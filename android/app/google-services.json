@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "888223270950",
+    "project_id": "winston-9dy48u",
+    "storage_bucket": "winston-9dy48u.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:888223270950:android:3c70f7776151fd8a637ee7",
+        "android_client_info": {
+          "package_name": "com.mycompany.winston"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAaImNi_6XCotnzXOPtgu-aqjCZnLFSXmY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,826 @@
+// Automatic FlutterFlow imports
+import '/backend/backend.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import 'index.dart'; // Imports other custom widgets
+import 'package:flutter/material.dart';
+// Begin custom widget code
+// DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+class AddListingPageView extends StatefulWidget {
+  const AddListingPageView({
+    super.key,
+    this.width,
+    this.height,
+  });
+
+  final double? width;
+  final double? height;
+
+  @override
+  State<AddListingPageView> createState() => _AddListingPageViewState();
+}
+
+class _AddListingPageViewState extends State<AddListingPageView> {
+  static const double _hPad = 24;
+  static const double _vPad = 24;
+
+  // Match ListingDetailPageView card styling
+  static const double _cardRadius = 16;
+
+  List<BoxShadow> _subbyTileShadow() => [
+        BoxShadow(
+          blurRadius: 10,
+          offset: const Offset(0, 4),
+          color: Colors.black.withOpacity(0.03),
+        ),
+      ];
+
+  BoxDecoration _subbyCardDecoration(
+    FlutterFlowTheme theme, {
+    Color? color,
+    bool shadow = true,
+  }) {
+    return BoxDecoration(
+      color: color ?? theme.primaryBackground,
+      borderRadius: BorderRadius.circular(_cardRadius),
+      border: Border.all(color: theme.alternate, width: 1),
+      boxShadow: shadow ? _subbyTileShadow() : const [],
+    );
+  }
+
+  // ---------------------------------------------------------
+  // Form state
+  // ---------------------------------------------------------
+  int _selectedTabIndex = 0; // 0..3
+
+  final TextEditingController _nameCtrl = TextEditingController();
+  final TextEditingController _aboutCtrl = TextEditingController();
+  final TextEditingController _phoneCtrl = TextEditingController();
+  final TextEditingController _emailCtrl = TextEditingController();
+  final TextEditingController _whatsCtrl = TextEditingController();
+  final TextEditingController _suburbCtrl = TextEditingController();
+
+  // ✅ Required dropdown selections
+  String _selectedProvince = 'Select province';
+  String _selectedRegion = 'Select region';
+  String _selectedSpeciality = 'Select speciality';
+
+  bool _isSaving = false;
+
+  // ---------------------------------------------------------
+  // Typography (token + family)
+  // ---------------------------------------------------------
+  TextStyle _titleStyle(FlutterFlowTheme t) => t.titleLarge.copyWith(
+        fontWeight: FontWeight.w900,
+        letterSpacing: 0.2,
+      );
+
+  TextStyle _subtitleStyle(FlutterFlowTheme t) => t.bodySmall.override(
+        fontFamily: t.bodySmallFamily,
+        color: t.secondaryText,
+      );
+
+  TextStyle _sectionTitleStyle(FlutterFlowTheme t) => t.titleMedium.override(
+        fontFamily: t.titleMediumFamily,
+      );
+
+  TextStyle _tabTextStyle(FlutterFlowTheme t, {required bool selected}) =>
+      t.labelMedium.override(
+        fontFamily: t.labelMediumFamily,
+        color: selected ? Colors.white : t.secondaryText,
+      );
+
+  TextStyle _fieldTextStyle(FlutterFlowTheme t) => t.bodyMedium.override(
+        fontFamily: t.bodyMediumFamily,
+      );
+
+  TextStyle _hintTextStyle(FlutterFlowTheme t) => t.bodyMedium.override(
+        fontFamily: t.bodyMediumFamily,
+        color: t.secondaryText,
+      );
+
+  TextStyle _primaryBtnTextStyle(FlutterFlowTheme t) => t.labelMedium.override(
+        fontFamily: t.labelMediumFamily,
+        color: Colors.white,
+        fontWeight: FontWeight.w700,
+      );
+
+  // ---------------------------------------------------------
+  // Listing type labels
+  // ---------------------------------------------------------
+  String get _listingTypeLabel {
+    switch (_selectedTabIndex) {
+      case 0:
+        return 'Professionals';
+      case 1:
+        return 'Trades';
+      case 2:
+        return 'Suppliers';
+      case 3:
+      default:
+        return 'Associations';
+    }
+  }
+
+  // ---------------------------------------------------------
+  // Dropdown data
+  // ---------------------------------------------------------
+  static const String _placeholderProvince = 'Select province';
+  static const String _placeholderRegion = 'Select region';
+  static const String _placeholderSpeciality = 'Select speciality';
+
+  static const List<String> _provinces = [
+    _placeholderProvince,
+    'Gauteng',
+    'Western Cape',
+    'KwaZulu-Natal',
+    'Eastern Cape',
+    'Free State',
+    'North West',
+    'Limpopo',
+    'Mpumalanga',
+    'Northern Cape',
+  ];
+
+  static const Map<String, List<String>> _regionsByProvince = {
+    'Gauteng': [
+      'Johannesburg',
+      'Pretoria',
+      'Centurion',
+      'Midrand',
+      'Sandton',
+      'Soweto',
+      'East Rand',
+      'West Rand',
+      'Vaal',
+    ],
+    'Western Cape': [
+      'Cape Town',
+      'Stellenbosch',
+      'Somerset West',
+      'Paarl',
+      'George',
+      'Knysna',
+      'Hermanus',
+    ],
+    'KwaZulu-Natal': [
+      'Durban',
+      'Umhlanga',
+      'Pietermaritzburg',
+      'Ballito',
+      'Richards Bay',
+    ],
+    'Eastern Cape': [
+      'Gqeberha (Port Elizabeth)',
+      'East London',
+      'Mthatha',
+    ],
+    'Free State': [
+      'Bloemfontein',
+      'Welkom',
+    ],
+    'North West': [
+      'Rustenburg',
+      'Mahikeng',
+      'Potchefstroom',
+    ],
+    'Limpopo': [
+      'Polokwane',
+      'Tzaneen',
+      'Thohoyandou',
+    ],
+    'Mpumalanga': [
+      'Nelspruit (Mbombela)',
+      'Witbank (eMalahleni)',
+      'Secunda',
+    ],
+    'Northern Cape': [
+      'Kimberley',
+      'Upington',
+    ],
+  };
+
+  static const Map<String, List<String>> _subcategories = {
+    'Professionals': [
+      'Architect',
+      'Structural engineer',
+      'Quantity surveyor',
+      'Interior designer',
+      'Project manager',
+      'Land surveyor',
+    ],
+    'Trades': [
+      'Builder',
+      'Electrician',
+      'Plumber',
+      'Tiler',
+      'Painter',
+      'Carpenter',
+      'Roofer',
+      'Glazier',
+    ],
+    'Suppliers': [
+      'Building materials',
+      'Hardware store',
+      'Timber & roofing',
+      'Windows & doors',
+      'Kitchens & cupboards',
+      'Paint & coatings',
+      'Plumbing supplies',
+    ],
+    'Associations': [
+      'Master Builders Association',
+      'NHBRC',
+      'Electrical Contractors Association',
+      'Plumbing Industry Board',
+    ],
+  };
+
+  List<String> get _currentRegions {
+    if (_selectedProvince == _placeholderProvince) {
+      return const <String>[_placeholderRegion];
+    }
+    final list = _regionsByProvince[_selectedProvince] ?? const <String>[];
+    if (list.isEmpty) return const <String>[_placeholderRegion];
+    return <String>[_placeholderRegion, ...list];
+  }
+
+  List<String> get _currentSpecialities {
+    final label = _listingTypeLabel;
+    final list = _subcategories[label] ?? const <String>[];
+    if (list.isEmpty) return const <String>[_placeholderSpeciality];
+    return <String>[_placeholderSpeciality, ...list];
+  }
+
+  // ---------------------------------------------------------
+  // Firestore wiring
+  // ---------------------------------------------------------
+  DocumentReference? _currentUserRefOrNull() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return null;
+    return FirebaseFirestore.instance.collection('users').doc(user.uid);
+  }
+
+  String _slugify(String input) {
+    var s = input.trim().toLowerCase();
+    s = s.replaceAll(RegExp(r'\(.*?\)'), '');
+    s = s.replaceAll('&', 'and');
+    s = s.replaceAll(RegExp(r'[^a-z0-9\s-]'), '');
+    s = s.replaceAll(RegExp(r'\s+'), ' ');
+    s = s.replaceAll(' ', '-');
+    s = s.replaceAll(RegExp(r'-+'), '-');
+    s = s.replaceAll(RegExp(r'^-+|-+$'), '');
+    return s;
+  }
+
+  void _toast(String message, {bool error = false}) {
+    if (!mounted) return;
+    final theme = FlutterFlowTheme.of(context);
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          backgroundColor: error ? theme.error : theme.primary,
+          content: Text(
+            message,
+            style: theme.bodyMedium.override(
+              fontFamily: theme.bodyMediumFamily,
+              color: Colors.white,
+            ),
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+  }
+
+  bool _validate() {
+    final name = _nameCtrl.text.trim();
+    final about = _aboutCtrl.text.trim();
+
+    if (name.isEmpty) {
+      _toast('Please enter your business name.', error: true);
+      return false;
+    }
+    if (_selectedProvince == _placeholderProvince) {
+      _toast('Please select a province.', error: true);
+      return false;
+    }
+    if (_selectedRegion == _placeholderRegion) {
+      _toast('Please select a city / region.', error: true);
+      return false;
+    }
+    if (_selectedSpeciality == _placeholderSpeciality) {
+      _toast('Please select a speciality.', error: true);
+      return false;
+    }
+    if (about.isEmpty) {
+      _toast('Please add a short description (About).', error: true);
+      return false;
+    }
+    return true;
+  }
+
+  Future<void> _saveListing() async {
+    if (_isSaving) return;
+    if (!_validate()) return;
+
+    final userRef = _currentUserRefOrNull();
+    if (userRef == null) {
+      context.pushNamed('loginPage');
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    try {
+      final now = Timestamp.now();
+
+      final name = _nameCtrl.text.trim();
+      final about = _aboutCtrl.text.trim();
+
+      final phone = _phoneCtrl.text.trim();
+      final whatsapp = _whatsCtrl.text.trim();
+      final email = _emailCtrl.text.trim();
+
+      final province = _selectedProvince.trim();
+      final city = _selectedRegion.trim();
+      final suburb = _suburbCtrl.text.trim();
+
+      final category = _listingTypeLabel;
+      final speciality = _selectedSpeciality.trim();
+
+      final categorySlug = _slugify(category);
+      final specialitySlug = _slugify(speciality);
+      final provinceSlug = _slugify(province);
+
+      final doc = FirebaseFirestore.instance.collection('subby_listings').doc();
+
+      await doc.set({
+        'name': name,
+        'about': about,
+        'category': category,
+        'categorySlug': categorySlug,
+        'speciality': speciality,
+        'specialitySlug': specialitySlug,
+        'province': province,
+        'provinceSlug': provinceSlug,
+        'city': city,
+        if (suburb.isNotEmpty) 'suburb': suburb,
+        if (phone.isNotEmpty) 'phoneNumber': phone,
+        if (whatsapp.isNotEmpty) 'whatsappNumber': whatsapp,
+        if (email.isNotEmpty) 'email': email,
+        'ownerRef': userRef,
+        'visibility': 'public',
+        'isVerified': false,
+        'rating': 0.0,
+        'reviewCount': 0,
+        'openNow': true,
+        'createdAt': now,
+        'updatedAt': now,
+      });
+
+      if (!mounted) return;
+
+      _toast('Listing created!');
+      context.safePop();
+    } catch (e) {
+      debugPrint('⚠️ create listing failed: $e');
+      _toast('Could not create listing. Check rules/connection.', error: true);
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _aboutCtrl.dispose();
+    _phoneCtrl.dispose();
+    _emailCtrl.dispose();
+    _whatsCtrl.dispose();
+    _suburbCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+
+    final double width = widget.width ?? MediaQuery.sizeOf(context).width;
+    final double height = widget.height ?? MediaQuery.sizeOf(context).height;
+
+    return SizedBox(
+      width: width,
+      height: height,
+      child: SafeArea(
+        child: Container(
+          color: theme.primaryBackground,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 12),
+                child: Row(
+                  children: [
+                    InkWell(
+                      onTap: () => context.safePop(),
+                      borderRadius: BorderRadius.circular(999),
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: theme.secondaryBackground,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: theme.alternate, width: 1),
+                        ),
+                        alignment: Alignment.center,
+                        child: Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          size: 20,
+                          color: theme.primaryText,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Add Listing', style: _titleStyle(theme)),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Create your directory profile',
+                          style: _subtitleStyle(theme),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: double.infinity,
+                color: theme.primary,
+                padding: const EdgeInsets.fromLTRB(_hPad, 14, _hPad, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Listing type',
+                      style: theme.titleMedium.override(
+                        fontFamily: theme.titleMediumFamily,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    _buildTypeTabs(),
+                    const SizedBox(height: 10),
+                    Text(
+                      'You are creating a ${_listingTypeLabel.toLowerCase()} listing.',
+                      style: theme.bodySmall.override(
+                        fontFamily: theme.bodySmallFamily,
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSection(
+                        title: 'Business details',
+                        child: Column(
+                          children: [
+                            _field(
+                              label: 'Name *',
+                              controller: _nameCtrl,
+                              hint: 'e.g. Acme Builders',
+                            ),
+                            const SizedBox(height: 12),
+                            _dropdownField(
+                              label: 'Speciality *',
+                              value: _selectedSpeciality,
+                              items: _currentSpecialities,
+                              onChanged: (v) {
+                                if (v == null) return;
+                                setState(() => _selectedSpeciality = v);
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            _field(
+                              label: 'About *',
+                              controller: _aboutCtrl,
+                              hint: 'Short description of your services',
+                              maxLines: 4,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildSection(
+                        title: 'Contact',
+                        child: Column(
+                          children: [
+                            _field(
+                              label: 'Phone number',
+                              controller: _phoneCtrl,
+                              hint: 'e.g. 082 123 4567',
+                              keyboardType: TextInputType.phone,
+                            ),
+                            const SizedBox(height: 12),
+                            _field(
+                              label: 'WhatsApp number',
+                              controller: _whatsCtrl,
+                              hint: 'e.g. 082 123 4567',
+                              keyboardType: TextInputType.phone,
+                            ),
+                            const SizedBox(height: 12),
+                            _field(
+                              label: 'Email',
+                              controller: _emailCtrl,
+                              hint: 'e.g. hello@company.co.za',
+                              keyboardType: TextInputType.emailAddress,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildSection(
+                        title: 'Location',
+                        child: Column(
+                          children: [
+                            _dropdownField(
+                              label: 'Province *',
+                              value: _selectedProvince,
+                              items: _provinces,
+                              onChanged: (v) {
+                                if (v == null) return;
+                                setState(() {
+                                  _selectedProvince = v;
+                                  _selectedRegion = _placeholderRegion;
+                                });
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            _dropdownField(
+                              label: 'City / Region *',
+                              value: _currentRegions.contains(_selectedRegion)
+                                  ? _selectedRegion
+                                  : _placeholderRegion,
+                              items: _currentRegions,
+                              onChanged: (v) {
+                                if (v == null) return;
+                                setState(() => _selectedRegion = v);
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            _field(
+                              label: 'Suburb (optional)',
+                              controller: _suburbCtrl,
+                              hint: 'e.g. Sandton',
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      _buildPrimaryButton(
+                        label: _isSaving ? 'Saving…' : 'Continue',
+                        icon: _isSaving
+                            ? Icons.hourglass_top_rounded
+                            : Icons.arrow_forward_rounded,
+                        onTap: _isSaving ? () {} : _saveListing,
+                        disabled: _isSaving,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Next: photos, services, tags and verification.',
+                        style: _subtitleStyle(theme),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // =========================================================
+  // UI helpers
+  // =========================================================
+  Widget _buildTypeTabs() {
+    final theme = FlutterFlowTheme.of(context);
+    final tabs = ['Professionals', 'Trades', 'Suppliers', 'Associations'];
+
+    return SizedBox(
+      height: 42,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: List.generate(tabs.length, (i) {
+            final selected = _selectedTabIndex == i;
+            return Padding(
+              padding: EdgeInsets.only(right: i == tabs.length - 1 ? 0 : 8),
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedTabIndex = i;
+                    _selectedSpeciality = _placeholderSpeciality;
+                  });
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: selected ? theme.secondary : theme.primary,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: selected ? theme.secondary : Colors.white54,
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    tabs[i],
+                    style: _tabTextStyle(theme, selected: selected),
+                  ),
+                ),
+              ),
+            );
+          }),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSection({required String title, required Widget child}) {
+    final theme = FlutterFlowTheme.of(context);
+
+    return Container(
+      decoration: _subbyCardDecoration(theme),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: _sectionTitleStyle(theme)),
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _field({
+    required String label,
+    required TextEditingController controller,
+    required String hint,
+    int maxLines = 1,
+    TextInputType? keyboardType,
+  }) {
+    final theme = FlutterFlowTheme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: theme.labelMedium.override(
+            fontFamily: theme.labelMediumFamily,
+            color: theme.secondaryText,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: theme.secondaryBackground,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: theme.alternate, width: 1),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: TextField(
+            controller: controller,
+            maxLines: maxLines,
+            keyboardType: keyboardType,
+            style: _fieldTextStyle(theme),
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              isDense: true,
+              hintText: hint,
+              hintStyle: _hintTextStyle(theme),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _dropdownField({
+    required String label,
+    required String value,
+    required List<String> items,
+    required ValueChanged<String?> onChanged,
+  }) {
+    final theme = FlutterFlowTheme.of(context);
+
+    final bool isPlaceholder = value.startsWith('Select ');
+    final Color textColor =
+        isPlaceholder ? theme.secondaryText : theme.primaryText;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: theme.labelMedium.override(
+            fontFamily: theme.labelMediumFamily,
+            color: theme.secondaryText,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          height: 50,
+          decoration: BoxDecoration(
+            color: theme.secondaryBackground,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: theme.alternate, width: 1),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: items.contains(value) ? value : items.first,
+              isExpanded: true,
+              icon: Icon(Icons.keyboard_arrow_down_rounded,
+                  color: theme.secondaryText),
+              dropdownColor: theme.primaryBackground,
+              style: _fieldTextStyle(theme).copyWith(color: textColor),
+              items: items.map((s) {
+                final bool itemPlaceholder = s.startsWith('Select ');
+                return DropdownMenuItem<String>(
+                  value: s,
+                  child: Text(
+                    s,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _fieldTextStyle(theme).copyWith(
+                      color: itemPlaceholder ? theme.secondaryText : textColor,
+                    ),
+                  ),
+                );
+              }).toList(),
+              onChanged: onChanged,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPrimaryButton({
+    required String label,
+    required IconData icon,
+    required VoidCallback onTap,
+    bool disabled = false,
+  }) {
+    final theme = FlutterFlowTheme.of(context);
+
+    return InkWell(
+      onTap: disabled ? null : onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        height: 48,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color:
+              disabled ? theme.secondaryText.withOpacity(0.35) : theme.primary,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: disabled ? Colors.transparent : theme.primary,
+            width: 1,
+          ),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 20, color: Colors.white),
+            const SizedBox(width: 8),
+            Text(label, style: _primaryBtnTextStyle(theme)),
+          ],
+        ),
+      ),
+    );
+  }
+}
