@@ -9,12 +9,29 @@ import 'package:flutter/material.dart';
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
 // ======================= DashboardPageView (FULL FILE) =======================
+//
+// v3 — simplified entry page. Two sections only:
+//   1) My Projects  — horizontal rail of the user's live projects + Add card.
+//                      Accent = ORANGE (light + dark).
+//   2) Directory    — browse trades/suppliers + manage own listing.
+//                      Accent = YELLOW.
+//
+// Removed in v3: the project-management grid (Timeline / Project Cost / Quotes /
+// Snag) — those now live INSIDE a project — and the Resources / legal footer,
+// which is moving to its own page. Profile/account access moved to a button in
+// the welcome header so the body is exactly the two sections.
+//
+// NOTE on widget params: the legacy route params (timeline / snag / projectCost /
+// getQuotes / terms / privacy / support) and the snag/myProjects counts are kept
+// on the constructor so the existing FlutterFlow component instance does NOT
+// break. They are no longer used by this screen and can be deleted from the FF
+// widget definition whenever convenient. Two new optional params were added:
+// projectDetailRouteName, addProjectsRouteName, projectParamName.
 
 import '/custom_code/widgets/index.dart';
 import 'dart:ui';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class DashboardPageView extends StatefulWidget {
   const DashboardPageView({
@@ -22,25 +39,26 @@ class DashboardPageView extends StatefulWidget {
     this.width,
     this.height,
 
-    /// Routes
+    /// Routes — USED
     this.directoryRouteName,
-    this.timelineRouteName, // ✅ will now fallback to TimelineHomePage
+    this.projectsRouteName, // "View all" → MyProjectsHomePage
+    this.profileRouteName,
+    this.projectDetailRouteName, // ✅ NEW — open a single project
+    this.addProjectsRouteName, // ✅ NEW — create a new project
+    this.projectParamName, // ✅ NEW — param name for the project ref (default "projectRef")
+
+    /// Listing management routes (Directory tile) — USED
+    this.addListingRouteName,
+    this.editListingRouteName,
+
+    /// LEGACY — kept for FF compatibility, no longer used by this screen
+    this.timelineRouteName,
     this.snagListRouteName,
     this.projectCostRouteName,
-    this.getQuotesRouteName, // ✅ NEW
-    this.projectsRouteName, // ✅ will now navigate to MyProjectsHomePage by default
-    this.profileRouteName,
-
-    /// ✅ Listing management routes (Dashboard controls listing)
-    this.addListingRouteName, // optional
-    this.editListingRouteName, // optional
-
-    /// Footer menu routes
+    this.getQuotesRouteName,
     this.termsRouteName,
     this.privacyRouteName,
     this.supportRouteName,
-
-    /// Counts
     this.snagCount,
     this.myProjectsCount,
   });
@@ -48,21 +66,24 @@ class DashboardPageView extends StatefulWidget {
   final double? width;
   final double? height;
 
+  // USED
   final String? directoryRouteName;
+  final String? projectsRouteName;
+  final String? profileRouteName;
+  final String? projectDetailRouteName;
+  final String? addProjectsRouteName;
+  final String? projectParamName;
+  final String? addListingRouteName;
+  final String? editListingRouteName;
+
+  // LEGACY (unused)
   final String? timelineRouteName;
   final String? snagListRouteName;
   final String? projectCostRouteName;
-  final String? getQuotesRouteName; // ✅ NEW
-  final String? projectsRouteName;
-  final String? profileRouteName;
-
-  final String? addListingRouteName; // ✅ NEW
-  final String? editListingRouteName; // ✅ NEW
-
+  final String? getQuotesRouteName;
   final String? termsRouteName;
   final String? privacyRouteName;
   final String? supportRouteName;
-
   final int? snagCount;
   final int? myProjectsCount;
 
@@ -72,48 +93,37 @@ class DashboardPageView extends StatefulWidget {
 
 class _DashboardPageViewState extends State<DashboardPageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  // less-is-more system · ported from Clutch Putt · lime → yellow.
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
-  //
-  // NOTE: this screen previously used per-feature tile colours
-  // (theme.projectsColour / timelineColour / projectCostColour /
-  // getQuotesColour / snagListColour). The locked system has no decorative
-  // per-feature colour, so tiles are now neutral: emphasis tiles = ink fill,
-  // standard tiles = paper + hairline. To restore colour-coding, give a tile
-  // its own fill in _tile()/_directoryTile() — accent plumbing is left intact.
   //
   // Neutrals
   static const Color _ink = Color(0xFF181C27);
-  static const Color _inkSoft = Color(0xFF181C27);
   static const Color _inkMute = Color(0xFF6B7280);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFE3E4E8);
-  static const Color _surface2 = Color(0xFFE3E4E8);
   static const Color _hairline = Color(0xFFE3E4E8);
-  static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
-  // Brand accent — YELLOW. Always ink foreground, never white.
-  static const Color _spark = Color(0xFFFFE718); // primary CTA / ranked accent
-  static const Color _sparkInk = Color(0xFF181C27);
-  static const Color _calm = Color(0xFF9C8A12);
-  static const Color _calmInk = Color(0xFFFFFFFF);
-  // Status
-  static const Color _live =
-      Color(0xFFFFB000); // gold — live / open-now / warning
-  static const Color _steel = Color(0xFF9DA8B5);
-  static const Color _coral = Color(0xFFC8102E); // legacy red — error/required
-  // On-ink overlays (for emphasis tiles)
-  static final Color _onInkChip = Colors.white.withOpacity(0.10);
-  static final Color _onInkChipBorder = Colors.white.withOpacity(0.16);
-  static final Color _onInkBadge = Colors.white.withOpacity(0.14);
+
+  // On-ink overlays (Directory dark tile)
   static final Color _onInkSub = Colors.white.withOpacity(0.85);
+
+  // Accent — DIRECTORY = YELLOW. Always ink foreground, never white.
+  static const Color _spark = Color(0xFFFFE718);
+  static const Color _sparkInk = Color(0xFF181C27);
+
+  // Accent — MY PROJECTS = ORANGE (light + dark).
+  static const Color _orange = Color(0xFFEA580C); // primary orange
+  static const Color _orangeDark = Color(0xFFC2410C); // deep orange — icon/text
+  static const Color _orangeLight =
+      Color(0xFFFFEDD5); // light orange — tint/chip
+  // (kept available if a lighter border is wanted later)
+  static const Color _orangeMid = Color(0xFFFED7AA);
+
   // Geometry
   static const double _rSmall = 6;
   static const double _rMed = 8;
   static const double _rLarge = 12;
   static const double _rPill = 999;
   static const double _pageHPad = 20;
-  static const double _sectionGap = 32;
-  static const double _navReserve = 96;
+
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -123,85 +133,58 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   static const double _hPad = _pageHPad;
   static const double _radius = _rLarge;
 
-  // ✅ Modern spacing rhythm
-  static const double _sectionBreak = 38; // between steps
+  // Spacing rhythm
+  static const double _sectionBreak = 38;
   static const double _titleToDesc = 8;
   static const double _descToTile = 16;
-  static const double _betweenTiles = 12;
-  static const double _gapAfterPM = 34; // big space before profile
 
-  // ✅ NEW: tighter gap for Step 3 subtitle -> grid tiles
-  static const double _pmDescToGrid = 10;
+  // Directory tile heights
+  static const double _tileH = 78;
+  static const double _tileHEmphasis = 88;
 
-  // Tile heights
-  static const double _tileH = 78; // standard tile (Group 2)
-  static const double _tileHEmphasis = 88; // bigger tiles (Group 1)
-
-  // ✅ Grid tile sizing (Step 3)
-  static const double _pmGridTileH = 165;
+  // Projects rail
+  static const double _railH = 152;
+  static const double _cardW = 224;
+  static const double _addCardW = 152;
+  static const double _betweenCards = 12;
 
   // Route fallbacks
   static const String _fallbackProfileRoute = 'profilePage';
-
-  // ✅ UPDATED: Dashboard "My Projects" now navigates to your MyProjectsHomePage by default
   static const String _fallbackProjectsRoute = 'MyProjectsHomePage';
-
-  // ✅ NEW: Timeline tile fallback to your TimelineHomePage (matches your page name)
-  static const String _fallbackTimelineRoute = 'TimelineHomePage';
-
-  static const String _fallbackGetQuotesRoute = 'quotesPage'; // ✅ NEW
-
-  // ✅ Listing management fallbacks (change these to your real FF page names if needed)
+  static const String _fallbackProjectDetailRoute = 'ProjectDetailPage';
+  static const String _fallbackAddProjectsRoute = 'addProjectsPage';
   static const String _fallbackAddListingRoute = 'addListingPage';
   static const String _fallbackEditListingRoute = 'editListingPage';
 
-  // Footer fallbacks
-  static const String _fallbackTermsRoute = 'termsPage';
-  static const String _fallbackPrivacyRoute = 'privacyPage';
-  static const String _fallbackSupportRoute = 'supportPage';
-
-  // ---- Reorder persistence (ONLY Group 2) ----
-  static const String _kPrefsOrderKey = 'subby_dashboard_pm_tile_order_v1';
-
-  // ✅ terms/privacy acceptance persistence
-  static const String _kAcceptedTermsKey = 'subby_terms_accepted_v1';
-  static const String _kAcceptedPrivacyKey = 'subby_privacy_accepted_v1';
-
-  // Tile IDs
-  static const String _tProjects = 'projects'; // Group 1 fixed
-  static const String _tDirectory = 'directory'; // Group 1 fixed
-
-  static const String _tTimeline = 'timeline'; // Group 2
-  static const String _tProjectCost = 'projectCost';
-  static const String _tGetQuotes = 'getQuotes';
-  static const String _tSnag = 'snag';
-
-  static const List<String> _defaultPMOrder = [
-    _tTimeline,
-    _tProjectCost,
-    _tGetQuotes,
-    _tSnag,
-  ];
-
-  List<String> _pmTileOrder = List<String>.from(_defaultPMOrder);
-
-  // ✅ Terms/Privacy acceptance
-  bool _acceptedTerms = false;
-  bool _acceptedPrivacy = false;
-
-  // ✅ listing exists (to show Add / Edit)
+  // Listing exists (drives Add / Edit on the Directory tile)
   bool _hasListing = false;
-
-  // ✅ robust prefs sync (handles FF keeping page alive)
-  bool _prefsSyncInFlight = false;
-  int _lastPrefsSyncMs = 0;
-
-  // ✅ robust listing check (handles FF keeping page alive)
   bool _listingCheckInFlight = false;
   int _lastListingCheckMs = 0;
 
+  // Date formatting (SA: DD MMM YYYY)
+  static const List<String> _months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+
+  String _fmtDate(DateTime? d) {
+    if (d == null) return '';
+    final dd = d.day.toString().padLeft(2, '0');
+    return '$dd ${_months[d.month - 1]} ${d.year}';
+  }
+
   // =========================================================
-  // ✅ TYPOGRAPHY (locked palette — explicit family + colour)
+  // TYPOGRAPHY
   // =========================================================
   TextStyle get _appTitleStyle => const TextStyle(
         fontFamily: _displayFont,
@@ -213,58 +196,6 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       );
 
   TextStyle get _appSubtitleStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 12,
-        color: _inkMute,
-      );
-
-  TextStyle get _sectionTitleStyle => const TextStyle(
-        fontFamily: _displayFont,
-        fontSize: 16,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.2,
-        color: _ink,
-      );
-
-  TextStyle get _tileTitleStyle => const TextStyle(
-        fontFamily: _displayFont,
-        fontSize: 16,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.2,
-        color: _ink,
-      );
-
-  TextStyle get _tileSubtitleStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
-        color: _inkMute,
-      );
-
-  TextStyle get _badgeTextStyle => const TextStyle(
-        fontFamily: _monoFont,
-        fontSize: 11,
-        fontWeight: FontWeight.w700,
-        color: _ink,
-        fontFeatures: [FontFeature.tabularFigures()],
-      );
-
-  TextStyle get _footerRowTextStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        color: _ink,
-      );
-
-  TextStyle get _profileNameStyle => const TextStyle(
-        fontFamily: _displayFont,
-        fontSize: 16,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.2,
-        color: _ink,
-      );
-
-  TextStyle get _profileMetaStyle => const TextStyle(
         fontFamily: _bodyFont,
         fontSize: 12,
         color: _inkMute,
@@ -286,6 +217,28 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         color: _inkMute,
       );
 
+  TextStyle get _tileTitleStyle => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.2,
+        color: _ink,
+      );
+
+  TextStyle get _tileSubtitleStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: _inkMute,
+      );
+
+  TextStyle get _metaStyle => const TextStyle(
+        fontFamily: _monoFont,
+        fontSize: 11,
+        fontWeight: FontWeight.w500,
+        color: _inkMute,
+        fontFeatures: [FontFeature.tabularFigures()],
+      );
   // =========================================================
 
   @override
@@ -293,24 +246,16 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      await _initAll();
-      await _syncPrefsFromStorage(force: true);
+      await _refreshHasListing(force: true);
     });
   }
 
-  Future<void> _initAll() async {
-    await _initPMTileOrder();
-    await _initLegalAcceptance();
-    await _refreshHasListing(force: true);
-  }
-
   // -----------------------------
-  // ✅ Navigation
+  // Navigation
   // -----------------------------
   void _safeNavigate(String? route, {String? fallbackRoute}) {
     final r = (route ?? '').trim();
     final fb = (fallbackRoute ?? '').trim();
-
     final target = r.isNotEmpty ? r : fb;
     if (target.isEmpty) return;
 
@@ -326,129 +271,55 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     );
   }
 
-  // -----------------------------
-  // ✅ PM Order normalization (ONLY Group 2)
-  // -----------------------------
-  List<String> _normalizePMOrder(List<String> input) {
-    final seen = <String>{};
-    final out = <String>[];
+  void _goToAddProject() => _safeNavigate(
+        widget.addProjectsRouteName,
+        fallbackRoute: _fallbackAddProjectsRoute,
+      );
 
-    for (final id in input) {
-      if (_defaultPMOrder.contains(id) && !seen.contains(id)) {
-        seen.add(id);
-        out.add(id);
-      }
-    }
-    for (final id in _defaultPMOrder) {
-      if (!seen.contains(id)) out.add(id);
-    }
-    return out;
+  // Open a single project — mirrors the contract used by MyProjectsHomePageView
+  // (serialized DocumentReference in both queryParameters and extra).
+  void _goToProject(DocumentReference projectRef) {
+    final target = (widget.projectDetailRouteName ?? '').trim().isNotEmpty
+        ? widget.projectDetailRouteName!.trim()
+        : _fallbackProjectDetailRoute;
+
+    final paramName = (widget.projectParamName ?? '').trim().isEmpty
+        ? 'projectRef'
+        : widget.projectParamName!.trim();
+
+    context.pushNamed(
+      target,
+      queryParameters: <String, dynamic>{
+        paramName: serializeParam(projectRef, ParamType.DocumentReference),
+      }.withoutNulls,
+      extra: <String, dynamic>{
+        paramName: projectRef,
+        kTransitionInfoKey: const TransitionInfo(
+          hasTransition: true,
+          transitionType: PageTransitionType.rightToLeft,
+          duration: Duration(milliseconds: 260),
+        ),
+      },
+    );
   }
 
   // -----------------------------
-  // ✅ Robust pref sync (ONLY Group 2)
+  // Projects query (live)
   // -----------------------------
-  Future<void> _syncPrefsFromStorage({bool force = false}) async {
-    if (_prefsSyncInFlight) return;
-
-    final nowMs = DateTime.now().millisecondsSinceEpoch;
-    if (!force && (nowMs - _lastPrefsSyncMs) < 350) return; // debounce
-    _lastPrefsSyncMs = nowMs;
-
-    _prefsSyncInFlight = true;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final storedOrder = prefs.getStringList(_kPrefsOrderKey);
-
-      final nextOrder = (storedOrder != null && storedOrder.isNotEmpty)
-          ? _normalizePMOrder(storedOrder)
-          : List<String>.from(_defaultPMOrder);
-
-      final changed = nextOrder.join('|') != _pmTileOrder.join('|');
-
-      if (!mounted) return;
-      if (changed) {
-        setState(() => _pmTileOrder = nextOrder);
-      }
-    } catch (_) {
-      // ignore
-    } finally {
-      _prefsSyncInFlight = false;
-    }
+  Query<Map<String, dynamic>>? _activeProjectsQuery() {
+    final userRef = currentUserReference;
+    if (userRef == null) return null;
+    return FirebaseFirestore.instance
+        .collection('projects')
+        .where('ownerRef', isEqualTo: userRef)
+        .where('archived', isEqualTo: false)
+        .orderBy('updatedAt', descending: true)
+        .limit(20);
   }
 
   // -----------------------------
-  // Order persistence (ONLY Group 2)
-  // -----------------------------
-  Future<void> _initPMTileOrder() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final stored = prefs.getStringList(_kPrefsOrderKey);
-
-      if (stored != null && stored.isNotEmpty) {
-        setState(() => _pmTileOrder = _normalizePMOrder(stored));
-      } else {
-        setState(() => _pmTileOrder = List.from(_defaultPMOrder));
-      }
-    } catch (_) {
-      setState(() => _pmTileOrder = List.from(_defaultPMOrder));
-    }
-  }
-
-  // (kept for compatibility even if not used by UI)
-  void _onPMReorder(int oldIndex, int newIndex) async {
-    if (newIndex > oldIndex) newIndex -= 1;
-    final updated = List<String>.from(_pmTileOrder);
-    final item = updated.removeAt(oldIndex);
-    updated.insert(newIndex, item);
-
-    final normalized = _normalizePMOrder(updated);
-    setState(() => _pmTileOrder = normalized);
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(_kPrefsOrderKey, normalized);
-
-    await _syncPrefsFromStorage(force: true);
-  }
-
-  // -----------------------------
-  // ✅ Terms/Privacy acceptance
-  // -----------------------------
-  Future<void> _initLegalAcceptance() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final t = prefs.getBool(_kAcceptedTermsKey) ?? false;
-      final p = prefs.getBool(_kAcceptedPrivacyKey) ?? false;
-      setState(() {
-        _acceptedTerms = t;
-        _acceptedPrivacy = p;
-      });
-    } catch (_) {
-      setState(() {
-        _acceptedTerms = false;
-        _acceptedPrivacy = false;
-      });
-    }
-  }
-
-  Future<void> _setAcceptedTerms(bool v) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_kAcceptedTermsKey, v);
-    if (!mounted) return;
-    setState(() => _acceptedTerms = v);
-  }
-
-  Future<void> _setAcceptedPrivacy(bool v) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_kAcceptedPrivacyKey, v);
-    if (!mounted) return;
-    setState(() => _acceptedPrivacy = v);
-  }
-
-  // -----------------------------
-  // Listing exists for current user (Add / Edit)
-  // ✅ Debounced + only setState on change, so it can run on every
-  //    post-frame (handles FF keeping the page alive on return).
+  // Listing exists for current user (Directory Add / Edit label)
+  // Debounced + only setState on change.
   // -----------------------------
   Future<void> _refreshHasListing({bool force = false}) async {
     if (_listingCheckInFlight) return;
@@ -483,32 +354,26 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   }
 
   // -----------------------------
-  // Theme accents (kept for compatibility — no longer drives tile fills)
+  // Small shared bits
   // -----------------------------
-  Color _accentForTile(FlutterFlowTheme theme, String id) {
-    switch (id) {
-      case _tProjects:
-        return theme.projectsColour;
-      case _tTimeline:
-        return theme.timelineColour;
-      case _tProjectCost:
-        return theme.projectCostColour;
-      case _tGetQuotes:
-        return theme.getQuotesColour;
-      case _tSnag:
-        return theme.snagListColour;
-      case _tDirectory:
-        return _ink;
-      default:
-        return _ink;
-    }
-  }
+  Widget _accentMarker(Color c) => Container(
+        width: 10,
+        height: 18,
+        decoration: BoxDecoration(
+          color: c,
+          borderRadius: BorderRadius.circular(3),
+        ),
+      );
 
   // -----------------------------
-  // ✅ Welcome header
+  // Welcome header (personalised) + account button
   // -----------------------------
   Widget _buildWelcomeHeader(FlutterFlowTheme theme) {
     final topInset = MediaQuery.of(context).padding.top;
+    final name = currentUserDisplayName.trim();
+    final greeting = name.isNotEmpty
+        ? 'Welcome back, ${name.split(' ').first}'
+        : 'Welcome to Subby';
 
     return Padding(
       padding: EdgeInsets.fromLTRB(_hPad, topInset + 14, _hPad, 18),
@@ -524,264 +389,449 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                   color: _ink,
                   borderRadius: BorderRadius.circular(_rMed),
                 ),
-                child: const Icon(
-                  Icons.home_rounded,
-                  size: 20,
-                  color: _paper,
-                ),
+                child: const Icon(Icons.home_rounded, size: 20, color: _paper),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Welcome to Subby', style: _appTitleStyle),
-                    const SizedBox(height: 2),
                     Text(
-                      'Your home building super power.',
-                      style: _appSubtitleStyle,
+                      greeting,
+                      style: _appTitleStyle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
+                    const SizedBox(height: 2),
+                    Text('Your home building super power.',
+                        style: _appSubtitleStyle),
                   ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Container(
-            height: 1,
-            width: double.infinity,
-            color: _hairline,
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // ✅ SECTION
-  // ---------------------------------------------------------------------------
-  Widget _buildStepSection(
-    FlutterFlowTheme theme, {
-    required int step,
-    required Color accent,
-    required String title,
-    required String subtitle,
-    required Widget child,
-    bool showLine = true,
-    double topPadding = 0,
-    double bottomPadding = 0,
-    double? descToChildGap,
-  }) {
-    final gap = descToChildGap ?? _descToTile;
-
-    return Padding(
-      padding: EdgeInsets.fromLTRB(_hPad, topPadding, _hPad, bottomPadding),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: _stepHeadlineStyle),
-          const SizedBox(height: _titleToDesc),
-          Text(subtitle, style: _stepDescStyle),
-          SizedBox(height: gap),
-          child,
-        ],
-      ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // ✅ TILE
-  // ---------------------------------------------------------------------------
-  Widget _tile({
-    required FlutterFlowTheme theme,
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color accent,
-    required VoidCallback onTap,
-    int? count,
-    double height = _tileH,
-    bool showDragHandle = false,
-    int dragIndex = 0,
-    bool emphasized = false,
-    bool grid = false,
-  }) {
-    // Emphasis tiles (Group 1) = ink fill; standard tiles (Group 2 grid) = paper.
-    final bool dark = emphasized;
-    final Color fill = dark ? _ink : _paper;
-    final Color fg = dark ? _paper : _ink;
-    final Color subFg = dark ? _onInkSub : _inkMute;
-    final Color chipBg = dark ? _onInkChip : _surface;
-    final Border? chipBorder =
-        dark ? Border.all(color: _onInkChipBorder) : null;
-    final Color badgeBg = dark ? _onInkBadge : _surface;
-    final Color chevron = dark ? _paper : _inkMute;
-    final Border? tileBorder =
-        dark ? null : Border.all(color: _hairline, width: 1);
-
-    if (grid) {
-      return InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(_radius),
-        child: Container(
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: fill,
-            borderRadius: BorderRadius.circular(_radius),
-            border: tileBorder,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: chipBg,
-                        borderRadius: BorderRadius.circular(_rMed),
-                        border: chipBorder,
-                      ),
-                      child: Icon(icon, size: 22, color: fg),
-                    ),
-                    const Spacer(),
-                    if ((count ?? 0) > 0)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: badgeBg,
-                          borderRadius: BorderRadius.circular(_rPill),
-                          border: chipBorder,
-                        ),
-                        child: Text(
-                          '$count',
-                          style: _badgeTextStyle.copyWith(color: fg),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: _tileTitleStyle.copyWith(color: fg),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: _tileSubtitleStyle.copyWith(color: subFg),
-                ),
-                const Spacer(),
-                Align(
-                  alignment: Alignment.bottomRight,
-                  child: Icon(Icons.chevron_right_rounded, color: chevron),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(_radius),
-      child: Container(
-        height: height,
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: fill,
-          borderRadius: BorderRadius.circular(_radius),
-          border: tileBorder,
-        ),
-        child: Row(
-          children: [
-            const SizedBox(width: 12),
-            if (showDragHandle) ...[
-              ReorderableDragStartListener(
-                index: dragIndex,
-                child: Icon(
-                  Icons.drag_handle_rounded,
-                  size: 22,
-                  color: chevron,
                 ),
               ),
               const SizedBox(width: 10),
+              _accountButton(),
             ],
-            Container(
-              width: emphasized ? 48 : 44,
-              height: emphasized ? 48 : 44,
-              decoration: BoxDecoration(
-                color: chipBg,
-                borderRadius: BorderRadius.circular(_rMed),
-                border: chipBorder,
+          ),
+          const SizedBox(height: 14),
+          Container(height: 1, width: double.infinity, color: _hairline),
+        ],
+      ),
+    );
+  }
+
+  Widget _accountButton() => InkWell(
+        onTap: () => _safeNavigate(
+          widget.profileRouteName,
+          fallbackRoute: _fallbackProfileRoute,
+        ),
+        borderRadius: BorderRadius.circular(_rPill),
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: _surface,
+          ),
+          child: const Icon(Icons.person_rounded, size: 20, color: _ink),
+        ),
+      );
+
+  // =====================================================================
+  // SECTION 1 — MY PROJECTS (orange) — horizontal rail
+  // =====================================================================
+  Widget _buildProjectsSection(FlutterFlowTheme theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  _accentMarker(_orange),
+                  const SizedBox(width: 10),
+                  Expanded(
+                      child: Text('My Projects', style: _stepHeadlineStyle)),
+                  _viewAllButton(),
+                ],
               ),
-              child: Icon(
-                icon,
-                size: emphasized ? 24 : 22,
-                color: fg,
+              const SizedBox(height: _titleToDesc),
+              Text(
+                'Open a project to manage its plans, timeline, budget, quotes & snags.',
+                style: _stepDescStyle,
               ),
-            ),
-            const SizedBox(width: 12),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        _projectsRail(theme),
+      ],
+    );
+  }
+
+  Widget _viewAllButton() => InkWell(
+        onTap: () => _safeNavigate(
+          widget.projectsRouteName,
+          fallbackRoute: _fallbackProjectsRoute,
+        ),
+        borderRadius: BorderRadius.circular(_rMed),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          child: Row(
+            children: const [
+              Text(
+                'View all',
+                style: TextStyle(
+                  fontFamily: _bodyFont,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: _orangeDark,
+                ),
+              ),
+              SizedBox(width: 2),
+              Icon(Icons.chevron_right_rounded, size: 18, color: _orangeDark),
+            ],
+          ),
+        ),
+      );
+
+  Widget _projectsRail(FlutterFlowTheme theme) {
+    final q = _activeProjectsQuery();
+
+    if (q == null) {
+      // Not signed in / no user ref — show the create prompt.
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: _hPad),
+        child: _emptyProjectsCard(),
+      );
+    }
+
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: q.snapshots(),
+      builder: (context, snap) {
+        if (snap.hasError) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: _hPad),
+            child: _emptyProjectsCard(),
+          );
+        }
+
+        if (snap.connectionState == ConnectionState.waiting && !snap.hasData) {
+          return SizedBox(height: _railH, child: _railLoading());
+        }
+
+        final docs = snap.data?.docs ?? const [];
+
+        if (docs.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: _hPad),
+            child: _emptyProjectsCard(),
+          );
+        }
+
+        return SizedBox(
+          height: _railH,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: _hPad),
+            itemCount: docs.length + 1, // + Add card
+            separatorBuilder: (_, __) => const SizedBox(width: _betweenCards),
+            itemBuilder: (context, i) {
+              if (i == docs.length) return _addProjectCard();
+              return _projectCard(docs[i]);
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _railLoading() => ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: _hPad),
+        children: [
+          _skeletonCard(),
+          const SizedBox(width: _betweenCards),
+          _skeletonCard(),
+        ],
+      );
+
+  Widget _skeletonCard() => Container(
+        width: _cardW,
+        decoration: BoxDecoration(
+          color: _paper,
+          borderRadius: BorderRadius.circular(_radius),
+          border: Border.all(color: _hairline),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: _surface,
+                  borderRadius: BorderRadius.circular(_rMed),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Container(height: 12, width: 130, color: _surface),
+              const SizedBox(height: 8),
+              Container(height: 10, width: 90, color: _surface),
+            ],
+          ),
+        ),
+      );
+
+  Widget _statusPill(String status) {
+    final label =
+        status.isEmpty ? '' : status[0].toUpperCase() + status.substring(1);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: _orangeLight,
+        borderRadius: BorderRadius.circular(_rPill),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontFamily: _bodyFont,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: _orangeDark,
+        ),
+      ),
+    );
+  }
+
+  Widget _projectCard(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data();
+    final name = (data['name'] as String?)?.trim() ?? '';
+    final city = (data['city'] as String?)?.trim() ?? '';
+    final province = (data['province'] as String?)?.trim() ?? '';
+    final status = (data['status'] as String?)?.trim() ?? '';
+    final updatedAt = (data['updatedAt'] as Timestamp?)?.toDate();
+    final loc = [city, province].where((x) => x.isNotEmpty).join(', ');
+
+    return InkWell(
+      onTap: () => _goToProject(doc.reference),
+      borderRadius: BorderRadius.circular(_radius),
+      child: Container(
+        width: _cardW,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: _paper,
+          borderRadius: BorderRadius.circular(_radius),
+          border: Border.all(color: _hairline),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top accent strip — dark orange
+            Container(height: 4, color: _orange),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.only(right: 10),
+                padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: _tileTitleStyle.copyWith(color: fg),
+                    Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: _orangeLight,
+                            borderRadius: BorderRadius.circular(_rMed),
+                          ),
+                          child: const Icon(
+                            Icons.folder_rounded,
+                            size: 20,
+                            color: _orangeDark,
+                          ),
+                        ),
+                        const Spacer(),
+                        if (status.isNotEmpty) _statusPill(status),
+                      ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 10),
                     Text(
-                      subtitle,
-                      style: _tileSubtitleStyle.copyWith(color: subFg),
+                      name.isEmpty ? 'Untitled project' : name,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
+                      style: _tileTitleStyle,
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      loc.isEmpty ? 'No location set' : loc,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: _tileSubtitleStyle,
+                    ),
+                    const Spacer(),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            updatedAt == null
+                                ? ''
+                                : 'Updated ${_fmtDate(updatedAt)}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: _metaStyle,
+                          ),
+                        ),
+                        const Icon(
+                          Icons.chevron_right_rounded,
+                          size: 20,
+                          color: _orangeDark,
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
             ),
-            if ((count ?? 0) > 0)
-              Container(
-                margin: const EdgeInsets.only(right: 8),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: badgeBg,
-                  borderRadius: BorderRadius.circular(_rPill),
-                  border: chipBorder,
-                ),
-                child: Text(
-                  '$count',
-                  style: _badgeTextStyle.copyWith(color: fg),
-                ),
-              ),
-            Icon(Icons.chevron_right_rounded, color: chevron),
-            const SizedBox(width: 10),
           ],
         ),
       ),
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // ✅ Directory tile (ink ground; Add/Edit is the sparing yellow CTA)
-  // ---------------------------------------------------------------------------
+  Widget _addProjectCard() => InkWell(
+        onTap: _goToAddProject,
+        borderRadius: BorderRadius.circular(_radius),
+        child: Container(
+          width: _addCardW,
+          decoration: BoxDecoration(
+            color: _orangeLight.withOpacity(0.55),
+            borderRadius: BorderRadius.circular(_radius),
+            border: Border.all(color: _orange, width: 1.4),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: _orange,
+                  borderRadius: BorderRadius.circular(_rMed),
+                ),
+                child: const Icon(Icons.add_rounded, size: 24, color: _paper),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'New Project',
+                style: TextStyle(
+                  fontFamily: _displayFont,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: _orangeDark,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Start a build',
+                style: TextStyle(
+                  fontFamily: _bodyFont,
+                  fontSize: 11,
+                  color: _orangeDark.withOpacity(0.8),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+  Widget _emptyProjectsCard() => InkWell(
+        onTap: _goToAddProject,
+        borderRadius: BorderRadius.circular(_radius),
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: _orangeLight.withOpacity(0.55),
+            borderRadius: BorderRadius.circular(_radius),
+            border: Border.all(color: _orange, width: 1.4),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: _orange,
+                    borderRadius: BorderRadius.circular(_rMed),
+                  ),
+                  child: const Icon(Icons.add_rounded, size: 26, color: _paper),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Create your first project',
+                        style: _tileTitleStyle.copyWith(color: _orangeDark),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'Store plans, photos, notes, timeline, budget & key contacts.',
+                        style: _tileSubtitleStyle.copyWith(
+                          color: _orangeDark.withOpacity(0.85),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right_rounded, color: _orangeDark),
+              ],
+            ),
+          ),
+        ),
+      );
+
+  // =====================================================================
+  // SECTION 2 — DIRECTORY (yellow)
+  // =====================================================================
+  Widget _buildDirectorySection(FlutterFlowTheme theme) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _accentMarker(_spark),
+              const SizedBox(width: 10),
+              Expanded(child: Text('Directory', style: _stepHeadlineStyle)),
+            ],
+          ),
+          const SizedBox(height: _titleToDesc),
+          Text(
+            'Browse trades & suppliers, compare options, and manage your own listing.',
+            style: _stepDescStyle,
+          ),
+          const SizedBox(height: _descToTile),
+          _directoryTile(
+            theme: theme,
+            onNavigateDirectory: () => _safeNavigate(widget.directoryRouteName),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _directoryTile({
     required FlutterFlowTheme theme,
-    required Color accent,
     required VoidCallback onNavigateDirectory,
-    bool emphasized = false,
+    bool emphasized = true,
   }) {
     const Color fg = _paper;
 
@@ -790,7 +840,6 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       required VoidCallback onTap,
       IconData? icon,
     }) {
-      // Primary action on the dark tile = yellow with ink content.
       return InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(_rMed),
@@ -839,18 +888,18 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                 padding: const EdgeInsets.fromLTRB(14, 12, 12, 10),
                 child: Row(
                   children: [
+                    // Yellow chip = the Directory accent
                     Container(
                       width: emphasized ? 48 : 44,
                       height: emphasized ? 48 : 44,
                       decoration: BoxDecoration(
-                        color: _onInkChip,
+                        color: _spark,
                         borderRadius: BorderRadius.circular(_rMed),
-                        border: Border.all(color: _onInkChipBorder),
                       ),
                       child: const Icon(
-                        Icons.home_work_outlined,
+                        Icons.home_work_rounded,
                         size: 22,
-                        color: fg,
+                        color: _sparkInk,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -859,10 +908,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Directory',
-                            style: _tileTitleStyle.copyWith(color: fg),
-                          ),
+                          Text('Directory',
+                              style: _tileTitleStyle.copyWith(color: fg)),
                           const SizedBox(height: 4),
                           Text(
                             'Find trades, compare options, manage your listing',
@@ -912,406 +959,16 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     );
   }
 
-  // -----------------------------
-  // Step 1 + Step 2
-  // -----------------------------
-  Widget _buildStep1And2(FlutterFlowTheme theme) {
-    final projectsAccent = _accentForTile(theme, _tProjects);
-    final directoryAccent = _accentForTile(theme, _tDirectory);
-
-    return Column(
-      children: [
-        _buildStepSection(
-          theme,
-          step: 1,
-          accent: projectsAccent,
-          title: 'Add your home building projects',
-          subtitle:
-              'Create a project to store plans, photos, notes & key contacts.',
-          showLine: true,
-          child: _tile(
-            theme: theme,
-            title: 'My Projects',
-            subtitle: 'Store plans, files, notes & key contacts',
-            icon: Icons.folder_open_rounded,
-            accent: projectsAccent,
-            count: widget.myProjectsCount,
-            emphasized: true,
-            height: _tileHEmphasis,
-            onTap: () => _safeNavigate(
-              widget.projectsRouteName,
-              fallbackRoute: _fallbackProjectsRoute,
-            ),
-          ),
-        ),
-        const SizedBox(height: _sectionBreak),
-        _buildStepSection(
-          theme,
-          step: 2,
-          accent: directoryAccent,
-          title: 'Find and shortlist trades & suppliers',
-          subtitle:
-              'Browse the directory, compare options, and add the right pros.',
-          showLine: true,
-          child: _directoryTile(
-            theme: theme,
-            accent: directoryAccent,
-            emphasized: true,
-            onNavigateDirectory: () => _safeNavigate(widget.directoryRouteName),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // -----------------------------
-  // Step 3 (2-column GRID)
-  // -----------------------------
-  Widget _buildPMSection(FlutterFlowTheme theme) {
-    return _buildStepSection(
-      theme,
-      step: 3,
-      accent: _ink,
-      title: 'Manage your build day-by-day',
-      subtitle:
-          'Track tasks, timeline, budget, quotes & snag items in one place.',
-      showLine: false,
-      topPadding: _sectionBreak,
-      descToChildGap: _pmDescToGrid,
-      child: Padding(
-        padding: const EdgeInsets.only(top: 5),
-        child: LayoutBuilder(
-          builder: (context, c) {
-            final gridW = c.maxWidth;
-            final itemW = (gridW - _betweenTiles) / 2;
-            final aspect = itemW / _pmGridTileH;
-
-            return GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _pmTileOrder.length,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: _betweenTiles,
-                mainAxisSpacing: _betweenTiles,
-                childAspectRatio: aspect,
-              ),
-              itemBuilder: (context, index) {
-                final id = _pmTileOrder[index];
-                return _buildPMTileByIdGrid(theme, id);
-              },
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPMTileByIdGrid(FlutterFlowTheme theme, String id) {
-    final accent = _accentForTile(theme, id);
-
-    switch (id) {
-      case _tTimeline:
-        return _tile(
-          theme: theme,
-          title: 'Timeline',
-          subtitle: 'Plan dates & milestones',
-          icon: Icons.timeline_rounded,
-          accent: accent,
-          grid: true,
-          onTap: () => _safeNavigate(
-            widget.timelineRouteName,
-            fallbackRoute: _fallbackTimelineRoute,
-          ),
-        );
-
-      case _tProjectCost:
-        return _tile(
-          theme: theme,
-          title: 'Project Cost',
-          subtitle: 'Budget, quotes & spend tracking',
-          icon: Icons.calculate_outlined,
-          accent: accent,
-          grid: true,
-          onTap: () => _safeNavigate(widget.projectCostRouteName),
-        );
-
-      case _tGetQuotes:
-        return _tile(
-          theme: theme,
-          title: 'Quotes',
-          subtitle: 'Request pricing from pros',
-          icon: Icons.request_quote_outlined,
-          accent: accent,
-          grid: true,
-          onTap: () => _safeNavigate(
-            widget.getQuotesRouteName,
-            fallbackRoute: _fallbackGetQuotesRoute,
-          ),
-        );
-
-      case _tSnag:
-        return _tile(
-          theme: theme,
-          title: 'Snag List',
-          subtitle: 'Capture defects and sign-offs',
-          icon: Icons.fact_check_outlined,
-          accent: accent,
-          count: widget.snagCount,
-          grid: true,
-          onTap: () => _safeNavigate(widget.snagListRouteName),
-        );
-
-      default:
-        return const SizedBox.shrink();
-    }
-  }
-
-  // -----------------------------
-  // Profile section
-  // -----------------------------
-  Widget _buildProfileSection(FlutterFlowTheme theme) {
-    final email = (currentUserEmail).trim();
-    final name = (currentUserDisplayName).trim();
-
-    final displayName = name.isNotEmpty ? name : 'My Profile';
-    final subtitle =
-        email.isNotEmpty ? email : 'Manage your account & dashboard';
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 10),
-      child: Container(
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: _paper,
-          borderRadius: BorderRadius.circular(_radius),
-          border: Border.all(color: _hairline),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _surface,
-                ),
-                child: const Icon(
-                  Icons.person_rounded,
-                  color: _inkMute,
-                  size: 22,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(displayName, style: _profileNameStyle),
-                    const SizedBox(height: 2),
-                    Text(subtitle, style: _profileMetaStyle),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              InkWell(
-                onTap: () => _safeNavigate(
-                  widget.profileRouteName,
-                  fallbackRoute: _fallbackProfileRoute,
-                ),
-                borderRadius: BorderRadius.circular(_rMed),
-                child: Container(
-                  padding: const EdgeInsets.all(11),
-                  decoration: BoxDecoration(
-                    color: _surface,
-                    borderRadius: BorderRadius.circular(_rMed),
-                  ),
-                  child: const Icon(
-                    Icons.open_in_new_rounded,
-                    size: 18,
-                    color: _ink,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // -----------------------------
-  // Footer
-  // -----------------------------
-  Widget _footerMenu(FlutterFlowTheme theme) {
-    final bottomInset = MediaQuery.of(context).padding.bottom;
-
-    Widget linkRow({
-      required String label,
-      required IconData icon,
-      required VoidCallback onTap,
-    }) {
-      return InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-          child: Row(
-            children: [
-              Icon(icon, size: 18, color: _inkMute),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(label, style: _footerRowTextStyle),
-              ),
-              const Icon(
-                Icons.chevron_right_rounded,
-                size: 20,
-                color: _inkMute,
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    Widget acceptRow({
-      required bool value,
-      required ValueChanged<bool> onChanged,
-      required String label,
-    }) {
-      final showRequired = !value;
-
-      return Container(
-        padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-        child: Row(
-          children: [
-            Checkbox(
-              value: value,
-              onChanged: (v) => onChanged(v ?? false),
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              visualDensity: VisualDensity.compact,
-              activeColor: _ink,
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      fontFamily: _bodyFont,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: _ink,
-                    ),
-                  ),
-                  if (showRequired) ...[
-                    const SizedBox(height: 2),
-                    Row(
-                      children: const [
-                        Icon(
-                          Icons.error_outline_rounded,
-                          size: 14,
-                          color: _coral,
-                        ),
-                        SizedBox(width: 6),
-                        Text(
-                          'Not accepted',
-                          style: TextStyle(
-                            fontFamily: _bodyFont,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: _coral,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Padding(
-      padding: EdgeInsets.fromLTRB(_hPad, 0, _hPad, 18 + bottomInset),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Resources', style: _sectionTitleStyle),
-          const SizedBox(height: 10),
-          Container(
-            clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(
-              color: _paper,
-              borderRadius: BorderRadius.circular(_radius),
-              border: Border.all(color: _hairline),
-            ),
-            child: Column(
-              children: [
-                linkRow(
-                  label: 'Terms of Use',
-                  icon: Icons.description_outlined,
-                  onTap: () => _safeNavigate(
-                    widget.termsRouteName,
-                    fallbackRoute: _fallbackTermsRoute,
-                  ),
-                ),
-                acceptRow(
-                  value: _acceptedTerms,
-                  onChanged: (v) => _setAcceptedTerms(v),
-                  label: 'I accept the Terms of Use',
-                ),
-                const Divider(height: 1, color: _hairline),
-                linkRow(
-                  label: 'Privacy Policy',
-                  icon: Icons.privacy_tip_outlined,
-                  onTap: () => _safeNavigate(
-                    widget.privacyRouteName,
-                    fallbackRoute: _fallbackPrivacyRoute,
-                  ),
-                ),
-                acceptRow(
-                  value: _acceptedPrivacy,
-                  onChanged: (v) => _setAcceptedPrivacy(v),
-                  label: 'I accept the Privacy Policy',
-                ),
-                const Divider(height: 1, color: _hairline),
-                linkRow(
-                  label: 'NHBRC & Building Regulations',
-                  icon: Icons.rule_outlined,
-                  onTap: () async {
-                    await launchURL('https://www.nhbrc.org.za');
-                  },
-                ),
-                const Divider(height: 1, color: _hairline),
-                linkRow(
-                  label: 'Help & Support',
-                  icon: Icons.help_outline_rounded,
-                  onTap: () => _safeNavigate(
-                    widget.supportRouteName,
-                    fallbackRoute: _fallbackSupportRoute,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
+  // =====================================================================
+  // BUILD
+  // =====================================================================
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _syncPrefsFromStorage();
-      _refreshHasListing(); // ✅ keep Add/Edit label fresh on return
+      _refreshHasListing(); // keep Add/Edit label fresh on return
     });
 
     return Container(
@@ -1322,11 +979,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         child: Column(
           children: [
             _buildWelcomeHeader(theme),
-            _buildStep1And2(theme),
-            _buildPMSection(theme),
-            const SizedBox(height: _gapAfterPM),
-            _buildProfileSection(theme),
-            _footerMenu(theme),
+            _buildProjectsSection(theme),
+            const SizedBox(height: _sectionBreak),
+            _buildDirectorySection(theme),
+            SizedBox(height: 28 + MediaQuery.of(context).padding.bottom),
           ],
         ),
       ),
