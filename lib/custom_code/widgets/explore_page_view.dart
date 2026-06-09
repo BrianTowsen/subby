@@ -12,6 +12,47 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+// ─── SUBBY PALETTE (LOCK) ────────────────────────────────────────────
+// less-is-more system · ported from Clutch Putt · lime → yellow.
+// File-level so BOTH _ExplorePageViewState and the pinned-header delegate
+// (_ExploreFilterHeaderDelegate) share one source. Grep `SUBBY PALETTE (LOCK)`.
+//
+// The filter band + sheet were a saturated brand fill; per the system a
+// saturated band becomes a neutral contained surface, so foreground flips
+// to ink. Yellow (_spark) is reserved for the "Show results" CTA only.
+//
+// Neutrals
+const Color _ink = Color(0xFF181C27);
+const Color _inkSoft = Color(0xFF181C27);
+const Color _inkMute = Color(0xFF6B7280);
+const Color _paper = Color(0xFFFFFFFF);
+const Color _surface = Color(0xFFE3E4E8);
+const Color _surface2 = Color(0xFFE3E4E8);
+const Color _hairline = Color(0xFFE3E4E8);
+const Color _hairlineOnSurface = Color(0xFFD0D2D8);
+// Brand accent — YELLOW. Always ink foreground, never white.
+const Color _spark = Color(0xFFFFE718); // primary CTA / ranked accent
+const Color _sparkInk = Color(0xFF181C27);
+const Color _calm = Color(0xFF9C8A12);
+const Color _calmInk = Color(0xFFFFFFFF);
+// Status
+const Color _live = Color(0xFFFFB000); // gold — live / open-now
+const Color _steel = Color(0xFF9DA8B5);
+const Color _coral = Color(0xFFC8102E); // legacy red — error
+// Geometry
+const double _rSmall = 6;
+const double _rMed = 8;
+const double _rLarge = 12;
+const double _rPill = 999;
+const double _pageHPad = 20;
+const double _sectionGap = 32;
+const double _navReserve = 96;
+// Type
+const String _displayFont = 'Inter Tight';
+const String _bodyFont = 'Inter';
+const String _monoFont = 'Inter';
+// ──────────────────────────────────────────────────────────────────────
+
 class ExplorePageView extends StatefulWidget {
   const ExplorePageView({
     super.key,
@@ -29,7 +70,7 @@ class ExplorePageView extends StatefulWidget {
 class _ExplorePageViewState extends State<ExplorePageView> {
   static const double _hPad = 24;
   static const double _vPad = 24;
-  static const double _radius = 16;
+  static const double _radius = _rLarge;
 
   // ✅ Shared prefs keys (Home + Explore use same)
   static const String _kProvince = 'subby_app_province';
@@ -59,70 +100,104 @@ class _ExplorePageViewState extends State<ExplorePageView> {
   List<String> _specialitiesForSelectedCategory = const [];
   final Map<String, List<String>> _specialitiesByCategory = {};
 
-  // ==========================================================
-  // ✅ TYPOGRAPHY (BENCHMARK: token + explicit family, color only)
-  // ==========================================================
-  TextStyle _appTitleStyle(FlutterFlowTheme theme) {
-    return theme.titleLarge.copyWith(
-      fontWeight: FontWeight.w900, // 🔥 Extra bold
-      letterSpacing: 0.2,
-    );
-  }
+  // Palette constants are defined at file scope — see SUBBY PALETTE (LOCK)
+  // above the class declarations (shared with _ExploreFilterHeaderDelegate).
 
-  // ✅ FIX: used in build() header ("Explore")
-  TextStyle _pageTitle(FlutterFlowTheme theme) {
-    return theme.titleLarge.copyWith(
-      fontWeight: FontWeight.w900,
-      letterSpacing: 0.2,
-    );
-  }
-
-  TextStyle _pageSubtitle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+  // ==========================================================
+  // ✅ TYPOGRAPHY (locked palette — explicit family + colour)
+  //    Signatures unchanged so all call sites compile as-is.
+  // ==========================================================
+  TextStyle _appTitleStyle(FlutterFlowTheme theme) => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 22,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.4,
+        height: 1.05,
+        color: _ink,
       );
 
-  TextStyle _sectionTitle(FlutterFlowTheme t) => t.titleMedium.override(
-        fontFamily: t.titleMediumFamily,
+  // used in build() header ("Explore")
+  TextStyle _pageTitle(FlutterFlowTheme theme) => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 22,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.4,
+        height: 1.05,
+        color: _ink,
       );
 
-  TextStyle _filterText(FlutterFlowTheme t, Color color) =>
-      t.titleMedium.override(
-        fontFamily: t.titleMediumFamily,
+  TextStyle _pageSubtitle(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 13,
+        color: _inkMute,
+      );
+
+  TextStyle _sectionTitle(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.2,
+        color: _ink,
+      );
+
+  TextStyle _filterText(FlutterFlowTheme t, Color color) => TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
         color: color,
       );
 
-  TextStyle _filterHint(FlutterFlowTheme t, Color color) =>
-      t.titleMedium.override(
-        fontFamily: t.titleMediumFamily,
+  TextStyle _filterHint(FlutterFlowTheme t, Color color) => TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 15,
         color: color,
       );
 
-  TextStyle _searchText(FlutterFlowTheme t) => t.bodyMedium.override(
-        fontFamily: t.bodyMediumFamily,
+  TextStyle _searchText(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 14,
+        color: _ink,
       );
 
-  TextStyle _searchHint(FlutterFlowTheme t) => t.bodyMedium.override(
-        fontFamily: t.bodyMediumFamily,
-        color: t.secondaryText,
+  TextStyle _searchHint(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 14,
+        color: _inkMute,
       );
 
-  TextStyle _cardTitle(FlutterFlowTheme t) => t.titleMedium.override(
-        fontFamily: t.titleMediumFamily,
+  TextStyle _cardTitle(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.2,
+        color: _ink,
       );
 
-  TextStyle _cardBody(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+  TextStyle _cardBody(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 13,
+        color: _inkMute,
       );
 
-  TextStyle _chipText(FlutterFlowTheme t) => t.labelMedium.override(
-        fontFamily: t.labelMediumFamily,
+  TextStyle _chipText(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: _ink,
       );
 
-  TextStyle _snackText(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.primaryText,
+  TextStyle _snackText(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 13,
+        color: _ink,
+      );
+
+  TextStyle get _ratingNumStyle => const TextStyle(
+        fontFamily: _monoFont,
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: _ink,
+        fontFeatures: [FontFeature.tabularFigures()],
       );
   // ==========================================================
 
@@ -164,10 +239,10 @@ class _ExplorePageViewState extends State<ExplorePageView> {
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           elevation: 0,
-          backgroundColor: theme.secondaryBackground,
+          backgroundColor: _surface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-            side: BorderSide(color: theme.alternate, width: 1),
+            borderRadius: BorderRadius.circular(_rMed),
+            side: BorderSide(color: _hairline, width: 1),
           ),
           duration: const Duration(milliseconds: 1400),
           content: Row(
@@ -176,7 +251,7 @@ class _ExplorePageViewState extends State<ExplorePageView> {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: theme.primary.withOpacity(0.12),
+                  color: _ink.withOpacity(0.12),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -184,7 +259,7 @@ class _ExplorePageViewState extends State<ExplorePageView> {
                       ? Icons.bookmark_rounded
                       : Icons.bookmark_border_rounded,
                   size: 16,
-                  color: theme.primary,
+                  color: _ink,
                 ),
               ),
               const SizedBox(width: 10),
@@ -504,7 +579,7 @@ class _ExplorePageViewState extends State<ExplorePageView> {
     bool enabled = true,
   }) {
     final theme = FlutterFlowTheme.of(context);
-    final onPrimary = theme.primaryText;
+    final onPrimary = _ink;
 
     final showHint = value.trim().isEmpty;
     final effectiveValue = showHint ? null : value;
@@ -520,7 +595,7 @@ class _ExplorePageViewState extends State<ExplorePageView> {
               child: DropdownButton<String>(
                 value: effectiveValue,
                 isExpanded: true,
-                dropdownColor: theme.primary,
+                dropdownColor: _paper, // _paper popup
                 icon: Icon(Icons.keyboard_arrow_down_rounded, color: onPrimary),
                 style: _filterText(theme, onPrimary),
                 hint: Text(
@@ -558,34 +633,33 @@ class _ExplorePageViewState extends State<ExplorePageView> {
       child: Container(
         height: 46,
         decoration: BoxDecoration(
-          color: theme.primaryBackground,
+          color: _paper,
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: theme.alternate, width: 1),
+          border: Border.all(color: _hairline, width: 1),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 14),
         child: Row(
           children: [
-            Icon(Icons.search, color: theme.secondaryText),
+            Icon(Icons.search, color: _inkMute),
             const SizedBox(width: 8),
             Expanded(
               child: Theme(
                 data: Theme.of(context).copyWith(
                   textSelectionTheme: TextSelectionThemeData(
-                    cursorColor: theme.primaryText,
-                    selectionColor: theme.primary.withOpacity(0.22),
-                    selectionHandleColor: theme.primary,
+                    cursorColor: _ink,
+                    selectionColor: _ink.withOpacity(0.22),
+                    selectionHandleColor: _ink,
                   ),
                 ),
                 child: TextField(
                   controller: _searchController,
                   focusNode: _searchFocusNode,
                   autofocus: autoFocus,
-                  cursorColor: theme.primaryText,
+                  cursorColor: _ink,
                   onTap: () =>
                       FocusScope.of(context).requestFocus(_searchFocusNode),
-                  style: _searchText(theme).override(
-                    fontFamily: theme.bodyMediumFamily,
-                    color: theme.primaryText,
+                  style: _searchText(theme).copyWith(
+                    color: _ink,
                   ),
                   decoration: InputDecoration(
                     border: InputBorder.none,
@@ -598,7 +672,7 @@ class _ExplorePageViewState extends State<ExplorePageView> {
               ),
             ),
             IconButton(
-              icon: Icon(Icons.clear, size: 20, color: theme.secondaryText),
+              icon: Icon(Icons.clear, size: 20, color: _inkMute),
               onPressed: () {
                 _searchController.clear();
                 FocusScope.of(context).requestFocus(_searchFocusNode);
@@ -612,7 +686,7 @@ class _ExplorePageViewState extends State<ExplorePageView> {
 
   Widget _expandedFilterContent() {
     final theme = FlutterFlowTheme.of(context);
-    final onPrimary = theme.primaryText;
+    final onPrimary = _ink;
 
     if (_loadingFilters) {
       return Row(
@@ -737,14 +811,14 @@ class _ExplorePageViewState extends State<ExplorePageView> {
 
   void _openFiltersSheet() {
     final theme = FlutterFlowTheme.of(context);
-    final onPrimary = theme.primaryText;
+    final onPrimary = _ink;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: theme.primary,
+      backgroundColor: _surface, // _surface
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(_rLarge)),
       ),
       builder: (context) {
         return StatefulBuilder(
@@ -919,18 +993,18 @@ class _ExplorePageViewState extends State<ExplorePageView> {
                         child: ElevatedButton(
                           onPressed: () => Navigator.pop(context),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.secondary,
-                            foregroundColor: theme.primaryText,
+                            backgroundColor: _spark,
+                            foregroundColor: _ink,
                             elevation: 0,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(_rMed),
                             ),
                           ),
                           child: Text(
                             'Show results',
-                            style: _searchText(theme).override(
-                              fontFamily: theme.bodyMediumFamily,
-                              color: theme.primaryText,
+                            style: _searchText(theme).copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: _sparkInk,
                             ),
                           ),
                         ),
@@ -1040,7 +1114,7 @@ class _ExplorePageViewState extends State<ExplorePageView> {
         width: width,
         height: height,
         child: Container(
-          color: theme.primaryBackground,
+          color: _paper,
           child: NestedScrollView(
             headerSliverBuilder: (context, innerBoxIsScrolled) {
               return [
@@ -1058,14 +1132,14 @@ class _ExplorePageViewState extends State<ExplorePageView> {
                           width: 36,
                           height: 36,
                           decoration: BoxDecoration(
-                            color: theme.primary,
-                            shape: BoxShape.circle,
+                            color: _ink, // _ink mark
+                            borderRadius: BorderRadius.circular(_rMed),
                           ),
                           alignment: Alignment.center,
                           child: Icon(
                             Icons.search_rounded,
-                            size: 22,
-                            color: theme.primaryBackground,
+                            size: 20,
+                            color: _paper,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -1095,21 +1169,21 @@ class _ExplorePageViewState extends State<ExplorePageView> {
                     buildExpanded: _expandedFilterContent,
                     buildCollapsed: () {
                       final t = FlutterFlowTheme.of(context);
-                      final onPrimary = t.primaryText;
+                      final onPrimary = _ink;
                       return Row(
                         children: [
                           Expanded(child: _whitePillSearch()),
                           const SizedBox(width: 10),
                           InkWell(
                             onTap: _openFiltersSheet,
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(_rMed),
                             child: Container(
                               height: 46,
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: onPrimary.withOpacity(0.12),
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: BorderRadius.circular(_rMed),
                                 border: Border.all(
                                   color: onPrimary.withOpacity(0.18),
                                   width: 1,
@@ -1164,7 +1238,7 @@ class _ExplorePageViewState extends State<ExplorePageView> {
                   builder: (context, snap) {
                     if (!snap.hasData) {
                       return Center(
-                        child: CircularProgressIndicator(color: theme.primary),
+                        child: CircularProgressIndicator(color: _ink),
                       );
                     }
 
@@ -1198,21 +1272,19 @@ class _ExplorePageViewState extends State<ExplorePageView> {
                             width: double.infinity,
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: theme.secondaryBackground,
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(color: theme.alternate),
+                              color: _surface,
+                              borderRadius: BorderRadius.circular(_rLarge),
+                              border: Border.all(color: _hairline),
                             ),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(Icons.search_off,
-                                    color: theme.secondaryText, size: 34),
+                                    color: _inkMute, size: 34),
                                 const SizedBox(height: 10),
                                 Text(
                                   'No listings found',
-                                  style: theme.titleMedium.override(
-                                    fontFamily: theme.titleMediumFamily,
-                                  ),
+                                  style: _sectionTitle(theme),
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
@@ -1267,17 +1339,9 @@ class _ExplorePageViewState extends State<ExplorePageView> {
                           borderRadius: BorderRadius.circular(_radius),
                           child: Container(
                             decoration: BoxDecoration(
-                              color: theme.primaryBackground,
+                              color: _paper,
                               borderRadius: BorderRadius.circular(_radius),
-                              border:
-                                  Border.all(color: theme.alternate, width: 1),
-                              boxShadow: [
-                                BoxShadow(
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                  color: Colors.black.withOpacity(0.03),
-                                ),
-                              ],
+                              border: Border.all(color: _hairline, width: 1),
                             ),
                             child: Row(
                               children: [
@@ -1286,10 +1350,10 @@ class _ExplorePageViewState extends State<ExplorePageView> {
                                   height: 86,
                                   margin: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(14),
-                                    color: theme.secondaryBackground,
-                                    border: Border.all(
-                                        color: theme.alternate, width: 1),
+                                    borderRadius: BorderRadius.circular(_rMed),
+                                    color: _surface,
+                                    border:
+                                        Border.all(color: _hairline, width: 1),
                                   ),
                                   clipBehavior: Clip.antiAlias,
                                   child: img.isNotEmpty
@@ -1298,11 +1362,11 @@ class _ExplorePageViewState extends State<ExplorePageView> {
                                           fit: BoxFit.cover,
                                           errorBuilder: (_, __, ___) => Icon(
                                             Icons.image_not_supported_outlined,
-                                            color: theme.secondaryText,
+                                            color: _inkMute,
                                           ),
                                         )
                                       : Icon(Icons.image_outlined,
-                                          color: theme.secondaryText),
+                                          color: _inkMute),
                                 ),
                                 Expanded(
                                   child: Padding(
@@ -1326,16 +1390,11 @@ class _ExplorePageViewState extends State<ExplorePageView> {
                                               Row(
                                                 children: [
                                                   Icon(Icons.star_rounded,
-                                                      size: 18,
-                                                      color: theme.primary),
+                                                      size: 18, color: _ink),
                                                   const SizedBox(width: 2),
                                                   Text(
                                                     rating.toStringAsFixed(1),
-                                                    style: theme.bodySmall
-                                                        .override(
-                                                      fontFamily:
-                                                          theme.bodySmallFamily,
-                                                    ),
+                                                    style: _ratingNumStyle,
                                                   ),
                                                 ],
                                               ),
@@ -1353,11 +1412,10 @@ class _ExplorePageViewState extends State<ExplorePageView> {
                                                 width: 34,
                                                 height: 34,
                                                 decoration: BoxDecoration(
-                                                  color:
-                                                      theme.secondaryBackground,
+                                                  color: _surface,
                                                   shape: BoxShape.circle,
                                                   border: Border.all(
-                                                    color: theme.alternate,
+                                                    color: _hairline,
                                                     width: 1,
                                                   ),
                                                 ),
@@ -1368,9 +1426,8 @@ class _ExplorePageViewState extends State<ExplorePageView> {
                                                       : Icons
                                                           .bookmark_border_rounded,
                                                   size: 18,
-                                                  color: isSaved
-                                                      ? theme.primary
-                                                      : theme.secondaryText,
+                                                  color:
+                                                      isSaved ? _ink : _inkMute,
                                                 ),
                                               ),
                                             ),
@@ -1382,12 +1439,11 @@ class _ExplorePageViewState extends State<ExplorePageView> {
                                             padding: const EdgeInsets.symmetric(
                                                 horizontal: 10, vertical: 6),
                                             decoration: BoxDecoration(
-                                              color: theme.secondaryBackground,
+                                              color: _surface,
                                               borderRadius:
                                                   BorderRadius.circular(999),
                                               border: Border.all(
-                                                  color: theme.alternate,
-                                                  width: 1),
+                                                  color: _hairline, width: 1),
                                             ),
                                             child: Text(
                                               chip,
@@ -1472,7 +1528,7 @@ class _ExploreFilterHeaderDelegate extends SliverPersistentHeaderDelegate {
     final showCollapsed = t > 0.10;
 
     return Container(
-      color: theme.primary,
+      color: _surface, // _surface contained block
       padding: EdgeInsets.fromLTRB(hPad, 14, hPad, 12),
       child: ClipRect(
         child: Stack(
@@ -1510,7 +1566,7 @@ class _ExploreFilterHeaderDelegate extends SliverPersistentHeaderDelegate {
                                   overflow: TextOverflow.ellipsis,
                                   style: theme.bodySmall.override(
                                     fontFamily: theme.bodySmallFamily,
-                                    color: theme.primaryText,
+                                    color: _ink,
                                   ),
                                 ),
                               ),
@@ -1521,7 +1577,7 @@ class _ExploreFilterHeaderDelegate extends SliverPersistentHeaderDelegate {
                                   'Clear',
                                   style: theme.bodySmall.override(
                                     fontFamily: theme.bodySmallFamily,
-                                    color: theme.primaryText,
+                                    color: _ink,
                                   ),
                                 ),
                               ),
