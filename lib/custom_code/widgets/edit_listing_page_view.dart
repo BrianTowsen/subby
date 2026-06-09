@@ -34,6 +34,9 @@ class EditListingPageView extends StatefulWidget {
     /// ✅ Ownership fields
     this.listingOwnerRefField,
     this.listingOwnerIdField,
+
+    /// ✅ Route to return to after deleting (defaults to 'dashboardPage')
+    this.dashboardRouteName,
   });
 
   final double? width;
@@ -44,6 +47,7 @@ class EditListingPageView extends StatefulWidget {
   final String? listingCollectionName;
   final String? listingOwnerRefField;
   final String? listingOwnerIdField;
+  final String? dashboardRouteName;
 
   @override
   State<EditListingPageView> createState() => _EditListingPageViewState();
@@ -94,6 +98,7 @@ class _EditListingPageViewState extends State<EditListingPageView> {
   String _selectedSpeciality = 'Select speciality';
 
   bool _saving = false;
+  bool _deleting = false;
   bool _didHydrate = false;
 
   // Hero photo (edit): existing url + optional new pick / removal.
@@ -644,6 +649,103 @@ class _EditListingPageViewState extends State<EditListingPageView> {
     }
   }
 
+  Future<void> _deleteListing(DocumentReference ref) async {
+    if (_saving || _deleting) return;
+
+    final theme = FlutterFlowTheme.of(context);
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: theme.secondaryBackground,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(
+          'Delete listing?',
+          style: theme.titleMedium.override(
+            fontFamily: theme.titleMediumFamily,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        content: Text(
+          'This permanently removes your listing. This cannot be undone.',
+          style: theme.bodyMedium.override(
+            fontFamily: theme.bodyMediumFamily,
+            color: theme.secondaryText,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(
+              'Cancel',
+              style: theme.labelMedium.override(
+                fontFamily: theme.labelMediumFamily,
+                color: theme.secondaryText,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(
+              'Delete',
+              style: theme.labelMedium.override(
+                fontFamily: theme.labelMediumFamily,
+                color: theme.error,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _deleting = true);
+
+    try {
+      // Best-effort: clean up this listing's Storage files (non-blocking).
+      try {
+        final folder = FirebaseStorage.instance
+            .ref()
+            .child('users/$currentUserUid/listings/${ref.id}');
+        final listed = await folder.listAll();
+        for (final item in listed.items) {
+          await item.delete();
+        }
+      } catch (_) {
+        // ignore storage cleanup failures — they must not block the delete
+      }
+
+      // Hard delete the listing document.
+      await ref.delete();
+
+      if (!mounted) return;
+      _toast('Listing deleted.');
+
+      // Replace with Dashboard so it rebuilds fresh (Add/Edit label updates).
+      context.pushReplacementNamed(
+        (widget.dashboardRouteName ?? 'dashboardPage').trim(),
+        extra: <String, dynamic>{
+          kTransitionInfoKey: const TransitionInfo(
+            hasTransition: true,
+            transitionType: PageTransitionType.leftToRight,
+            duration: Duration(milliseconds: 260),
+          ),
+        },
+      );
+    } catch (e) {
+      debugPrint('⚠️ delete listing failed: $e');
+      if (mounted) {
+        setState(() => _deleting = false);
+        _toast('Delete failed. Check rules/connection.', error: true);
+      }
+    }
+  }
+
   @override
   void dispose() {
     _nameCtrl.dispose();
@@ -927,14 +1029,60 @@ class _EditListingPageViewState extends State<EditListingPageView> {
                             icon: _saving
                                 ? Icons.hourglass_top_rounded
                                 : Icons.check_rounded,
-                            onTap: _saving ? () {} : () => _save(listingRef),
-                            disabled: _saving,
+                            onTap: (_saving || _deleting)
+                                ? () {}
+                                : () => _save(listingRef),
+                            disabled: _saving || _deleting,
                           ),
                           const SizedBox(height: 10),
                           Text(
                             'Tip: keep your description short and specific — this helps you rank better in search.',
                             style: _subtitleStyle(theme),
                           ),
+                          const SizedBox(height: 18),
+                          // ---- Delete listing (destructive) ----
+                          InkWell(
+                            onTap: (_saving || _deleting)
+                                ? null
+                                : () => _deleteListing(listingRef),
+                            borderRadius: BorderRadius.circular(999),
+                            child: Container(
+                              height: 48,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: theme.error.withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(999),
+                                border: Border.all(
+                                  color: theme.error.withOpacity(0.55),
+                                  width: 1,
+                                ),
+                              ),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    _deleting
+                                        ? Icons.hourglass_top_rounded
+                                        : Icons.delete_outline_rounded,
+                                    size: 20,
+                                    color: theme.error,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    _deleting ? 'Deleting…' : 'Delete listing',
+                                    style: theme.bodyLarge.override(
+                                      fontFamily: theme.bodyLargeFamily,
+                                      color: theme.error,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
                         ],
                       ),
                     ),

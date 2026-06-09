@@ -147,6 +147,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   bool _prefsSyncInFlight = false;
   int _lastPrefsSyncMs = 0;
 
+  // ✅ robust listing check (handles FF keeping page alive)
+  bool _listingCheckInFlight = false;
+  int _lastListingCheckMs = 0;
+
   // =========================================================
   // ✅ TYPOGRAPHY (LOCKED)
   // =========================================================
@@ -221,7 +225,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   Future<void> _initAll() async {
     await _initPMTileOrder();
     await _initLegalAcceptance();
-    await _refreshHasListing();
+    await _refreshHasListing(force: true);
   }
 
   // -----------------------------
@@ -367,26 +371,38 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
   // -----------------------------
   // Listing exists for current user (Add / Edit)
+  // ✅ Debounced + only setState on change, so it can run on every
+  //    post-frame (handles FF keeping the page alive on return).
   // -----------------------------
-  Future<void> _refreshHasListing() async {
+  Future<void> _refreshHasListing({bool force = false}) async {
+    if (_listingCheckInFlight) return;
+
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    if (!force && (nowMs - _lastListingCheckMs) < 350) return; // debounce
+    _lastListingCheckMs = nowMs;
+
+    _listingCheckInFlight = true;
     try {
       final userRef = currentUserReference;
-      if (userRef == null) {
-        setState(() => _hasListing = false);
-        return;
+      bool has = false;
+
+      if (userRef != null) {
+        final snap = await FirebaseFirestore.instance
+            .collection('subby_listings')
+            .where('ownerRef', isEqualTo: userRef)
+            .limit(1)
+            .get();
+        has = snap.docs.isNotEmpty;
       }
 
-      final snap = await FirebaseFirestore.instance
-          .collection('subby_listings')
-          .where('ownerRef', isEqualTo: userRef)
-          .limit(1)
-          .get();
-
       if (!mounted) return;
-      setState(() => _hasListing = snap.docs.isNotEmpty);
+      if (has != _hasListing) {
+        setState(() => _hasListing = has);
+      }
     } catch (_) {
-      if (!mounted) return;
-      setState(() => _hasListing = false);
+      // keep last known value on error
+    } finally {
+      _listingCheckInFlight = false;
     }
   }
 
@@ -1243,6 +1259,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _syncPrefsFromStorage();
+      _refreshHasListing(); // ✅ keep Add/Edit label fresh on return
     });
 
     return Container(
