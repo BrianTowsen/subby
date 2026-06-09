@@ -116,13 +116,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
   // Accent — MY PROJECTS = ORANGE.
   static const Color _orangeBg =
-      Color(0xFFFB923C); // bright orange — card bg (ink reads on it)
+      Color(0xFFFF7A00); // bright vivid orange — card bg (ink reads on it)
   static const Color _orange =
-      Color(0xFFEA580C); // saturated orange — marker / add-card
+      Color(0xFFFF6A00); // bright orange — marker / add-card
   static const Color _orangeDark =
-      Color(0xFFC2410C); // deep orange — "View all" link
+      Color(0xFFC2410C); // deep orange — (legacy, unused)
   static const Color _orangeLight =
-      Color(0xFFFFEDD5); // light orange — add-card tint
+      Color(0xFFFFE2C2); // light orange — add-card tint
 
   // Geometry
   static const double _rSmall = 6;
@@ -466,8 +466,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                   _accentMarker(_orange),
                   const SizedBox(width: 10),
                   Expanded(
-                      child: Text('My Projects', style: _stepHeadlineStyle)),
-                  _viewAllButton(),
+                      child:
+                          Text('My Home Projects', style: _stepHeadlineStyle)),
                 ],
               ),
               const SizedBox(height: _titleToDesc),
@@ -483,32 +483,6 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       ],
     );
   }
-
-  Widget _viewAllButton() => InkWell(
-        onTap: () => _safeNavigate(
-          widget.projectsRouteName,
-          fallbackRoute: _fallbackProjectsRoute,
-        ),
-        borderRadius: BorderRadius.circular(_rMed),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          child: Row(
-            children: const [
-              Text(
-                'View all',
-                style: TextStyle(
-                  fontFamily: _bodyFont,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: _orangeDark,
-                ),
-              ),
-              SizedBox(width: 2),
-              Icon(Icons.chevron_right_rounded, size: 18, color: _orangeDark),
-            ],
-          ),
-        ),
-      );
 
   Widget _projectsRail(FlutterFlowTheme theme) {
     final q = _activeProjectsQuery();
@@ -820,7 +794,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             children: [
               _accentMarker(_spark),
               const SizedBox(width: 10),
-              Expanded(child: Text('Directory', style: _stepHeadlineStyle)),
+              Expanded(
+                  child: Text('Home Building Directory',
+                      style: _stepHeadlineStyle)),
             ],
           ),
           const SizedBox(height: _titleToDesc),
