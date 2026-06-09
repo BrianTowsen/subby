@@ -92,8 +92,47 @@ class HomePageView extends StatefulWidget {
 }
 
 class _HomePageViewState extends State<HomePageView> {
-  static const double _hPad = 24;
-  static const double _vPad = 24;
+  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // This inline block is the authoritative source for this file — NOT a
+  // shared theme. Grep `SUBBY PALETTE (LOCK)` across widgets to confirm sync.
+  //
+  // Neutrals
+  static const Color _ink = Color(0xFF181C27); // headings, body, dark fills
+  static const Color _inkSoft = Color(0xFF181C27);
+  static const Color _inkMute = Color(0xFF6B7280); // labels, captions, 2nd text
+  static const Color _paper = Color(0xFFFFFFFF); // page bg, card fills
+  static const Color _surface = Color(0xFFE3E4E8); // cards, surface fills
+  static const Color _surface2 = Color(0xFFE3E4E8);
+  static const Color _hairline = Color(0xFFE3E4E8); // standard dividers
+  static const Color _hairlineOnSurface = Color(0xFFD0D2D8); // on surface cards
+  // Brand accent — YELLOW (was lime). Yellow ALWAYS takes ink foreground.
+  static const Color _spark = Color(0xFFFFE718); // primary CTA / ranked accent
+  static const Color _sparkInk =
+      Color(0xFF181C27); // ink-on-yellow — never white
+  static const Color _calm = Color(0xFF9C8A12); // darker yellow — info accent
+  static const Color _calmInk = Color(0xFFFFFFFF);
+  // Status / achievement
+  static const Color _live =
+      Color(0xFFFFB000); // gold — live / open-now / warning
+  static const Color _steel = Color(0xFF9DA8B5);
+  static const Color _coral = Color(0xFFC8102E);
+  // Geometry & layout
+  static const double _rSmall = 6;
+  static const double _rMed = 8;
+  static const double _rLarge = 12;
+  static const double _rPill = 999;
+  static const double _pageHPad = 20;
+  static const double _sectionGap = 32;
+  static const double _navReserve = 96;
+  // Type — Inter Tight (display) · Inter (body) · mono retired to Inter
+  static const String _displayFont = 'Inter Tight';
+  static const String _bodyFont = 'Inter';
+  static const String _monoFont = 'Inter';
+  // ────────────────────────────────────────────────────────────────────
+
+  static const double _hPad = _pageHPad;
+  static const double _vPad = _pageHPad;
 
   // ✅ Shared prefs keys (Home + Explore use same)
   static const String _kProvince = 'subby_app_province';
@@ -120,51 +159,95 @@ class _HomePageViewState extends State<HomePageView> {
   DocumentReference? _myListingRef;
 
   // =========================================================
-  // ✅ TYPOGRAPHY (CONSISTENT: token + explicit family, color only)
+  // ✅ TYPOGRAPHY (locked palette — explicit family + colour)
   // =========================================================
-  TextStyle _appTitleStyle(FlutterFlowTheme theme) {
-    return theme.titleLarge.copyWith(
-      fontWeight: FontWeight.w900, // 🔥 Extra bold
-      letterSpacing: 0.2,
-    );
-  }
-
-  TextStyle _appSubtitleStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+  TextStyle get _appTitleStyle => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.3,
+        height: 1.0,
+        color: _ink,
       );
 
-  TextStyle _welcomeStyle(FlutterFlowTheme t) => t.headlineSmall.override(
-        fontFamily: t.headlineSmallFamily,
+  TextStyle get _appSubtitleStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 11,
+        fontWeight: FontWeight.w400,
+        color: _inkMute,
       );
 
-  TextStyle _tabTextStyle(FlutterFlowTheme t, {required bool selected}) =>
-      t.labelMedium.override(
-        fontFamily: t.labelMediumFamily,
-        color: selected ? Colors.white : t.secondaryText,
+  TextStyle get _eyebrowStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 1.0,
+        color: _inkMute,
       );
 
-  // ✅ Filters / dropdowns use ONE token everywhere in app (match this in Explore too)
-  TextStyle _dropdownTextStyle(FlutterFlowTheme t) => t.titleMedium.override(
-        fontFamily: t.titleMediumFamily,
-        color: t.primaryText,
+  TextStyle get _welcomeStyle => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 30,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.6,
+        height: 1.05,
+        color: _ink,
       );
 
-  TextStyle _searchTextStyle(FlutterFlowTheme t) => t.bodyMedium.override(
-        fontFamily: t.bodyMediumFamily,
+  TextStyle _tabTextStyle({required bool selected}) => TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: selected ? _paper : _inkMute,
       );
 
-  TextStyle _searchHintStyle(FlutterFlowTheme t) => t.bodyMedium.override(
-        fontFamily: t.bodyMediumFamily,
-        color: t.secondaryText,
+  TextStyle get _dropdownTextStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: _ink,
       );
 
-  TextStyle _sectionTitleStyle(FlutterFlowTheme t) => t.titleMedium.override(
-        fontFamily: t.titleMediumFamily,
+  TextStyle get _dropdownLabelStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 10,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.6,
+        color: _inkMute,
       );
 
-  TextStyle _gridTileLabelStyle(FlutterFlowTheme t) => t.labelMedium.override(
-        fontFamily: t.labelMediumFamily,
+  TextStyle get _searchTextStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 14,
+        color: _ink,
+      );
+
+  TextStyle get _searchHintStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 14,
+        color: _inkMute,
+      );
+
+  TextStyle get _sectionTitleStyle => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.3,
+        color: _ink,
+      );
+
+  TextStyle get _sectionCountStyle => const TextStyle(
+        fontFamily: _monoFont,
+        fontSize: 11,
+        color: _inkMute,
+        fontFeatures: [FontFeature.tabularFigures()],
+      );
+
+  TextStyle get _gridTileLabelStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: _ink,
       );
   // =========================================================
 
@@ -586,8 +669,6 @@ class _HomePageViewState extends State<HomePageView> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = FlutterFlowTheme.of(context);
-
     final double width = widget.width ?? MediaQuery.sizeOf(context).width;
     final double height = widget.height ?? MediaQuery.sizeOf(context).height;
 
@@ -596,7 +677,7 @@ class _HomePageViewState extends State<HomePageView> {
       height: height,
       child: SafeArea(
         child: Container(
-          color: theme.primaryBackground,
+          color: _paper,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -605,52 +686,45 @@ class _HomePageViewState extends State<HomePageView> {
                 padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 12),
                 child: Row(
                   children: [
-                    // ✅ Back (to DashboardPage) - based on ProjectDetailPageView
+                    // ✅ Back (to DashboardPage)
                     InkWell(
                       onTap: _goBackToDashboard,
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(_rMed),
                       child: Container(
-                        width: 44,
-                        height: 44,
+                        width: 40,
+                        height: 40,
                         decoration: BoxDecoration(
-                          color: theme.primaryBackground,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                              color: theme.alternate.withOpacity(0.9)),
+                          color: _surface,
+                          borderRadius: BorderRadius.circular(_rMed),
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.arrow_back_rounded,
-                          size: 22,
-                          color: theme.primaryText,
+                          size: 20,
+                          color: _ink,
                         ),
                       ),
                     ),
 
                     const SizedBox(width: 12),
 
+                    // ✅ Mono square mark (replaces construction-icon-in-circle)
                     Container(
-                      width: 36,
-                      height: 36,
+                      width: 20,
+                      height: 20,
                       decoration: BoxDecoration(
-                        color: theme.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.construction,
-                        size: 22,
-                        color: Colors.white,
+                        color: _ink,
+                        borderRadius: BorderRadius.circular(_rSmall),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Subby', style: _appTitleStyle(theme)),
+                        Text('Subby', style: _appTitleStyle),
                         const SizedBox(height: 2),
                         Text(
                           'Home building directory',
-                          style: _appSubtitleStyle(theme),
+                          style: _appSubtitleStyle,
                         ),
                       ],
                     ),
@@ -662,21 +736,37 @@ class _HomePageViewState extends State<HomePageView> {
                 ),
               ),
 
-              // ---------- EDGE-TO-EDGE PRIMARY BLOCK ----------
+              // ---------- LOCATION + SEARCH BLOCK ----------
               _buildPrimaryLocationSearchBar(),
 
-              const SizedBox(height: 14),
+              const SizedBox(height: 24),
 
-              // ---------- WELCOME TEXT ----------
+              // ---------- TITLE (eyebrow + display title) ----------
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: _hPad),
-                child: Text(
-                  'Welcome, how can we help you?',
-                  style: _welcomeStyle(theme),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('DIRECTORY', style: _eyebrowStyle),
+                    const SizedBox(height: 10),
+                    Text.rich(
+                      TextSpan(
+                        text: 'Welcome, how can we help you',
+                        style: _welcomeStyle,
+                        children: const [
+                          // sparing yellow — title period
+                          TextSpan(
+                            text: '.',
+                            style: TextStyle(color: _spark),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
-              const SizedBox(height: 14),
+              const SizedBox(height: _sectionGap),
 
               // ---------- MAIN TABS ----------
               Padding(
@@ -726,64 +816,82 @@ class _HomePageViewState extends State<HomePageView> {
   }
 
   // =========================================================
-  // PRIMARY BLOCK - DROPDOWNS + SEARCH
+  // LOCATION + SEARCH BLOCK (white, surface fields, hairline search)
   // =========================================================
   Widget _buildPrimaryLocationSearchBar() {
-    final theme = FlutterFlowTheme.of(context);
     final regions = _regionsByProvince[_selectedProvince] ?? const <String>[];
     final regionItems =
         regions.isNotEmpty ? regions : <String>[_placeholderRegion];
 
-    Widget plainWhiteDropdown({
+    Widget surfaceField({
+      required String label,
       required String value,
       required List<String> items,
       required ValueChanged<String?> onChanged,
       required IconData icon,
     }) {
-      return Row(
-        children: [
-          Icon(icon, size: 18, color: theme.primaryText),
-          const SizedBox(width: 6),
-          Expanded(
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: value,
-                isExpanded: true,
-                dropdownColor: theme.primary,
-                icon: Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: theme.primaryText,
-                ),
-                style: _dropdownTextStyle(theme),
-                items: items.map((s) {
-                  return DropdownMenuItem<String>(
-                    value: s,
-                    child: Text(
-                      s,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      style: _dropdownTextStyle(theme),
+      return Container(
+        decoration: BoxDecoration(
+          color: _surface,
+          borderRadius: BorderRadius.circular(_rMed),
+        ),
+        padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label.toUpperCase(), style: _dropdownLabelStyle),
+            const SizedBox(height: 2),
+            Row(
+              children: [
+                Icon(icon, size: 16, color: _inkMute),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: value,
+                      isExpanded: true,
+                      isDense: true,
+                      dropdownColor: _paper,
+                      icon: const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: _inkMute,
+                      ),
+                      style: _dropdownTextStyle,
+                      items: items.map((s) {
+                        return DropdownMenuItem<String>(
+                          value: s,
+                          child: Text(
+                            s,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            style: _dropdownTextStyle,
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: onChanged,
                     ),
-                  );
-                }).toList(),
-                onChanged: onChanged,
-              ),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
+          ],
+        ),
       );
     }
 
     return Container(
       width: double.infinity,
-      color: theme.primary,
-      padding: const EdgeInsets.fromLTRB(_hPad, 14, _hPad, 14),
+      color: _paper,
+      padding: const EdgeInsets.fromLTRB(_hPad, 4, _hPad, 0),
       child: Column(
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: plainWhiteDropdown(
+                child: surfaceField(
+                  label: 'Province',
                   value: _selectedProvince,
                   items: _provinces,
                   icon: Icons.location_on_outlined,
@@ -802,14 +910,10 @@ class _HomePageViewState extends State<HomePageView> {
                   },
                 ),
               ),
-              Container(
-                width: 1,
-                height: 22,
-                margin: const EdgeInsets.symmetric(horizontal: 10),
-                color: theme.primaryText.withOpacity(0.35),
-              ),
+              const SizedBox(width: 10),
               Expanded(
-                child: plainWhiteDropdown(
+                child: surfaceField(
+                  label: 'Region',
                   value: regionItems.contains(_selectedRegion)
                       ? _selectedRegion
                       : regionItems.first,
@@ -824,7 +928,7 @@ class _HomePageViewState extends State<HomePageView> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           _buildSearchFieldWhite(),
         ],
       ),
@@ -832,36 +936,36 @@ class _HomePageViewState extends State<HomePageView> {
   }
 
   Widget _buildSearchFieldWhite() {
-    final theme = FlutterFlowTheme.of(context);
-
     return Container(
       height: 46,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(999),
+        color: _paper,
+        borderRadius: BorderRadius.circular(_rMed),
+        border: Border.all(color: _hairline, width: 1),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Row(
         children: [
-          Icon(Icons.search, color: theme.secondaryText),
+          const Icon(Icons.search, color: _inkMute),
           const SizedBox(width: 8),
           Expanded(
             child: TextField(
               controller: _searchController,
               focusNode: _searchFocusNode,
-              style: _searchTextStyle(theme),
+              style: _searchTextStyle,
+              cursorColor: _ink,
               decoration: InputDecoration(
                 border: InputBorder.none,
                 isDense: true,
                 hintText: 'Search for a trade, contractor or supplier',
-                hintStyle: _searchHintStyle(theme),
+                hintStyle: _searchHintStyle,
               ),
               textInputAction: TextInputAction.search,
               onSubmitted: (_) => _goToResultsFromSearch(),
             ),
           ),
           IconButton(
-            icon: Icon(Icons.tune, size: 20, color: theme.secondaryText),
+            icon: const Icon(Icons.tune, size: 20, color: _inkMute),
             onPressed: () async {
               await _openLocationSelect(searchText: _searchController.text);
             },
@@ -875,11 +979,10 @@ class _HomePageViewState extends State<HomePageView> {
   // MAIN TABS
   // =========================================================
   Widget _buildMainTabs() {
-    final theme = FlutterFlowTheme.of(context);
     final tabs = ['Professionals', 'Trades', 'Suppliers', 'Associations'];
 
     return SizedBox(
-      height: 42,
+      height: 40,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
@@ -914,16 +1017,16 @@ class _HomePageViewState extends State<HomePageView> {
                   padding:
                       const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                   decoration: BoxDecoration(
-                    color: selected ? theme.primary : theme.primaryBackground,
-                    borderRadius: BorderRadius.circular(999),
+                    color: selected ? _ink : _paper,
+                    borderRadius: BorderRadius.circular(_rPill),
                     border: Border.all(
-                      color: selected ? theme.primary : theme.alternate,
+                      color: selected ? _ink : _hairline,
                       width: 1,
                     ),
                   ),
                   child: Text(
                     tabs[index],
-                    style: _tabTextStyle(theme, selected: selected),
+                    style: _tabTextStyle(selected: selected),
                   ),
                 ),
               ),
@@ -938,16 +1041,15 @@ class _HomePageViewState extends State<HomePageView> {
   // SUB-CATEGORY GRID
   // =========================================================
   Widget _buildSubcategoryTwoRowGrid(double maxHeight) {
-    final theme = FlutterFlowTheme.of(context);
     final category = _selectedCategoryLabel;
     final items = _subcategories[category] ?? const <String>[];
 
-    // ✅ FIX: give the 2-row grid enough vertical room so labels never overflow
+    // ✅ give the 2-row grid enough vertical room so labels never overflow
     final double availableForGrid = (maxHeight - 64).clamp(220, 280);
 
-    const double tileWidth = 92;
-    const double hGap = 12;
-    const double vGap = 12;
+    const double tileWidth = 96;
+    const double hGap = 10;
+    const double vGap = 10;
 
     Widget tile(String sub) {
       final icon = _iconForSubcategory(category, sub);
@@ -980,30 +1082,22 @@ class _HomePageViewState extends State<HomePageView> {
         },
         child: Container(
           decoration: BoxDecoration(
-            color: theme.primaryBackground,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: theme.alternate, width: 1),
-            boxShadow: [
-              BoxShadow(
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-                color: Colors.black.withOpacity(0.03),
-              ),
-            ],
+            color: _paper,
+            borderRadius: BorderRadius.circular(_rLarge),
+            border: Border.all(color: _hairline, width: 1),
           ),
-          padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 36,
-                height: 36,
+                width: 34,
+                height: 34,
                 decoration: BoxDecoration(
-                  color: theme.secondaryBackground,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: theme.alternate, width: 1),
+                  color: _surface,
+                  borderRadius: BorderRadius.circular(_rSmall),
                 ),
-                child: Icon(icon, size: 19, color: theme.primary),
+                child: Icon(icon, size: 18, color: _ink),
               ),
               const SizedBox(height: 8),
               Flexible(
@@ -1012,7 +1106,7 @@ class _HomePageViewState extends State<HomePageView> {
                   maxLines: 2,
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
-                  style: _gridTileLabelStyle(theme),
+                  style: _gridTileLabelStyle,
                 ),
               ),
             ],
@@ -1024,17 +1118,25 @@ class _HomePageViewState extends State<HomePageView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: _hPad),
-          child: Text('Browse $category', style: _sectionTitleStyle(theme)),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text('Browse $category', style: _sectionTitleStyle),
+              const Spacer(),
+              Text('${items.length} categories', style: _sectionCountStyle),
+            ],
+          ),
         ),
         const SizedBox(height: 12),
         SizedBox(
           height: availableForGrid,
           child: GridView.builder(
             clipBehavior: Clip.none,
-            padding: const EdgeInsets.fromLTRB(_hPad, 10, _hPad, 10),
+            padding: const EdgeInsets.fromLTRB(_hPad, 4, _hPad, 4),
             scrollDirection: Axis.horizontal,
             itemCount: items.length,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

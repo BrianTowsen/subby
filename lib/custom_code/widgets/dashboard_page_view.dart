@@ -71,8 +71,57 @@ class DashboardPageView extends StatefulWidget {
 }
 
 class _DashboardPageViewState extends State<DashboardPageView> {
-  static const double _hPad = 24;
-  static const double _radius = 16;
+  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
+  //
+  // NOTE: this screen previously used per-feature tile colours
+  // (theme.projectsColour / timelineColour / projectCostColour /
+  // getQuotesColour / snagListColour). The locked system has no decorative
+  // per-feature colour, so tiles are now neutral: emphasis tiles = ink fill,
+  // standard tiles = paper + hairline. To restore colour-coding, give a tile
+  // its own fill in _tile()/_directoryTile() — accent plumbing is left intact.
+  //
+  // Neutrals
+  static const Color _ink = Color(0xFF181C27);
+  static const Color _inkSoft = Color(0xFF181C27);
+  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _surface = Color(0xFFE3E4E8);
+  static const Color _surface2 = Color(0xFFE3E4E8);
+  static const Color _hairline = Color(0xFFE3E4E8);
+  static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
+  // Brand accent — YELLOW. Always ink foreground, never white.
+  static const Color _spark = Color(0xFFFFE718); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFF181C27);
+  static const Color _calm = Color(0xFF9C8A12);
+  static const Color _calmInk = Color(0xFFFFFFFF);
+  // Status
+  static const Color _live =
+      Color(0xFFFFB000); // gold — live / open-now / warning
+  static const Color _steel = Color(0xFF9DA8B5);
+  static const Color _coral = Color(0xFFC8102E); // legacy red — error/required
+  // On-ink overlays (for emphasis tiles)
+  static final Color _onInkChip = Colors.white.withOpacity(0.10);
+  static final Color _onInkChipBorder = Colors.white.withOpacity(0.16);
+  static final Color _onInkBadge = Colors.white.withOpacity(0.14);
+  static final Color _onInkSub = Colors.white.withOpacity(0.85);
+  // Geometry
+  static const double _rSmall = 6;
+  static const double _rMed = 8;
+  static const double _rLarge = 12;
+  static const double _rPill = 999;
+  static const double _pageHPad = 20;
+  static const double _sectionGap = 32;
+  static const double _navReserve = 96;
+  // Type
+  static const String _displayFont = 'Inter Tight';
+  static const String _bodyFont = 'Inter';
+  static const String _monoFont = 'Inter';
+  // ────────────────────────────────────────────────────────────────────
+
+  static const double _hPad = _pageHPad;
+  static const double _radius = _rLarge;
 
   // ✅ Modern spacing rhythm
   static const double _sectionBreak = 38; // between steps
@@ -152,62 +201,89 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   int _lastListingCheckMs = 0;
 
   // =========================================================
-  // ✅ TYPOGRAPHY (LOCKED)
+  // ✅ TYPOGRAPHY (locked palette — explicit family + colour)
   // =========================================================
-
-  TextStyle _appTitleStyle(FlutterFlowTheme theme) {
-    return theme.titleLarge.copyWith(
-      fontWeight: FontWeight.w900,
-      letterSpacing: 0.2,
-    );
-  }
-
-  TextStyle _appSubtitleStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+  TextStyle get _appTitleStyle => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 20,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.4,
+        height: 1.05,
+        color: _ink,
       );
 
-  TextStyle _sectionTitleStyle(FlutterFlowTheme t) => t.titleMedium.override(
-        fontFamily: t.titleMediumFamily,
-        fontWeight: FontWeight.w900,
-        color: t.primaryText,
+  TextStyle get _appSubtitleStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 12,
+        color: _inkMute,
       );
 
-  TextStyle _tileTitleStyle(FlutterFlowTheme t) => t.titleLarge.override(
-        fontFamily: t.titleLargeFamily,
+  TextStyle get _sectionTitleStyle => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.2,
+        color: _ink,
       );
 
-  TextStyle _tileSubtitleStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+  TextStyle get _tileTitleStyle => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.2,
+        color: _ink,
       );
 
-  TextStyle _badgeTextStyle(FlutterFlowTheme t) => t.labelSmall.override(
-        fontFamily: t.labelSmallFamily,
-        color: Colors.white,
+  TextStyle get _tileSubtitleStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: _inkMute,
       );
 
-  TextStyle _footerRowTextStyle(FlutterFlowTheme t) => t.bodyMedium.override(
-        fontFamily: t.bodyMediumFamily,
-        color: t.secondaryText,
+  TextStyle get _badgeTextStyle => const TextStyle(
+        fontFamily: _monoFont,
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        color: _ink,
+        fontFeatures: [FontFeature.tabularFigures()],
       );
 
-  TextStyle _profileNameStyle(FlutterFlowTheme t) => t.titleMedium.override(
-        fontFamily: t.titleMediumFamily,
-        fontWeight: FontWeight.w900,
-        color: t.primaryText,
-      );
-
-  TextStyle _profileMetaStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
-      );
-
-  TextStyle _stepHeadlineStyle(FlutterFlowTheme t) =>
-      _appTitleStyle(t).copyWith(color: t.primaryText);
-
-  TextStyle _stepDescStyle(FlutterFlowTheme t) => _appSubtitleStyle(t).copyWith(
+  TextStyle get _footerRowTextStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 14,
         fontWeight: FontWeight.w600,
+        color: _ink,
+      );
+
+  TextStyle get _profileNameStyle => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.2,
+        color: _ink,
+      );
+
+  TextStyle get _profileMetaStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 12,
+        color: _inkMute,
+      );
+
+  TextStyle get _stepHeadlineStyle => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 20,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.4,
+        height: 1.05,
+        color: _ink,
+      );
+
+  TextStyle get _stepDescStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+        color: _inkMute,
       );
 
   // =========================================================
@@ -407,7 +483,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   }
 
   // -----------------------------
-  // Theme accents
+  // Theme accents (kept for compatibility — no longer drives tile fills)
   // -----------------------------
   Color _accentForTile(FlutterFlowTheme theme, String id) {
     switch (id) {
@@ -422,9 +498,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       case _tSnag:
         return theme.snagListColour;
       case _tDirectory:
-        return theme.primary;
+        return _ink;
       default:
-        return theme.primary;
+        return _ink;
     }
   }
 
@@ -445,13 +521,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: theme.primary,
-                  borderRadius: BorderRadius.circular(14),
+                  color: _ink,
+                  borderRadius: BorderRadius.circular(_rMed),
                 ),
                 child: const Icon(
                   Icons.home_rounded,
                   size: 20,
-                  color: Colors.white,
+                  color: _paper,
                 ),
               ),
               const SizedBox(width: 12),
@@ -459,16 +535,11 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Welcome to Subby',
-                      style: _appTitleStyle(theme).copyWith(
-                        color: theme.primaryText,
-                      ),
-                    ),
+                    Text('Welcome to Subby', style: _appTitleStyle),
                     const SizedBox(height: 2),
                     Text(
                       'Your home building super power.',
-                      style: _appSubtitleStyle(theme),
+                      style: _appSubtitleStyle,
                     ),
                   ],
                 ),
@@ -479,7 +550,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           Container(
             height: 1,
             width: double.infinity,
-            color: theme.alternate.withOpacity(0.55),
+            color: _hairline,
           ),
         ],
       ),
@@ -508,9 +579,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: _stepHeadlineStyle(theme)),
+          Text(title, style: _stepHeadlineStyle),
           const SizedBox(height: _titleToDesc),
-          Text(subtitle, style: _stepDescStyle(theme)),
+          Text(subtitle, style: _stepDescStyle),
           SizedBox(height: gap),
           child,
         ],
@@ -535,82 +606,84 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     bool emphasized = false,
     bool grid = false,
   }) {
-    final fg = theme.tertiaryText;
-    final overlay = Colors.white.withOpacity(0.18);
-    final overlayBorder = Colors.white.withOpacity(0.22);
+    // Emphasis tiles (Group 1) = ink fill; standard tiles (Group 2 grid) = paper.
+    final bool dark = emphasized;
+    final Color fill = dark ? _ink : _paper;
+    final Color fg = dark ? _paper : _ink;
+    final Color subFg = dark ? _onInkSub : _inkMute;
+    final Color chipBg = dark ? _onInkChip : _surface;
+    final Border? chipBorder =
+        dark ? Border.all(color: _onInkChipBorder) : null;
+    final Color badgeBg = dark ? _onInkBadge : _surface;
+    final Color chevron = dark ? _paper : _inkMute;
+    final Border? tileBorder =
+        dark ? null : Border.all(color: _hairline, width: 1);
 
     if (grid) {
       return InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(_radius),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(_radius),
-          child: Container(
-            color: accent,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: overlay,
-                          borderRadius: BorderRadius.circular(_radius),
-                          border: Border.all(color: overlayBorder),
-                        ),
-                        child: Icon(icon, size: 22, color: fg),
+        child: Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: fill,
+            borderRadius: BorderRadius.circular(_radius),
+            border: tileBorder,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: chipBg,
+                        borderRadius: BorderRadius.circular(_rMed),
+                        border: chipBorder,
                       ),
-                      const Spacer(),
-                      if ((count ?? 0) > 0)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: overlay,
-                            borderRadius: BorderRadius.circular(999),
-                            border: Border.all(color: overlayBorder),
-                          ),
-                          child: Text(
-                            '$count',
-                            style: _badgeTextStyle(theme).copyWith(
-                              color: fg,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
+                      child: Icon(icon, size: 22, color: fg),
+                    ),
+                    const Spacer(),
+                    if ((count ?? 0) > 0)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: badgeBg,
+                          borderRadius: BorderRadius.circular(_rPill),
+                          border: chipBorder,
                         ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: _tileTitleStyle(theme).copyWith(
-                      color: fg,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: _tileSubtitleStyle(theme).copyWith(
-                      color: fg.withOpacity(0.90),
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const Spacer(),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: Icon(Icons.chevron_right_rounded, color: fg),
-                  ),
-                ],
-              ),
+                        child: Text(
+                          '$count',
+                          style: _badgeTextStyle.copyWith(color: fg),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: _tileTitleStyle.copyWith(color: fg),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: _tileSubtitleStyle.copyWith(color: subFg),
+                ),
+                const Spacer(),
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: Icon(Icons.chevron_right_rounded, color: chevron),
+                ),
+              ],
             ),
           ),
         ),
@@ -620,96 +693,89 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(_radius),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(_radius),
-        child: Container(
-          height: height,
-          color: accent,
-          child: Row(
-            children: [
-              const SizedBox(width: 12),
-              if (showDragHandle) ...[
-                ReorderableDragStartListener(
-                  index: dragIndex,
-                  child: Icon(
-                    Icons.drag_handle_rounded,
-                    size: 22,
-                    color: fg,
-                  ),
-                ),
-                const SizedBox(width: 10),
-              ],
-              Container(
-                width: emphasized ? 48 : 44,
-                height: emphasized ? 48 : 44,
-                decoration: BoxDecoration(
-                  color: overlay,
-                  borderRadius: BorderRadius.circular(_radius),
-                  border: Border.all(color: overlayBorder),
-                ),
+      child: Container(
+        height: height,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: fill,
+          borderRadius: BorderRadius.circular(_radius),
+          border: tileBorder,
+        ),
+        child: Row(
+          children: [
+            const SizedBox(width: 12),
+            if (showDragHandle) ...[
+              ReorderableDragStartListener(
+                index: dragIndex,
                 child: Icon(
-                  icon,
-                  size: emphasized ? 24 : 22,
-                  color: fg,
+                  Icons.drag_handle_rounded,
+                  size: 22,
+                  color: chevron,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 10),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: _tileTitleStyle(theme).copyWith(
-                          color: fg,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: _tileSubtitleStyle(theme).copyWith(
-                          color: fg.withOpacity(0.90),
-                          fontWeight: FontWeight.w700,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              if ((count ?? 0) > 0)
-                Container(
-                  margin: const EdgeInsets.only(right: 8),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: overlay,
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: overlayBorder),
-                  ),
-                  child: Text(
-                    '$count',
-                    style: _badgeTextStyle(theme).copyWith(
-                      color: fg,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-              Icon(Icons.chevron_right_rounded, color: fg),
               const SizedBox(width: 10),
             ],
-          ),
+            Container(
+              width: emphasized ? 48 : 44,
+              height: emphasized ? 48 : 44,
+              decoration: BoxDecoration(
+                color: chipBg,
+                borderRadius: BorderRadius.circular(_rMed),
+                border: chipBorder,
+              ),
+              child: Icon(
+                icon,
+                size: emphasized ? 24 : 22,
+                color: fg,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: _tileTitleStyle.copyWith(color: fg),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: _tileSubtitleStyle.copyWith(color: subFg),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if ((count ?? 0) > 0)
+              Container(
+                margin: const EdgeInsets.only(right: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: badgeBg,
+                  borderRadius: BorderRadius.circular(_rPill),
+                  border: chipBorder,
+                ),
+                child: Text(
+                  '$count',
+                  style: _badgeTextStyle.copyWith(color: fg),
+                ),
+              ),
+            Icon(Icons.chevron_right_rounded, color: chevron),
+            const SizedBox(width: 10),
+          ],
         ),
       ),
     );
   }
 
   // ---------------------------------------------------------------------------
-  // ✅ Directory tile
+  // ✅ Directory tile (ink ground; Add/Edit is the sparing yellow CTA)
   // ---------------------------------------------------------------------------
   Widget _directoryTile({
     required FlutterFlowTheme theme,
@@ -717,38 +783,37 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     required VoidCallback onNavigateDirectory,
     bool emphasized = false,
   }) {
-    final fg = theme.tertiaryText;
-    final overlay = Colors.white.withOpacity(0.18);
-    final overlayBorder = Colors.white.withOpacity(0.22);
+    const Color fg = _paper;
 
     Widget pillButton({
       required String label,
       required VoidCallback onTap,
       IconData? icon,
     }) {
+      // Primary action on the dark tile = yellow with ink content.
       return InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(_rMed),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
           decoration: BoxDecoration(
-            color: overlay,
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: overlayBorder),
+            color: _spark,
+            borderRadius: BorderRadius.circular(_rMed),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (icon != null) ...[
-                Icon(icon, size: 16, color: fg),
+                Icon(icon, size: 16, color: _sparkInk),
                 const SizedBox(width: 8),
               ],
               Text(
                 label,
-                style: theme.labelMedium.override(
-                  fontFamily: theme.labelMediumFamily,
-                  fontWeight: FontWeight.w900,
-                  color: fg,
+                style: const TextStyle(
+                  fontFamily: _bodyFont,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: _sparkInk,
                 ),
               ),
             ],
@@ -757,96 +822,92 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       );
     }
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(_radius),
-      child: Container(
-        color: accent,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            InkWell(
-              onTap: onNavigateDirectory,
-              child: SizedBox(
-                height: emphasized ? _tileHEmphasis : _tileH,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 12, 12, 10),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: emphasized ? 48 : 44,
-                        height: emphasized ? 48 : 44,
-                        decoration: BoxDecoration(
-                          color: overlay,
-                          borderRadius: BorderRadius.circular(_radius),
-                          border: Border.all(color: overlayBorder),
-                        ),
-                        child: Icon(
-                          Icons.home_work_outlined,
-                          size: 22,
-                          color: fg,
-                        ),
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: _ink,
+        borderRadius: BorderRadius.circular(_radius),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          InkWell(
+            onTap: onNavigateDirectory,
+            child: SizedBox(
+              height: emphasized ? _tileHEmphasis : _tileH,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 12, 10),
+                child: Row(
+                  children: [
+                    Container(
+                      width: emphasized ? 48 : 44,
+                      height: emphasized ? 48 : 44,
+                      decoration: BoxDecoration(
+                        color: _onInkChip,
+                        borderRadius: BorderRadius.circular(_rMed),
+                        border: Border.all(color: _onInkChipBorder),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Directory',
-                              style: _tileTitleStyle(theme).copyWith(
-                                color: fg,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Find trades, compare options, manage your listing',
-                              style: _tileSubtitleStyle(theme).copyWith(
-                                color: fg.withOpacity(0.90),
-                                fontWeight: FontWeight.w700,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
+                      child: const Icon(
+                        Icons.home_work_outlined,
+                        size: 22,
+                        color: fg,
                       ),
-                      Icon(Icons.chevron_right_rounded, color: fg),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Directory',
+                            style: _tileTitleStyle.copyWith(color: fg),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Find trades, compare options, manage your listing',
+                            style:
+                                _tileSubtitleStyle.copyWith(color: _onInkSub),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.chevron_right_rounded, color: fg),
+                  ],
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: pillButton(
-                      label: _hasListing ? 'Edit Listing' : 'Add Listing',
-                      icon: _hasListing
-                          ? Icons.edit_outlined
-                          : Icons.add_circle_outline_rounded,
-                      onTap: () {
-                        if (_hasListing) {
-                          _safeNavigate(
-                            widget.editListingRouteName,
-                            fallbackRoute: _fallbackEditListingRoute,
-                          );
-                        } else {
-                          _safeNavigate(
-                            widget.addListingRouteName,
-                            fallbackRoute: _fallbackAddListingRoute,
-                          );
-                        }
-                      },
-                    ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+            child: Row(
+              children: [
+                Expanded(
+                  child: pillButton(
+                    label: _hasListing ? 'Edit Listing' : 'Add Listing',
+                    icon: _hasListing
+                        ? Icons.edit_outlined
+                        : Icons.add_circle_outline_rounded,
+                    onTap: () {
+                      if (_hasListing) {
+                        _safeNavigate(
+                          widget.editListingRouteName,
+                          fallbackRoute: _fallbackEditListingRoute,
+                        );
+                      } else {
+                        _safeNavigate(
+                          widget.addListingRouteName,
+                          fallbackRoute: _fallbackAddListingRoute,
+                        );
+                      }
+                    },
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -910,7 +971,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     return _buildStepSection(
       theme,
       step: 3,
-      accent: theme.timelineColour, // ✅ removed todoColour dependency
+      accent: _ink,
       title: 'Manage your build day-by-day',
       subtitle:
           'Track tasks, timeline, budget, quotes & snag items in one place.',
@@ -1020,65 +1081,61 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 10),
       child: Container(
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          color: theme.secondaryBackground,
+          color: _paper,
           borderRadius: BorderRadius.circular(_radius),
-          border: Border.all(color: theme.alternate.withOpacity(0.9)),
+          border: Border.all(color: _hairline),
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(_radius),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  width: 52,
-                  height: 52,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _surface,
+                ),
+                child: const Icon(
+                  Icons.person_rounded,
+                  color: _inkMute,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(displayName, style: _profileNameStyle),
+                    const SizedBox(height: 2),
+                    Text(subtitle, style: _profileMetaStyle),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              InkWell(
+                onTap: () => _safeNavigate(
+                  widget.profileRouteName,
+                  fallbackRoute: _fallbackProfileRoute,
+                ),
+                borderRadius: BorderRadius.circular(_rMed),
+                child: Container(
+                  padding: const EdgeInsets.all(11),
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: theme.secondaryBackground,
-                    border: Border.all(color: theme.alternate),
+                    color: _surface,
+                    borderRadius: BorderRadius.circular(_rMed),
                   ),
-                  child: Icon(
-                    Icons.person_rounded,
-                    color: theme.secondaryText,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(displayName, style: _profileNameStyle(theme)),
-                      const SizedBox(height: 2),
-                      Text(subtitle, style: _profileMetaStyle(theme)),
-                    ],
+                  child: const Icon(
+                    Icons.open_in_new_rounded,
+                    size: 18,
+                    color: _ink,
                   ),
                 ),
-                const SizedBox(width: 10),
-                InkWell(
-                  onTap: () => _safeNavigate(
-                    widget.profileRouteName,
-                    fallbackRoute: _fallbackProfileRoute,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.all(11),
-                    decoration: BoxDecoration(
-                      color: theme.secondaryBackground,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: theme.alternate),
-                    ),
-                    child: Icon(
-                      Icons.open_in_new_rounded,
-                      size: 18,
-                      color: theme.secondaryText,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -1102,20 +1159,15 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           child: Row(
             children: [
-              Icon(icon, size: 18, color: theme.secondaryText),
+              Icon(icon, size: 18, color: _inkMute),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(
-                  label,
-                  style: _footerRowTextStyle(theme).copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                child: Text(label, style: _footerRowTextStyle),
               ),
-              Icon(
+              const Icon(
                 Icons.chevron_right_rounded,
                 size: 20,
-                color: theme.secondaryText,
+                color: _inkMute,
               ),
             ],
           ),
@@ -1139,7 +1191,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               onChanged: (v) => onChanged(v ?? false),
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               visualDensity: VisualDensity.compact,
-              activeColor: theme.primary,
+              activeColor: _ink,
             ),
             Expanded(
               child: Column(
@@ -1147,28 +1199,30 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                 children: [
                   Text(
                     label,
-                    style: theme.bodySmall.override(
-                      fontFamily: theme.bodySmallFamily,
-                      fontWeight: FontWeight.w700,
-                      color: theme.primaryText,
+                    style: const TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: _ink,
                     ),
                   ),
                   if (showRequired) ...[
                     const SizedBox(height: 2),
                     Row(
-                      children: [
+                      children: const [
                         Icon(
                           Icons.error_outline_rounded,
                           size: 14,
-                          color: theme.error,
+                          color: _coral,
                         ),
-                        const SizedBox(width: 6),
+                        SizedBox(width: 6),
                         Text(
                           'Not accepted',
-                          style: theme.labelSmall.override(
-                            fontFamily: theme.labelSmallFamily,
-                            fontWeight: FontWeight.w800,
-                            color: theme.error,
+                          style: TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: _coral,
                           ),
                         ),
                       ],
@@ -1187,64 +1241,62 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Resources', style: _sectionTitleStyle(theme)),
+          Text('Resources', style: _sectionTitleStyle),
           const SizedBox(height: 10),
           Container(
+            clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
-              color: theme.secondaryBackground,
+              color: _paper,
               borderRadius: BorderRadius.circular(_radius),
-              border: Border.all(color: theme.alternate.withOpacity(0.9)),
+              border: Border.all(color: _hairline),
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(_radius),
-              child: Column(
-                children: [
-                  linkRow(
-                    label: 'Terms of Use',
-                    icon: Icons.description_outlined,
-                    onTap: () => _safeNavigate(
-                      widget.termsRouteName,
-                      fallbackRoute: _fallbackTermsRoute,
-                    ),
+            child: Column(
+              children: [
+                linkRow(
+                  label: 'Terms of Use',
+                  icon: Icons.description_outlined,
+                  onTap: () => _safeNavigate(
+                    widget.termsRouteName,
+                    fallbackRoute: _fallbackTermsRoute,
                   ),
-                  acceptRow(
-                    value: _acceptedTerms,
-                    onChanged: (v) => _setAcceptedTerms(v),
-                    label: 'I accept the Terms of Use',
+                ),
+                acceptRow(
+                  value: _acceptedTerms,
+                  onChanged: (v) => _setAcceptedTerms(v),
+                  label: 'I accept the Terms of Use',
+                ),
+                const Divider(height: 1, color: _hairline),
+                linkRow(
+                  label: 'Privacy Policy',
+                  icon: Icons.privacy_tip_outlined,
+                  onTap: () => _safeNavigate(
+                    widget.privacyRouteName,
+                    fallbackRoute: _fallbackPrivacyRoute,
                   ),
-                  Divider(height: 1, color: theme.alternate.withOpacity(0.75)),
-                  linkRow(
-                    label: 'Privacy Policy',
-                    icon: Icons.privacy_tip_outlined,
-                    onTap: () => _safeNavigate(
-                      widget.privacyRouteName,
-                      fallbackRoute: _fallbackPrivacyRoute,
-                    ),
+                ),
+                acceptRow(
+                  value: _acceptedPrivacy,
+                  onChanged: (v) => _setAcceptedPrivacy(v),
+                  label: 'I accept the Privacy Policy',
+                ),
+                const Divider(height: 1, color: _hairline),
+                linkRow(
+                  label: 'NHBRC & Building Regulations',
+                  icon: Icons.rule_outlined,
+                  onTap: () async {
+                    await launchURL('https://www.nhbrc.org.za');
+                  },
+                ),
+                const Divider(height: 1, color: _hairline),
+                linkRow(
+                  label: 'Help & Support',
+                  icon: Icons.help_outline_rounded,
+                  onTap: () => _safeNavigate(
+                    widget.supportRouteName,
+                    fallbackRoute: _fallbackSupportRoute,
                   ),
-                  acceptRow(
-                    value: _acceptedPrivacy,
-                    onChanged: (v) => _setAcceptedPrivacy(v),
-                    label: 'I accept the Privacy Policy',
-                  ),
-                  Divider(height: 1, color: theme.alternate.withOpacity(0.75)),
-                  linkRow(
-                    label: 'NHBRC & Building Regulations',
-                    icon: Icons.rule_outlined,
-                    onTap: () async {
-                      await launchURL('https://www.nhbrc.org.za');
-                    },
-                  ),
-                  Divider(height: 1, color: theme.alternate.withOpacity(0.75)),
-                  linkRow(
-                    label: 'Help & Support',
-                    icon: Icons.help_outline_rounded,
-                    onTap: () => _safeNavigate(
-                      widget.supportRouteName,
-                      fallbackRoute: _fallbackSupportRoute,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],
@@ -1265,7 +1317,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     return Container(
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
-      color: theme.primaryBackground,
+      color: _paper,
       child: SingleChildScrollView(
         child: Column(
           children: [

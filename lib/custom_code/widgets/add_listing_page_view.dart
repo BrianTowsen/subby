@@ -36,32 +36,54 @@ class AddListingPageView extends StatefulWidget {
 }
 
 class _AddListingPageViewState extends State<AddListingPageView> {
-  static const double _hPad = 24;
-  static const double _vPad = 24;
+  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
+  //
+  // Neutrals
+  static const Color _ink = Color(0xFF181C27);
+  static const Color _inkSoft = Color(0xFF181C27);
+  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _surface = Color(0xFFE3E4E8);
+  static const Color _surface2 = Color(0xFFE3E4E8);
+  static const Color _hairline = Color(0xFFE3E4E8);
+  static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
+  // Brand accent — YELLOW. Always ink foreground, never white.
+  static const Color _spark = Color(0xFFFFE718); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFF181C27);
+  static const Color _calm = Color(0xFF9C8A12);
+  static const Color _calmInk = Color(0xFFFFFFFF);
+  // Status
+  static const Color _live =
+      Color(0xFFFFB000); // gold — live / open-now / warning
+  static const Color _steel = Color(0xFF9DA8B5);
+  static const Color _coral =
+      Color(0xFFC8102E); // legacy red — error/destructive
+  // Geometry
+  static const double _rSmall = 6;
+  static const double _rMed = 8;
+  static const double _rLarge = 12;
+  static const double _rPill = 999;
+  static const double _pageHPad = 20;
+  static const double _sectionGap = 32;
+  static const double _navReserve = 96;
+  // Type
+  static const String _displayFont = 'Inter Tight';
+  static const String _bodyFont = 'Inter';
+  static const String _monoFont = 'Inter';
+  // ────────────────────────────────────────────────────────────────────
 
-  // Match ListingDetailPageView card styling
-  static const double _cardRadius = 16;
+  static const double _hPad = _pageHPad;
+  static const double _vPad = _pageHPad;
 
-  List<BoxShadow> _subbyTileShadow() => [
-        BoxShadow(
-          blurRadius: 10,
-          offset: const Offset(0, 4),
-          color: Colors.black.withOpacity(0.03),
-        ),
-      ];
+  static const double _cardRadius = _rLarge;
 
-  BoxDecoration _subbyCardDecoration(
-    FlutterFlowTheme theme, {
-    Color? color,
-    bool shadow = true,
-  }) {
-    return BoxDecoration(
-      color: color ?? theme.primaryBackground,
-      borderRadius: BorderRadius.circular(_cardRadius),
-      border: Border.all(color: theme.alternate, width: 1),
-      boxShadow: shadow ? _subbyTileShadow() : const [],
-    );
-  }
+  BoxDecoration get _cardDecoration => BoxDecoration(
+        color: _paper,
+        borderRadius: BorderRadius.circular(_cardRadius),
+        border: Border.all(color: _hairline, width: 1),
+      );
 
   // ---------------------------------------------------------
   // Form state
@@ -87,41 +109,62 @@ class _AddListingPageViewState extends State<AddListingPageView> {
   String? _heroFileName;
 
   // ---------------------------------------------------------
-  // Typography (token + family)
+  // Typography (locked palette — explicit family + colour)
   // ---------------------------------------------------------
-  TextStyle _titleStyle(FlutterFlowTheme t) => t.titleLarge.copyWith(
-        fontWeight: FontWeight.w900,
-        letterSpacing: 0.2,
+  TextStyle get _titleStyle => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 22,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.4,
+        height: 1.05,
+        color: _ink,
       );
 
-  TextStyle _subtitleStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+  TextStyle get _subtitleStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 12,
+        color: _inkMute,
       );
 
-  TextStyle _sectionTitleStyle(FlutterFlowTheme t) => t.titleMedium.override(
-        fontFamily: t.titleMediumFamily,
-      );
-
-  TextStyle _tabTextStyle(FlutterFlowTheme t, {required bool selected}) =>
-      t.labelMedium.override(
-        fontFamily: t.labelMediumFamily,
-        color: selected ? Colors.white : t.secondaryText,
-      );
-
-  TextStyle _fieldTextStyle(FlutterFlowTheme t) => t.bodyMedium.override(
-        fontFamily: t.bodyMediumFamily,
-      );
-
-  TextStyle _hintTextStyle(FlutterFlowTheme t) => t.bodyMedium.override(
-        fontFamily: t.bodyMediumFamily,
-        color: t.secondaryText,
-      );
-
-  TextStyle _primaryBtnTextStyle(FlutterFlowTheme t) => t.labelMedium.override(
-        fontFamily: t.labelMediumFamily,
-        color: Colors.white,
+  TextStyle get _sectionTitleStyle => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 15,
         fontWeight: FontWeight.w700,
+        letterSpacing: -0.2,
+        color: _ink,
+      );
+
+  TextStyle _tabTextStyle({required bool selected}) => TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: selected ? _paper : _inkMute,
+      );
+
+  TextStyle get _fieldTextStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 14,
+        color: _ink,
+      );
+
+  TextStyle get _hintTextStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 14,
+        color: _inkMute,
+      );
+
+  TextStyle get _labelStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: _inkMute,
+      );
+
+  TextStyle get _primaryBtnTextStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 14,
+        fontWeight: FontWeight.w700,
+        color: _sparkInk, // ink-on-yellow
       );
 
   // ---------------------------------------------------------
@@ -282,7 +325,6 @@ class _AddListingPageViewState extends State<AddListingPageView> {
 
   void _toast(String message, {bool error = false}) {
     if (!mounted) return;
-    final theme = FlutterFlowTheme.of(context);
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -290,11 +332,12 @@ class _AddListingPageViewState extends State<AddListingPageView> {
         SnackBar(
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          backgroundColor: error ? theme.error : theme.primary,
+          backgroundColor: error ? _coral : _ink,
           content: Text(
             message,
-            style: theme.bodyMedium.override(
-              fontFamily: theme.bodyMediumFamily,
+            style: const TextStyle(
+              fontFamily: _bodyFont,
+              fontSize: 14,
               color: Colors.white,
             ),
           ),
@@ -332,7 +375,7 @@ class _AddListingPageViewState extends State<AddListingPageView> {
     }
   }
 
-  Widget _buildHeroPhotoPicker(FlutterFlowTheme theme) {
+  Widget _buildHeroPhotoPicker() {
     final hasPhoto = _heroBytes != null && _heroBytes!.isNotEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -344,9 +387,9 @@ class _AddListingPageViewState extends State<AddListingPageView> {
             width: double.infinity,
             height: 170,
             decoration: BoxDecoration(
-              color: theme.secondaryBackground,
+              color: _surface,
               borderRadius: BorderRadius.circular(_cardRadius),
-              border: Border.all(color: theme.alternate, width: 1),
+              border: Border.all(color: _hairlineOnSurface, width: 1),
             ),
             clipBehavior: Clip.antiAlias,
             child: hasPhoto
@@ -354,10 +397,10 @@ class _AddListingPageViewState extends State<AddListingPageView> {
                 : Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.add_a_photo_outlined,
-                          size: 30, color: theme.secondaryText),
+                      const Icon(Icons.add_a_photo_outlined,
+                          size: 30, color: _inkMute),
                       const SizedBox(height: 8),
-                      Text('Add a cover photo', style: _hintTextStyle(theme)),
+                      Text('Add a cover photo', style: _hintTextStyle),
                     ],
                   ),
           ),
@@ -368,7 +411,15 @@ class _AddListingPageViewState extends State<AddListingPageView> {
             children: [
               TextButton(
                 onPressed: _isSaving ? null : _pickHeroPhoto,
-                child: Text('Change', style: _hintTextStyle(theme)),
+                child: const Text(
+                  'Change',
+                  style: TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: _ink,
+                  ),
+                ),
               ),
               TextButton(
                 onPressed: _isSaving
@@ -377,7 +428,15 @@ class _AddListingPageViewState extends State<AddListingPageView> {
                           _heroBytes = null;
                           _heroFileName = null;
                         }),
-                child: Text('Remove', style: _hintTextStyle(theme)),
+                child: const Text(
+                  'Remove',
+                  style: TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: _inkMute,
+                  ),
+                ),
               ),
             ],
           ),
@@ -523,8 +582,6 @@ class _AddListingPageViewState extends State<AddListingPageView> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = FlutterFlowTheme.of(context);
-
     final double width = widget.width ?? MediaQuery.sizeOf(context).width;
     final double height = widget.height ?? MediaQuery.sizeOf(context).height;
 
@@ -533,7 +590,7 @@ class _AddListingPageViewState extends State<AddListingPageView> {
       height: height,
       child: SafeArea(
         child: Container(
-          color: theme.primaryBackground,
+          color: _paper,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -543,20 +600,19 @@ class _AddListingPageViewState extends State<AddListingPageView> {
                   children: [
                     InkWell(
                       onTap: () => context.safePop(),
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(_rMed),
                       child: Container(
                         width: 36,
                         height: 36,
                         decoration: BoxDecoration(
-                          color: theme.secondaryBackground,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: theme.alternate, width: 1),
+                          color: _surface,
+                          borderRadius: BorderRadius.circular(_rMed),
                         ),
                         alignment: Alignment.center,
-                        child: Icon(
+                        child: const Icon(
                           Icons.arrow_back_ios_new_rounded,
-                          size: 20,
-                          color: theme.primaryText,
+                          size: 18,
+                          color: _ink,
                         ),
                       ),
                     ),
@@ -564,43 +620,41 @@ class _AddListingPageViewState extends State<AddListingPageView> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Add Listing', style: _titleStyle(theme)),
+                        Text('Add Listing', style: _titleStyle),
                         const SizedBox(height: 2),
                         Text(
                           'Create your directory profile',
-                          style: _subtitleStyle(theme),
+                          style: _subtitleStyle,
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
-              Container(
-                width: double.infinity,
-                color: theme.primary,
-                padding: const EdgeInsets.fromLTRB(_hPad, 14, _hPad, 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Listing type',
-                      style: theme.titleMedium.override(
-                        fontFamily: theme.titleMediumFamily,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
+
+              // ---------- LISTING TYPE (contained surface block) ----------
+              Padding(
+                padding: const EdgeInsets.fromLTRB(_hPad, 4, _hPad, 0),
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: _surface,
+                    borderRadius: BorderRadius.circular(_rLarge),
+                  ),
+                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Listing type', style: _sectionTitleStyle),
+                      const SizedBox(height: 10),
+                      _buildTypeTabs(),
+                      const SizedBox(height: 10),
+                      Text(
+                        'You are creating a ${_listingTypeLabel.toLowerCase()} listing.',
+                        style: _subtitleStyle,
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    _buildTypeTabs(),
-                    const SizedBox(height: 10),
-                    Text(
-                      'You are creating a ${_listingTypeLabel.toLowerCase()} listing.',
-                      style: theme.bodySmall.override(
-                        fontFamily: theme.bodySmallFamily,
-                        color: Colors.white.withOpacity(0.9),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 14),
@@ -612,7 +666,7 @@ class _AddListingPageViewState extends State<AddListingPageView> {
                     children: [
                       _buildSection(
                         title: 'Photo',
-                        child: _buildHeroPhotoPicker(theme),
+                        child: _buildHeroPhotoPicker(),
                       ),
                       const SizedBox(height: 16),
                       _buildSection(
@@ -722,7 +776,7 @@ class _AddListingPageViewState extends State<AddListingPageView> {
                       const SizedBox(height: 10),
                       Text(
                         'Next: photos, services, tags and verification.',
-                        style: _subtitleStyle(theme),
+                        style: _subtitleStyle,
                       ),
                     ],
                   ),
@@ -739,11 +793,10 @@ class _AddListingPageViewState extends State<AddListingPageView> {
   // UI helpers
   // =========================================================
   Widget _buildTypeTabs() {
-    final theme = FlutterFlowTheme.of(context);
     final tabs = ['Professionals', 'Trades', 'Suppliers', 'Associations'];
 
     return SizedBox(
-      height: 42,
+      height: 40,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
@@ -763,16 +816,16 @@ class _AddListingPageViewState extends State<AddListingPageView> {
                   padding:
                       const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                   decoration: BoxDecoration(
-                    color: selected ? theme.secondary : theme.primary,
-                    borderRadius: BorderRadius.circular(999),
+                    color: selected ? _ink : _paper,
+                    borderRadius: BorderRadius.circular(_rPill),
                     border: Border.all(
-                      color: selected ? theme.secondary : Colors.white54,
+                      color: selected ? _ink : _hairlineOnSurface,
                       width: 1,
                     ),
                   ),
                   child: Text(
                     tabs[i],
-                    style: _tabTextStyle(theme, selected: selected),
+                    style: _tabTextStyle(selected: selected),
                   ),
                 ),
               ),
@@ -784,15 +837,13 @@ class _AddListingPageViewState extends State<AddListingPageView> {
   }
 
   Widget _buildSection({required String title, required Widget child}) {
-    final theme = FlutterFlowTheme.of(context);
-
     return Container(
-      decoration: _subbyCardDecoration(theme),
+      decoration: _cardDecoration,
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: _sectionTitleStyle(theme)),
+          Text(title, style: _sectionTitleStyle),
           const SizedBox(height: 12),
           child,
         ],
@@ -807,36 +858,29 @@ class _AddListingPageViewState extends State<AddListingPageView> {
     int maxLines = 1,
     TextInputType? keyboardType,
   }) {
-    final theme = FlutterFlowTheme.of(context);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: theme.labelMedium.override(
-            fontFamily: theme.labelMediumFamily,
-            color: theme.secondaryText,
-          ),
-        ),
+        Text(label, style: _labelStyle),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: theme.secondaryBackground,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: theme.alternate, width: 1),
+            color: _surface,
+            borderRadius: BorderRadius.circular(_rMed),
+            border: Border.all(color: _hairlineOnSurface, width: 1),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: TextField(
             controller: controller,
             maxLines: maxLines,
             keyboardType: keyboardType,
-            style: _fieldTextStyle(theme),
+            style: _fieldTextStyle,
+            cursorColor: _ink,
             decoration: InputDecoration(
               border: InputBorder.none,
               isDense: true,
               hintText: hint,
-              hintStyle: _hintTextStyle(theme),
+              hintStyle: _hintTextStyle,
             ),
           ),
         ),
@@ -850,39 +894,30 @@ class _AddListingPageViewState extends State<AddListingPageView> {
     required List<String> items,
     required ValueChanged<String?> onChanged,
   }) {
-    final theme = FlutterFlowTheme.of(context);
-
     final bool isPlaceholder = value.startsWith('Select ');
-    final Color textColor =
-        isPlaceholder ? theme.secondaryText : theme.primaryText;
+    final Color textColor = isPlaceholder ? _inkMute : _ink;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: theme.labelMedium.override(
-            fontFamily: theme.labelMediumFamily,
-            color: theme.secondaryText,
-          ),
-        ),
+        Text(label, style: _labelStyle),
         const SizedBox(height: 8),
         Container(
           height: 50,
           decoration: BoxDecoration(
-            color: theme.secondaryBackground,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: theme.alternate, width: 1),
+            color: _surface,
+            borderRadius: BorderRadius.circular(_rMed),
+            border: Border.all(color: _hairlineOnSurface, width: 1),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: items.contains(value) ? value : items.first,
               isExpanded: true,
-              icon: Icon(Icons.keyboard_arrow_down_rounded,
-                  color: theme.secondaryText),
-              dropdownColor: theme.primaryBackground,
-              style: _fieldTextStyle(theme).copyWith(color: textColor),
+              icon: const Icon(Icons.keyboard_arrow_down_rounded,
+                  color: _inkMute),
+              dropdownColor: _paper,
+              style: _fieldTextStyle.copyWith(color: textColor),
               items: items.map((s) {
                 final bool itemPlaceholder = s.startsWith('Select ');
                 return DropdownMenuItem<String>(
@@ -891,8 +926,8 @@ class _AddListingPageViewState extends State<AddListingPageView> {
                     s,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: _fieldTextStyle(theme).copyWith(
-                      color: itemPlaceholder ? theme.secondaryText : textColor,
+                    style: _fieldTextStyle.copyWith(
+                      color: itemPlaceholder ? _inkMute : textColor,
                     ),
                   ),
                 );
@@ -911,30 +946,28 @@ class _AddListingPageViewState extends State<AddListingPageView> {
     required VoidCallback onTap,
     bool disabled = false,
   }) {
-    final theme = FlutterFlowTheme.of(context);
-
     return InkWell(
       onTap: disabled ? null : onTap,
-      borderRadius: BorderRadius.circular(999),
+      borderRadius: BorderRadius.circular(_rMed),
       child: Container(
-        height: 48,
+        height: 50,
         width: double.infinity,
         decoration: BoxDecoration(
-          color:
-              disabled ? theme.secondaryText.withOpacity(0.35) : theme.primary,
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(
-            color: disabled ? Colors.transparent : theme.primary,
-            width: 1,
-          ),
+          color: disabled ? _surface : _spark,
+          borderRadius: BorderRadius.circular(_rMed),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 20, color: Colors.white),
+            Icon(icon, size: 20, color: disabled ? _inkMute : _sparkInk),
             const SizedBox(width: 8),
-            Text(label, style: _primaryBtnTextStyle(theme)),
+            Text(
+              label,
+              style: disabled
+                  ? _primaryBtnTextStyle.copyWith(color: _inkMute)
+                  : _primaryBtnTextStyle,
+            ),
           ],
         ),
       ),
