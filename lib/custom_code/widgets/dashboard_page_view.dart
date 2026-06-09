@@ -102,20 +102,27 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   static const Color _surface = Color(0xFFE3E4E8);
   static const Color _hairline = Color(0xFFE3E4E8);
 
-  // On-ink overlays (Directory dark tile)
-  static final Color _onInkSub = Colors.white.withOpacity(0.85);
+  // ── ACCENT-BACKGROUND CARD SYSTEM ──────────────────────────────────
+  // Both section cards are SOLID accent blocks with INK content. One rule
+  // for everything: accent fill, ink text, ink chip + white icon, ink
+  // pill + white text. Orange = My Projects, Yellow = Directory.
+  static const Color _onAccentChip = _ink; // icon chip fill (both cards)
+  static final Color _onAccentSub = _ink.withOpacity(0.72); // secondary text
+  // primary text on an accent card is plain _ink; chip icon is white (_paper)
 
-  // Accent — DIRECTORY = YELLOW. Always ink foreground, never white.
-  static const Color _spark = Color(0xFFFFE718);
+  // Accent — DIRECTORY = YELLOW. Ink foreground only, never white.
+  static const Color _spark = Color(0xFFFFE718); // yellow card background
   static const Color _sparkInk = Color(0xFF181C27);
 
-  // Accent — MY PROJECTS = ORANGE (light + dark).
-  static const Color _orange = Color(0xFFEA580C); // primary orange
-  static const Color _orangeDark = Color(0xFFC2410C); // deep orange — icon/text
+  // Accent — MY PROJECTS = ORANGE.
+  static const Color _orangeBg =
+      Color(0xFFFB923C); // bright orange — card bg (ink reads on it)
+  static const Color _orange =
+      Color(0xFFEA580C); // saturated orange — marker / add-card
+  static const Color _orangeDark =
+      Color(0xFFC2410C); // deep orange — "View all" link
   static const Color _orangeLight =
-      Color(0xFFFFEDD5); // light orange — tint/chip
-  // (kept available if a lighter border is wanted later)
-  static const Color _orangeMid = Color(0xFFFED7AA);
+      Color(0xFFFFEDD5); // light orange — add-card tint
 
   // Geometry
   static const double _rSmall = 6;
@@ -371,9 +378,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   Widget _buildWelcomeHeader(FlutterFlowTheme theme) {
     final topInset = MediaQuery.of(context).padding.top;
     final name = currentUserDisplayName.trim();
-    final greeting = name.isNotEmpty
-        ? 'Welcome back, ${name.split(' ').first}'
-        : 'Welcome to Subby';
+    final firstName = name.isNotEmpty ? name.split(' ').first : '';
+    final hasName = firstName.isNotEmpty;
 
     return Padding(
       padding: EdgeInsets.fromLTRB(_hPad, topInset + 14, _hPad, 18),
@@ -396,15 +402,22 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      greeting,
-                      style: _appTitleStyle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text('Your home building super power.',
-                        style: _appSubtitleStyle),
+                    if (hasName) ...[
+                      Text('Welcome back', style: _appSubtitleStyle),
+                      const SizedBox(height: 1),
+                      Text(
+                        firstName,
+                        style: _appTitleStyle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ] else
+                      Text(
+                        'Welcome to Subby',
+                        style: _appTitleStyle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                   ],
                 ),
               ),
@@ -593,7 +606,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: _orangeLight,
+        color: _ink,
         borderRadius: BorderRadius.circular(_rPill),
       ),
       child: Text(
@@ -602,7 +615,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           fontFamily: _bodyFont,
           fontSize: 11,
           fontWeight: FontWeight.w700,
-          color: _orangeDark,
+          color: _paper,
         ),
       ),
     );
@@ -624,18 +637,15 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         width: _cardW,
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          color: _paper,
+          color: _orangeBg,
           borderRadius: BorderRadius.circular(_radius),
-          border: Border.all(color: _hairline),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top accent strip — dark orange
-            Container(height: 4, color: _orange),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+                padding: const EdgeInsets.fromLTRB(14, 14, 12, 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -645,13 +655,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: _orangeLight,
+                            color: _onAccentChip,
                             borderRadius: BorderRadius.circular(_rMed),
                           ),
                           child: const Icon(
                             Icons.folder_rounded,
                             size: 20,
-                            color: _orangeDark,
+                            color: _paper,
                           ),
                         ),
                         const Spacer(),
@@ -663,14 +673,14 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                       name.isEmpty ? 'Untitled project' : name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: _tileTitleStyle,
+                      style: _tileTitleStyle.copyWith(color: _ink),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       loc.isEmpty ? 'No location set' : loc,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: _tileSubtitleStyle,
+                      style: _tileSubtitleStyle.copyWith(color: _onAccentSub),
                     ),
                     const Spacer(),
                     Row(
@@ -682,13 +692,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                                 : 'Updated ${_fmtDate(updatedAt)}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: _metaStyle,
+                            style: _metaStyle.copyWith(color: _onAccentSub),
                           ),
                         ),
                         const Icon(
                           Icons.chevron_right_rounded,
                           size: 20,
-                          color: _orangeDark,
+                          color: _ink,
                         ),
                       ],
                     ),
@@ -833,27 +843,26 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     required VoidCallback onNavigateDirectory,
     bool emphasized = true,
   }) {
-    const Color fg = _paper;
-
     Widget pillButton({
       required String label,
       required VoidCallback onTap,
       IconData? icon,
     }) {
+      // Primary action on a yellow card = ink button, white content.
       return InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(_rMed),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
           decoration: BoxDecoration(
-            color: _spark,
+            color: _ink,
             borderRadius: BorderRadius.circular(_rMed),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (icon != null) ...[
-                Icon(icon, size: 16, color: _sparkInk),
+                Icon(icon, size: 16, color: _paper),
                 const SizedBox(width: 8),
               ],
               Text(
@@ -862,7 +871,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                   fontFamily: _bodyFont,
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: _sparkInk,
+                  color: _paper,
                 ),
               ),
             ],
@@ -874,7 +883,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: _ink,
+        color: _spark,
         borderRadius: BorderRadius.circular(_radius),
       ),
       child: Column(
@@ -888,18 +897,18 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                 padding: const EdgeInsets.fromLTRB(14, 12, 12, 10),
                 child: Row(
                   children: [
-                    // Yellow chip = the Directory accent
+                    // Ink chip + white icon — matches the project cards
                     Container(
                       width: emphasized ? 48 : 44,
                       height: emphasized ? 48 : 44,
                       decoration: BoxDecoration(
-                        color: _spark,
+                        color: _onAccentChip,
                         borderRadius: BorderRadius.circular(_rMed),
                       ),
                       child: const Icon(
                         Icons.home_work_rounded,
                         size: 22,
-                        color: _sparkInk,
+                        color: _paper,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -908,19 +917,21 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Directory',
-                              style: _tileTitleStyle.copyWith(color: fg)),
+                          // No "Directory" here — the section header already
+                          // says it. Lead with the value instead.
+                          Text('Browse trades & suppliers',
+                              style: _tileTitleStyle.copyWith(color: _ink)),
                           const SizedBox(height: 4),
                           Text(
-                            'Find trades, compare options, manage your listing',
-                            style:
-                                _tileSubtitleStyle.copyWith(color: _onInkSub),
+                            'Compare options & manage your listing',
+                            style: _tileSubtitleStyle.copyWith(
+                                color: _onAccentSub),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
                     ),
-                    const Icon(Icons.chevron_right_rounded, color: fg),
+                    const Icon(Icons.chevron_right_rounded, color: _ink),
                   ],
                 ),
               ),
