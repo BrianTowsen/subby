@@ -3,9 +3,12 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -168,18 +171,6 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
     return s;
   }
 
-  String _slugify(String input) {
-    var s = input.trim().toLowerCase();
-    s = s.replaceAll(RegExp(r'\(.*?\)'), '');
-    s = s.replaceAll('&', 'and');
-    s = s.replaceAll(RegExp(r'[^a-z0-9\s-]'), '');
-    s = s.replaceAll(RegExp(r'\s+'), ' ');
-    s = s.replaceAll(' ', '-');
-    s = s.replaceAll(RegExp(r'-+'), '-');
-    s = s.replaceAll(RegExp(r'^-+|-+$'), '');
-    return s;
-  }
-
   // Safe read from record snapshotData (so you’re not dependent on generated fields)
   String _readString(SubbyListingsRecord listing, String key) {
     try {
@@ -262,11 +253,11 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
     }
 
     // Speciality
-    final String sSlug = _slugify(speciality ?? '');
+    final String sSlug = functions.slugify(speciality ?? '');
     if (sSlug.isNotEmpty) {
       out = out.where((l) {
         final ls = _readString(l, 'specialitySlug');
-        if (ls.isNotEmpty) return _slugify(ls) == sSlug;
+        if (ls.isNotEmpty) return functions.slugify(ls) == sSlug;
         return (l.speciality)
             .toString()
             .toLowerCase()
@@ -625,16 +616,16 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
 
     final String provinceSlug = (widget.provinceSlug ?? '').trim().isNotEmpty
         ? widget.provinceSlug!.trim()
-        : _slugify(provinceLabel ?? '');
+        : functions.slugify(provinceLabel ?? '');
 
     final String categorySlug = (widget.categorySlug ?? '').trim().isNotEmpty
         ? widget.categorySlug!.trim()
-        : _slugify(categoryLabel ?? '');
+        : functions.slugify(categoryLabel ?? '');
 
     final String specialitySlug =
         (widget.specialitySlug ?? '').trim().isNotEmpty
             ? widget.specialitySlug!.trim()
-            : _slugify(specialityLabel ?? '');
+            : functions.slugify(specialityLabel ?? '');
 
     final String searchText = (widget.searchText ?? '').trim();
 
@@ -908,6 +899,12 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
     final int jobs = listing.jobsCompleted ?? 0;
     final bool isVerified = listing.isVerified == true;
 
+    final String heroPhoto = (listing.heroPhotoUrl ?? '').isNotEmpty
+        ? (listing.heroPhotoUrl ?? '')
+        : ((listing.photoUrls ?? const <String>[]).isNotEmpty
+            ? (listing.photoUrls ?? const <String>[]).first
+            : '');
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -928,11 +925,14 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
           Container(
             width: 44,
             height: 44,
+            clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               color: theme.secondaryBackground,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(Icons.handyman_rounded, size: 24, color: theme.primary),
+            child: heroPhoto.isNotEmpty
+                ? Image.network(heroPhoto, fit: BoxFit.cover)
+                : Icon(Icons.handyman_rounded, size: 24, color: theme.primary),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -980,15 +980,20 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    Icon(Icons.star_rounded, size: 16, color: theme.primary),
-                    const SizedBox(width: 4),
-                    Text(rating.toStringAsFixed(1),
-                        style: _cardSmallStyle(theme)),
-                    const SizedBox(width: 6),
-                    Text(
-                      '• $jobs jobs',
-                      style: _cardMetaStyle(theme),
-                    ),
+                    if (rating > 0) ...[
+                      Icon(Icons.star_rounded, size: 16, color: theme.primary),
+                      const SizedBox(width: 4),
+                      Text(rating.toStringAsFixed(1),
+                          style: _cardSmallStyle(theme)),
+                      const SizedBox(width: 6),
+                    ],
+                    if (jobs > 0)
+                      Text(
+                        rating > 0 ? '• $jobs jobs' : '$jobs jobs',
+                        style: _cardMetaStyle(theme),
+                      ),
+                    if (rating <= 0 && jobs <= 0)
+                      Text('New', style: _cardMetaStyle(theme)),
                   ],
                 ),
               ],

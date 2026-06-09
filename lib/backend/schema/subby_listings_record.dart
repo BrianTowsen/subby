@@ -171,6 +171,21 @@ class SubbyListingsRecord extends FirestoreRecord {
   String get specialitySlug => _specialitySlug ?? '';
   bool hasSpecialitySlug() => _specialitySlug != null;
 
+  // "ownerRef" field.
+  DocumentReference? _ownerRef;
+  DocumentReference? get ownerRef => _ownerRef;
+  bool hasOwnerRef() => _ownerRef != null;
+
+  // "ownerName" field.
+  String? _ownerName;
+  String get ownerName => _ownerName ?? '';
+  bool hasOwnerName() => _ownerName != null;
+
+  // "ownerPhotoUrl" field.
+  String? _ownerPhotoUrl;
+  String get ownerPhotoUrl => _ownerPhotoUrl ?? '';
+  bool hasOwnerPhotoUrl() => _ownerPhotoUrl != null;
+
   void _initializeFields() {
     _name = snapshotData['name'] as String?;
     _category = snapshotData['category'] as String?;
@@ -203,6 +218,9 @@ class SubbyListingsRecord extends FirestoreRecord {
     _categorySlug = snapshotData['categorySlug'] as String?;
     _provinceSlug = snapshotData['provinceSlug'] as String?;
     _specialitySlug = snapshotData['specialitySlug'] as String?;
+    _ownerRef = snapshotData['ownerRef'] as DocumentReference?;
+    _ownerName = snapshotData['ownerName'] as String?;
+    _ownerPhotoUrl = snapshotData['ownerPhotoUrl'] as String?;
   }
 
   static CollectionReference get collection =>
@@ -266,6 +284,9 @@ Map<String, dynamic> createSubbyListingsRecordData({
   String? categorySlug,
   String? provinceSlug,
   String? specialitySlug,
+  DocumentReference? ownerRef,
+  String? ownerName,
+  String? ownerPhotoUrl,
 }) {
   final firestoreData = mapToFirestore(
     <String, dynamic>{
@@ -295,6 +316,9 @@ Map<String, dynamic> createSubbyListingsRecordData({
       'categorySlug': categorySlug,
       'provinceSlug': provinceSlug,
       'specialitySlug': specialitySlug,
+      'ownerRef': ownerRef,
+      'ownerName': ownerName,
+      'ownerPhotoUrl': ownerPhotoUrl,
     }.withoutNulls,
   );
 
@@ -338,7 +362,10 @@ class SubbyListingsRecordDocumentEquality
         e1?.claimedAt == e2?.claimedAt &&
         e1?.categorySlug == e2?.categorySlug &&
         e1?.provinceSlug == e2?.provinceSlug &&
-        e1?.specialitySlug == e2?.specialitySlug;
+        e1?.specialitySlug == e2?.specialitySlug &&
+        e1?.ownerRef == e2?.ownerRef &&
+        e1?.ownerName == e2?.ownerName &&
+        e1?.ownerPhotoUrl == e2?.ownerPhotoUrl;
   }
 
   @override
@@ -373,7 +400,10 @@ class SubbyListingsRecordDocumentEquality
         e?.claimedAt,
         e?.categorySlug,
         e?.provinceSlug,
-        e?.specialitySlug
+        e?.specialitySlug,
+        e?.ownerRef,
+        e?.ownerName,
+        e?.ownerPhotoUrl
       ]);
 
   @override

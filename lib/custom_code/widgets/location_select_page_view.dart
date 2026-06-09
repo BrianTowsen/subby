@@ -3,9 +3,12 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import '/flutter_flow/custom_functions.dart' as functions;
 
 class LocationSelectPageView extends StatefulWidget {
   const LocationSelectPageView({
@@ -82,18 +85,6 @@ class _LocationSelectPageViewState extends State<LocationSelectPageView> {
         color: t.secondaryText,
       );
   // =========================================================
-
-  String _slugify(String input) {
-    var s = input.trim().toLowerCase();
-    s = s.replaceAll(RegExp(r'\(.*?\)'), '');
-    s = s.replaceAll('&', 'and');
-    s = s.replaceAll(RegExp(r'[^a-z0-9\s-]'), '');
-    s = s.replaceAll(RegExp(r'\s+'), ' ');
-    s = s.replaceAll(' ', '-');
-    s = s.replaceAll(RegExp(r'-+'), '-');
-    s = s.replaceAll(RegExp(r'^-+|-+$'), '');
-    return s;
-  }
 
   @override
   void initState() {
@@ -401,8 +392,9 @@ class _LocationSelectPageViewState extends State<LocationSelectPageView> {
                             context.pop({
                               'province': _province,
                               'region': _city ?? '',
-                              'provinceSlug':
-                                  _province != null ? _slugify(_province!) : '',
+                              'provinceSlug': _province != null
+                                  ? functions.slugify(_province!)
+                                  : '',
                             });
                           },
                     child: Text(

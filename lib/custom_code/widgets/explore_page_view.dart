@@ -3,6 +3,7 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
@@ -142,6 +143,14 @@ class _ExplorePageViewState extends State<ExplorePageView> {
   }
 
   String _s(dynamic v) => (v ?? '').toString().trim();
+
+  String _firstPhotoUrl(dynamic v) {
+    if (v is List && v.isNotEmpty) {
+      final f = v.first;
+      return (f ?? '').toString().trim();
+    }
+    return '';
+  }
 
   void _showBookmarkSnack({required bool wasSaved}) {
     if (!mounted) return;
@@ -975,9 +984,13 @@ class _ExplorePageViewState extends State<ExplorePageView> {
 
   double? _ratingFrom(Map<String, dynamic> d) {
     final r = d['rating'];
-    if (r is num) return r.toDouble();
+    if (r is num) {
+      final v = r.toDouble();
+      return v > 0 ? v : null;
+    }
     final rs = _s(r);
-    return rs.isEmpty ? null : double.tryParse(rs);
+    final parsed = rs.isEmpty ? null : double.tryParse(rs);
+    return (parsed != null && parsed > 0) ? parsed : null;
   }
 
   void _openListing(DocumentReference ref) {
@@ -1234,13 +1247,17 @@ class _ExplorePageViewState extends State<ExplorePageView> {
                         final chip = _chipFrom(data);
                         final rating = _ratingFrom(data);
 
-                        final img = _s(data['photoUrl']).isNotEmpty
-                            ? _s(data['photoUrl'])
-                            : _s(data['photo_url']).isNotEmpty
-                                ? _s(data['photo_url'])
-                                : _s(data['imageUrl']).isNotEmpty
-                                    ? _s(data['imageUrl'])
-                                    : _s(data['image_url']);
+                        final img = _s(data['heroPhotoUrl']).isNotEmpty
+                            ? _s(data['heroPhotoUrl'])
+                            : _firstPhotoUrl(data['photoUrls']).isNotEmpty
+                                ? _firstPhotoUrl(data['photoUrls'])
+                                : _s(data['photoUrl']).isNotEmpty
+                                    ? _s(data['photoUrl'])
+                                    : _s(data['photo_url']).isNotEmpty
+                                        ? _s(data['photo_url'])
+                                        : _s(data['imageUrl']).isNotEmpty
+                                            ? _s(data['imageUrl'])
+                                            : _s(data['image_url']);
 
                         final listingRef = doc.reference;
                         final isSaved = savedPaths.contains(listingRef.path);

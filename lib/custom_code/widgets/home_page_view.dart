@@ -3,9 +3,12 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -182,20 +185,9 @@ class _HomePageViewState extends State<HomePageView> {
   // ----------------------------
   // Slug helper (index strategy)
   // ----------------------------
-  String _slugify(String input) {
-    var s = input.trim().toLowerCase();
-    s = s.replaceAll(RegExp(r'\(.*?\)'), '');
-    s = s.replaceAll('&', 'and');
-    s = s.replaceAll(RegExp(r'[^a-z0-9\s-]'), '');
-    s = s.replaceAll(RegExp(r'\s+'), ' ');
-    s = s.replaceAll(' ', '-');
-    s = s.replaceAll(RegExp(r'-+'), '-');
-    s = s.replaceAll(RegExp(r'^-+|-+$'), '');
-    return s;
-  }
 
-  String get _provinceSlug => _slugify(_selectedProvince);
-  String get _categorySlug => _slugify(_selectedCategoryLabel);
+  String get _provinceSlug => functions.slugify(_selectedProvince);
+  String get _categorySlug => functions.slugify(_selectedCategoryLabel);
 
   static const List<String> _provinces = [
     'Gauteng',
@@ -959,7 +951,7 @@ class _HomePageViewState extends State<HomePageView> {
 
     Widget tile(String sub) {
       final icon = _iconForSubcategory(category, sub);
-      final specialitySlug = _slugify(sub);
+      final specialitySlug = functions.slugify(sub);
       final resultsRoute =
           (widget.listingResultsRouteName ?? 'ListingResultsPage').trim();
 
