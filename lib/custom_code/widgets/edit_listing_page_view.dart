@@ -3,11 +3,20 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import '/flutter_flow/custom_functions.dart' as functions;
+
+import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:mime/mime.dart';
+import 'package:path/path.dart' as p;
 import '/auth/firebase_auth/auth_util.dart';
 
 class EditListingPageView extends StatefulWidget {
@@ -86,6 +95,12 @@ class _EditListingPageViewState extends State<EditListingPageView> {
 
   bool _saving = false;
   bool _didHydrate = false;
+
+  // Hero photo (edit): existing url + optional new pick / removal.
+  String _existingHeroUrl = '';
+  Uint8List? _heroBytes;
+  String? _heroFileName;
+  bool _removeHero = false;
 
   // ---------------------------------------------------------
   // Typography (match AddListing)
@@ -278,17 +293,6 @@ class _EditListingPageViewState extends State<EditListingPageView> {
   // ---------------------------------------------------------
   // Firestore helpers
   // ---------------------------------------------------------
-  String _slugify(String input) {
-    var s = input.trim().toLowerCase();
-    s = s.replaceAll(RegExp(r'\(.*?\)'), '');
-    s = s.replaceAll('&', 'and');
-    s = s.replaceAll(RegExp(r'[^a-z0-9\s-]'), '');
-    s = s.replaceAll(RegExp(r'\s+'), ' ');
-    s = s.replaceAll(' ', '-');
-    s = s.replaceAll(RegExp(r'-+'), '-');
-    s = s.replaceAll(RegExp(r'^-+|-+$'), '');
-    return s;
-  }
 
   // ✅ Toast matches ExplorePageView / Subby toast style
   void _toast(String message, {bool error = false}) {
@@ -409,6 +413,7 @@ class _EditListingPageViewState extends State<EditListingPageView> {
     _whatsCtrl.text = s(data['whatsappNumber']);
     _emailCtrl.text = s(data['email']);
     _suburbCtrl.text = s(data['suburb']);
+    _existingHeroUrl = s(data['heroPhotoUrl']);
 
     final prov = s(data['province']);
     final city = s(data['city']);
@@ -426,6 +431,97 @@ class _EditListingPageViewState extends State<EditListingPageView> {
         currentSpecs.contains(spec) ? spec : _placeholderSpeciality;
 
     _didHydrate = true;
+  }
+
+  // ---------------------------------------------------------
+  // Hero photo (FilePicker + FirebaseStorage; uploaded on save)
+  // ---------------------------------------------------------
+  Future<void> _pickHeroPhoto() async {
+    if (_saving) return;
+    FocusScope.of(context).unfocus();
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+        withData: true,
+      );
+      if (result == null || result.files.isEmpty) return;
+      final f = result.files.first;
+      final Uint8List? bytes = f.bytes;
+      if (bytes == null || bytes.isEmpty) {
+        _toast('Could not read that image. Try again.', error: true);
+        return;
+      }
+      setState(() {
+        _heroBytes = bytes;
+        _heroFileName = f.name;
+        _removeHero = false;
+      });
+    } catch (e) {
+      debugPrint('\u26a0\ufe0f pick hero failed: $e');
+      _toast('Could not pick image.', error: true);
+    }
+  }
+
+  Widget _buildHeroPhotoPicker() {
+    final theme = FlutterFlowTheme.of(context);
+    final hasNew = _heroBytes != null && _heroBytes!.isNotEmpty;
+    final hasExisting = !_removeHero && _existingHeroUrl.isNotEmpty;
+    final showImage = hasNew || hasExisting;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InkWell(
+          onTap: _saving ? null : _pickHeroPhoto,
+          borderRadius: BorderRadius.circular(_cardRadius),
+          child: Container(
+            width: double.infinity,
+            height: 170,
+            decoration: BoxDecoration(
+              color: theme.secondaryBackground,
+              borderRadius: BorderRadius.circular(_cardRadius),
+              border: Border.all(color: theme.alternate, width: 1),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: hasNew
+                ? Image.memory(_heroBytes!, fit: BoxFit.cover)
+                : hasExisting
+                    ? Image.network(_existingHeroUrl, fit: BoxFit.cover)
+                    : Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.add_a_photo_outlined,
+                              size: 30, color: theme.secondaryText),
+                          const SizedBox(height: 8),
+                          Text('Add a cover photo',
+                              style: _hintTextStyle(theme)),
+                        ],
+                      ),
+          ),
+        ),
+        if (showImage) ...[
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              TextButton(
+                onPressed: _saving ? null : _pickHeroPhoto,
+                child: Text('Change', style: _hintTextStyle(theme)),
+              ),
+              TextButton(
+                onPressed: _saving
+                    ? null
+                    : () => setState(() {
+                          _heroBytes = null;
+                          _heroFileName = null;
+                          _removeHero = true;
+                        }),
+                child: Text('Remove', style: _hintTextStyle(theme)),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
   }
 
   bool _validate() {
@@ -478,9 +574,29 @@ class _EditListingPageViewState extends State<EditListingPageView> {
       final category = _listingTypeLabel;
       final speciality = _selectedSpeciality.trim();
 
-      final categorySlug = _slugify(category);
-      final specialitySlug = _slugify(speciality);
-      final provinceSlug = _slugify(province);
+      final categorySlug = functions.slugify(category);
+      final specialitySlug = functions.slugify(speciality);
+      final provinceSlug = functions.slugify(province);
+
+      // Upload new hero photo (optional) -> users/<uid>/listings/<id>/...
+      String? newHeroUrl;
+      if (_heroBytes != null && _heroBytes!.isNotEmpty) {
+        final ts = DateTime.now().millisecondsSinceEpoch;
+        final rawName =
+            (_heroFileName?.isNotEmpty ?? false) ? _heroFileName! : 'hero.jpg';
+        final safeName =
+            p.basename(rawName).replaceAll(RegExp(r'[^\w\.\- ]+'), '_');
+        final storagePath =
+            'users/$currentUserUid/listings/${ref.id}/hero_${ts}_$safeName';
+        final contentType =
+            lookupMimeType(safeName, headerBytes: _heroBytes) ?? 'image/jpeg';
+        final storageRef = FirebaseStorage.instance.ref().child(storagePath);
+        await storageRef.putData(
+          _heroBytes!,
+          SettableMetadata(contentType: contentType),
+        );
+        newHeroUrl = await storageRef.getDownloadURL();
+      }
 
       final updateData = <String, dynamic>{
         'name': name,
@@ -505,6 +621,13 @@ class _EditListingPageViewState extends State<EditListingPageView> {
         else
           'whatsappNumber': FieldValue.delete(),
         if (email.isNotEmpty) 'email': email else 'email': FieldValue.delete(),
+        if (newHeroUrl != null) 'heroPhotoUrl': newHeroUrl,
+        if (newHeroUrl != null) 'photoUrls': <String>[newHeroUrl],
+        if (newHeroUrl == null && _removeHero)
+          'heroPhotoUrl': FieldValue.delete(),
+        if (newHeroUrl == null && _removeHero) 'photoUrls': FieldValue.delete(),
+        'ownerName': currentUserDisplayName,
+        'ownerPhotoUrl': currentUserPhoto,
         'updatedAt': now,
       };
 
@@ -697,6 +820,11 @@ class _EditListingPageViewState extends State<EditListingPageView> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          _buildSection(
+                            title: 'Photo',
+                            child: _buildHeroPhotoPicker(),
+                          ),
+                          const SizedBox(height: 16),
                           _buildSection(
                             title: 'Business details',
                             child: Column(

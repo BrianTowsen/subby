@@ -3,12 +3,23 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import '/flutter_flow/custom_functions.dart' as functions;
+
+import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:mime/mime.dart';
+import 'package:path/path.dart' as p;
+
+import '/auth/firebase_auth/auth_util.dart';
 
 class AddListingPageView extends StatefulWidget {
   const AddListingPageView({
@@ -70,6 +81,10 @@ class _AddListingPageViewState extends State<AddListingPageView> {
   String _selectedSpeciality = 'Select speciality';
 
   bool _isSaving = false;
+
+  // Hero photo: picked in-form, uploaded to Storage on save.
+  Uint8List? _heroBytes;
+  String? _heroFileName;
 
   // ---------------------------------------------------------
   // Typography (token + family)
@@ -265,18 +280,6 @@ class _AddListingPageViewState extends State<AddListingPageView> {
     return FirebaseFirestore.instance.collection('users').doc(user.uid);
   }
 
-  String _slugify(String input) {
-    var s = input.trim().toLowerCase();
-    s = s.replaceAll(RegExp(r'\(.*?\)'), '');
-    s = s.replaceAll('&', 'and');
-    s = s.replaceAll(RegExp(r'[^a-z0-9\s-]'), '');
-    s = s.replaceAll(RegExp(r'\s+'), ' ');
-    s = s.replaceAll(' ', '-');
-    s = s.replaceAll(RegExp(r'-+'), '-');
-    s = s.replaceAll(RegExp(r'^-+|-+$'), '');
-    return s;
-  }
-
   void _toast(String message, {bool error = false}) {
     if (!mounted) return;
     final theme = FlutterFlowTheme.of(context);
@@ -298,6 +301,89 @@ class _AddListingPageViewState extends State<AddListingPageView> {
           duration: const Duration(seconds: 2),
         ),
       );
+  }
+
+  // ---------------------------------------------------------
+  // Hero photo (FilePicker + FirebaseStorage; uploaded on save)
+  // ---------------------------------------------------------
+  Future<void> _pickHeroPhoto() async {
+    if (_isSaving) return;
+    FocusScope.of(context).unfocus();
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+        withData: true,
+      );
+      if (result == null || result.files.isEmpty) return;
+      final f = result.files.first;
+      final Uint8List? bytes = f.bytes;
+      if (bytes == null || bytes.isEmpty) {
+        _toast('Could not read that image. Try again.', error: true);
+        return;
+      }
+      setState(() {
+        _heroBytes = bytes;
+        _heroFileName = f.name;
+      });
+    } catch (e) {
+      debugPrint('\u26a0\ufe0f pick hero failed: $e');
+      _toast('Could not pick image.', error: true);
+    }
+  }
+
+  Widget _buildHeroPhotoPicker(FlutterFlowTheme theme) {
+    final hasPhoto = _heroBytes != null && _heroBytes!.isNotEmpty;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InkWell(
+          onTap: _isSaving ? null : _pickHeroPhoto,
+          borderRadius: BorderRadius.circular(_cardRadius),
+          child: Container(
+            width: double.infinity,
+            height: 170,
+            decoration: BoxDecoration(
+              color: theme.secondaryBackground,
+              borderRadius: BorderRadius.circular(_cardRadius),
+              border: Border.all(color: theme.alternate, width: 1),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: hasPhoto
+                ? Image.memory(_heroBytes!, fit: BoxFit.cover)
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.add_a_photo_outlined,
+                          size: 30, color: theme.secondaryText),
+                      const SizedBox(height: 8),
+                      Text('Add a cover photo', style: _hintTextStyle(theme)),
+                    ],
+                  ),
+          ),
+        ),
+        if (hasPhoto) ...[
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              TextButton(
+                onPressed: _isSaving ? null : _pickHeroPhoto,
+                child: Text('Change', style: _hintTextStyle(theme)),
+              ),
+              TextButton(
+                onPressed: _isSaving
+                    ? null
+                    : () => setState(() {
+                          _heroBytes = null;
+                          _heroFileName = null;
+                        }),
+                child: Text('Remove', style: _hintTextStyle(theme)),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
   }
 
   bool _validate() {
@@ -356,11 +442,34 @@ class _AddListingPageViewState extends State<AddListingPageView> {
       final category = _listingTypeLabel;
       final speciality = _selectedSpeciality.trim();
 
-      final categorySlug = _slugify(category);
-      final specialitySlug = _slugify(speciality);
-      final provinceSlug = _slugify(province);
+      final categorySlug = functions.slugify(category);
+      final specialitySlug = functions.slugify(speciality);
+      final provinceSlug = functions.slugify(province);
 
       final doc = FirebaseFirestore.instance.collection('subby_listings').doc();
+
+      // Upload hero photo (optional) -> users/<uid>/listings/<id>/...
+      // (public-read, owner-write under existing Storage rules)
+      String heroUrl = '';
+      List<String> photoUrls = const <String>[];
+      if (_heroBytes != null && _heroBytes!.isNotEmpty) {
+        final ts = DateTime.now().millisecondsSinceEpoch;
+        final rawName =
+            (_heroFileName?.isNotEmpty ?? false) ? _heroFileName! : 'hero.jpg';
+        final safeName =
+            p.basename(rawName).replaceAll(RegExp(r'[^\w\.\- ]+'), '_');
+        final storagePath =
+            'users/${userRef.id}/listings/${doc.id}/hero_${ts}_$safeName';
+        final contentType =
+            lookupMimeType(safeName, headerBytes: _heroBytes) ?? 'image/jpeg';
+        final storageRef = FirebaseStorage.instance.ref().child(storagePath);
+        await storageRef.putData(
+          _heroBytes!,
+          SettableMetadata(contentType: contentType),
+        );
+        heroUrl = await storageRef.getDownloadURL();
+        photoUrls = <String>[heroUrl];
+      }
 
       await doc.set({
         'name': name,
@@ -376,8 +485,11 @@ class _AddListingPageViewState extends State<AddListingPageView> {
         if (phone.isNotEmpty) 'phoneNumber': phone,
         if (whatsapp.isNotEmpty) 'whatsappNumber': whatsapp,
         if (email.isNotEmpty) 'email': email,
+        if (heroUrl.isNotEmpty) 'heroPhotoUrl': heroUrl,
+        if (photoUrls.isNotEmpty) 'photoUrls': photoUrls,
         'ownerRef': userRef,
-        'visibility': 'public',
+        'ownerName': currentUserDisplayName,
+        'ownerPhotoUrl': currentUserPhoto,
         'isVerified': false,
         'rating': 0.0,
         'reviewCount': 0,
@@ -498,6 +610,11 @@ class _AddListingPageViewState extends State<AddListingPageView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      _buildSection(
+                        title: 'Photo',
+                        child: _buildHeroPhotoPicker(theme),
+                      ),
+                      const SizedBox(height: 16),
                       _buildSection(
                         title: 'Business details',
                         child: Column(

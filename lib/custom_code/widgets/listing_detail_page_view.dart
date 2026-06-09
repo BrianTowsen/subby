@@ -3,15 +3,19 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 // ✅ Share support (Clipboard copy)
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ListingDetailPageView extends StatefulWidget {
   const ListingDetailPageView({
@@ -45,9 +49,6 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
   final String _fallbackTrade = 'Electrician';
   final String _fallbackArea = 'Sandton, Gauteng';
 
-  final double _fallbackRating = 4.8;
-  final int _reviews = 120;
-
   // Service Provider fallbacks (used ONLY if providerRef exists but profile fields are missing)
   final String _fallbackProviderName = 'Guy';
   final String _fallbackProviderSurname = 'Smith';
@@ -66,14 +67,6 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
       'We are a registered electrical company specialising in residential and '
       'light commercial projects across Sandton and surrounding areas. '
       'Fully insured, accredited, and available 24/7 for emergency call-outs.';
-
-  // Gallery mock (per your instruction: do NOT wire photoUrls yet)
-  final List<String> _photoUrls = const [
-    'https://images.pexels.com/photos/4254168/pexels-photo-4254168.jpeg',
-    'https://images.pexels.com/photos/4254162/pexels-photo-4254162.jpeg',
-    'https://images.pexels.com/photos/4254167/pexels-photo-4254167.jpeg',
-    'https://images.pexels.com/photos/4254165/pexels-photo-4254165.jpeg',
-  ];
 
   // Prevent “infinite spinner” if the first snapshot never arrives
   static const Duration _maxInitialLoad = Duration(seconds: 8);
@@ -117,18 +110,6 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
       if (!mounted) return;
       setState(() => _showSlowLoadFallback = true);
     });
-  }
-
-  String _slugify(String input) {
-    var s = input.trim().toLowerCase();
-    s = s.replaceAll(RegExp(r'\(.*?\)'), '');
-    s = s.replaceAll('&', 'and');
-    s = s.replaceAll(RegExp(r'[^a-z0-9\s-]'), '');
-    s = s.replaceAll(RegExp(r'\s+'), ' ');
-    s = s.replaceAll(' ', '-');
-    s = s.replaceAll(RegExp(r'-+'), '-');
-    s = s.replaceAll(RegExp(r'^-+|-+$'), '');
-    return s;
   }
 
   // =========================================================
@@ -332,6 +313,52 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
     } catch (_) {}
   }
 
+  // ---------------------------------------------------------
+  // Launch contact actions (dialer / WhatsApp / email)
+  // ---------------------------------------------------------
+  Future<void> _launchUri(Uri uri, {required String failMessage}) async {
+    try {
+      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!ok && mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(failMessage)));
+      }
+    } catch (e) {
+      debugPrint('\u26a0\ufe0f launch failed: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(failMessage)));
+    }
+  }
+
+  String _digitsPlus(String s) => s.replaceAll(RegExp(r'[^0-9+]'), '');
+
+  Future<void> _launchPhone(String phone) async {
+    final n = _digitsPlus(phone);
+    if (n.isEmpty) return;
+    await _launchUri(Uri(scheme: 'tel', path: n),
+        failMessage: 'No dialer available.');
+  }
+
+  Future<void> _launchWhatsApp(String number) async {
+    // wa.me needs international digits, no '+' or spaces.
+    var n = _digitsPlus(number).replaceAll('+', '');
+    if (n.isEmpty) return;
+    // ZA local format (0xx...) -> 27xx...
+    if (n.startsWith('0')) n = '27${n.substring(1)}';
+    await _launchUri(Uri.parse('https://wa.me/$n'),
+        failMessage: 'Could not open WhatsApp.');
+  }
+
+  Future<void> _launchEmail(String email) async {
+    final e = email.trim();
+    if (e.isEmpty) return;
+    await _launchUri(Uri(scheme: 'mailto', path: e),
+        failMessage: 'No email app available.');
+  }
+
   Widget _contactButton({
     required FlutterFlowTheme theme,
     required IconData icon,
@@ -465,7 +492,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                   theme: theme,
                   icon: Icons.call_rounded,
                   label: 'Call',
-                  onTap: () => _copyToClipboard('Phone', p),
+                  onTap: () => _launchPhone(p),
                 ),
               if (p.isNotEmpty && (w.isNotEmpty || e.isNotEmpty))
                 const SizedBox(width: 10),
@@ -474,7 +501,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                   theme: theme,
                   icon: Icons.chat_rounded,
                   label: 'WhatsApp',
-                  onTap: () => _copyToClipboard('WhatsApp', w),
+                  onTap: () => _launchWhatsApp(w),
                 ),
               if (w.isNotEmpty && e.isNotEmpty) const SizedBox(width: 10),
               if (e.isNotEmpty)
@@ -482,7 +509,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                   theme: theme,
                   icon: Icons.email_rounded,
                   label: 'Email',
-                  onTap: () => _copyToClipboard('Email', e),
+                  onTap: () => _launchEmail(e),
                 ),
             ],
           ),
@@ -1099,14 +1126,14 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
 
           final String categorySlug = _readString('categorySlug').isNotEmpty
               ? _readString('categorySlug')
-              : _slugify(category);
+              : functions.slugify(category);
 
           final String province = _readString('province');
           final String city = _readString('city');
 
           final String provinceSlug = _readString('provinceSlug').isNotEmpty
               ? _readString('provinceSlug')
-              : _slugify(province);
+              : functions.slugify(province);
 
           final String area = [
             if (city.isNotEmpty) city,
@@ -1115,12 +1142,12 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
 
           final String displayArea = area.isNotEmpty ? area : _fallbackArea;
 
-          final double rating = (raw['rating'] is num)
-              ? (raw['rating'] as num).toDouble()
-              : _fallbackRating;
+          final double rating =
+              (raw['rating'] is num) ? (raw['rating'] as num).toDouble() : 0.0;
 
           final int reviews =
-              _readInt('reviewCount') ?? _readInt('reviews') ?? _reviews;
+              _readInt('reviewCount') ?? _readInt('reviews') ?? 0;
+          final bool hasReviews = reviews > 0;
 
           final List<String> associations = _readStringList('associations');
 
@@ -1145,14 +1172,22 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
 
           final DocumentReference? providerRef = _readDocRef('providerRef');
 
-          final bool isVerified =
-              providerRef != null && (raw['isVerified'] == true);
+          final bool isVerified = raw['isVerified'] == true;
+
+          final List<String> listingPhotos = _readStringList('photoUrls');
 
           final String heroPhotoUrl = _readString('heroPhotoUrl').isNotEmpty
               ? _readString('heroPhotoUrl')
-              : _photoUrls.first;
+              : (listingPhotos.isNotEmpty ? listingPhotos.first : '');
 
-          final List<String> galleryPhotos = _photoUrls;
+          final List<String> galleryPhotos = listingPhotos.isNotEmpty
+              ? listingPhotos
+              : (heroPhotoUrl.isNotEmpty
+                  ? <String>[heroPhotoUrl]
+                  : const <String>[]);
+
+          final String ownerName = _readString('ownerName');
+          final String ownerPhotoUrl = _readString('ownerPhotoUrl');
 
           final double bottomScrollPad = _bottomCtaContainerHeight + 18;
           final Color tabAccent = theme.primary;
@@ -1168,8 +1203,9 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
             category,
             if (displayArea.isNotEmpty) displayArea
           ].where((s) => s.trim().isNotEmpty).join(' • ');
-          final String plRatingText =
-              '${rating.toStringAsFixed(1)} • $reviews reviews';
+          final String plRatingText = hasReviews
+              ? '${rating.toStringAsFixed(1)} • $reviews reviews'
+              : 'No reviews yet';
           final String plPhotoUrl = heroPhotoUrl;
 
           return DefaultTabController(
@@ -1348,21 +1384,28 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                       const Spacer(),
                                       Row(
                                         children: [
-                                          const Icon(
-                                            Icons.star_rounded,
-                                            size: 18,
-                                            color: Color(0xFFFFC857),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            rating.toStringAsFixed(1),
-                                            style: _bodyMedium(theme),
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            '($reviews)',
-                                            style: _bodySmall(theme),
-                                          ),
+                                          if (hasReviews) ...[
+                                            const Icon(
+                                              Icons.star_rounded,
+                                              size: 18,
+                                              color: Color(0xFFFFC857),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              rating.toStringAsFixed(1),
+                                              style: _bodyMedium(theme),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              '($reviews)',
+                                              style: _bodySmall(theme),
+                                            ),
+                                          ] else ...[
+                                            Text(
+                                              'No reviews yet',
+                                              style: _bodySmall(theme),
+                                            ),
+                                          ],
                                           const SizedBox(width: 10),
                                           _pill(
                                             theme: theme,
@@ -1451,7 +1494,17 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                     whatsapp: listingWhatsapp,
                                     email: listingEmail,
                                   ),
-                                  if (providerRef != null) ...[
+                                  if (ownerName.isNotEmpty ||
+                                      ownerPhotoUrl.isNotEmpty) ...[
+                                    const SizedBox(height: 18),
+                                    Text('Service Provider',
+                                        style: _titleSmall(theme)),
+                                    const SizedBox(height: 10),
+                                    _buildOwnerSection(
+                                      name: ownerName,
+                                      photoUrl: ownerPhotoUrl,
+                                    ),
+                                  ] else if (providerRef != null) ...[
                                     const SizedBox(height: 18),
                                     Text('Service Provider',
                                         style: _titleSmall(theme)),
@@ -1535,47 +1588,61 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                         ListView(
                           padding: EdgeInsets.fromLTRB(
                               _hPad, 18, _hPad, bottomScrollPad),
-                          children: [
-                            GridView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: galleryPhotos.length,
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                mainAxisSpacing: 10,
-                                crossAxisSpacing: 10,
-                                childAspectRatio: 1.2,
-                              ),
-                              itemBuilder: (context, i) {
-                                return Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius:
-                                        BorderRadius.circular(_cardRadius),
-                                    border: Border.all(
-                                        color: theme.alternate, width: 1),
-                                    boxShadow: _subbyTileShadow(),
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius:
-                                        BorderRadius.circular(_cardRadius),
-                                    child: Image.network(
-                                      galleryPhotos[i],
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (c, e, st) => Container(
-                                        color: theme.secondaryBackground,
-                                        alignment: Alignment.center,
-                                        child: Icon(
-                                          Icons.image_not_supported_outlined,
-                                          color: theme.secondaryText,
-                                        ),
-                                      ),
+                          children: galleryPhotos.isEmpty
+                              ? [
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 24),
+                                    child: Center(
+                                      child: Text('No photos yet',
+                                          style: _bodySmall(theme)),
                                     ),
                                   ),
-                                );
-                              },
-                            ),
-                          ],
+                                ]
+                              : [
+                                  GridView.builder(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    itemCount: galleryPhotos.length,
+                                    gridDelegate:
+                                        const SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 2,
+                                      mainAxisSpacing: 10,
+                                      crossAxisSpacing: 10,
+                                      childAspectRatio: 1.2,
+                                    ),
+                                    itemBuilder: (context, i) {
+                                      return Container(
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(
+                                              _cardRadius),
+                                          border: Border.all(
+                                              color: theme.alternate, width: 1),
+                                          boxShadow: _subbyTileShadow(),
+                                        ),
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                              _cardRadius),
+                                          child: Image.network(
+                                            galleryPhotos[i],
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (c, e, st) =>
+                                                Container(
+                                              color: theme.secondaryBackground,
+                                              alignment: Alignment.center,
+                                              child: Icon(
+                                                Icons
+                                                    .image_not_supported_outlined,
+                                                color: theme.secondaryText,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
                         ),
                         ListView(
                           padding: EdgeInsets.fromLTRB(
@@ -1740,6 +1807,65 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
   // ===========================
   // PROVIDER SECTION (NO CLAIM / NO "NOT LINKED YET")
   // ===========================
+  Widget _buildOwnerSection({
+    required String name,
+    required String photoUrl,
+  }) {
+    final theme = FlutterFlowTheme.of(context);
+    final displayName = name.trim().isNotEmpty ? name.trim() : 'Listing owner';
+    final img = photoUrl.trim();
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: _subbyCardDecoration(theme),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: img.isNotEmpty
+                ? Image.network(
+                    img,
+                    width: 46,
+                    height: 46,
+                    fit: BoxFit.cover,
+                    errorBuilder: (c, e, st) => _ownerAvatarFallback(theme),
+                  )
+                : _ownerAvatarFallback(theme),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: _bodyMedium(theme),
+                ),
+                const SizedBox(height: 2),
+                Text('Service provider', style: _bodySmall(theme)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _ownerAvatarFallback(FlutterFlowTheme theme) {
+    return Container(
+      width: 46,
+      height: 46,
+      decoration: BoxDecoration(
+        color: theme.primaryBackground,
+        shape: BoxShape.circle,
+        border: Border.all(color: theme.alternate, width: 1),
+      ),
+      alignment: Alignment.center,
+      child: Icon(Icons.person_outline_rounded, color: theme.secondaryText),
+    );
+  }
+
   Widget _buildProviderSection({
     required DocumentReference? providerRef,
     required String fallbackName,
