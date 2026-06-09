@@ -8,279 +8,198 @@ import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '/auth/firebase_auth/auth_util.dart';
+// ======================= SubbyBottomNav (FULL FILE) =======================
+//
+// App-shell bottom navigation. The active tab is shown as a pill in that area's
+// accent (Home = ink, Explore = saffron, Saved = orange, More = steel) with the
+// icon sitting ON the pill in the readable foreground. Inactive tabs are muted.
+//
+// PARAMETERS (match the FlutterFlow definition — nothing to add):
+//   * width, height   - the standard required pair (height is accepted but the
+//                       bar sizes itself; pass anything).
+//   * currentIndex    - which tab is active on THIS page:
+//                       0 Home . 1 Explore . 2 Saved . 3 More
+//
+// ROUTES are app-global, so they're constants here (not per-page params). Edit
+// the four _route* values below to match your FlutterFlow page names.
+//
+// ANDROID SAFE AREA: the row is wrapped in SafeArea(top:false) so the system
+// inset (Samsung gesture bar / 3-button nav) is reserved automatically; the
+// `minimum: bottom 8` is a floor for devices with no inset. Place the bar at the
+// very bottom of the page, full-bleed, so it owns the inset.
 
 class SubbyBottomNav extends StatefulWidget {
   const SubbyBottomNav({
-    Key? key,
+    super.key,
     this.width,
     this.height,
-    required this.currentIndex, // 0..2 (SECTION TABS ONLY)
-  }) : super(key: key);
+    this.currentIndex, // 0 Home . 1 Explore . 2 Saved . 3 More
+  });
 
   final double? width;
   final double? height;
-
-  /// 0=Home (Directory start), 1=Explore, 2=Bookmarked
-  final int currentIndex;
+  final int? currentIndex;
 
   @override
   State<SubbyBottomNav> createState() => _SubbyBottomNavState();
 }
 
 class _SubbyBottomNavState extends State<SubbyBottomNav> {
-  // ✅ SECTION Route NAMES (ONLY 3)
-  static const String _homeRouteName = 'homePage'; // Directory home/start
-  static const String _exploreRouteName = 'explorePage';
-  static const String _savedRouteName = 'savedPage';
+  // PALETTE (matches the app)
+  static const Color _ink = Color(0xFF2B3443);
+  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _hairline = Color(0xFFE3E4E8);
+  static const Color _orange = Color(0xFFFF7A00);
+  static const Color _saffron = Color(0xFFF1BC16);
+  static const Color _steel = Color(0xFF9EA3B0);
 
-  static const String _kSavedField = 'savedListingRefs';
+  static const String _bodyFont = 'Inter';
 
-  String _routeNameForIndex(int index) {
-    if (index == 0) return _homeRouteName;
-    if (index == 1) return _exploreRouteName;
-    return _savedRouteName;
-  }
-
-  /// ✅ Fade transition for section tabs (Home/Explore/Bookmarked)
-  void _go(int index) {
-    if (index == widget.currentIndex) return;
-
-    context.pushReplacementNamed(
-      _routeNameForIndex(index),
-      extra: {
-        kTransitionInfoKey: const TransitionInfo(
-          hasTransition: true,
-          transitionType: PageTransitionType.fade,
-          duration: Duration(milliseconds: 180),
-        ),
-      },
-    );
-  }
+  // ROUTES (edit to your real FlutterFlow page names)
+  static const String _routeHome = 'homePage';
+  static const String _routeExplore = 'explorePage';
+  static const String _routeSaved = 'savedPage';
+  static const String _routeMore = 'morePage';
 
   @override
   Widget build(BuildContext context) {
-    final theme = FlutterFlowTheme.of(context);
+    final sel = (widget.currentIndex ?? 0).clamp(0, 3);
 
-    // ✅ Content height of the bar (NOT including iPhone home-indicator inset)
-    final double contentHeight = (widget.height ?? 74).clamp(64, 86).toDouble();
-
-    // ✅ Include bottom safe-area INSIDE the painted background
-    final double bottomInset = MediaQuery.of(context).padding.bottom;
-    final double totalHeight = contentHeight + bottomInset;
-
-    final items = <_NavItemSpec>[
-      _NavItemSpec('Home', Icons.home_outlined, Icons.home_rounded),
-      _NavItemSpec('Explore', Icons.search_outlined, Icons.search_rounded),
-      _NavItemSpec(
-        'Bookmarked',
-        Icons.bookmark_border_rounded,
-        Icons.bookmark_rounded,
-      ),
-    ];
-
-    final userRef = currentUserReference;
-    final inactiveColor = theme.secondaryText.withOpacity(0.78);
-
-    return SizedBox(
+    return Container(
       width: widget.width ?? double.infinity,
-      height: totalHeight,
-      child: Container(
-        decoration: BoxDecoration(
-          color: theme.secondaryBackground,
-          boxShadow: const [
-            BoxShadow(
-              blurRadius: 18,
-              offset: Offset(0, -6),
-              color: Color(0x12000000),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            // top divider line
-            Container(
-              height: 1,
-              color: theme.alternate.withOpacity(0.7),
-            ),
-
-            // ✅ Main nav content area (fixed height)
-            SizedBox(
-              height: contentHeight - 1, // subtract divider
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // SECTION TABS (3)
-                    Expanded(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: List.generate(items.length, (i) {
-                          final spec = items[i];
-                          final bool active = i == widget.currentIndex;
-
-                          // Bookmarked tab with live count
-                          if (i == 2 && userRef != null) {
-                            return Expanded(
-                              child: StreamBuilder<DocumentSnapshot>(
-                                stream: userRef.snapshots(),
-                                builder: (context, snap) {
-                                  int count = 0;
-                                  final data = snap.data?.data()
-                                      as Map<String, dynamic>?;
-
-                                  if (data != null &&
-                                      data[_kSavedField] is List) {
-                                    count = (data[_kSavedField] as List).length;
-                                  }
-
-                                  return _FlatNavItem(
-                                    label: spec.label,
-                                    iconOff: spec.iconOff,
-                                    iconOn: spec.iconOn,
-                                    active: active,
-                                    activeColor: theme.primary,
-                                    inactiveColor: inactiveColor,
-                                    badgeCount: count,
-                                    onTap: () => _go(i),
-                                  );
-                                },
-                              ),
-                            );
-                          }
-
-                          return Expanded(
-                            child: _FlatNavItem(
-                              label: spec.label,
-                              iconOff: spec.iconOff,
-                              iconOn: spec.iconOn,
-                              active: active,
-                              activeColor: theme.primary,
-                              inactiveColor: inactiveColor,
-                              onTap: () => _go(i),
-                            ),
-                          );
-                        }),
-                      ),
-                    ),
-                  ],
+      decoration: const BoxDecoration(
+        color: _paper,
+        border: Border(top: BorderSide(color: _hairline, width: 1)),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x14000000),
+            blurRadius: 16,
+            offset: Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        // Floor so it never hugs the gesture bar; SafeArea adds the real
+        // system inset on top of this where present (Samsung etc).
+        minimum: const EdgeInsets.only(bottom: 8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: _tab(
+                  active: sel == 0,
+                  label: 'Home',
+                  icon: Icons.home_rounded,
+                  accent: _ink,
+                  onAccent: _paper,
+                  route: _routeHome,
                 ),
               ),
-            ),
-
-            // ✅ Painted safe-area spacer (keeps background to bottom edge)
-            if (bottomInset > 0) SizedBox(height: bottomInset),
-          ],
+              Expanded(
+                child: _tab(
+                  active: sel == 1,
+                  label: 'Explore',
+                  icon: Icons.explore_rounded,
+                  accent: _saffron,
+                  onAccent: _ink,
+                  route: _routeExplore,
+                ),
+              ),
+              Expanded(
+                child: _tab(
+                  active: sel == 2,
+                  label: 'Saved',
+                  icon: Icons.bookmark_rounded,
+                  accent: _orange,
+                  onAccent: _ink,
+                  route: _routeSaved,
+                ),
+              ),
+              Expanded(
+                child: _tab(
+                  active: sel == 3,
+                  label: 'More',
+                  icon: Icons.menu_rounded,
+                  accent: _steel,
+                  onAccent: _ink,
+                  route: _routeMore,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
-}
 
-class _NavItemSpec {
-  final String label;
-  final IconData iconOff;
-  final IconData iconOn;
-  _NavItemSpec(this.label, this.iconOff, this.iconOn);
-}
-
-/// Flat nav item with optional badge (Subby style)
-class _FlatNavItem extends StatelessWidget {
-  const _FlatNavItem({
-    required this.label,
-    required this.iconOff,
-    required this.iconOn,
-    required this.active,
-    required this.activeColor,
-    required this.inactiveColor,
-    required this.onTap,
-    this.badgeCount,
-  });
-
-  final String label;
-  final IconData iconOff;
-  final IconData iconOn;
-  final bool active;
-  final Color activeColor;
-  final Color inactiveColor;
-  final VoidCallback onTap;
-  final int? badgeCount;
-
-  TextStyle _navLabelStyle(FlutterFlowTheme theme, {required Color color}) {
-    final base = theme.labelSmall;
-    return base.copyWith(color: color);
-  }
-
-  TextStyle _badgeTextStyle(FlutterFlowTheme theme) {
-    final base = theme.labelSmall;
-    return base.copyWith(color: Colors.white);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = FlutterFlowTheme.of(context);
-    const double iconSize = 22;
-
+  Widget _tab({
+    required bool active,
+    required String label,
+    required IconData icon,
+    required Color accent,
+    required Color onAccent,
+    required String route,
+  }) {
     return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
+      onTap: () => _navigate(route),
+      borderRadius: BorderRadius.circular(16),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+        padding: const EdgeInsets.symmetric(vertical: 6),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Icon(
-                  active ? iconOn : iconOff,
-                  size: iconSize,
-                  color: active ? activeColor : inactiveColor,
-                ),
-                if (badgeCount != null && badgeCount! > 0)
-                  Positioned(
-                    top: -6,
-                    right: -8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: theme.primary,
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(
-                          color: theme.secondaryBackground,
-                          width: 1.5,
-                        ),
-                      ),
-                      child: Text(
-                        badgeCount! > 99 ? '99+' : badgeCount.toString(),
-                        style: _badgeTextStyle(theme),
-                        maxLines: 1,
-                        overflow: TextOverflow.clip,
-                      ),
-                    ),
-                  ),
-              ],
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOut,
+              width: 56,
+              height: 30,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: active ? accent : Colors.transparent,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Icon(
+                icon,
+                size: 22,
+                color: active ? onAccent : _inkMute,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: _navLabelStyle(
-                theme,
-                color: active ? activeColor : inactiveColor,
+              style: TextStyle(
+                fontFamily: _bodyFont,
+                fontSize: 11,
+                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                color: active ? _ink : _inkMute,
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  void _navigate(String route) {
+    final target = route.trim();
+    if (target.isEmpty) return;
+
+    // Tab semantics: switch branch rather than stack pages. go_router's
+    // goNamed replaces the location; fall back to pushNamed if the name
+    // isn't registered for go.
+    try {
+      context.goNamed(target);
+    } catch (_) {
+      try {
+        context.pushNamed(target);
+      } catch (_) {
+        // route name not found - update the _route* constants above
+      }
+    }
   }
 }
