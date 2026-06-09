@@ -12,47 +12,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-// ─── SUBBY PALETTE (LOCK) ────────────────────────────────────────────
-// less-is-more system · ported from Clutch Putt · lime → yellow.
-// File-level so BOTH _ExplorePageViewState and the pinned-header delegate
-// (_ExploreFilterHeaderDelegate) share one source. Grep `SUBBY PALETTE (LOCK)`.
-//
-// The filter band + sheet were a saturated brand fill; per the system a
-// saturated band becomes a neutral contained surface, so foreground flips
-// to ink. Yellow (_spark) is reserved for the "Show results" CTA only.
-//
-// Neutrals
-const Color _ink = Color(0xFF181C27);
-const Color _inkSoft = Color(0xFF181C27);
-const Color _inkMute = Color(0xFF6B7280);
-const Color _paper = Color(0xFFFFFFFF);
-const Color _surface = Color(0xFFE3E4E8);
-const Color _surface2 = Color(0xFFE3E4E8);
-const Color _hairline = Color(0xFFE3E4E8);
-const Color _hairlineOnSurface = Color(0xFFD0D2D8);
-// Brand accent — YELLOW. Always ink foreground, never white.
-const Color _spark = Color(0xFFFFE718); // primary CTA / ranked accent
-const Color _sparkInk = Color(0xFF181C27);
-const Color _calm = Color(0xFF9C8A12);
-const Color _calmInk = Color(0xFFFFFFFF);
-// Status
-const Color _live = Color(0xFFFFB000); // gold — live / open-now
-const Color _steel = Color(0xFF9DA8B5);
-const Color _coral = Color(0xFFC8102E); // legacy red — error
-// Geometry
-const double _rSmall = 6;
-const double _rMed = 8;
-const double _rLarge = 12;
-const double _rPill = 999;
-const double _pageHPad = 20;
-const double _sectionGap = 32;
-const double _navReserve = 96;
-// Type
-const String _displayFont = 'Inter Tight';
-const String _bodyFont = 'Inter';
-const String _monoFont = 'Inter';
-// ──────────────────────────────────────────────────────────────────────
-
 class ExplorePageView extends StatefulWidget {
   const ExplorePageView({
     super.key,
@@ -100,8 +59,45 @@ class _ExplorePageViewState extends State<ExplorePageView> {
   List<String> _specialitiesForSelectedCategory = const [];
   final Map<String, List<String>> _specialitiesByCategory = {};
 
-  // Palette constants are defined at file scope — see SUBBY PALETTE (LOCK)
-  // above the class declarations (shared with _ExploreFilterHeaderDelegate).
+  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
+  //
+  // The filter band + sheet were a saturated brand fill; per the system a
+  // saturated band becomes a neutral contained surface, so foreground flips
+  // to ink. Yellow (_spark) is reserved for the "Show results" CTA only.
+  //
+  // Neutrals
+  static const Color _ink = Color(0xFF2B3443);
+  static const Color _inkSoft = Color(0xFF2B3443);
+  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _surface = Color(0xFFE3E4E8);
+  static const Color _surface2 = Color(0xFFE3E4E8);
+  static const Color _hairline = Color(0xFFE3E4E8);
+  static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
+  // Brand accent — YELLOW. Always ink foreground, never white.
+  static const Color _spark = Color(0xFFF1BC16); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFF2B3443);
+  static const Color _calm = Color(0xFFB8910F);
+  static const Color _calmInk = Color(0xFFFFFFFF);
+  // Status
+  static const Color _live = Color(0xFFFFB000); // gold — live / open-now
+  static const Color _steel = Color(0xFF9EA3B0);
+  static const Color _coral = Color(0xFFC8102E); // legacy red — error
+  // Geometry
+  static const double _rSmall = 6;
+  static const double _rMed = 8;
+  static const double _rLarge = 12;
+  static const double _rPill = 999;
+  static const double _pageHPad = 20;
+  static const double _sectionGap = 32;
+  static const double _navReserve = 96;
+  // Type
+  static const String _displayFont = 'Inter Tight';
+  static const String _bodyFont = 'Inter';
+  static const String _monoFont = 'Inter';
+  // ────────────────────────────────────────────────────────────────────
 
   // ==========================================================
   // ✅ TYPOGRAPHY (locked palette — explicit family + colour)
@@ -1484,6 +1480,11 @@ class _ExplorePageViewState extends State<ExplorePageView> {
 }
 
 class _ExploreFilterHeaderDelegate extends SliverPersistentHeaderDelegate {
+  // This is a separate class, so it can't see the palette consts that live as
+  // static members of _ExplorePageViewState — give it its own copies.
+  static const Color _ink = Color(0xFF2B3443);
+  static const Color _surface = Color(0xFFE3E4E8);
+
   _ExploreFilterHeaderDelegate({
     required this.rebuildToken,
     required this.hPad,

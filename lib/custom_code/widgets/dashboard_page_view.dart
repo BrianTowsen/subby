@@ -96,29 +96,34 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF181C27);
+  static const Color _ink = Color(0xFF2B3443); // Jet Black — softer blue-black
   static const Color _inkMute = Color(0xFF6B7280);
-  static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _paper = Color(0xFFFFFFFF); // White
   static const Color _surface = Color(0xFFE3E4E8);
   static const Color _hairline = Color(0xFFE3E4E8);
+  static const Color _steel =
+      Color(0xFF9EA3B0); // Cool Steel — profile / account / "other"
 
   // ── ACCENT-BACKGROUND CARD SYSTEM ──────────────────────────────────
-  // Both section cards are SOLID accent blocks with INK content. One rule
-  // for everything: accent fill, ink text, ink chip + white icon, ink
-  // pill + white text. Orange = My Projects, Yellow = Directory.
+  // Both section cards are SOLID accent blocks with INK content. One rule:
+  // accent fill, ink text, ink chip + white icon, ink pill + white text.
+  // On a saturated fill, faded text loses contrast — so on-accent text is
+  // FULL ink, with hierarchy carried by size/weight, not opacity.
   static const Color _onAccentChip = _ink; // icon chip fill (both cards)
-  static final Color _onAccentSub = _ink.withOpacity(0.72); // secondary text
-  // primary text on an accent card is plain _ink; chip icon is white (_paper)
+  static const Color _onAccentSub =
+      _ink; // secondary text — full ink for contrast
 
-  // Accent — DIRECTORY = YELLOW. Ink foreground only, never white.
-  static const Color _spark = Color(0xFFFFE718); // yellow card background
-  static const Color _sparkInk = Color(0xFF181C27);
+  // Accent — DIRECTORY = YELLOW (Saffron). Ink foreground only, never white.
+  static const Color _spark = Color(0xFFF1BC16); // saffron card background
+  static const Color _sparkInk = Color(0xFF2B3443);
 
   // Accent — MY PROJECTS = ORANGE.
+  // Card bg is the BRIGHT orange so ink reads with margin; Blazing Flame
+  // (F15025) is kept as the saturated accent on shapes that carry no text.
   static const Color _orangeBg =
-      Color(0xFFFF7A00); // bright vivid orange — card bg (ink reads on it)
+      Color(0xFFFF7A00); // bright orange — card bg (ink reads on it)
   static const Color _orange =
-      Color(0xFFFF6A00); // bright orange — marker / add-card
+      Color(0xFFF15025); // Blazing Flame — marker / add-card accent
   static const Color _orangeDark =
       Color(0xFFC2410C); // deep orange — (legacy, unused)
   static const Color _orangeLight =
@@ -141,7 +146,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   static const double _radius = _rLarge;
 
   // Spacing rhythm
-  static const double _sectionBreak = 38;
+  static const double _sectionBreak = 56;
   static const double _titleToDesc = 8;
   static const double _descToTile = 16;
 
@@ -443,7 +448,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           height: 40,
           decoration: const BoxDecoration(
             shape: BoxShape.circle,
-            color: _surface,
+            color: _steel,
           ),
           child: const Icon(Icons.person_rounded, size: 20, color: _ink),
         ),
@@ -466,8 +471,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                   _accentMarker(_orange),
                   const SizedBox(width: 10),
                   Expanded(
-                      child:
-                          Text('My Home Projects', style: _stepHeadlineStyle)),
+                      child: Text('Home Building Projects',
+                          style: _stepHeadlineStyle)),
                 ],
               ),
               const SizedBox(height: _titleToDesc),
