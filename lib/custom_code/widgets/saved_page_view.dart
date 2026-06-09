@@ -26,47 +26,117 @@ class SavedPageView extends StatefulWidget {
 }
 
 class _SavedPageViewState extends State<SavedPageView> {
-  static const double _hPad = 24;
+  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
+  //
+  // Neutrals
+  static const Color _ink = Color(0xFF181C27);
+  static const Color _inkSoft = Color(0xFF181C27);
+  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _surface = Color(0xFFE3E4E8);
+  static const Color _surface2 = Color(0xFFE3E4E8);
+  static const Color _hairline = Color(0xFFE3E4E8);
+  static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
+  // Brand accent — YELLOW. Always ink foreground, never white.
+  static const Color _spark = Color(0xFFFFE718); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFF181C27);
+  static const Color _calm = Color(0xFF9C8A12);
+  static const Color _calmInk = Color(0xFFFFFFFF);
+  // Status
+  static const Color _live =
+      Color(0xFFFFB000); // gold — live / open-now / warning
+  static const Color _steel = Color(0xFF9DA8B5);
+  static const Color _coral = Color(0xFFC8102E);
+  // Geometry
+  static const double _rSmall = 6;
+  static const double _rMed = 8;
+  static const double _rLarge = 12;
+  static const double _rPill = 999;
+  static const double _pageHPad = 20;
+  static const double _sectionGap = 32;
+  static const double _navReserve = 96;
+  // Type
+  static const String _displayFont = 'Inter Tight';
+  static const String _bodyFont = 'Inter';
+  static const String _monoFont = 'Inter';
+  // ────────────────────────────────────────────────────────────────────
+
+  static const double _hPad = _pageHPad;
   static const double _vPad = 18;
 
   /// users/<uid>.savedListingRefs : List<DocRef(subby_listings)>
   static const String _kSavedField = 'savedListingRefs';
 
   // =========================================================
-  // ✅ TYPOGRAPHY (BENCHMARK: token + explicit family, color only)
+  // ✅ TYPOGRAPHY (locked palette — explicit family + colour)
   // =========================================================
-  TextStyle _appTitleStyle(FlutterFlowTheme theme) {
-    return theme.titleLarge.copyWith(
-      fontWeight: FontWeight.w900, // 🔥 Extra bold
-      letterSpacing: 0.2,
-    );
-  }
-
-  // ✅ FIX: this was referenced in build() but missing
-  TextStyle _topTitle(FlutterFlowTheme theme) => _appTitleStyle(theme);
-
-  TextStyle _topSubtitle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+  TextStyle get _appTitleStyle => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 24,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.4,
+        height: 1.05,
+        color: _ink,
       );
 
-  TextStyle _cardTitle(FlutterFlowTheme t) => t.titleMedium.override(
-        fontFamily: t.titleMediumFamily,
+  TextStyle get _topTitle => _appTitleStyle;
+
+  TextStyle get _topSubtitle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 13,
+        color: _inkMute,
       );
 
-  TextStyle _bodyMuted(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+  TextStyle get _headingStyle => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.2,
+        color: _ink,
       );
 
-  TextStyle _pillText(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.primaryText,
+  TextStyle get _nameStyle => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 15,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.2,
+        color: _ink,
       );
 
-  TextStyle _buttonTextOnPrimary(FlutterFlowTheme t) => t.labelMedium.override(
-        fontFamily: t.labelMediumFamily,
-        color: Colors.white,
+  TextStyle get _bodyMuted => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 13,
+        color: _inkMute,
+      );
+
+  TextStyle get _pillText => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: _ink,
+      );
+
+  TextStyle get _ratingText => const TextStyle(
+        fontFamily: _monoFont,
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: _ink,
+        fontFeatures: [FontFeature.tabularFigures()],
+      );
+
+  TextStyle get _locationText => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 12,
+        color: _inkMute,
+      );
+
+  TextStyle get _buttonTextOnPrimary => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: _sparkInk, // ink-on-yellow
       );
   // =========================================================
 
@@ -146,13 +216,12 @@ class _SavedPageViewState extends State<SavedPageView> {
   }
 
   Widget _loading(BuildContext context) {
-    final theme = FlutterFlowTheme.of(context);
-    return Center(
+    return const Center(
       child: SizedBox(
         width: 28,
         height: 28,
         child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(theme.primary),
+          valueColor: AlwaysStoppedAnimation<Color>(_ink),
           strokeWidth: 2,
         ),
       ),
@@ -160,26 +229,25 @@ class _SavedPageViewState extends State<SavedPageView> {
   }
 
   // =========================
-  // Subby-style buttons
+  // Subby-style buttons (primary action — yellow, ink-on-yellow)
   // =========================
   Widget _primaryPillButton(
     BuildContext context, {
     required String label,
     required VoidCallback onTap,
   }) {
-    final theme = FlutterFlowTheme.of(context);
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(999),
+      borderRadius: BorderRadius.circular(_rPill),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
         decoration: BoxDecoration(
-          color: theme.primary,
-          borderRadius: BorderRadius.circular(999),
+          color: _spark,
+          borderRadius: BorderRadius.circular(_rPill),
         ),
         child: Text(
           label,
-          style: _buttonTextOnPrimary(theme),
+          style: _buttonTextOnPrimary,
         ),
       ),
     );
@@ -189,8 +257,6 @@ class _SavedPageViewState extends State<SavedPageView> {
   // States (polished + centered)
   // =========================
   Widget _emptyState(BuildContext context) {
-    final theme = FlutterFlowTheme.of(context);
-
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 320),
       child: Column(
@@ -200,27 +266,27 @@ class _SavedPageViewState extends State<SavedPageView> {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: theme.secondaryBackground,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: theme.alternate, width: 1),
+              color: _surface,
+              borderRadius: BorderRadius.circular(_rLarge),
+              border: Border.all(color: _hairlineOnSurface, width: 1),
             ),
             alignment: Alignment.center,
-            child: Icon(
+            child: const Icon(
               Icons.bookmark_border,
               size: 34,
-              color: theme.secondaryText,
+              color: _inkMute,
             ),
           ),
           const SizedBox(height: 14),
           Text(
             'No saved listings yet',
-            style: _cardTitle(theme),
+            style: _headingStyle,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
             'When you bookmark a listing, it will show here.',
-            style: _bodyMuted(theme),
+            style: _bodyMuted,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -239,8 +305,6 @@ class _SavedPageViewState extends State<SavedPageView> {
   }
 
   Widget _loginState(BuildContext context) {
-    final theme = FlutterFlowTheme.of(context);
-
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 320),
       child: Column(
@@ -250,24 +314,23 @@ class _SavedPageViewState extends State<SavedPageView> {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: theme.secondaryBackground,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: theme.alternate, width: 1),
+              color: _surface,
+              borderRadius: BorderRadius.circular(_rLarge),
+              border: Border.all(color: _hairlineOnSurface, width: 1),
             ),
             alignment: Alignment.center,
-            child:
-                Icon(Icons.lock_outline, size: 34, color: theme.secondaryText),
+            child: const Icon(Icons.lock_outline, size: 34, color: _inkMute),
           ),
           const SizedBox(height: 14),
           Text(
             'Sign in to see your saved listings',
-            style: _cardTitle(theme),
+            style: _headingStyle,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
             'Bookmarks are tied to your account.',
-            style: _bodyMuted(theme),
+            style: _bodyMuted,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -298,25 +361,24 @@ class _SavedPageViewState extends State<SavedPageView> {
   }
 
   // ==========================================================
-  // ✅ Explore-style listing card (THEME TOKEN TYPOGRAPHY ONLY)
+  // ✅ Explore-style listing card (locked palette)
   // ==========================================================
   Widget _pill(
     BuildContext context, {
     required String text,
   }) {
-    final theme = FlutterFlowTheme.of(context);
     if (text.trim().isEmpty) return const SizedBox.shrink();
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: theme.secondaryBackground,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: theme.alternate, width: 1),
+        color: _surface,
+        borderRadius: BorderRadius.circular(_rPill),
+        border: Border.all(color: _hairlineOnSurface, width: 1),
       ),
       child: Text(
         text,
-        style: _pillText(theme),
+        style: _pillText,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
@@ -328,8 +390,6 @@ class _SavedPageViewState extends State<SavedPageView> {
     required DocumentReference listingRef,
     required Map<String, dynamic> listing,
   }) {
-    final theme = FlutterFlowTheme.of(context);
-
     final String name = _str(listing['name']);
     final String category = _str(listing['category']);
     final String speciality = _str(listing['speciality']);
@@ -346,16 +406,9 @@ class _SavedPageViewState extends State<SavedPageView> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: theme.primaryBackground,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.alternate, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: _paper,
+        borderRadius: BorderRadius.circular(_rLarge),
+        border: Border.all(color: _hairline, width: 1),
       ),
       child: Row(
         children: [
@@ -364,15 +417,14 @@ class _SavedPageViewState extends State<SavedPageView> {
             width: 74,
             height: 74,
             decoration: BoxDecoration(
-              color: theme.secondaryBackground,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: theme.alternate, width: 1),
+              color: _surface,
+              borderRadius: BorderRadius.circular(_rLarge),
             ),
             alignment: Alignment.center,
-            child: Icon(
+            child: const Icon(
               Icons.image_outlined,
               size: 24,
-              color: theme.secondaryText,
+              color: _inkMute,
             ),
           ),
           const SizedBox(width: 12),
@@ -394,17 +446,15 @@ class _SavedPageViewState extends State<SavedPageView> {
                               name.isNotEmpty ? name : 'Listing',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: theme.titleMedium.override(
-                                fontFamily: theme.titleMediumFamily,
-                              ),
+                              style: _nameStyle,
                             ),
                           ),
                           if (isVerified) ...[
                             const SizedBox(width: 6),
-                            Icon(
+                            const Icon(
                               Icons.verified_rounded,
                               size: 16,
-                              color: theme.primary,
+                              color: _ink,
                             ),
                           ],
                         ],
@@ -414,32 +464,29 @@ class _SavedPageViewState extends State<SavedPageView> {
                     const Icon(
                       Icons.star_rounded,
                       size: 16,
-                      color: Color(0xFFFFC857),
+                      color: _ink,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       rating.toStringAsFixed(1),
-                      style: theme.bodySmall.override(
-                        fontFamily: theme.bodySmallFamily,
-                      ),
+                      style: _ratingText,
                     ),
                     const SizedBox(width: 10),
                     InkWell(
                       onTap: () => _removeBookmark(listingRef),
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(_rMed),
                       child: Container(
                         width: 30,
                         height: 30,
                         decoration: BoxDecoration(
-                          color: theme.secondaryBackground,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: theme.alternate, width: 1),
+                          color: _surface,
+                          borderRadius: BorderRadius.circular(_rMed),
                         ),
                         alignment: Alignment.center,
-                        child: Icon(
+                        child: const Icon(
                           Icons.bookmark_rounded,
                           size: 16,
-                          color: theme.primary,
+                          color: _ink,
                         ),
                       ),
                     ),
@@ -463,18 +510,15 @@ class _SavedPageViewState extends State<SavedPageView> {
                 // Location only
                 Row(
                   children: [
-                    Icon(Icons.location_on_outlined,
-                        size: 14, color: theme.secondaryText),
+                    const Icon(Icons.location_on_outlined,
+                        size: 14, color: _inkMute),
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
                         location,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: theme.bodySmall.override(
-                          fontFamily: theme.bodySmallFamily,
-                          color: theme.secondaryText,
-                        ),
+                        style: _locationText,
                       ),
                     ),
                   ],
@@ -492,8 +536,6 @@ class _SavedPageViewState extends State<SavedPageView> {
   // =========================
   @override
   Widget build(BuildContext context) {
-    final theme = FlutterFlowTheme.of(context);
-
     final double width = widget.width ?? MediaQuery.sizeOf(context).width;
     final double height = widget.height ?? MediaQuery.sizeOf(context).height;
 
@@ -504,7 +546,7 @@ class _SavedPageViewState extends State<SavedPageView> {
       width: width,
       height: height,
       child: Container(
-        color: theme.primaryBackground,
+        color: _paper,
         child: Padding(
           padding: EdgeInsets.fromLTRB(
             _hPad,
@@ -515,9 +557,9 @@ class _SavedPageViewState extends State<SavedPageView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Saved', style: _topTitle(theme)),
+              Text('Saved', style: _topTitle),
               const SizedBox(height: 6),
-              Text('Your bookmarked listings', style: _topSubtitle(theme)),
+              Text('Your bookmarked listings', style: _topSubtitle),
               const SizedBox(height: 16),
               Expanded(
                 child: currentUserReference == null

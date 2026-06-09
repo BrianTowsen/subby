@@ -48,8 +48,46 @@ class ListingResultsPageView extends StatefulWidget {
 }
 
 class _ListingResultsPageViewState extends State<ListingResultsPageView> {
-  static const double _hPad = 24;
-  static const double _vPad = 24;
+  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
+  //
+  // Neutrals
+  static const Color _ink = Color(0xFF181C27);
+  static const Color _inkSoft = Color(0xFF181C27);
+  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _surface = Color(0xFFE3E4E8);
+  static const Color _surface2 = Color(0xFFE3E4E8);
+  static const Color _hairline = Color(0xFFE3E4E8);
+  static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
+  // Brand accent — YELLOW. Always ink foreground, never white.
+  static const Color _spark =
+      Color(0xFFFFE718); // primary CTA / ranked accent / live data pip
+  static const Color _sparkInk = Color(0xFF181C27);
+  static const Color _calm = Color(0xFF9C8A12);
+  static const Color _calmInk = Color(0xFFFFFFFF);
+  // Status
+  static const Color _live =
+      Color(0xFFFFB000); // gold — live / open-now / warning
+  static const Color _steel = Color(0xFF9DA8B5);
+  static const Color _coral = Color(0xFFC8102E);
+  // Geometry
+  static const double _rSmall = 6;
+  static const double _rMed = 8;
+  static const double _rLarge = 12;
+  static const double _rPill = 999;
+  static const double _pageHPad = 20;
+  static const double _sectionGap = 32;
+  static const double _navReserve = 96;
+  // Type
+  static const String _displayFont = 'Inter Tight';
+  static const String _bodyFont = 'Inter';
+  static const String _monoFont = 'Inter';
+  // ────────────────────────────────────────────────────────────────────
+
+  static const double _hPad = _pageHPad;
+  static const double _vPad = _pageHPad;
 
   String _sortBy = 'A–Z';
 
@@ -126,39 +164,64 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
   };
 
   // =========================================================
-  // ✅ TYPOGRAPHY (Theme labels + correct families, no unknown theme getters)
+  // ✅ TYPOGRAPHY (locked palette — explicit family + colour)
   // =========================================================
-  TextStyle _titleStyle(FlutterFlowTheme t) => t.titleLarge.copyWith(
-        fontWeight: FontWeight.w900,
-        letterSpacing: 0.2,
+  TextStyle get _titleStyle => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 22,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.4,
+        height: 1.05,
+        color: _ink,
       );
 
-  TextStyle _subtitleStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+  TextStyle get _subtitleStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 12,
+        color: _inkMute,
       );
 
-  TextStyle _chipLabelStyle(FlutterFlowTheme t) => t.labelMedium.override(
-        fontFamily: t.labelMediumFamily,
+  TextStyle get _chipLabelStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: _ink,
       );
 
-  TextStyle _cardNameStyle(FlutterFlowTheme t) => t.bodyMedium.override(
-        fontFamily: t.bodyMediumFamily,
+  TextStyle get _cardNameStyle => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 15,
         fontWeight: FontWeight.w700,
+        letterSpacing: -0.2,
+        color: _ink,
       );
 
-  TextStyle _cardMetaStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+  TextStyle get _cardMetaStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 12,
+        color: _inkMute,
       );
 
-  TextStyle _cardSmallStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
+  TextStyle get _cardSmallStyle => const TextStyle(
+        fontFamily: _monoFont,
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: _ink,
+        fontFeatures: [FontFeature.tabularFigures()],
       );
 
-  TextStyle _snackTextStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.primaryText,
+  TextStyle get _snackTextStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 13,
+        color: _ink,
+      );
+
+  TextStyle get _sectionHeadingStyle => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.2,
+        color: _ink,
       );
   // =========================================================
 
@@ -326,6 +389,7 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
   Future<void> _openSortMenu() async {
     final selected = await showMenu<String>(
       context: context,
+      color: _paper,
       position: _menuPositionFor(_sortKey),
       items: const [
         PopupMenuItem(value: 'A–Z', child: Text('A–Z')),
@@ -357,10 +421,9 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
     return <String>{};
   }
 
-  // ✅ Subby-style snackbar (typography labels only + correct families)
+  // ✅ Subby-style snackbar (locked palette)
   void _showBookmarkSnack({required bool wasSaved}) {
     if (!mounted) return;
-    final theme = FlutterFlowTheme.of(context);
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -370,10 +433,10 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           elevation: 0,
-          backgroundColor: theme.secondaryBackground,
+          backgroundColor: _surface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-            side: BorderSide(color: theme.alternate, width: 1),
+            borderRadius: BorderRadius.circular(_rLarge),
+            side: const BorderSide(color: _hairlineOnSurface, width: 1),
           ),
           duration: const Duration(milliseconds: 1400),
           content: Row(
@@ -382,22 +445,23 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: theme.primary.withOpacity(0.12),
+                  color: _paper,
                   shape: BoxShape.circle,
+                  border: Border.all(color: _hairlineOnSurface, width: 1),
                 ),
                 child: Icon(
                   wasSaved
                       ? Icons.bookmark_rounded
                       : Icons.bookmark_border_rounded,
                   size: 16,
-                  color: theme.primary,
+                  color: _ink,
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   wasSaved ? 'Saved to bookmarks' : 'Removed from bookmarks',
-                  style: _snackTextStyle(theme),
+                  style: _snackTextStyle,
                 ),
               ),
             ],
@@ -439,17 +503,15 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
   }
 
   Future<void> _openFiltersSheet() async {
-    final theme = FlutterFlowTheme.of(context);
-
     bool tempVerified = _verifiedOnly;
     double tempMinRating = _minRating;
 
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: theme.primaryBackground,
+      backgroundColor: _paper,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(_rLarge)),
       ),
       builder: (_) {
         return StatefulBuilder(
@@ -469,15 +531,11 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                   children: [
                     Row(
                       children: [
-                        Text(
-                          'Filters',
-                          style: theme.titleMedium
-                              .override(fontFamily: theme.titleMediumFamily),
-                        ),
+                        Text('Filters', style: _sectionHeadingStyle),
                         const Spacer(),
                         IconButton(
-                          icon: Icon(Icons.close_rounded,
-                              color: theme.secondaryText),
+                          icon:
+                              const Icon(Icons.close_rounded, color: _inkMute),
                           onPressed: () => Navigator.pop(context),
                         ),
                       ],
@@ -485,39 +543,53 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                     const SizedBox(height: 6),
                     Container(
                       decoration: BoxDecoration(
-                        color: theme.secondaryBackground,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: theme.alternate, width: 1),
+                        color: _surface,
+                        borderRadius: BorderRadius.circular(_rLarge),
+                        border: Border.all(color: _hairlineOnSurface, width: 1),
                       ),
                       child: Column(
                         children: [
                           SwitchListTile(
                             value: tempVerified,
+                            activeColor: _ink,
                             onChanged: (v) =>
                                 modalSetState(() => tempVerified = v),
-                            title: Text(
+                            title: const Text(
                               'Verified only',
-                              style: theme.bodyMedium
-                                  .override(fontFamily: theme.bodyMediumFamily),
+                              style: TextStyle(
+                                fontFamily: _bodyFont,
+                                fontSize: 14,
+                                color: _ink,
+                              ),
                             ),
                           ),
-                          Divider(
-                              height: 1, thickness: 1, color: theme.alternate),
+                          const Divider(
+                              height: 1,
+                              thickness: 1,
+                              color: _hairlineOnSurface),
                           Padding(
                             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                             child: Row(
                               children: [
-                                Text(
+                                const Text(
                                   'Minimum rating',
-                                  style: theme.bodyMedium.override(
-                                      fontFamily: theme.bodyMediumFamily),
+                                  style: TextStyle(
+                                    fontFamily: _bodyFont,
+                                    fontSize: 14,
+                                    color: _ink,
+                                  ),
                                 ),
                                 const Spacer(),
                                 Text(
                                   tempMinRating.toStringAsFixed(1),
-                                  style: theme.bodySmall.override(
-                                    fontFamily: theme.bodySmallFamily,
-                                    color: theme.secondaryText,
+                                  style: const TextStyle(
+                                    fontFamily: _monoFont,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: _inkMute,
+                                    fontFeatures: [
+                                      FontFeature.tabularFigures()
+                                    ],
                                   ),
                                 ),
                               ],
@@ -525,13 +597,21 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                           ),
                           Padding(
                             padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
-                            child: Slider(
-                              value: tempMinRating,
-                              min: 0,
-                              max: 5,
-                              divisions: 10,
-                              onChanged: (v) =>
-                                  modalSetState(() => tempMinRating = v),
+                            child: SliderTheme(
+                              data: SliderTheme.of(context).copyWith(
+                                activeTrackColor: _ink,
+                                inactiveTrackColor: _hairlineOnSurface,
+                                thumbColor: _ink,
+                                overlayColor: _ink.withOpacity(0.12),
+                              ),
+                              child: Slider(
+                                value: tempMinRating,
+                                min: 0,
+                                max: 5,
+                                divisions: 10,
+                                onChanged: (v) =>
+                                    modalSetState(() => tempMinRating = v),
+                              ),
                             ),
                           ),
                         ],
@@ -549,17 +629,22 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                               });
                             },
                             style: OutlinedButton.styleFrom(
-                              side:
-                                  BorderSide(color: theme.alternate, width: 1),
+                              foregroundColor: _ink,
+                              side: const BorderSide(
+                                  color: _hairlineOnSurface, width: 1),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(999),
+                                borderRadius: BorderRadius.circular(_rMed),
                               ),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
-                            child: Text(
+                            child: const Text(
                               'Reset',
-                              style: theme.labelLarge
-                                  .override(fontFamily: theme.labelLargeFamily),
+                              style: TextStyle(
+                                fontFamily: _bodyFont,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: _ink,
+                              ),
                             ),
                           ),
                         ),
@@ -568,18 +653,21 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                           child: ElevatedButton(
                             onPressed: () => Navigator.pop(context),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: theme.primary,
+                              backgroundColor: _spark,
+                              foregroundColor: _sparkInk,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(999),
+                                borderRadius: BorderRadius.circular(_rMed),
                               ),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
                               elevation: 0,
                             ),
-                            child: Text(
+                            child: const Text(
                               'Apply',
-                              style: theme.labelLarge.override(
-                                fontFamily: theme.labelLargeFamily,
-                                color: Colors.white,
+                              style: TextStyle(
+                                fontFamily: _bodyFont,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: _sparkInk,
                               ),
                             ),
                           ),
@@ -604,8 +692,6 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = FlutterFlowTheme.of(context);
-
     final double width = widget.width ?? MediaQuery.sizeOf(context).width;
     final double height = widget.height ?? MediaQuery.sizeOf(context).height;
 
@@ -660,7 +746,7 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
       height: height,
       child: SafeArea(
         child: Container(
-          color: theme.primaryBackground,
+          color: _paper,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -672,17 +758,16 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                     GestureDetector(
                       onTap: () => context.pop(),
                       child: Container(
-                        width: 32,
-                        height: 32,
+                        width: 36,
+                        height: 36,
                         decoration: BoxDecoration(
-                          color: theme.secondaryBackground,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: theme.alternate, width: 1),
+                          color: _surface,
+                          borderRadius: BorderRadius.circular(_rMed),
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.arrow_back_ios_new_rounded,
                           size: 16,
-                          color: theme.secondaryText,
+                          color: _ink,
                         ),
                       ),
                     ),
@@ -691,9 +776,9 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(title, style: _titleStyle(theme)),
+                          Text(title, style: _titleStyle),
                           const SizedBox(height: 2),
-                          Text(subtitle, style: _subtitleStyle(theme)),
+                          Text(subtitle, style: _subtitleStyle),
                         ],
                       ),
                     ),
@@ -711,26 +796,25 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                     Expanded(
                       child: InkWell(
                         key: _sortKey,
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: BorderRadius.circular(_rPill),
                         onTap: _openSortMenu,
                         child: Container(
                           height: 38,
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           decoration: BoxDecoration(
-                            color: theme.primaryBackground,
-                            borderRadius: BorderRadius.circular(999),
-                            border:
-                                Border.all(color: theme.alternate, width: 1),
+                            color: _paper,
+                            borderRadius: BorderRadius.circular(_rPill),
+                            border: Border.all(color: _hairline, width: 1),
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.sort_rounded,
-                                  size: 18, color: theme.secondaryText),
+                              const Icon(Icons.sort_rounded,
+                                  size: 18, color: _inkMute),
                               const SizedBox(width: 8),
-                              Text(_sortBy, style: _chipLabelStyle(theme)),
+                              Text(_sortBy, style: _chipLabelStyle),
                               const Spacer(),
-                              Icon(Icons.expand_more_rounded,
-                                  size: 18, color: theme.secondaryText),
+                              const Icon(Icons.expand_more_rounded,
+                                  size: 18, color: _inkMute),
                             ],
                           ),
                         ),
@@ -739,23 +823,23 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                     const SizedBox(width: 8),
                     InkWell(
                       key: _filterKey,
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(_rPill),
                       onTap: _openFiltersSheet,
                       child: Container(
                         height: 38,
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
-                          color: theme.primaryBackground,
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(color: theme.alternate, width: 1),
+                          color: _paper,
+                          borderRadius: BorderRadius.circular(_rPill),
+                          border: Border.all(color: _hairline, width: 1),
                         ),
                         child: Row(
                           children: [
                             Stack(
                               clipBehavior: Clip.none,
                               children: [
-                                Icon(Icons.tune_rounded,
-                                    size: 18, color: theme.secondaryText),
+                                const Icon(Icons.tune_rounded,
+                                    size: 18, color: _inkMute),
                                 if (_hasActiveFilters)
                                   Positioned(
                                     right: -2,
@@ -763,8 +847,8 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                                     child: Container(
                                       width: 8,
                                       height: 8,
-                                      decoration: BoxDecoration(
-                                        color: theme.primary,
+                                      decoration: const BoxDecoration(
+                                        color: _spark, // live data pip
                                         shape: BoxShape.circle,
                                       ),
                                     ),
@@ -772,7 +856,7 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                               ],
                             ),
                             const SizedBox(width: 6),
-                            Text('Filters', style: _chipLabelStyle(theme)),
+                            Text('Filters', style: _chipLabelStyle),
                           ],
                         ),
                       ),
@@ -885,8 +969,6 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
     required bool isSaved,
     required VoidCallback onToggleSaved,
   }) {
-    final theme = FlutterFlowTheme.of(context);
-
     final String name = listing.name;
     final String speciality = listing.speciality;
 
@@ -908,16 +990,9 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: theme.primaryBackground,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.alternate, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: _paper,
+        borderRadius: BorderRadius.circular(_rLarge),
+        border: Border.all(color: _hairline, width: 1),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -927,12 +1002,12 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
             height: 44,
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
-              color: theme.secondaryBackground,
-              borderRadius: BorderRadius.circular(12),
+              color: _surface,
+              borderRadius: BorderRadius.circular(_rMed),
             ),
             child: heroPhoto.isNotEmpty
                 ? Image.network(heroPhoto, fit: BoxFit.cover)
-                : Icon(Icons.handyman_rounded, size: 24, color: theme.primary),
+                : const Icon(Icons.handyman_rounded, size: 24, color: _inkMute),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -946,33 +1021,32 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                         name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: _cardNameStyle(theme),
+                        style: _cardNameStyle,
                       ),
                     ),
                     if (isVerified) ...[
                       const SizedBox(width: 6),
-                      Icon(Icons.verified_rounded,
-                          size: 16, color: theme.primary),
+                      const Icon(Icons.verified_rounded, size: 16, color: _ink),
                     ],
                   ],
                 ),
                 const SizedBox(height: 2),
                 Text(
                   speciality,
-                  style: _cardMetaStyle(theme),
+                  style: _cardMetaStyle,
                 ),
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(Icons.location_on_outlined,
-                        size: 14, color: theme.secondaryText),
+                    const Icon(Icons.location_on_outlined,
+                        size: 14, color: _inkMute),
                     const SizedBox(width: 4),
                     Flexible(
                       child: Text(
                         area,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: _cardMetaStyle(theme),
+                        style: _cardMetaStyle,
                       ),
                     ),
                   ],
@@ -981,19 +1055,18 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                 Row(
                   children: [
                     if (rating > 0) ...[
-                      Icon(Icons.star_rounded, size: 16, color: theme.primary),
+                      const Icon(Icons.star_rounded, size: 16, color: _ink),
                       const SizedBox(width: 4),
-                      Text(rating.toStringAsFixed(1),
-                          style: _cardSmallStyle(theme)),
+                      Text(rating.toStringAsFixed(1), style: _cardSmallStyle),
                       const SizedBox(width: 6),
                     ],
                     if (jobs > 0)
                       Text(
                         rating > 0 ? '• $jobs jobs' : '$jobs jobs',
-                        style: _cardMetaStyle(theme),
+                        style: _cardMetaStyle,
                       ),
                     if (rating <= 0 && jobs <= 0)
-                      Text('New', style: _cardMetaStyle(theme)),
+                      Text('New', style: _cardMetaStyle),
                   ],
                 ),
               ],
@@ -1004,14 +1077,13 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
             children: [
               InkWell(
                 onTap: onToggleSaved,
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(_rMed),
                 child: Container(
                   width: 34,
                   height: 34,
                   decoration: BoxDecoration(
-                    color: theme.secondaryBackground,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: theme.alternate, width: 1),
+                    color: _surface,
+                    borderRadius: BorderRadius.circular(_rMed),
                   ),
                   alignment: Alignment.center,
                   child: Icon(
@@ -1019,18 +1091,19 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                         ? Icons.bookmark_rounded
                         : Icons.bookmark_border_rounded,
                     size: 18,
-                    color: isSaved ? theme.primary : theme.secondaryText,
+                    color: isSaved ? _ink : _inkMute,
                   ),
                 ),
               ),
               const SizedBox(height: 8),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.primary,
+                  backgroundColor: _spark,
+                  foregroundColor: _sparkInk,
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(_rMed),
                   ),
                   elevation: 0,
                 ),
@@ -1045,11 +1118,13 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                     }.withoutNulls,
                   );
                 },
-                child: Text(
+                child: const Text(
                   'View',
-                  style: theme.labelMedium.override(
-                    fontFamily: theme.labelMediumFamily,
-                    color: Colors.white,
+                  style: TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: _sparkInk,
                   ),
                 ),
               ),
@@ -1061,8 +1136,7 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
   }
 
   Widget _buildSubbyLoader() {
-    final theme = FlutterFlowTheme.of(context);
-    return Center(
+    return const Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1071,15 +1145,16 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
             height: 28,
             child: CircularProgressIndicator(
               strokeWidth: 2.5,
-              valueColor: AlwaysStoppedAnimation<Color>(theme.primary),
+              valueColor: AlwaysStoppedAnimation<Color>(_ink),
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Text(
-            'Loading subbies…',
-            style: theme.bodySmall.override(
-              fontFamily: theme.bodySmallFamily,
-              color: theme.secondaryText,
+            'Finding subbies…',
+            style: TextStyle(
+              fontFamily: _bodyFont,
+              fontSize: 13,
+              color: _inkMute,
             ),
           ),
         ],
@@ -1088,8 +1163,6 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
   }
 
   Widget _buildEmptyState({required String title, required String subtitle}) {
-    final theme = FlutterFlowTheme.of(context);
-
     return Padding(
       padding: const EdgeInsets.all(18),
       child: Center(
@@ -1097,28 +1170,24 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: theme.secondaryBackground,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: theme.alternate),
+            color: _surface,
+            borderRadius: BorderRadius.circular(_rLarge),
+            border: Border.all(color: _hairlineOnSurface),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.search_off, color: theme.secondaryText, size: 34),
+              const Icon(Icons.search_off, color: _inkMute, size: 34),
               const SizedBox(height: 10),
               Text(
                 title,
-                style: theme.titleMedium
-                    .override(fontFamily: theme.titleMediumFamily),
+                style: _sectionHeadingStyle,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 6),
               Text(
                 subtitle,
-                style: theme.bodySmall.override(
-                  fontFamily: theme.bodySmallFamily,
-                  color: theme.secondaryText,
-                ),
+                style: _cardMetaStyle,
                 textAlign: TextAlign.center,
               ),
             ],
@@ -1129,7 +1198,6 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
   }
 
   Widget _buildErrorState({required String title, required String subtitle}) {
-    final theme = FlutterFlowTheme.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(_hPad, 8, _hPad, 24),
       child: Align(
@@ -1137,22 +1205,18 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
         child: Column(
           children: [
             const SizedBox(height: 24),
-            Icon(Icons.warning_amber_rounded, size: 44, color: theme.primary),
+            const Icon(Icons.warning_amber_rounded, size: 44, color: _live),
             const SizedBox(height: 12),
             Text(
               title,
               textAlign: TextAlign.center,
-              style:
-                  theme.titleSmall.override(fontFamily: theme.titleSmallFamily),
+              style: _sectionHeadingStyle,
             ),
             const SizedBox(height: 6),
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: theme.bodySmall.override(
-                fontFamily: theme.bodySmallFamily,
-                color: theme.secondaryText,
-              ),
+              style: _cardMetaStyle,
             ),
           ],
         ),

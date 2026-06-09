@@ -78,29 +78,105 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
   DocumentReference? _selectedProjectRef; // persisted selection
   String? _selectedProjectName;
 
+  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
+  //
+  // Trust cluster note: on this screen yellow (_spark) is reserved for the
+  // primary CTAs only (bottom "Add to Project" + sheet "Add"); the OPEN-now
+  // state uses gold (_live); verified + rating are neutral ink. So yellow and
+  // gold never sit adjacent here — the collision risk is resolved by hierarchy.
+  //
+  // Neutrals
+  static const Color _ink = Color(0xFF181C27);
+  static const Color _inkSoft = Color(0xFF181C27);
+  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _surface = Color(0xFFE3E4E8);
+  static const Color _surface2 = Color(0xFFE3E4E8);
+  static const Color _hairline = Color(0xFFE3E4E8);
+  static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
+  // Brand accent — YELLOW. Always ink foreground, never white.
+  static const Color _spark = Color(0xFFFFE718); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFF181C27);
+  static const Color _calm = Color(0xFF9C8A12);
+  static const Color _calmInk = Color(0xFFFFFFFF);
+  // Status
+  static const Color _live =
+      Color(0xFFFFB000); // gold — live / open-now / warning
+  static const Color _liveInk =
+      Color(0xFF7A5300); // gold-on-tint text (legible)
+  static const Color _steel = Color(0xFF9DA8B5);
+  static const Color _coral = Color(0xFFC8102E); // legacy red — closed/error
+  // Geometry
+  static const double _rSmall = 6;
+  static const double _rMed = 8;
+  static const double _rLarge = 12;
+  static const double _rPill = 999;
+  static const double _pageHPad = 20;
+  static const double _sectionGap = 32;
+  static const double _navReserve = 96;
+  // Type
+  static const String _displayFont = 'Inter Tight';
+  static const String _bodyFont = 'Inter';
+  static const String _monoFont = 'Inter';
+  // ────────────────────────────────────────────────────────────────────
+
   // =========================================================
-  // ✅ TYPOGRAPHY (Subby style: token + explicit family)
+  // ✅ TYPOGRAPHY (locked palette — explicit family + colour)
+  //    Signatures keep (FlutterFlowTheme t) so call sites are unchanged.
   // =========================================================
-  TextStyle _titleMedium(FlutterFlowTheme t) => t.titleMedium.override(
-        fontFamily: t.titleMediumFamily,
+  TextStyle _titleMedium(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 20,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.4,
+        height: 1.05,
+        color: _ink,
       );
 
-  TextStyle _titleSmall(FlutterFlowTheme t) => t.titleSmall.override(
-        fontFamily: t.titleSmallFamily,
+  TextStyle _titleSmall(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.2,
+        color: _ink,
       );
 
-  TextStyle _bodyMedium(FlutterFlowTheme t) => t.bodyMedium.override(
-        fontFamily: t.bodyMediumFamily,
+  TextStyle _bodyMedium(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: _ink,
       );
 
-  TextStyle _bodySmall(FlutterFlowTheme t, {Color? color}) => t.bodySmall
-      .override(fontFamily: t.bodySmallFamily, color: color ?? t.secondaryText);
+  TextStyle _bodySmall(FlutterFlowTheme t, {Color? color}) => TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 13,
+        color: color ?? _inkMute,
+      );
 
-  TextStyle _labelLarge(FlutterFlowTheme t, {Color? color}) => t.labelLarge
-      .override(fontFamily: t.labelLargeFamily, color: color ?? t.primaryText);
+  TextStyle _labelLarge(FlutterFlowTheme t, {Color? color}) => TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: color ?? _ink,
+      );
 
-  TextStyle _labelMedium(FlutterFlowTheme t, {Color? color}) => t.labelMedium
-      .override(fontFamily: t.labelMediumFamily, color: color ?? t.primaryText);
+  TextStyle _labelMedium(FlutterFlowTheme t, {Color? color}) => TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: color ?? _ink,
+      );
+
+  TextStyle get _ratingNumStyle => const TextStyle(
+        fontFamily: _monoFont,
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: _ink,
+        fontFeatures: [FontFeature.tabularFigures()],
+      );
   // =========================================================
 
   @override
@@ -115,15 +191,10 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
   // =========================================================
   // ✅ Subby card/tile styling (MATCH HomePageView tiles)
   // =========================================================
-  static const double _cardRadius = 16;
+  static const double _cardRadius = _rLarge;
 
-  List<BoxShadow> _subbyTileShadow() => [
-        BoxShadow(
-          blurRadius: 10,
-          offset: const Offset(0, 4),
-          color: Colors.black.withOpacity(0.03),
-        ),
-      ];
+  // Swiss/less-is-more: hairlines, not shadows.
+  List<BoxShadow> _subbyTileShadow() => const <BoxShadow>[];
 
   // ✅ IMPORTANT: HomePageView tiles use primaryBackground + alternate border + subtle shadow
   BoxDecoration _subbyCardDecoration(
@@ -132,9 +203,9 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
     bool shadow = true,
   }) {
     return BoxDecoration(
-      color: color ?? theme.primaryBackground,
+      color: color ?? _paper,
       borderRadius: BorderRadius.circular(_cardRadius),
-      border: Border.all(color: theme.alternate, width: 1),
+      border: Border.all(color: _hairline, width: 1),
       boxShadow: shadow ? _subbyTileShadow() : const [],
     );
   }
@@ -173,10 +244,10 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           elevation: 0,
-          backgroundColor: theme.secondaryBackground,
+          backgroundColor: _surface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-            side: BorderSide(color: theme.alternate, width: 1),
+            borderRadius: BorderRadius.circular(_rMed),
+            side: BorderSide(color: _hairline, width: 1),
           ),
           duration: const Duration(milliseconds: 1400),
           content: Row(
@@ -185,7 +256,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: theme.primary.withOpacity(0.12),
+                  color: _ink.withOpacity(0.12),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -193,14 +264,14 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                       ? Icons.bookmark_rounded
                       : Icons.bookmark_border_rounded,
                   size: 16,
-                  color: theme.primary,
+                  color: _ink,
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   wasSaved ? 'Saved to bookmarks' : 'Removed from bookmarks',
-                  style: _bodySmall(theme, color: theme.primaryText),
+                  style: _bodySmall(theme, color: _ink),
                 ),
               ),
             ],
@@ -266,14 +337,14 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
         SnackBar(
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          backgroundColor: theme.secondaryBackground,
+          backgroundColor: _surface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-            side: BorderSide(color: theme.alternate, width: 1),
+            borderRadius: BorderRadius.circular(_rMed),
+            side: BorderSide(color: _hairline, width: 1),
           ),
           content: Text(
             'Listing details copied. You can now paste and share.',
-            style: _bodySmall(theme, color: theme.primaryText),
+            style: _bodySmall(theme, color: _ink),
           ),
           duration: const Duration(seconds: 2),
         ),
@@ -298,14 +369,14 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
         SnackBar(
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          backgroundColor: theme.secondaryBackground,
+          backgroundColor: _surface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-            side: BorderSide(color: theme.alternate, width: 1),
+            borderRadius: BorderRadius.circular(_rMed),
+            side: BorderSide(color: _hairline, width: 1),
           ),
           content: Text(
             '$label copied',
-            style: _bodySmall(theme, color: theme.primaryText),
+            style: _bodySmall(theme, color: _ink),
           ),
           duration: const Duration(milliseconds: 1100),
         ),
@@ -369,18 +440,18 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
     return Expanded(
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(_rMed),
         child: Container(
           height: 44,
           decoration: BoxDecoration(
-            color: theme.primaryBackground,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: theme.alternate, width: 1),
+            color: _paper,
+            borderRadius: BorderRadius.circular(_rMed),
+            border: Border.all(color: _hairline, width: 1),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 18, color: theme.primary),
+              Icon(icon, size: 18, color: _ink),
               const SizedBox(width: 8),
               Text(label, style: _labelMedium(theme)),
             ],
@@ -416,12 +487,12 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: theme.secondaryBackground,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: theme.alternate, width: 1),
+                  color: _surface,
+                  borderRadius: BorderRadius.circular(_rMed),
+                  border: Border.all(color: _hairline, width: 1),
                 ),
                 alignment: Alignment.center,
-                child: Icon(Icons.call_rounded, size: 18, color: theme.primary),
+                child: Icon(Icons.call_rounded, size: 18, color: _ink),
               ),
               const SizedBox(width: 10),
               Expanded(child: Text('Contact', style: _titleSmall(theme))),
@@ -439,13 +510,13 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: theme.primaryBackground,
+                    color: _paper,
                     borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: theme.alternate, width: 1),
+                    border: Border.all(color: _hairline, width: 1),
                   ),
                   child: Text(
                     'Copy',
-                    style: _labelMedium(theme, color: theme.primary),
+                    style: _labelMedium(theme, color: _ink),
                   ),
                 ),
               ),
@@ -455,8 +526,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
           if (p.isNotEmpty) ...[
             Row(
               children: [
-                Icon(Icons.phone_outlined,
-                    size: 16, color: theme.secondaryText),
+                Icon(Icons.phone_outlined, size: 16, color: _inkMute),
                 const SizedBox(width: 8),
                 Expanded(child: Text(p, style: _bodySmall(theme))),
               ],
@@ -467,7 +537,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
             Row(
               children: [
                 Icon(Icons.chat_bubble_outline_rounded,
-                    size: 16, color: theme.secondaryText),
+                    size: 16, color: _inkMute),
                 const SizedBox(width: 8),
                 Expanded(child: Text(w, style: _bodySmall(theme))),
               ],
@@ -477,8 +547,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
           if (e.isNotEmpty) ...[
             Row(
               children: [
-                Icon(Icons.email_outlined,
-                    size: 16, color: theme.secondaryText),
+                Icon(Icons.email_outlined, size: 16, color: _inkMute),
                 const SizedBox(width: 8),
                 Expanded(child: Text(e, style: _bodySmall(theme))),
               ],
@@ -569,14 +638,14 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
           SnackBar(
             behavior: SnackBarBehavior.floating,
             margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            backgroundColor: theme.secondaryBackground,
+            backgroundColor: _surface,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-              side: BorderSide(color: theme.alternate, width: 1),
+              borderRadius: BorderRadius.circular(_rMed),
+              side: BorderSide(color: _hairline, width: 1),
             ),
             content: Text(
               'Already added to this project.',
-              style: _bodySmall(theme, color: theme.primaryText),
+              style: _bodySmall(theme, color: _ink),
             ),
             duration: const Duration(milliseconds: 1300),
           ),
@@ -607,14 +676,14 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
         SnackBar(
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          backgroundColor: theme.secondaryBackground,
+          backgroundColor: _surface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-            side: BorderSide(color: theme.alternate, width: 1),
+            borderRadius: BorderRadius.circular(_rMed),
+            side: BorderSide(color: _hairline, width: 1),
           ),
           content: Text(
             'Added to project.',
-            style: _bodySmall(theme, color: theme.primaryText),
+            style: _bodySmall(theme, color: _ink),
           ),
           duration: const Duration(milliseconds: 1300),
         ),
@@ -657,17 +726,10 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
           padding: EdgeInsets.only(bottom: bottomInset),
           child: Container(
             decoration: BoxDecoration(
-              color: theme.primaryBackground,
+              color: _paper,
               borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(22)),
-              border: Border.all(color: theme.alternate, width: 1),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.12),
-                  blurRadius: 18,
-                  offset: const Offset(0, -8),
-                ),
-              ],
+                  const BorderRadius.vertical(top: Radius.circular(_rLarge)),
+              border: Border.all(color: _hairline, width: 1),
             ),
             child: SafeArea(
               top: false,
@@ -684,7 +746,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                             width: 44,
                             height: 5,
                             decoration: BoxDecoration(
-                              color: theme.alternate,
+                              color: _hairline,
                               borderRadius: BorderRadius.circular(999),
                             ),
                           ),
@@ -696,16 +758,15 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                               width: 36,
                               height: 36,
                               decoration: BoxDecoration(
-                                color: theme.secondaryBackground,
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(
-                                    color: theme.alternate, width: 1),
+                                color: _surface,
+                                borderRadius: BorderRadius.circular(_rMed),
+                                border: Border.all(color: _hairline, width: 1),
                               ),
                               alignment: Alignment.center,
                               child: Icon(
                                 Icons.playlist_add_rounded,
                                 size: 18,
-                                color: theme.primary,
+                                color: _ink,
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -720,14 +781,14 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                 width: 36,
                                 height: 36,
                                 decoration: BoxDecoration(
-                                  color: theme.primaryBackground,
+                                  color: _paper,
                                   shape: BoxShape.circle,
-                                  border: Border.all(
-                                      color: theme.alternate, width: 1),
+                                  border:
+                                      Border.all(color: _hairline, width: 1),
                                 ),
                                 alignment: Alignment.center,
                                 child: Icon(Icons.close_rounded,
-                                    size: 18, color: theme.primaryText),
+                                    size: 18, color: _ink),
                               ),
                             ),
                           ],
@@ -755,8 +816,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
                                         valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                                theme.primary),
+                                            AlwaysStoppedAnimation<Color>(_ink),
                                       ),
                                     ),
                                     const SizedBox(width: 10),
@@ -790,7 +850,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Icon(Icons.warning_amber_rounded,
-                                        size: 18, color: theme.primary),
+                                        size: 18, color: _ink),
                                     const SizedBox(width: 10),
                                     Expanded(
                                       child: Column(
@@ -824,7 +884,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                 child: Row(
                                   children: [
                                     Icon(Icons.folder_off_outlined,
-                                        size: 18, color: theme.secondaryText),
+                                        size: 18, color: _inkMute),
                                     const SizedBox(width: 10),
                                     Expanded(
                                       child: Text('No projects yet.',
@@ -861,16 +921,16 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                       selectedName = pName;
                                       setLocal(() {});
                                     },
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius:
+                                        BorderRadius.circular(_rLarge),
                                     child: Container(
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: theme.primaryBackground,
-                                        borderRadius: BorderRadius.circular(16),
+                                        color: _paper,
+                                        borderRadius:
+                                            BorderRadius.circular(_rLarge),
                                         border: Border.all(
-                                          color: selected
-                                              ? theme.primary
-                                              : theme.alternate,
+                                          color: selected ? _ink : _hairline,
                                           width: 1,
                                         ),
                                       ),
@@ -880,12 +940,11 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                             width: 34,
                                             height: 34,
                                             decoration: BoxDecoration(
-                                              color: theme.secondaryBackground,
+                                              color: _surface,
                                               borderRadius:
-                                                  BorderRadius.circular(14),
+                                                  BorderRadius.circular(_rMed),
                                               border: Border.all(
-                                                  color: theme.alternate,
-                                                  width: 1),
+                                                  color: _hairline, width: 1),
                                             ),
                                             alignment: Alignment.center,
                                             child: Icon(
@@ -893,9 +952,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                                   ? Icons.check_circle_rounded
                                                   : Icons.folder_open_rounded,
                                               size: 18,
-                                              color: selected
-                                                  ? theme.primary
-                                                  : theme.secondaryText,
+                                              color: selected ? _ink : _inkMute,
                                             ),
                                           ),
                                           const SizedBox(width: 10),
@@ -923,19 +980,17 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                               child: OutlinedButton(
                                 onPressed: () => Navigator.of(ctx).pop(),
                                 style: OutlinedButton.styleFrom(
-                                  side: BorderSide(
-                                      color: theme.alternate, width: 1),
+                                  side: BorderSide(color: _hairline, width: 1),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(999),
                                   ),
                                   padding:
                                       const EdgeInsets.symmetric(vertical: 14),
-                                  backgroundColor: theme.primaryBackground,
+                                  backgroundColor: _paper,
                                   elevation: 0,
                                 ),
                                 child: Text('Cancel',
-                                    style: _labelLarge(theme,
-                                        color: theme.primaryText)),
+                                    style: _labelLarge(theme, color: _ink)),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -962,19 +1017,19 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                         );
                                       },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: theme.primary,
-                                  disabledBackgroundColor:
-                                      theme.alternate.withOpacity(0.4),
+                                  backgroundColor: _spark,
+                                  foregroundColor: _sparkInk,
+                                  disabledBackgroundColor: _surface,
                                   elevation: 0,
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(999),
+                                    borderRadius: BorderRadius.circular(_rMed),
                                   ),
                                   padding:
                                       const EdgeInsets.symmetric(vertical: 14),
                                 ),
                                 child: Text('Add',
-                                    style: _labelLarge(theme,
-                                        color: Colors.white)),
+                                    style:
+                                        _labelLarge(theme, color: _sparkInk)),
                               ),
                             ),
                           ],
@@ -1004,12 +1059,12 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: theme.secondaryBackground,
+          color: _surface,
           shape: BoxShape.circle,
-          border: Border.all(color: theme.alternate, width: 1),
+          border: Border.all(color: _hairline, width: 1),
         ),
         alignment: Alignment.center,
-        child: Icon(icon, size: 18, color: iconColor ?? theme.secondaryText),
+        child: Icon(icon, size: 18, color: iconColor ?? _inkMute),
       ),
     );
   }
@@ -1023,9 +1078,9 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: bgColor ?? theme.primaryBackground,
+        color: bgColor ?? _paper,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: borderColor ?? theme.alternate, width: 1),
+        border: Border.all(color: borderColor ?? _hairline, width: 1),
       ),
       child: child,
     );
@@ -1045,12 +1100,12 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
         width: width,
         height: height,
         child: Container(
-          color: theme.primaryBackground,
+          color: _paper,
           padding: EdgeInsets.fromLTRB(24, topInset + 24, 24, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.error_outline, color: theme.error, size: 40),
+              Icon(Icons.error_outline, color: _coral, size: 40),
               const SizedBox(height: 12),
               Text('Listing not found.', style: _bodyMedium(theme)),
             ],
@@ -1067,18 +1122,17 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
         builder: (context, snap) {
           if (!snap.hasData) {
             return Container(
-              color: theme.primaryBackground,
+              color: _paper,
               alignment: Alignment.center,
               child: _showSlowLoadFallback
                   ? Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.wifi_off_rounded,
-                            color: theme.secondaryText, size: 38),
+                        Icon(Icons.wifi_off_rounded, color: _inkMute, size: 38),
                         const SizedBox(height: 10),
                         Text('Still loading…',
-                            style: _bodyMedium(theme)
-                                .copyWith(color: theme.secondaryText)),
+                            style:
+                                _bodyMedium(theme).copyWith(color: _inkMute)),
                         const SizedBox(height: 10),
                         Text(
                           'Check your connection or Firestore rules.',
@@ -1087,7 +1141,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                       ],
                     )
                   : CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(theme.primary),
+                      valueColor: AlwaysStoppedAnimation<Color>(_ink),
                       strokeWidth: 2,
                     ),
             );
@@ -1190,7 +1244,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
           final String ownerPhotoUrl = _readString('ownerPhotoUrl');
 
           final double bottomScrollPad = _bottomCtaContainerHeight + 18;
-          final Color tabAccent = theme.primary;
+          final Color tabAccent = _ink;
 
           final double bannerHeight =
               (MediaQuery.sizeOf(context).height * 0.36).clamp(260.0, 360.0);
@@ -1229,11 +1283,11 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                     heroPhotoUrl,
                                     fit: BoxFit.cover,
                                     errorBuilder: (c, e, st) => Container(
-                                      color: theme.secondaryBackground,
+                                      color: _surface,
                                       alignment: Alignment.center,
                                       child: Icon(
                                         Icons.image_not_supported_outlined,
-                                        color: theme.secondaryText,
+                                        color: _inkMute,
                                         size: 40,
                                       ),
                                     ),
@@ -1246,7 +1300,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                     theme: theme,
                                     icon: Icons.arrow_back_ios_new_rounded,
                                     onTap: () => context.safePop(),
-                                    iconColor: theme.secondaryText,
+                                    iconColor: _inkMute,
                                   ),
                                 ),
                                 Positioned(
@@ -1266,7 +1320,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                                   Icons.bookmark_border_rounded,
                                               onTap: () => context
                                                   .pushNamed('loginPage'),
-                                              iconColor: theme.secondaryText,
+                                              iconColor: _inkMute,
                                             );
                                           }
 
@@ -1290,9 +1344,8 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                                     ? Icons.bookmark_rounded
                                                     : Icons
                                                         .bookmark_border_rounded,
-                                                iconColor: saved
-                                                    ? theme.primary
-                                                    : theme.secondaryText,
+                                                iconColor:
+                                                    saved ? _ink : _inkMute,
                                                 onTap: () => _toggleBookmark(
                                                   listingRef: listingRef,
                                                   currentlySaved: saved,
@@ -1312,7 +1365,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                           area: displayArea,
                                           listingRef: listingRef,
                                         ),
-                                        iconColor: theme.secondaryText,
+                                        iconColor: _inkMute,
                                       ),
                                     ],
                                   ),
@@ -1323,7 +1376,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                         ),
                         SliverToBoxAdapter(
                           child: Container(
-                            color: theme.primaryBackground,
+                            color: _paper,
                             child: Padding(
                               padding: const EdgeInsets.fromLTRB(
                                   _hPad, 14, _hPad, 14),
@@ -1365,7 +1418,8 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                             }.withoutNulls,
                                           );
                                         },
-                                        borderRadius: BorderRadius.circular(8),
+                                        borderRadius:
+                                            BorderRadius.circular(_rMed),
                                         child: Padding(
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: 4,
@@ -1374,7 +1428,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                           child: Text(
                                             category,
                                             style: _bodyMedium(theme).copyWith(
-                                              color: theme.primary,
+                                              color: _ink,
                                               decoration:
                                                   TextDecoration.underline,
                                             ),
@@ -1388,12 +1442,12 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                             const Icon(
                                               Icons.star_rounded,
                                               size: 18,
-                                              color: Color(0xFFFFC857),
+                                              color: _ink,
                                             ),
                                             const SizedBox(width: 4),
                                             Text(
                                               rating.toStringAsFixed(1),
-                                              style: _bodyMedium(theme),
+                                              style: _ratingNumStyle,
                                             ),
                                             const SizedBox(width: 6),
                                             Text(
@@ -1409,10 +1463,12 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                           const SizedBox(width: 10),
                                           _pill(
                                             theme: theme,
-                                            borderColor: (openNow
-                                                    ? theme.secondary
-                                                    : theme.error)
-                                                .withOpacity(0.45),
+                                            bgColor: openNow
+                                                ? _live.withOpacity(0.14)
+                                                : _surface,
+                                            borderColor: openNow
+                                                ? _live.withOpacity(0.30)
+                                                : _hairlineOnSurface,
                                             child: Row(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
@@ -1423,8 +1479,8 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                                       : Icons.cancel_outlined,
                                                   size: 14,
                                                   color: openNow
-                                                      ? theme.secondary
-                                                      : theme.error,
+                                                      ? _live
+                                                      : _inkMute,
                                                 ),
                                                 const SizedBox(width: 6),
                                                 Text(
@@ -1432,8 +1488,8 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                                   style: _bodySmall(
                                                     theme,
                                                     color: openNow
-                                                        ? theme.secondary
-                                                        : theme.error,
+                                                        ? _liveInk
+                                                        : _inkMute,
                                                   ),
                                                 ),
                                               ],
@@ -1447,14 +1503,13 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
                                                   Icon(Icons.verified_rounded,
-                                                      size: 16,
-                                                      color: theme.primary),
+                                                      size: 16, color: _ink),
                                                   const SizedBox(width: 6),
                                                   Text(
                                                     'Verified',
                                                     style: _bodySmall(
                                                       theme,
-                                                      color: theme.primaryText,
+                                                      color: _ink,
                                                     ),
                                                   ),
                                                 ],
@@ -1476,7 +1531,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                   Row(
                                     children: [
                                       Icon(Icons.location_on_outlined,
-                                          size: 16, color: theme.secondaryText),
+                                          size: 16, color: _inkMute),
                                       const SizedBox(width: 6),
                                       Expanded(
                                         child: Text(
@@ -1522,11 +1577,10 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                     labelPadding: const EdgeInsets.symmetric(
                                         horizontal: 12),
                                     labelColor: tabAccent,
-                                    unselectedLabelColor: theme.secondaryText,
+                                    unselectedLabelColor: _inkMute,
                                     indicatorColor: tabAccent,
                                     indicatorWeight: 2,
-                                    labelStyle: _bodySmall(theme,
-                                        color: theme.primaryText),
+                                    labelStyle: _bodySmall(theme, color: _ink),
                                     unselectedLabelStyle: _bodySmall(theme),
                                     tabs: const [
                                       Tab(child: Text('About')),
@@ -1568,17 +1622,16 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 12, vertical: 6),
                                   decoration: BoxDecoration(
-                                    color: theme.primaryBackground,
+                                    color: _paper,
                                     borderRadius: BorderRadius.circular(999),
                                     border: Border.all(
-                                      color: theme.alternate,
+                                      color: _hairline,
                                       width: 1,
                                     ),
                                   ),
                                   child: Text(
                                     s,
-                                    style: _bodySmall(theme,
-                                        color: theme.primaryText),
+                                    style: _bodySmall(theme, color: _ink),
                                   ),
                                 );
                               }).toList(),
@@ -1618,7 +1671,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                           borderRadius: BorderRadius.circular(
                                               _cardRadius),
                                           border: Border.all(
-                                              color: theme.alternate, width: 1),
+                                              color: _hairline, width: 1),
                                           boxShadow: _subbyTileShadow(),
                                         ),
                                         child: ClipRRect(
@@ -1629,12 +1682,12 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                             fit: BoxFit.cover,
                                             errorBuilder: (c, e, st) =>
                                                 Container(
-                                              color: theme.secondaryBackground,
+                                              color: _surface,
                                               alignment: Alignment.center,
                                               child: Icon(
                                                 Icons
                                                     .image_not_supported_outlined,
-                                                color: theme.secondaryText,
+                                                color: _inkMute,
                                               ),
                                             ),
                                           ),
@@ -1657,7 +1710,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                   Row(
                                     children: [
                                       Icon(Icons.location_on_outlined,
-                                          size: 18, color: theme.secondaryText),
+                                          size: 18, color: _inkMute),
                                       const SizedBox(width: 8),
                                       Expanded(
                                         child: Text(
@@ -1671,7 +1724,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                   Row(
                                     children: [
                                       Icon(Icons.schedule_rounded,
-                                          size: 18, color: theme.secondaryText),
+                                          size: 18, color: _inkMute),
                                       const SizedBox(width: 8),
                                       Text(openingHours,
                                           style: _bodySmall(theme)),
@@ -1693,7 +1746,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                 child: Row(
                                   children: [
                                     Icon(Icons.info_outline_rounded,
-                                        size: 18, color: theme.secondaryText),
+                                        size: 18, color: _inkMute),
                                     const SizedBox(width: 10),
                                     Expanded(
                                       child: Text(
@@ -1715,10 +1768,10 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                       vertical: 6,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: theme.primaryBackground,
+                                      color: _paper,
                                       borderRadius: BorderRadius.circular(999),
                                       border: Border.all(
-                                        color: theme.alternate,
+                                        color: _hairline,
                                         width: 1,
                                       ),
                                     ),
@@ -1726,12 +1779,11 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(Icons.verified_outlined,
-                                            size: 14, color: theme.primary),
+                                            size: 14, color: _ink),
                                         const SizedBox(width: 6),
                                         Text(
                                           assoc,
-                                          style: _bodySmall(theme,
-                                              color: theme.primaryText),
+                                          style: _bodySmall(theme, color: _ink),
                                         ),
                                       ],
                                     ),
@@ -1754,19 +1806,15 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                     child: Container(
                       height: _bottomCtaContainerHeight,
                       padding: const EdgeInsets.fromLTRB(_hPad, 12, _hPad, 16),
-                      decoration: BoxDecoration(
-                        color: theme.primaryBackground,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.10),
-                            blurRadius: 14,
-                            offset: const Offset(0, -6),
-                          ),
-                        ],
+                      decoration: const BoxDecoration(
+                        color: _paper,
+                        border: Border(
+                          top: BorderSide(color: _hairline, width: 1),
+                        ),
                       ),
                       child: SizedBox(
                         width: double.infinity,
-                        height: 48,
+                        height: 50,
                         child: ElevatedButton.icon(
                           onPressed: () => _showAddToProjectSheet(
                             listingRef: listingRef,
@@ -1778,17 +1826,18 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                           icon: const Icon(
                             Icons.playlist_add_rounded,
                             size: 20,
-                            color: Colors.white,
+                            color: _sparkInk,
                           ),
                           label: Text(
                             'Add to Project',
-                            style: _labelLarge(theme, color: Colors.white),
+                            style: _labelLarge(theme, color: _sparkInk),
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.primary,
+                            backgroundColor: _spark,
+                            foregroundColor: _sparkInk,
                             elevation: 0,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(999),
+                              borderRadius: BorderRadius.circular(_rMed),
                             ),
                           ),
                         ),
@@ -1857,12 +1906,12 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
       width: 46,
       height: 46,
       decoration: BoxDecoration(
-        color: theme.primaryBackground,
+        color: _paper,
         shape: BoxShape.circle,
-        border: Border.all(color: theme.alternate, width: 1),
+        border: Border.all(color: _hairline, width: 1),
       ),
       alignment: Alignment.center,
-      child: Icon(Icons.person_outline_rounded, color: theme.secondaryText),
+      child: Icon(Icons.person_outline_rounded, color: _inkMute),
     );
   }
 
@@ -1907,13 +1956,12 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                     width: 46,
                     height: 46,
                     decoration: BoxDecoration(
-                      color: theme.primaryBackground,
+                      color: _paper,
                       shape: BoxShape.circle,
-                      border: Border.all(color: theme.alternate, width: 1),
+                      border: Border.all(color: _hairline, width: 1),
                     ),
                     alignment: Alignment.center,
-                    child: Icon(Icons.person_outline_rounded,
-                        color: theme.secondaryText),
+                    child: Icon(Icons.person_outline_rounded, color: _inkMute),
                   ),
                 ),
               ),
