@@ -42,22 +42,17 @@ class _AddListingPageViewState extends State<AddListingPageView> {
   //
   // Neutrals
   static const Color _ink = Color(0xFF14243F);
-  static const Color _inkSoft = Color(0xFF14243F);
   static const Color _inkMute = Color(0xFF6B7280);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFE3E4E8);
-  static const Color _surface2 = Color(0xFFE3E4E8);
   static const Color _hairline = Color(0xFFE3E4E8);
   static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
   // Brand accent — YELLOW. Always ink foreground, never white.
   static const Color _spark = Color(0xFFFFE74C); // primary CTA / ranked accent
   static const Color _sparkInk = Color(0xFF14243F);
-  static const Color _calm = Color(0xFFB8910F);
-  static const Color _calmInk = Color(0xFFFFFFFF);
   // Status
   static const Color _live =
       Color(0xFFFFB000); // gold — live / open-now / warning
-  static const Color _steel = Color(0xFF9EA3B0);
   static const Color _coral =
       Color(0xFFC8102E); // legacy red — error/destructive
   // Geometry
@@ -113,7 +108,7 @@ class _AddListingPageViewState extends State<AddListingPageView> {
   // ---------------------------------------------------------
   TextStyle get _titleStyle => const TextStyle(
         fontFamily: _displayFont,
-        fontSize: 22,
+        fontSize: 20,
         fontWeight: FontWeight.w800,
         letterSpacing: -0.4,
         height: 1.05,
@@ -122,13 +117,14 @@ class _AddListingPageViewState extends State<AddListingPageView> {
 
   TextStyle get _subtitleStyle => const TextStyle(
         fontFamily: _bodyFont,
-        fontSize: 12,
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
         color: _inkMute,
       );
 
   TextStyle get _sectionTitleStyle => const TextStyle(
         fontFamily: _displayFont,
-        fontSize: 15,
+        fontSize: 16,
         fontWeight: FontWeight.w700,
         letterSpacing: -0.2,
         color: _ink,
@@ -137,7 +133,7 @@ class _AddListingPageViewState extends State<AddListingPageView> {
   TextStyle _tabTextStyle({required bool selected}) => TextStyle(
         fontFamily: _bodyFont,
         fontSize: 13,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w500,
         color: selected ? _paper : _inkMute,
       );
 
@@ -156,7 +152,7 @@ class _AddListingPageViewState extends State<AddListingPageView> {
   TextStyle get _labelStyle => const TextStyle(
         fontFamily: _bodyFont,
         fontSize: 12,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w500,
         color: _inkMute,
       );
 
@@ -416,7 +412,7 @@ class _AddListingPageViewState extends State<AddListingPageView> {
                   style: TextStyle(
                     fontFamily: _bodyFont,
                     fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     color: _ink,
                   ),
                 ),
@@ -433,7 +429,7 @@ class _AddListingPageViewState extends State<AddListingPageView> {
                   style: TextStyle(
                     fontFamily: _bodyFont,
                     fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     color: _inkMute,
                   ),
                 ),
