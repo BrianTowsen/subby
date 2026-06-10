@@ -8,10 +8,6 @@ import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
-// ===================================
-// FILE: post_auth_gate_page_view.dart
-// ===================================
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -37,6 +33,30 @@ class _PostAuthGatePageViewState extends State<PostAuthGatePageView>
 
   late final AnimationController _fadeController;
   late final Animation<double> _fadeAnim;
+
+  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
+  //
+  // Neutrals
+  static const Color _ink = Color(0xFF14243F);
+  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _surface = Color(0xFFE3E4E8);
+  static const Color _hairline = Color(0xFFE3E4E8);
+  static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
+  // Brand accent — YELLOW. Always ink foreground, never white.
+  static const Color _spark = Color(0xFFFFE74C); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFF14243F);
+  // Status
+  static const Color _live =
+      Color(0xFFFFB000); // gold — live / open-now / warning
+  static const Color _coral = Color(0xFFC8102E);
+  // Type
+  static const String _displayFont = 'Inter Tight';
+  static const String _bodyFont = 'Inter';
+  static const String _monoFont = 'Inter';
+  // ────────────────────────────────────────────────────────────────────
 
   // ✅ Route names (MATCH FlutterFlow route names exactly)
   static const String kLoginRoute = 'login';
@@ -133,27 +153,27 @@ class _PostAuthGatePageViewState extends State<PostAuthGatePageView>
 
   @override
   Widget build(BuildContext context) {
-    final theme = FlutterFlowTheme.of(context);
-
     return SafeArea(
       child: Container(
         width: widget.width ?? double.infinity,
         height: widget.height ?? double.infinity,
-        color: theme.primaryBackground,
+        color: _paper,
         alignment: Alignment.center,
         padding: const EdgeInsets.all(24),
         child: _error != null
             ? Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.error_outline, size: 42, color: theme.error),
+                  const Icon(Icons.error_outline, size: 42, color: _coral),
                   const SizedBox(height: 12),
                   Text(
                     _error!,
                     textAlign: TextAlign.center,
-                    style: theme.bodyMedium.copyWith(
-                      color: theme.error,
+                    style: const TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 14,
                       fontWeight: FontWeight.w700,
+                      color: _coral,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -163,26 +183,34 @@ class _PostAuthGatePageViewState extends State<PostAuthGatePageView>
                       _handleAuth();
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.primary,
-                      foregroundColor: Colors.white,
+                      backgroundColor: _spark, // primary CTA — yellow
+                      foregroundColor: _sparkInk, // ink-on-yellow, never white
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: const Text('Retry'),
+                    child: const Text(
+                      'Retry',
+                      style: TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: _sparkInk,
+                      ),
+                    ),
                   ),
                 ],
               )
             : Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  SizedBox(
+                  const SizedBox(
                     width: 26,
                     height: 26,
                     child: CircularProgressIndicator(
                       strokeWidth: 1.8,
-                      valueColor: AlwaysStoppedAnimation<Color>(theme.primary),
+                      valueColor: AlwaysStoppedAnimation<Color>(_ink),
                     ),
                   ),
                   const SizedBox(height: 18),
@@ -193,10 +221,12 @@ class _PostAuthGatePageViewState extends State<PostAuthGatePageView>
                           ? 'Welcome back. Just a moment…'
                           : 'Almost there…',
                       textAlign: TextAlign.center,
-                      style: theme.bodyMedium.copyWith(
-                        color: theme.secondaryText,
+                      style: const TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 14,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.2,
+                        color: _inkMute,
                       ),
                     ),
                   ),

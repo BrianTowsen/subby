@@ -29,6 +29,30 @@ class EditProfilePageView extends StatefulWidget {
 }
 
 class _EditProfilePageViewState extends State<EditProfilePageView> {
+  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
+  //
+  // Neutrals
+  static const Color _ink = Color(0xFF14243F);
+  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _surface = Color(0xFFE3E4E8);
+  static const Color _hairline = Color(0xFFE3E4E8);
+  static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
+  // Brand accent — YELLOW. Always ink foreground, never white.
+  static const Color _spark = Color(0xFFFFE74C); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFF14243F);
+  // Status
+  static const Color _live =
+      Color(0xFFFFB000); // gold — live / open-now / warning
+  static const Color _coral = Color(0xFFC8102E);
+  // Type
+  static const String _displayFont = 'Inter Tight';
+  static const String _bodyFont = 'Inter';
+  static const String _monoFont = 'Inter';
+  // ────────────────────────────────────────────────────────────────────
+
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   final TextEditingController _nameController = TextEditingController();
@@ -48,40 +72,41 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
   // =========================================================
   // ✅ TYPOGRAPHY (match ListingResultsPageView)
   // =========================================================
-  TextStyle _titleStyle(FlutterFlowTheme t) => t.titleLarge.copyWith(
+  TextStyle _titleStyle(FlutterFlowTheme t) => t.titleLarge.override(
+        fontFamily: _displayFont,
         fontWeight: FontWeight.w900,
         letterSpacing: 0.2,
       );
 
   TextStyle _subtitleStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+        fontFamily: _bodyFont,
+        color: _inkMute,
       );
 
   TextStyle _sectionTitleStyle(FlutterFlowTheme t) => t.titleMedium.override(
-        fontFamily: t.titleMediumFamily,
+        fontFamily: _displayFont,
         fontWeight: FontWeight.w800,
       );
 
   TextStyle _labelStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+        fontFamily: _bodyFont,
+        color: _inkMute,
         fontWeight: FontWeight.w600,
         fontSize: 11,
       );
 
   TextStyle _fieldTextStyle(FlutterFlowTheme t) => t.bodyMedium.override(
-        fontFamily: t.bodyMediumFamily,
+        fontFamily: _bodyFont,
       );
 
   TextStyle _hintStyle(FlutterFlowTheme t) => t.bodyMedium.override(
-        fontFamily: t.bodyMediumFamily,
-        color: t.secondaryText,
+        fontFamily: _bodyFont,
+        color: _inkMute,
       );
 
   TextStyle _snackTextStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.primaryText,
+        fontFamily: _bodyFont,
+        color: _ink,
       );
   // =========================================================
 
@@ -99,9 +124,9 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: t.secondaryBackground,
+        color: _surface,
         shape: BoxShape.circle,
-        border: Border.all(color: t.alternate, width: 1),
+        border: Border.all(color: _hairline, width: 1),
       ),
       alignment: Alignment.center,
       child: Icon(icon, size: size == 32 ? 16 : 18, color: iconColor),
@@ -112,9 +137,9 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
   }
 
   BoxDecoration _liftedCardDecoration(FlutterFlowTheme t) => BoxDecoration(
-        color: t.primaryBackground,
+        color: _paper,
         borderRadius: BorderRadius.circular(_radius),
-        border: Border.all(color: t.alternate, width: 1),
+        border: Border.all(color: _hairline, width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
@@ -137,7 +162,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
       child: ElevatedButton(
         onPressed: loading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: t.primary,
+          backgroundColor: _spark,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(999),
@@ -149,21 +174,21 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                 height: 18,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                  valueColor: const AlwaysStoppedAnimation<Color>(_sparkInk),
                 ),
               )
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (icon != null) ...[
-                    Icon(icon, size: 18, color: Colors.white),
+                    Icon(icon, size: 18, color: _sparkInk),
                     const SizedBox(width: 8),
                   ],
                   Text(
                     label,
                     style: t.labelLarge.override(
-                      fontFamily: t.labelLargeFamily,
-                      color: Colors.white,
+                      fontFamily: _bodyFont,
+                      color: _sparkInk,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -183,9 +208,9 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
     Color? iconColor,
     bool loading = false,
   }) {
-    final bc = borderColor ?? t.alternate;
-    final tc = textColor ?? t.primaryText;
-    final ic = iconColor ?? t.secondaryText;
+    final bc = borderColor ?? _hairline;
+    final tc = textColor ?? _ink;
+    final ic = iconColor ?? _inkMute;
 
     return SizedBox(
       width: double.infinity,
@@ -204,7 +229,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                 height: 18,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(t.primary),
+                  valueColor: AlwaysStoppedAnimation<Color>(_ink),
                 ),
               )
             : Row(
@@ -217,7 +242,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                   Text(
                     label,
                     style: t.labelLarge.override(
-                      fontFamily: t.labelLargeFamily,
+                      fontFamily: _bodyFont,
                       color: tc,
                       fontWeight: FontWeight.w700,
                     ),
@@ -240,10 +265,10 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           elevation: 0,
-          backgroundColor: theme.secondaryBackground,
+          backgroundColor: _surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
-            side: BorderSide(color: theme.alternate, width: 1),
+            side: BorderSide(color: _hairline, width: 1),
           ),
           duration: const Duration(milliseconds: 1600),
           content: Row(
@@ -252,13 +277,13 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: theme.primary.withOpacity(0.12),
+                  color: _ink.withOpacity(0.08),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   success ? Icons.check_rounded : Icons.info_outline_rounded,
                   size: 16,
-                  color: theme.primary,
+                  color: _ink,
                 ),
               ),
               const SizedBox(width: 10),
@@ -300,23 +325,23 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
       hintText: hint,
       hintStyle: _hintStyle(theme),
       filled: true,
-      fillColor: theme.primaryBackground,
+      fillColor: _paper,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: theme.alternate, width: 1),
+        borderSide: BorderSide(color: _hairline, width: 1),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: theme.primary, width: 1.6),
+        borderSide: BorderSide(color: _ink, width: 1.6),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: theme.error, width: 1.2),
+        borderSide: BorderSide(color: _coral, width: 1.2),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: theme.error, width: 1.6),
+        borderSide: BorderSide(color: _coral, width: 1.6),
       ),
     );
   }
@@ -369,7 +394,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
       height: height,
       child: SafeArea(
         child: Container(
-          color: theme.primaryBackground,
+          color: _paper,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -381,7 +406,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                       theme,
                       size: 32,
                       icon: Icons.arrow_back_ios_new_rounded,
-                      iconColor: theme.secondaryText,
+                      iconColor: _inkMute,
                       onTap: () => context.safePop(),
                     ),
                     const SizedBox(width: 12),
@@ -408,20 +433,19 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: theme.secondaryBackground,
+                        color: _surface,
                         borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: theme.alternate),
+                        border: Border.all(color: _hairline),
                       ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.lock_outline,
-                              color: theme.secondaryText, size: 34),
+                          Icon(Icons.lock_outline, color: _inkMute, size: 34),
                           const SizedBox(height: 10),
                           Text(
                             'You are not signed in.',
                             style: theme.titleMedium.override(
-                              fontFamily: theme.titleMediumFamily,
+                              fontFamily: _displayFont,
                               fontWeight: FontWeight.w800,
                             ),
                             textAlign: TextAlign.center,
@@ -430,8 +454,8 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                           Text(
                             'Please log in to edit your profile.',
                             style: theme.bodySmall.override(
-                              fontFamily: theme.bodySmallFamily,
-                              color: theme.secondaryText,
+                              fontFamily: _bodyFont,
+                              color: _inkMute,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -461,7 +485,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
       height: height,
       child: SafeArea(
         child: Container(
-          color: theme.primaryBackground,
+          color: _paper,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -473,7 +497,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                       theme,
                       size: 32,
                       icon: Icons.arrow_back_ios_new_rounded,
-                      iconColor: theme.secondaryText,
+                      iconColor: _inkMute,
                       onTap: () => context.safePop(),
                     ),
                     const SizedBox(width: 12),
@@ -500,20 +524,20 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: theme.secondaryBackground,
+                        color: _surface,
                         borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: theme.alternate),
+                        border: Border.all(color: _hairline),
                       ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.cloud_off_rounded,
-                              color: theme.secondaryText, size: 34),
+                              color: _inkMute, size: 34),
                           const SizedBox(height: 10),
                           Text(
                             'Unable to load profile right now.',
                             style: theme.titleMedium.override(
-                              fontFamily: theme.titleMediumFamily,
+                              fontFamily: _displayFont,
                               fontWeight: FontWeight.w800,
                             ),
                             textAlign: TextAlign.center,
@@ -522,8 +546,8 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                           Text(
                             'Please try again in a moment.',
                             style: theme.bodySmall.override(
-                              fontFamily: theme.bodySmallFamily,
-                              color: theme.secondaryText,
+                              fontFamily: _bodyFont,
+                              color: _inkMute,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -602,7 +626,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                 onTap: () => FocusScope.of(context).unfocus(),
                 child: SafeArea(
                   child: Container(
-                    color: theme.primaryBackground,
+                    color: _paper,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -616,7 +640,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                                 theme,
                                 size: 32,
                                 icon: Icons.arrow_back_ios_new_rounded,
-                                iconColor: theme.secondaryText,
+                                iconColor: _inkMute,
                                 onTap: () => context.safePop(),
                               ),
                               const SizedBox(width: 12),
@@ -642,14 +666,14 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                                           strokeWidth: 2,
                                           valueColor:
                                               AlwaysStoppedAnimation<Color>(
-                                                  theme.primary),
+                                                  _ink),
                                         ),
                                       )
                                     : Text(
                                         'Save',
                                         style: theme.labelMedium.override(
-                                          fontFamily: theme.labelMediumFamily,
-                                          color: theme.primary,
+                                          fontFamily: _bodyFont,
+                                          color: _ink,
                                           fontWeight: FontWeight.w700,
                                         ),
                                       ),
@@ -679,7 +703,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                                         width: 44,
                                         height: 44,
                                         decoration: BoxDecoration(
-                                          color: theme.secondaryBackground,
+                                          color: _surface,
                                           borderRadius:
                                               BorderRadius.circular(12),
                                         ),
@@ -731,8 +755,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                               style: theme.bodyMedium.override(
-                                                fontFamily:
-                                                    theme.bodyMediumFamily,
+                                                fontFamily: _bodyFont,
                                                 fontWeight: FontWeight.w700,
                                               ),
                                             ),
@@ -742,9 +765,8 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                               style: theme.bodySmall.override(
-                                                fontFamily:
-                                                    theme.bodySmallFamily,
-                                                color: theme.secondaryText,
+                                                fontFamily: _bodyFont,
+                                                color: _inkMute,
                                               ),
                                             ),
                                           ],

@@ -28,6 +28,30 @@ class ProjectTimelinePageView extends StatefulWidget {
 }
 
 class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
+  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
+  //
+  // Neutrals
+  static const Color _ink = Color(0xFF14243F);
+  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _surface = Color(0xFFE3E4E8);
+  static const Color _hairline = Color(0xFFE3E4E8);
+  static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
+  // Brand accent — YELLOW. Always ink foreground, never white.
+  static const Color _spark = Color(0xFFFFE74C); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFF14243F);
+  // Status
+  static const Color _live =
+      Color(0xFFFFB000); // gold — live / open-now / done / warning
+  static const Color _coral = Color(0xFFC8102E);
+  // Type
+  static const String _displayFont = 'Inter Tight';
+  static const String _bodyFont = 'Inter';
+  static const String _monoFont = 'Inter';
+  // ────────────────────────────────────────────────────────────────────
+
   static const double _hPad = 24;
   static const double _vPad = 24;
   static const double _radius = 16;
@@ -91,9 +115,9 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   Color _timelineColor(FlutterFlowTheme theme) {
     try {
       final c = (theme as dynamic).timelineColour as Color?;
-      return c ?? theme.primary;
+      return c ?? _ink;
     } catch (_) {
-      return theme.primary;
+      return _ink;
     }
   }
 
@@ -101,7 +125,8 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   // ✅ TYPOGRAPHY (CONSISTENT: token + explicit family)
   // =========================================================
   TextStyle _titleStyle(FlutterFlowTheme theme) {
-    return theme.titleLarge.copyWith(
+    return theme.titleLarge.override(
+      fontFamily: _displayFont,
       fontWeight: FontWeight.w900,
       letterSpacing: 0.2,
     );
@@ -109,37 +134,37 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
 
   TextStyle _subtitleStyle(FlutterFlowTheme theme) {
     return theme.bodySmall.override(
-      fontFamily: theme.bodySmallFamily,
-      color: theme.secondaryText,
+      fontFamily: _bodyFont,
+      color: _inkMute,
     );
   }
 
   TextStyle _sectionTitleStyle(FlutterFlowTheme theme) {
     return theme.titleSmall.override(
-      fontFamily: theme.titleSmallFamily,
+      fontFamily: _displayFont,
       fontWeight: FontWeight.w800,
-      color: theme.primaryText,
+      color: _ink,
     );
   }
 
   TextStyle _rowTitleStyle(FlutterFlowTheme theme) {
     return theme.bodyMedium.override(
-      fontFamily: theme.bodyMediumFamily,
+      fontFamily: _bodyFont,
       fontWeight: FontWeight.w800,
-      color: theme.primaryText,
+      color: _ink,
     );
   }
 
   TextStyle _rowMetaStyle(FlutterFlowTheme theme) {
     return theme.bodySmall.override(
-      fontFamily: theme.bodySmallFamily,
-      color: theme.secondaryText,
+      fontFamily: _bodyFont,
+      color: _inkMute,
     );
   }
 
   TextStyle _pillTextStyle(FlutterFlowTheme theme) {
     return theme.labelSmall.override(
-      fontFamily: theme.labelSmallFamily,
+      fontFamily: _bodyFont,
       fontWeight: FontWeight.w800,
       letterSpacing: 0.2,
     );
@@ -405,10 +430,10 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: theme.primaryBackground,
+        color: _paper,
         borderRadius: BorderRadius.circular(_radius),
         border: Border.all(
-          color: theme.alternate.withOpacity(0.9),
+          color: _hairline.withOpacity(0.9),
           width: 1,
         ),
         boxShadow: [
@@ -465,7 +490,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
         height: 10,
         child: LinearProgressIndicator(
           value: v,
-          backgroundColor: theme.alternate.withOpacity(0.55),
+          backgroundColor: _hairline.withOpacity(0.55),
           valueColor: AlwaysStoppedAnimation<Color>(fillColor),
         ),
       ),
@@ -478,13 +503,13 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   Color _statusColor(FlutterFlowTheme theme, Color accent, _PhaseStatus s) {
     switch (s) {
       case _PhaseStatus.completed:
-        return theme.success;
+        return _live;
       case _PhaseStatus.inProgress:
         return accent;
       case _PhaseStatus.upcoming:
-        return theme.tertiary;
+        return _inkMute;
       case _PhaseStatus.notStarted:
-        return theme.secondaryText;
+        return _inkMute;
     }
   }
 
@@ -517,7 +542,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
         width: outer,
         height: outer,
         decoration: BoxDecoration(
-          color: theme.primaryBackground,
+          color: _paper,
           shape: BoxShape.circle,
           border: Border.all(color: statusColor, width: 2.2),
           boxShadow: [
@@ -552,7 +577,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
         color: dotColor,
         shape: BoxShape.circle,
         border: Border.all(
-          color: theme.primaryBackground,
+          color: _paper,
           width: 2,
         ),
         boxShadow: [
@@ -611,14 +636,12 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: _rowTitleStyle(theme).copyWith(
-                          color: disabled
-                              ? theme.secondaryText
-                              : theme.primaryText,
+                          color: disabled ? _inkMute : _ink,
                         ),
                       ),
                       icon: Icon(
                         Icons.keyboard_arrow_down_rounded,
-                        color: theme.secondaryText,
+                        color: _inkMute,
                       ),
                       items: _projectOptions
                           .map(
@@ -854,15 +877,14 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: theme.primaryBackground,
+                        color: _paper,
                         borderRadius: BorderRadius.circular(12),
-                        border:
-                            Border.all(color: theme.alternate.withOpacity(0.9)),
+                        border: Border.all(color: _hairline.withOpacity(0.9)),
                       ),
                       child: Icon(
                         Icons.drag_handle_rounded,
                         size: 20,
-                        color: theme.secondaryText,
+                        color: _inkMute,
                       ),
                     ),
                   ),
@@ -897,8 +919,8 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                   Text(
                     _pct(phaseProg),
                     style: theme.bodySmall.override(
-                      fontFamily: theme.bodySmallFamily,
-                      color: theme.secondaryText,
+                      fontFamily: _bodyFont,
+                      color: _inkMute,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -907,7 +929,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                     isExpanded
                         ? Icons.keyboard_arrow_up_rounded
                         : Icons.keyboard_arrow_down_rounded,
-                    color: theme.secondaryText,
+                    color: _inkMute,
                   ),
                 ],
               ),
@@ -961,15 +983,15 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
-          color: theme.primaryBackground,
+          color: _paper,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: theme.alternate.withOpacity(0.9)),
+          border: Border.all(color: _hairline.withOpacity(0.9)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 16, color: theme.secondaryText),
+              Icon(icon, size: 16, color: _inkMute),
               const SizedBox(width: 6),
             ],
             Column(
@@ -980,9 +1002,9 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                 Text(
                   value,
                   style: theme.bodyMedium.override(
-                    fontFamily: theme.bodyMediumFamily,
+                    fontFamily: _bodyFont,
                     fontWeight: FontWeight.w900,
-                    color: theme.primaryText,
+                    color: _ink,
                   ),
                 ),
               ],
@@ -996,9 +1018,9 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
       return Text(
         t,
         style: theme.labelMedium.override(
-          fontFamily: theme.labelMediumFamily,
+          fontFamily: _bodyFont,
           fontWeight: FontWeight.w900,
-          color: theme.secondaryText,
+          color: _inkMute,
           letterSpacing: 0.2,
         ),
       );
@@ -1006,9 +1028,9 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
 
     return Container(
       decoration: BoxDecoration(
-        color: theme.secondaryBackground,
+        color: _surface,
         borderRadius: BorderRadius.circular(_radius),
-        border: Border.all(color: theme.alternate.withOpacity(0.9)),
+        border: Border.all(color: _hairline.withOpacity(0.9)),
       ),
       padding: const EdgeInsets.all(12),
       child: Column(
@@ -1028,7 +1050,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                 child: Text(
                   _statusLabel(task.status),
                   style: theme.labelSmall.override(
-                    fontFamily: theme.labelSmallFamily,
+                    fontFamily: _bodyFont,
                     fontWeight: FontWeight.w900,
                     color: statusColor,
                     letterSpacing: 0.2,
@@ -1050,9 +1072,9 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
           Text(
             task.title,
             style: theme.bodyMedium.override(
-              fontFamily: theme.bodyMediumFamily,
+              fontFamily: _bodyFont,
               fontWeight: FontWeight.w900,
-              color: theme.primaryText,
+              color: _ink,
             ),
           ),
 
@@ -1114,7 +1136,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
               activeTrackColor: accent,
-              inactiveTrackColor: theme.alternate.withOpacity(0.55),
+              inactiveTrackColor: _hairline.withOpacity(0.55),
               thumbColor: accent,
               overlayColor: accent.withOpacity(0.18),
               trackHeight: 3.2,
@@ -1133,8 +1155,8 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
           Text(
             'Slide to update completion.',
             style: theme.bodySmall.override(
-              fontFamily: theme.bodySmallFamily,
-              color: theme.secondaryText,
+              fontFamily: _bodyFont,
+              color: _inkMute,
             ),
           ),
         ],
@@ -1153,9 +1175,9 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
       width: double.infinity,
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: theme.primaryBackground,
+        color: _paper,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: theme.alternate.withOpacity(0.9)),
+        border: Border.all(color: _hairline.withOpacity(0.9)),
       ),
       child: Row(
         children: [
@@ -1168,9 +1190,9 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                 Text(
                   '$value',
                   style: theme.bodyMedium.override(
-                    fontFamily: theme.bodyMediumFamily,
+                    fontFamily: _bodyFont,
                     fontWeight: FontWeight.w900,
-                    color: theme.primaryText,
+                    color: _ink,
                   ),
                 ),
               ],
@@ -1193,11 +1215,11 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
         width: 32,
         height: 32,
         decoration: BoxDecoration(
-          color: theme.secondaryBackground,
+          color: _surface,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: theme.alternate.withOpacity(0.9)),
+          border: Border.all(color: _hairline.withOpacity(0.9)),
         ),
-        child: Icon(icon, size: 18, color: theme.primaryText),
+        child: Icon(icon, size: 18, color: _ink),
       ),
     );
   }
@@ -1206,7 +1228,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
     return Container(
       width: double.infinity,
       height: 1.5,
-      color: theme.alternate.withOpacity(0.75),
+      color: _hairline.withOpacity(0.75),
     );
   }
 
@@ -1221,7 +1243,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
     return Container(
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
-      color: theme.primaryBackground,
+      color: _paper,
       child: SafeArea(
         top: true,
         bottom: true,
@@ -1243,16 +1265,16 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: theme.primaryBackground,
+                          color: _paper,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: theme.alternate.withOpacity(0.9),
+                            color: _hairline.withOpacity(0.9),
                           ),
                         ),
                         child: Icon(
                           Icons.arrow_back_rounded,
                           size: 22,
-                          color: theme.primaryText,
+                          color: _ink,
                         ),
                       ),
                     ),
@@ -1266,7 +1288,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                       ),
                       child: const Icon(
                         Icons.timeline_rounded,
-                        color: Colors.white,
+                        color: _paper,
                         size: 22,
                       ),
                     ),
@@ -1278,7 +1300,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                           Text(
                             'Project Timeline',
                             style: _titleStyle(theme).copyWith(
-                              color: theme.primaryText,
+                              color: _ink,
                             ),
                           ),
                           const SizedBox(height: 4),

@@ -28,6 +28,30 @@ class ProjectCostView extends StatefulWidget {
 
 class _ProjectCostViewState extends State<ProjectCostView>
     with SingleTickerProviderStateMixin {
+  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
+  //
+  // Neutrals
+  static const Color _ink = Color(0xFF14243F);
+  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _surface = Color(0xFFE3E4E8);
+  static const Color _hairline = Color(0xFFE3E4E8);
+  static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
+  // Brand accent — YELLOW. Always ink foreground, never white.
+  static const Color _spark = Color(0xFFFFE74C); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFF14243F);
+  // Status
+  static const Color _live =
+      Color(0xFFFFB000); // gold — live / paid / done / warning
+  static const Color _coral = Color(0xFFC8102E);
+  // Type
+  static const String _displayFont = 'Inter Tight';
+  static const String _bodyFont = 'Inter';
+  static const String _monoFont = 'Inter';
+  // ────────────────────────────────────────────────────────────────────
+
   static const double _hPad = 24;
   static const double _vPad = 24;
   static const double _radius = 16;
@@ -91,9 +115,9 @@ class _ProjectCostViewState extends State<ProjectCostView>
   Color _projectCostColor(FlutterFlowTheme theme) {
     try {
       final c = (theme as dynamic).projectCostColour as Color?;
-      return c ?? theme.primary;
+      return c ?? _ink;
     } catch (_) {
-      return theme.primary;
+      return _ink;
     }
   }
 
@@ -101,7 +125,8 @@ class _ProjectCostViewState extends State<ProjectCostView>
   // Typography (token + explicit family)
   // -----------------------------
   TextStyle _titleStyle(FlutterFlowTheme theme) {
-    return theme.titleLarge.copyWith(
+    return theme.titleLarge.override(
+      fontFamily: _displayFont,
       fontWeight: FontWeight.w900,
       letterSpacing: 0.2,
     );
@@ -109,37 +134,37 @@ class _ProjectCostViewState extends State<ProjectCostView>
 
   TextStyle _subtitleStyle(FlutterFlowTheme theme) {
     return theme.bodySmall.override(
-      fontFamily: theme.bodySmallFamily,
-      color: theme.secondaryText,
+      fontFamily: _bodyFont,
+      color: _inkMute,
     );
   }
 
   TextStyle _sectionTitleStyle(FlutterFlowTheme theme) {
     return theme.titleSmall.override(
-      fontFamily: theme.titleSmallFamily,
+      fontFamily: _displayFont,
       fontWeight: FontWeight.w800,
-      color: theme.primaryText,
+      color: _ink,
     );
   }
 
   TextStyle _rowTitleStyle(FlutterFlowTheme theme) {
     return theme.bodyMedium.override(
-      fontFamily: theme.bodyMediumFamily,
+      fontFamily: _bodyFont,
       fontWeight: FontWeight.w900,
-      color: theme.primaryText,
+      color: _ink,
     );
   }
 
   TextStyle _rowMetaStyle(FlutterFlowTheme theme) {
     return theme.bodySmall.override(
-      fontFamily: theme.bodySmallFamily,
-      color: theme.secondaryText,
+      fontFamily: _bodyFont,
+      color: _inkMute,
     );
   }
 
   TextStyle _pillTextStyle(FlutterFlowTheme theme) {
     return theme.labelSmall.override(
-      fontFamily: theme.labelSmallFamily,
+      fontFamily: _bodyFont,
       fontWeight: FontWeight.w800,
       letterSpacing: 0.2,
     );
@@ -172,10 +197,10 @@ class _ProjectCostViewState extends State<ProjectCostView>
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: theme.primaryBackground,
+        color: _paper,
         borderRadius: BorderRadius.circular(_radius),
         border: Border.all(
-          color: theme.alternate.withOpacity(0.9),
+          color: _hairline.withOpacity(0.9),
           width: 1,
         ),
         boxShadow: [
@@ -197,7 +222,7 @@ class _ProjectCostViewState extends State<ProjectCostView>
     return Container(
       width: double.infinity,
       height: 1.5,
-      color: theme.alternate.withOpacity(0.75),
+      color: _hairline.withOpacity(0.75),
     );
   }
 
@@ -240,7 +265,7 @@ class _ProjectCostViewState extends State<ProjectCostView>
         height: 10,
         child: LinearProgressIndicator(
           value: v,
-          backgroundColor: theme.alternate.withOpacity(0.55),
+          backgroundColor: _hairline.withOpacity(0.55),
           valueColor: AlwaysStoppedAnimation<Color>(fillColor),
         ),
       ),
@@ -262,14 +287,14 @@ class _ProjectCostViewState extends State<ProjectCostView>
             color: accent,
             borderRadius: BorderRadius.circular(999),
           ),
-          labelColor: Colors.white,
-          unselectedLabelColor: theme.secondaryText,
+          labelColor: _paper,
+          unselectedLabelColor: _inkMute,
           labelStyle: theme.bodyMedium.override(
-            fontFamily: theme.bodyMediumFamily,
+            fontFamily: _bodyFont,
             fontWeight: FontWeight.w900,
           ),
           unselectedLabelStyle: theme.bodyMedium.override(
-            fontFamily: theme.bodyMediumFamily,
+            fontFamily: _bodyFont,
             fontWeight: FontWeight.w800,
           ),
           tabs: const [
@@ -443,7 +468,7 @@ class _ProjectCostViewState extends State<ProjectCostView>
                 Expanded(
                   child: _summaryStat(
                     theme: theme,
-                    accent: theme.success,
+                    accent: _live,
                     label: 'Spent',
                     value: _money(spent),
                     icon: Icons.receipt_long_outlined,
@@ -457,7 +482,7 @@ class _ProjectCostViewState extends State<ProjectCostView>
                 Expanded(
                   child: _summaryStat(
                     theme: theme,
-                    accent: theme.tertiary,
+                    accent: _inkMute,
                     label: 'Committed',
                     value: _money(committed),
                     icon: Icons.assignment_turned_in_outlined,
@@ -486,8 +511,8 @@ class _ProjectCostViewState extends State<ProjectCostView>
                 Text(
                   '${_pct(budgetProgress)} used',
                   style: theme.bodySmall.override(
-                    fontFamily: theme.bodySmallFamily,
-                    color: theme.secondaryText,
+                    fontFamily: _bodyFont,
+                    color: _inkMute,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -536,9 +561,9 @@ class _ProjectCostViewState extends State<ProjectCostView>
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.bodyMedium.override(
-                    fontFamily: theme.bodyMediumFamily,
+                    fontFamily: _bodyFont,
                     fontWeight: FontWeight.w900,
-                    color: theme.primaryText,
+                    color: _ink,
                   ),
                 ),
               ],
@@ -638,7 +663,7 @@ class _ProjectCostViewState extends State<ProjectCostView>
                     isExpanded
                         ? Icons.keyboard_arrow_up_rounded
                         : Icons.keyboard_arrow_down_rounded,
-                    color: theme.secondaryText,
+                    color: _inkMute,
                   ),
                 ],
               ),
@@ -667,9 +692,9 @@ class _ProjectCostViewState extends State<ProjectCostView>
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: theme.secondaryBackground,
+        color: _surface,
         borderRadius: BorderRadius.circular(_radius),
-        border: Border.all(color: theme.alternate.withOpacity(0.9)),
+        border: Border.all(color: _hairline.withOpacity(0.9)),
       ),
       child: Column(
         children: [
@@ -682,9 +707,9 @@ class _ProjectCostViewState extends State<ProjectCostView>
               Text(
                 _money(line.amount),
                 style: theme.bodyMedium.override(
-                  fontFamily: theme.bodyMediumFamily,
+                  fontFamily: _bodyFont,
                   fontWeight: FontWeight.w900,
-                  color: theme.primaryText,
+                  color: _ink,
                 ),
               ),
             ],
@@ -764,7 +789,7 @@ class _ProjectCostViewState extends State<ProjectCostView>
                 Expanded(
                   child: _summaryStat(
                     theme: theme,
-                    accent: theme.success,
+                    accent: _live,
                     label: 'Paid',
                     value: _money(paid),
                     icon: Icons.verified_outlined,
@@ -786,14 +811,13 @@ class _ProjectCostViewState extends State<ProjectCostView>
             Row(
               children: [
                 Expanded(
-                    child: _progressBar(theme,
-                        value: prog, fillColor: theme.success)),
+                    child: _progressBar(theme, value: prog, fillColor: _live)),
                 const SizedBox(width: 10),
                 Text(
                   '${_pct(prog)} paid',
                   style: theme.bodySmall.override(
-                    fontFamily: theme.bodySmallFamily,
-                    color: theme.secondaryText,
+                    fontFamily: _bodyFont,
+                    color: _inkMute,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -807,7 +831,7 @@ class _ProjectCostViewState extends State<ProjectCostView>
 
   Widget _buildInvoiceCard(
       FlutterFlowTheme theme, Color accent, _InvoiceItem inv) {
-    final pillColor = inv.paid ? theme.success : accent;
+    final pillColor = inv.paid ? _live : accent;
 
     return _subbyCardShell(
       theme: theme,
@@ -855,9 +879,9 @@ class _ProjectCostViewState extends State<ProjectCostView>
               Text(
                 _money(inv.amount),
                 style: theme.bodyMedium.override(
-                  fontFamily: theme.bodyMediumFamily,
+                  fontFamily: _bodyFont,
                   fontWeight: FontWeight.w900,
-                  color: theme.primaryText,
+                  color: _ink,
                 ),
               ),
               const SizedBox(height: 6),
@@ -915,9 +939,9 @@ class _ProjectCostViewState extends State<ProjectCostView>
                   child: Text(
                     _money(total),
                     style: theme.titleSmall.override(
-                      fontFamily: theme.titleSmallFamily,
+                      fontFamily: _displayFont,
                       fontWeight: FontWeight.w900,
-                      color: theme.primaryText,
+                      color: _ink,
                     ),
                   ),
                 ),
@@ -952,9 +976,9 @@ class _ProjectCostViewState extends State<ProjectCostView>
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: theme.secondaryBackground,
+              color: _surface,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: theme.alternate.withOpacity(0.9)),
+              border: Border.all(color: _hairline.withOpacity(0.9)),
             ),
             child: Icon(Icons.shopping_bag_outlined, color: accent, size: 22),
           ),
@@ -981,9 +1005,9 @@ class _ProjectCostViewState extends State<ProjectCostView>
           Text(
             _money(t.amount),
             style: theme.bodyMedium.override(
-              fontFamily: theme.bodyMediumFamily,
+              fontFamily: _bodyFont,
               fontWeight: FontWeight.w900,
-              color: theme.primaryText,
+              color: _ink,
             ),
           ),
         ],
@@ -1002,7 +1026,7 @@ class _ProjectCostViewState extends State<ProjectCostView>
     return Container(
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
-      color: theme.primaryBackground,
+      color: _paper,
       child: SafeArea(
         top: true,
         bottom: true,
@@ -1024,16 +1048,16 @@ class _ProjectCostViewState extends State<ProjectCostView>
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: theme.primaryBackground,
+                          color: _paper,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: theme.alternate.withOpacity(0.9),
+                            color: _hairline.withOpacity(0.9),
                           ),
                         ),
                         child: Icon(
                           Icons.arrow_back_rounded,
                           size: 22,
-                          color: theme.primaryText,
+                          color: _ink,
                         ),
                       ),
                     ),
@@ -1047,7 +1071,7 @@ class _ProjectCostViewState extends State<ProjectCostView>
                       ),
                       child: const Icon(
                         Icons.account_balance_wallet_outlined,
-                        color: Colors.white,
+                        color: _paper,
                         size: 22,
                       ),
                     ),
@@ -1059,7 +1083,7 @@ class _ProjectCostViewState extends State<ProjectCostView>
                           Text(
                             'Project Cost',
                             style: _titleStyle(theme).copyWith(
-                              color: theme.primaryText,
+                              color: _ink,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -1097,8 +1121,8 @@ class _ProjectCostViewState extends State<ProjectCostView>
                                     child: Text(
                                       'No project selected.',
                                       style: theme.bodyMedium.override(
-                                        fontFamily: theme.bodyMediumFamily,
-                                        color: theme.secondaryText,
+                                        fontFamily: _bodyFont,
+                                        color: _inkMute,
                                       ),
                                     ),
                                   )
@@ -1150,7 +1174,7 @@ class _ProjectCostViewState extends State<ProjectCostView>
                                                         .override(
                                                       fontFamily: theme
                                                           .titleMediumFamily,
-                                                      color: theme.primaryText,
+                                                      color: _ink,
                                                       fontWeight:
                                                           FontWeight.w900,
                                                     ),
@@ -1160,10 +1184,8 @@ class _ProjectCostViewState extends State<ProjectCostView>
                                                     'Cost dashboard (UI) • Wire Firestore next',
                                                     style: theme.bodySmall
                                                         .override(
-                                                      fontFamily:
-                                                          theme.bodySmallFamily,
-                                                      color:
-                                                          theme.secondaryText,
+                                                      fontFamily: _bodyFont,
+                                                      color: _inkMute,
                                                     ),
                                                   ),
                                                 ],
@@ -1184,7 +1206,7 @@ class _ProjectCostViewState extends State<ProjectCostView>
                           minHeight: _stickyTabsHeight,
                           maxHeight: _stickyTabsHeight,
                           child: Container(
-                            color: theme.primaryBackground,
+                            color: _paper,
                             padding: const EdgeInsets.only(bottom: 12),
                             alignment: Alignment.bottomCenter,
                             child: _buildTabs(theme, accent),

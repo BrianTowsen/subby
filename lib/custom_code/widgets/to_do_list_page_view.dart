@@ -26,6 +26,30 @@ class ToDoListPageView extends StatefulWidget {
 }
 
 class _ToDoListPageViewState extends State<ToDoListPageView> {
+  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
+  //
+  // Neutrals
+  static const Color _ink = Color(0xFF14243F);
+  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _surface = Color(0xFFE3E4E8);
+  static const Color _hairline = Color(0xFFE3E4E8);
+  static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
+  // Brand accent — YELLOW. Always ink foreground, never white.
+  static const Color _spark = Color(0xFFFFE74C); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFF14243F);
+  // Status
+  static const Color _live =
+      Color(0xFFFFB000); // gold — live / open-now / done / warning
+  static const Color _coral = Color(0xFFC8102E);
+  // Type
+  static const String _displayFont = 'Inter Tight';
+  static const String _bodyFont = 'Inter';
+  static const String _monoFont = 'Inter';
+  // ────────────────────────────────────────────────────────────────────
+
   static const double _hPad = 24;
   static const double _vPad = 24;
   static const double _radius = 16;
@@ -56,7 +80,8 @@ class _ToDoListPageViewState extends State<ToDoListPageView> {
   }
 
   TextStyle _titleStyle(FlutterFlowTheme theme) {
-    return theme.titleLarge.copyWith(
+    return theme.titleLarge.override(
+      fontFamily: _displayFont,
       fontWeight: FontWeight.w900,
       letterSpacing: 0.2,
     );
@@ -64,8 +89,8 @@ class _ToDoListPageViewState extends State<ToDoListPageView> {
 
   TextStyle _subtitleStyle(FlutterFlowTheme theme) {
     return theme.bodySmall.override(
-      fontFamily: theme.bodySmallFamily,
-      color: theme.secondaryText,
+      fontFamily: _bodyFont,
+      color: _inkMute,
     );
   }
 
@@ -74,9 +99,9 @@ class _ToDoListPageViewState extends State<ToDoListPageView> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.primaryBackground,
+        color: _paper,
         borderRadius: BorderRadius.circular(_radius),
-        border: Border.all(color: theme.alternate.withOpacity(0.9)),
+        border: Border.all(color: _hairline.withOpacity(0.9)),
         boxShadow: [
           BoxShadow(
             blurRadius: 14,
@@ -96,7 +121,7 @@ class _ToDoListPageViewState extends State<ToDoListPageView> {
     return Container(
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
-      color: theme.primaryBackground,
+      color: _paper,
       child: SafeArea(
         child: Padding(
           padding:
@@ -114,16 +139,16 @@ class _ToDoListPageViewState extends State<ToDoListPageView> {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: theme.primaryBackground,
+                        color: _paper,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: theme.alternate.withOpacity(0.9),
+                          color: _hairline.withOpacity(0.9),
                         ),
                       ),
                       child: Icon(
                         Icons.arrow_back_rounded,
                         size: 22,
-                        color: theme.primaryText,
+                        color: _ink,
                       ),
                     ),
                   ),
@@ -133,8 +158,7 @@ class _ToDoListPageViewState extends State<ToDoListPageView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('To Do List',
-                            style: _titleStyle(theme)
-                                .copyWith(color: theme.primaryText)),
+                            style: _titleStyle(theme).copyWith(color: _ink)),
                         const SizedBox(height: 4),
                         Text('Tasks and assignments',
                             style: _subtitleStyle(theme)),
@@ -153,8 +177,8 @@ class _ToDoListPageViewState extends State<ToDoListPageView> {
                   Text(
                     'No project selected.',
                     style: theme.bodyMedium.override(
-                      fontFamily: theme.bodyMediumFamily,
-                      color: theme.secondaryText,
+                      fontFamily: _bodyFont,
+                      color: _inkMute,
                     ),
                   ),
                 )
@@ -180,8 +204,8 @@ class _ToDoListPageViewState extends State<ToDoListPageView> {
                           Text(
                             name,
                             style: theme.titleMedium.override(
-                              fontFamily: theme.titleMediumFamily,
-                              color: theme.primaryText,
+                              fontFamily: _displayFont,
+                              color: _ink,
                               fontWeight: FontWeight.w900,
                             ),
                           ),
@@ -189,8 +213,8 @@ class _ToDoListPageViewState extends State<ToDoListPageView> {
                           Text(
                             'To Do content coming next.',
                             style: theme.bodySmall.override(
-                              fontFamily: theme.bodySmallFamily,
-                              color: theme.secondaryText,
+                              fontFamily: _bodyFont,
+                              color: _inkMute,
                             ),
                           ),
                         ],

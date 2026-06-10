@@ -55,6 +55,30 @@ class MyProjectsHomePageView extends StatefulWidget {
 }
 
 class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
+  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
+  //
+  // Neutrals
+  static const Color _ink = Color(0xFF14243F);
+  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _surface = Color(0xFFE3E4E8);
+  static const Color _hairline = Color(0xFFE3E4E8);
+  static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
+  // Brand accent — YELLOW. Always ink foreground, never white.
+  static const Color _spark = Color(0xFFFFE74C); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFF14243F);
+  // Status
+  static const Color _live =
+      Color(0xFFFFB000); // gold — live / open-now / warning
+  static const Color _coral = Color(0xFFC8102E);
+  // Type
+  static const String _displayFont = 'Inter Tight';
+  static const String _bodyFont = 'Inter';
+  static const String _monoFont = 'Inter';
+  // ────────────────────────────────────────────────────────────────────
+
   static const double _hPad = 24;
   static const double _vPad = 24;
   static const double _radius = 16; // ✅ match Dashboard tiles
@@ -115,30 +139,31 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
   // =========================================================
 
   TextStyle _appTitleStyle(FlutterFlowTheme theme) {
-    return theme.titleLarge.copyWith(
+    return theme.titleLarge.override(
+      fontFamily: _displayFont,
       fontWeight: FontWeight.w900,
       letterSpacing: 0.2,
     );
   }
 
   TextStyle _appSubtitleStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+        fontFamily: _bodyFont,
+        color: _inkMute,
       );
 
   TextStyle _sectionTitleStyle(FlutterFlowTheme t) => t.titleMedium.override(
-        fontFamily: t.titleMediumFamily,
+        fontFamily: _displayFont,
         fontWeight: FontWeight.w900,
-        color: t.primaryText,
+        color: _ink,
       );
 
   TextStyle _metaStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+        fontFamily: _bodyFont,
+        color: _inkMute,
       );
 
   TextStyle _cardTitleStyle(FlutterFlowTheme t) => t.bodyMedium.override(
-        fontFamily: t.bodyMediumFamily,
+        fontFamily: _bodyFont,
       );
 
   // -----------------------------
@@ -224,18 +249,18 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
   Color _projectsColor(FlutterFlowTheme theme) {
     try {
       final c = (theme as dynamic).projectsColour as Color?;
-      return c ?? theme.primary;
+      return c ?? _ink;
     } catch (_) {
-      return theme.primary;
+      return _ink;
     }
   }
 
   Color _tertiaryText(FlutterFlowTheme theme) {
     try {
       final c = (theme as dynamic).tertiaryText as Color?;
-      return c ?? theme.primaryText;
+      return c ?? _ink;
     } catch (_) {
-      return theme.primaryText;
+      return _ink;
     }
   }
 
@@ -248,10 +273,10 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: theme.primaryBackground,
+        color: _paper,
         borderRadius: BorderRadius.circular(_radius),
         border: Border.all(
-          color: theme.alternate.withOpacity(0.9),
+          color: _hairline.withOpacity(0.9),
           width: 1,
         ),
       ),
@@ -299,7 +324,7 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
                 Text(
                   'Add Project',
                   style: _cardTitleStyle(theme).copyWith(
-                    color: theme.primaryText,
+                    color: _ink,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -322,14 +347,14 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: accent,
+                color: _spark,
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Text(
                 'Create',
                 style: theme.bodyMedium.override(
-                  fontFamily: theme.bodyMediumFamily,
-                  color: Colors.white,
+                  fontFamily: _bodyFont,
+                  color: _sparkInk,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 0.0,
                 ),
@@ -430,7 +455,7 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.bodySmall.override(
-                              fontFamily: theme.bodySmallFamily,
+                              fontFamily: _bodyFont,
                               color: projectsColour,
                               fontWeight: FontWeight.w800,
                               letterSpacing: 0.0,
@@ -517,9 +542,9 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
               const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
           child: Container(
             decoration: BoxDecoration(
-              color: theme.primaryBackground, // ✅ shell = primaryBackground
+              color: _paper, // ✅ shell = primaryBackground
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: theme.alternate.withOpacity(0.75)),
+              border: Border.all(color: _hairline.withOpacity(0.75)),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.12),
@@ -535,7 +560,7 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
                   color: theme
                       .secondaryBackground, // ✅ inner = secondaryBackground
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: theme.alternate.withOpacity(0.35)),
+                  border: Border.all(color: _hairline.withOpacity(0.35)),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
@@ -547,9 +572,9 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
                       Text(
                         'Delete project?',
                         style: theme.titleMedium.override(
-                          fontFamily: theme.titleMediumFamily,
+                          fontFamily: _displayFont,
                           fontWeight: FontWeight.w900,
-                          color: theme.primaryText,
+                          color: _ink,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -558,8 +583,8 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
                       Text(
                         'This will permanently remove the project and its data. This can’t be undone.',
                         style: theme.bodyMedium.override(
-                          fontFamily: theme.bodyMediumFamily,
-                          color: theme.secondaryText,
+                          fontFamily: _bodyFont,
+                          color: _inkMute,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -577,17 +602,17 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
                                 height: 44,
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
-                                  color: theme.primaryBackground,
+                                  color: _paper,
                                   borderRadius: BorderRadius.circular(14),
                                   border: Border.all(
-                                    color: theme.alternate.withOpacity(0.75),
+                                    color: _hairline.withOpacity(0.75),
                                   ),
                                 ),
                                 child: Text(
                                   'Cancel',
                                   style: theme.bodyMedium.override(
-                                    fontFamily: theme.bodyMediumFamily,
-                                    color: theme.primaryText,
+                                    fontFamily: _bodyFont,
+                                    color: _ink,
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: 0.0,
                                   ),
@@ -604,17 +629,17 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
                                 height: 44,
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
-                                  color: theme.error.withOpacity(0.12),
+                                  color: _coral.withOpacity(0.12),
                                   borderRadius: BorderRadius.circular(14),
                                   border: Border.all(
-                                    color: theme.error.withOpacity(0.35),
+                                    color: _coral.withOpacity(0.35),
                                   ),
                                 ),
                                 child: Text(
                                   'Delete',
                                   style: theme.bodyMedium.override(
-                                    fontFamily: theme.bodyMediumFamily,
-                                    color: theme.error,
+                                    fontFamily: _bodyFont,
+                                    color: _coral,
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: 0.0,
                                   ),
@@ -654,9 +679,8 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
     required VoidCallback onTap,
     bool destructive = false,
   }) {
-    final borderColor = destructive
-        ? theme.error.withOpacity(0.25)
-        : theme.alternate.withOpacity(0.75);
+    final borderColor =
+        destructive ? _coral.withOpacity(0.25) : _hairline.withOpacity(0.75);
 
     return Material(
       color: Colors.transparent,
@@ -673,7 +697,7 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
           width: double.infinity,
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: theme.primaryBackground, // ✅ requested
+            color: _paper, // ✅ requested
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: borderColor, width: 1),
           ),
@@ -681,12 +705,12 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
             // ✅ INNER tile
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
             decoration: BoxDecoration(
-              color: theme.secondaryBackground, // ✅ requested
+              color: _surface, // ✅ requested
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: destructive
-                    ? theme.error.withOpacity(0.18)
-                    : theme.alternate.withOpacity(0.35),
+                    ? _coral.withOpacity(0.18)
+                    : _hairline.withOpacity(0.35),
                 width: 1,
               ),
             ),
@@ -718,8 +742,8 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.bodyMedium.override(
-                          fontFamily: theme.bodyMediumFamily,
-                          color: destructive ? theme.error : theme.primaryText,
+                          fontFamily: _bodyFont,
+                          color: destructive ? _coral : _ink,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 0.0,
                         ),
@@ -730,8 +754,8 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: theme.bodySmall.override(
-                          fontFamily: theme.bodySmallFamily,
-                          color: theme.secondaryText,
+                          fontFamily: _bodyFont,
+                          color: _inkMute,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.0,
                         ),
@@ -744,7 +768,7 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
 
                 Icon(
                   Icons.chevron_right_rounded,
-                  color: theme.secondaryText,
+                  color: _inkMute,
                   size: 22,
                 ),
               ],
@@ -778,9 +802,9 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
             child: Container(
               decoration: BoxDecoration(
-                color: theme.primaryBackground, // ✅ shell = primaryBackground
+                color: _paper, // ✅ shell = primaryBackground
                 borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: theme.alternate.withOpacity(0.75)),
+                border: Border.all(color: _hairline.withOpacity(0.75)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.10),
@@ -802,7 +826,7 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
                         height: 5,
                         margin: const EdgeInsets.only(bottom: 10),
                         decoration: BoxDecoration(
-                          color: theme.alternate.withOpacity(0.55),
+                          color: _hairline.withOpacity(0.55),
                           borderRadius: BorderRadius.circular(999),
                         ),
                       ),
@@ -817,9 +841,9 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.titleMedium.override(
-                              fontFamily: theme.titleMediumFamily,
+                              fontFamily: _displayFont,
                               fontWeight: FontWeight.w900,
-                              color: theme.primaryText,
+                              color: _ink,
                             ),
                           ),
                         ),
@@ -830,7 +854,7 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
                             padding: const EdgeInsets.all(6),
                             child: Icon(
                               Icons.close_rounded,
-                              color: theme.secondaryText,
+                              color: _inkMute,
                               size: 20,
                             ),
                           ),
@@ -869,7 +893,7 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
                       _actionModuleRow(
                         theme: theme,
                         icon: Icons.delete_outline,
-                        iconColor: theme.error,
+                        iconColor: _coral,
                         title: 'Delete project',
                         subtitle: 'Permanently removes the project.',
                         destructive: true,
@@ -885,7 +909,7 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
                     _actionModuleRow(
                       theme: theme,
                       icon: Icons.close_rounded,
-                      iconColor: theme.secondaryText,
+                      iconColor: _inkMute,
                       title: 'Cancel',
                       subtitle: 'Close this menu.',
                       onTap: () => Navigator.pop(ctx),
@@ -943,7 +967,7 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
               color: cardColor,
               borderRadius: BorderRadius.circular(_radius),
               border: Border.all(
-                color: theme.alternate.withOpacity(0.55),
+                color: _hairline.withOpacity(0.55),
                 width: 1,
               ),
             ),
@@ -1086,7 +1110,7 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.labelSmall.override(
-                  fontFamily: theme.labelSmallFamily,
+                  fontFamily: _bodyFont,
                   color: accent,
                   letterSpacing: 0.0,
                   fontWeight: FontWeight.w800,
@@ -1201,7 +1225,7 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
                   Text(
                     'Login required',
                     style: _cardTitleStyle(theme).copyWith(
-                      color: theme.primaryText,
+                      color: _ink,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -1246,7 +1270,7 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
                       Text(
                         'Couldn’t load projects',
                         style: _cardTitleStyle(theme).copyWith(
-                          color: theme.primaryText,
+                          color: _ink,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -1271,8 +1295,8 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
                       color: accent,
                       borderRadius: BorderRadius.circular(_radius),
                     ),
-                    child: const Icon(Icons.add_rounded,
-                        color: Colors.white, size: 24),
+                    child:
+                        const Icon(Icons.add_rounded, color: _paper, size: 24),
                   ),
                 ),
               ],
@@ -1350,7 +1374,7 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
                       Text(
                         'No active projects yet',
                         style: _cardTitleStyle(theme).copyWith(
-                          color: theme.primaryText,
+                          color: _ink,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -1374,8 +1398,8 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
                       color: accent,
                       borderRadius: BorderRadius.circular(_radius),
                     ),
-                    child: const Icon(Icons.add_rounded,
-                        color: Colors.white, size: 24),
+                    child:
+                        const Icon(Icons.add_rounded, color: _paper, size: 24),
                   ),
                 ),
               ],
@@ -1438,11 +1462,10 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: theme.alternate.withOpacity(0.18),
+                color: _hairline.withOpacity(0.18),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(Icons.lock_outline,
-                  color: theme.secondaryText, size: 20),
+              child: Icon(Icons.lock_outline, color: _inkMute, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -1470,11 +1493,10 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: theme.alternate.withOpacity(0.18),
+                    color: _hairline.withOpacity(0.18),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(Icons.error_outline,
-                      color: theme.secondaryText, size: 20),
+                  child: Icon(Icons.error_outline, color: _inkMute, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -1515,8 +1537,7 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
                     height: 18,
                     child: CircularProgressIndicator(
                       strokeWidth: 2.4,
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(theme.secondaryText),
+                      valueColor: AlwaysStoppedAnimation<Color>(_inkMute),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -1538,10 +1559,10 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: theme.primaryBackground,
+              color: _paper,
               borderRadius: BorderRadius.circular(_radius),
               border: Border.all(
-                color: theme.alternate.withOpacity(0.9),
+                color: _hairline.withOpacity(0.9),
                 width: 1,
               ),
             ),
@@ -1551,12 +1572,12 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: theme.alternate.withOpacity(0.25),
+                    color: _hairline.withOpacity(0.25),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     Icons.archive_outlined,
-                    color: theme.secondaryText,
+                    color: _inkMute,
                     size: 20,
                   ),
                 ),
@@ -1619,7 +1640,7 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
     return Container(
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
-      color: theme.primaryBackground,
+      color: _paper,
       child: SafeArea(
         top: true,
         bottom: true,
@@ -1644,16 +1665,16 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: theme.primaryBackground,
+                          color: _paper,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: theme.alternate.withOpacity(0.9),
+                            color: _hairline.withOpacity(0.9),
                           ),
                         ),
                         child: Icon(
                           Icons.arrow_back_rounded,
                           size: 22,
-                          color: theme.primaryText,
+                          color: _ink,
                         ),
                       ),
                     ),
@@ -1667,7 +1688,7 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
                       ),
                       child: const Icon(
                         Icons.folder_open_rounded,
-                        color: Colors.white,
+                        color: _paper,
                         size: 22,
                       ),
                     ),
@@ -1679,7 +1700,7 @@ class _MyProjectsHomePageViewState extends State<MyProjectsHomePageView> {
                           Text(
                             'My Projects',
                             style: _appTitleStyle(theme).copyWith(
-                              color: theme.primaryText,
+                              color: _ink,
                             ),
                           ),
                           const SizedBox(height: 4),

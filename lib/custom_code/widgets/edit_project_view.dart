@@ -38,6 +38,30 @@ class EditProjectView extends StatefulWidget {
 }
 
 class _EditProjectViewState extends State<EditProjectView> {
+  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
+  //
+  // Neutrals
+  static const Color _ink = Color(0xFF14243F);
+  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _surface = Color(0xFFE3E4E8);
+  static const Color _hairline = Color(0xFFE3E4E8);
+  static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
+  // Brand accent — YELLOW. Always ink foreground, never white.
+  static const Color _spark = Color(0xFFFFE74C); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFF14243F);
+  // Status
+  static const Color _live =
+      Color(0xFFFFB000); // gold — live / open-now / warning
+  static const Color _coral = Color(0xFFC8102E);
+  // Type
+  static const String _displayFont = 'Inter Tight';
+  static const String _bodyFont = 'Inter';
+  static const String _monoFont = 'Inter';
+  // ────────────────────────────────────────────────────────────────────
+
   static const double _hPad = 24;
   static const double _vPad = 24;
   static const double _radius = 16;
@@ -65,40 +89,41 @@ class _EditProjectViewState extends State<EditProjectView> {
   // ---------------------------------------------------------
   // ✅ TYPOGRAPHY (token + explicit family, minimal overrides)
   // ---------------------------------------------------------
-  TextStyle _appTitleStyle(FlutterFlowTheme t) => t.titleLarge.copyWith(
+  TextStyle _appTitleStyle(FlutterFlowTheme t) => t.titleLarge.override(
+        fontFamily: _displayFont,
         fontWeight: FontWeight.w900,
         letterSpacing: 0.2,
       );
 
   TextStyle _appSubtitleStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+        fontFamily: _bodyFont,
+        color: _inkMute,
       );
 
   // ✅ Keep section titles consistent across Subby
   TextStyle _sectionTitleStyle(FlutterFlowTheme t) => t.titleMedium.override(
-        fontFamily: t.titleMediumFamily,
-        color: t.primaryText,
+        fontFamily: _displayFont,
+        color: _ink,
         fontWeight: FontWeight.w900,
       );
 
   TextStyle _fieldLabelStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+        fontFamily: _bodyFont,
+        color: _inkMute,
         letterSpacing: 0.0,
         fontWeight: FontWeight.w700,
       );
 
   TextStyle _fieldTextStyle(FlutterFlowTheme t) => t.bodyMedium.override(
-        fontFamily: t.bodyMediumFamily,
-        color: t.primaryText,
+        fontFamily: _bodyFont,
+        color: _ink,
         letterSpacing: 0.0,
         fontWeight: FontWeight.w700,
       );
 
   TextStyle _helperStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+        fontFamily: _bodyFont,
+        color: _inkMute,
         letterSpacing: 0.0,
         fontWeight: FontWeight.w600,
       );
@@ -109,21 +134,20 @@ class _EditProjectViewState extends State<EditProjectView> {
   Color _projectsColor(FlutterFlowTheme theme) {
     try {
       final c = (theme as dynamic).projectsColour as Color?;
-      return c ?? theme.primary;
+      return c ?? _ink;
     } catch (_) {
-      return theme.primary;
+      return _ink;
     }
   }
 
   // Match AddProjectsPageView: high-contrast field fill + clearer borders
   Color _fieldFill(FlutterFlowTheme theme) {
-    final sb = theme.secondaryBackground;
-    if (sb != theme.primaryBackground) return sb;
-    return theme.alternate.withOpacity(0.10);
+    final sb = _surface;
+    if (sb != _paper) return sb;
+    return _hairline.withOpacity(0.10);
   }
 
-  Color _fieldBorder(FlutterFlowTheme theme) =>
-      theme.alternate.withOpacity(0.95);
+  Color _fieldBorder(FlutterFlowTheme theme) => _hairline.withOpacity(0.95);
 
   // ---------------------------------------------------------
   // ✅ SUBBY SHELLS (NO SHADOWS)
@@ -136,10 +160,10 @@ class _EditProjectViewState extends State<EditProjectView> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: theme.primaryBackground,
+        color: _paper,
         borderRadius: BorderRadius.circular(_radius),
         border: Border.all(
-          color: theme.alternate.withOpacity(0.9),
+          color: _hairline.withOpacity(0.9),
           width: 1,
         ),
         // ✅ NO SHADOWS (matches Dashboard + other pages)
@@ -159,8 +183,8 @@ class _EditProjectViewState extends State<EditProjectView> {
     return InputDecoration(
       hintText: hint,
       hintStyle: theme.bodySmall.override(
-        fontFamily: theme.bodySmallFamily,
-        color: theme.secondaryText.withOpacity(0.85),
+        fontFamily: _bodyFont,
+        color: _inkMute.withOpacity(0.85),
         letterSpacing: 0.0,
         fontWeight: FontWeight.w600,
       ),
@@ -170,7 +194,7 @@ class _EditProjectViewState extends State<EditProjectView> {
           ? null
           : Padding(
               padding: const EdgeInsets.only(left: 12, right: 8),
-              child: Icon(icon, size: 18, color: theme.secondaryText),
+              child: Icon(icon, size: 18, color: _inkMute),
             ),
       prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
@@ -180,15 +204,15 @@ class _EditProjectViewState extends State<EditProjectView> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(_radius),
-        borderSide: BorderSide(color: theme.primary, width: 1.7),
+        borderSide: BorderSide(color: _ink, width: 1.7),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(_radius),
-        borderSide: BorderSide(color: theme.error, width: 1.2),
+        borderSide: BorderSide(color: _coral, width: 1.2),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(_radius),
-        borderSide: BorderSide(color: theme.error, width: 1.2),
+        borderSide: BorderSide(color: _coral, width: 1.2),
       ),
     );
   }
@@ -219,10 +243,10 @@ class _EditProjectViewState extends State<EditProjectView> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: isPrimary ? accent : accent.withOpacity(0.12),
+              color: isPrimary ? _spark : accent.withOpacity(0.12),
               borderRadius: BorderRadius.circular(999),
               border: Border.all(
-                color: isPrimary ? accent : accent.withOpacity(0.25),
+                color: isPrimary ? _spark : accent.withOpacity(0.25),
                 width: 1,
               ),
               // ✅ NO SHADOWS
@@ -239,7 +263,7 @@ class _EditProjectViewState extends State<EditProjectView> {
                       child: CircularProgressIndicator(
                         strokeWidth: 2.2,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          isPrimary ? Colors.white : accent,
+                          isPrimary ? _sparkInk : accent,
                         ),
                       ),
                     ),
@@ -248,14 +272,14 @@ class _EditProjectViewState extends State<EditProjectView> {
                   Icon(
                     icon,
                     size: 18,
-                    color: isPrimary ? Colors.white : accent,
+                    color: isPrimary ? _sparkInk : accent,
                   ),
                 const SizedBox(width: 8),
                 Text(
                   text,
                   style: theme.bodyMedium.override(
-                    fontFamily: theme.bodyMediumFamily,
-                    color: isPrimary ? Colors.white : accent,
+                    fontFamily: _bodyFont,
+                    color: isPrimary ? _sparkInk : accent,
                     letterSpacing: 0.0,
                     fontWeight: FontWeight.w900,
                   ),
@@ -352,16 +376,16 @@ class _EditProjectViewState extends State<EditProjectView> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           child: Row(
             children: [
-              Icon(icon, size: 18, color: theme.secondaryText),
+              Icon(icon, size: 18, color: _inkMute),
               const SizedBox(width: 10),
               Expanded(
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: safeValue,
                     isExpanded: true,
-                    dropdownColor: theme.primaryBackground,
+                    dropdownColor: _paper,
                     icon: Icon(Icons.keyboard_arrow_down_rounded,
-                        color: theme.secondaryText),
+                        color: _inkMute),
                     style: _fieldTextStyle(theme),
                     items: items
                         .map(
@@ -429,20 +453,18 @@ class _EditProjectViewState extends State<EditProjectView> {
               ),
               child: Row(
                 children: [
-                  Icon(icon, size: 18, color: theme.secondaryText),
+                  Icon(icon, size: 18, color: _inkMute),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       value,
                       style: _fieldTextStyle(theme).copyWith(
-                        color: value == 'Select date'
-                            ? theme.secondaryText
-                            : theme.primaryText,
+                        color: value == 'Select date' ? _inkMute : _ink,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
-                  Icon(Icons.chevron_right_rounded, color: theme.secondaryText),
+                  Icon(Icons.chevron_right_rounded, color: _inkMute),
                 ],
               ),
             ),
@@ -485,7 +507,7 @@ class _EditProjectViewState extends State<EditProjectView> {
                 'You do not have permission to edit this project.',
                 style: FlutterFlowTheme.of(context).bodyMedium.override(
                       fontFamily: FlutterFlowTheme.of(context).bodyMediumFamily,
-                      color: Colors.white,
+                      color: _paper,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.0,
                     ),
@@ -527,7 +549,7 @@ class _EditProjectViewState extends State<EditProjectView> {
             'Could not load project. Please try again.',
             style: FlutterFlowTheme.of(context).bodyMedium.override(
                   fontFamily: FlutterFlowTheme.of(context).bodyMediumFamily,
-                  color: Colors.white,
+                  color: _paper,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.0,
                 ),
@@ -569,7 +591,7 @@ class _EditProjectViewState extends State<EditProjectView> {
             'Missing project reference.',
             style: FlutterFlowTheme.of(context).bodyMedium.override(
                   fontFamily: FlutterFlowTheme.of(context).bodyMediumFamily,
-                  color: Colors.white,
+                  color: _paper,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.0,
                 ),
@@ -595,7 +617,7 @@ class _EditProjectViewState extends State<EditProjectView> {
             'Project updated.',
             style: FlutterFlowTheme.of(context).bodyMedium.override(
                   fontFamily: FlutterFlowTheme.of(context).bodyMediumFamily,
-                  color: Colors.white,
+                  color: _paper,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.0,
                 ),
@@ -627,7 +649,7 @@ class _EditProjectViewState extends State<EditProjectView> {
             'Update failed. Please try again.',
             style: FlutterFlowTheme.of(context).bodyMedium.override(
                   fontFamily: FlutterFlowTheme.of(context).bodyMediumFamily,
-                  color: Colors.white,
+                  color: _paper,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.0,
                 ),
@@ -661,7 +683,7 @@ class _EditProjectViewState extends State<EditProjectView> {
             'Project deleted.',
             style: FlutterFlowTheme.of(context).bodyMedium.override(
                   fontFamily: FlutterFlowTheme.of(context).bodyMediumFamily,
-                  color: Colors.white,
+                  color: _paper,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.0,
                 ),
@@ -693,7 +715,7 @@ class _EditProjectViewState extends State<EditProjectView> {
             'Delete failed. Please try again.',
             style: FlutterFlowTheme.of(context).bodyMedium.override(
                   fontFamily: FlutterFlowTheme.of(context).bodyMediumFamily,
-                  color: Colors.white,
+                  color: _paper,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.0,
                 ),
@@ -710,16 +732,16 @@ class _EditProjectViewState extends State<EditProjectView> {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          backgroundColor: theme.primaryBackground,
+          backgroundColor: _paper,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
-            side: BorderSide(color: theme.alternate.withOpacity(0.9), width: 1),
+            side: BorderSide(color: _hairline.withOpacity(0.9), width: 1),
           ),
           title: Text(
             'Delete project?',
             style: theme.titleMedium.override(
-              fontFamily: theme.titleMediumFamily,
-              color: theme.primaryText,
+              fontFamily: _displayFont,
+              color: _ink,
               letterSpacing: 0.0,
               fontWeight: FontWeight.w900,
             ),
@@ -734,8 +756,8 @@ class _EditProjectViewState extends State<EditProjectView> {
               child: Text(
                 'Cancel',
                 style: theme.bodyMedium.override(
-                  fontFamily: theme.bodyMediumFamily,
-                  color: theme.secondaryText,
+                  fontFamily: _bodyFont,
+                  color: _inkMute,
                   letterSpacing: 0.0,
                   fontWeight: FontWeight.w800,
                 ),
@@ -749,7 +771,7 @@ class _EditProjectViewState extends State<EditProjectView> {
               child: Text(
                 'Delete',
                 style: theme.bodyMedium.override(
-                  fontFamily: theme.bodyMediumFamily,
+                  fontFamily: _bodyFont,
                   color: accent,
                   letterSpacing: 0.0,
                   fontWeight: FontWeight.w900,
@@ -789,7 +811,7 @@ class _EditProjectViewState extends State<EditProjectView> {
       return Container(
         width: widget.width ?? double.infinity,
         height: widget.height ?? double.infinity,
-        color: theme.primaryBackground,
+        color: _paper,
         child: SafeArea(
           top: true,
           bottom: true,
@@ -828,7 +850,7 @@ class _EditProjectViewState extends State<EditProjectView> {
     return Container(
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
-      color: theme.primaryBackground,
+      color: _paper,
       child: SafeArea(
         top: true,
         bottom: true,
@@ -864,14 +886,14 @@ class _EditProjectViewState extends State<EditProjectView> {
                           width: 44,
                           height: 44,
                           decoration: BoxDecoration(
-                            color: theme.primaryBackground,
+                            color: _paper,
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
-                              color: theme.alternate.withOpacity(0.9),
+                              color: _hairline.withOpacity(0.9),
                             ),
                           ),
                           child: Icon(Icons.arrow_back_rounded,
-                              size: 22, color: theme.primaryText),
+                              size: 22, color: _ink),
                         ),
                       ),
                     ),
@@ -884,7 +906,7 @@ class _EditProjectViewState extends State<EditProjectView> {
                         borderRadius: BorderRadius.circular(_radius),
                       ),
                       child: const Icon(Icons.edit_rounded,
-                          color: Colors.white, size: 22),
+                          color: _paper, size: 22),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -894,7 +916,7 @@ class _EditProjectViewState extends State<EditProjectView> {
                           Text(
                             'Edit Project',
                             style: _appTitleStyle(theme).copyWith(
-                              color: theme.primaryText,
+                              color: _ink,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -925,14 +947,14 @@ class _EditProjectViewState extends State<EditProjectView> {
                             width: 44,
                             height: 44,
                             decoration: BoxDecoration(
-                              color: theme.primaryBackground,
+                              color: _paper,
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                color: theme.alternate.withOpacity(0.9),
+                                color: _hairline.withOpacity(0.9),
                               ),
                             ),
                             child: Icon(Icons.delete_outline_rounded,
-                                size: 22, color: theme.error),
+                                size: 22, color: _coral),
                           ),
                         ),
                       ),
@@ -1116,10 +1138,10 @@ class _EditProjectViewState extends State<EditProjectView> {
                           width: double.infinity,
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
-                            color: theme.secondaryBackground,
+                            color: _surface,
                             borderRadius: BorderRadius.circular(_radius),
                             border: Border.all(
-                              color: theme.alternate.withOpacity(0.9),
+                              color: _hairline.withOpacity(0.9),
                               width: 1,
                             ),
                           ),
@@ -1129,11 +1151,11 @@ class _EditProjectViewState extends State<EditProjectView> {
                                 width: 36,
                                 height: 36,
                                 decoration: BoxDecoration(
-                                  color: theme.alternate.withOpacity(0.35),
+                                  color: _hairline.withOpacity(0.35),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Icon(Icons.archive_outlined,
-                                    color: theme.secondaryText, size: 20),
+                                    color: _inkMute, size: 20),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -1143,8 +1165,8 @@ class _EditProjectViewState extends State<EditProjectView> {
                                     Text(
                                       'Archive this project',
                                       style: theme.bodyMedium.override(
-                                        fontFamily: theme.bodyMediumFamily,
-                                        color: theme.primaryText,
+                                        fontFamily: _bodyFont,
+                                        color: _ink,
                                         letterSpacing: 0.0,
                                         fontWeight: FontWeight.w900,
                                       ),

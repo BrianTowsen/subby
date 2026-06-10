@@ -74,6 +74,30 @@ class ProjectDetailPageView extends StatefulWidget {
 }
 
 class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
+  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
+  //
+  // Neutrals
+  static const Color _ink = Color(0xFF14243F);
+  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _surface = Color(0xFFE3E4E8);
+  static const Color _hairline = Color(0xFFE3E4E8);
+  static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
+  // Brand accent — YELLOW. Always ink foreground, never white.
+  static const Color _spark = Color(0xFFFFE74C); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFF14243F);
+  // Status
+  static const Color _live =
+      Color(0xFFFFB000); // gold — live / open-now / warning
+  static const Color _coral = Color(0xFFC8102E);
+  // Type
+  static const String _displayFont = 'Inter Tight';
+  static const String _bodyFont = 'Inter';
+  static const String _monoFont = 'Inter';
+  // ────────────────────────────────────────────────────────────────────
+
   static const double _hPad = 24;
   static const double _vPad = 24;
   static const double _radius = 16;
@@ -446,9 +470,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
     required VoidCallback onTap,
     bool destructive = false,
   }) {
-    final borderColor = destructive
-        ? theme.error.withOpacity(0.25)
-        : theme.alternate.withOpacity(0.75);
+    final borderColor =
+        destructive ? _coral.withOpacity(0.25) : _hairline.withOpacity(0.75);
 
     return Material(
       color: Colors.transparent,
@@ -464,19 +487,19 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
           width: double.infinity,
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: theme.primaryBackground, // ✅ shell = primaryBackground
+            color: _paper, // ✅ shell = primaryBackground
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: borderColor, width: 1),
           ),
           child: Container(
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
             decoration: BoxDecoration(
-              color: theme.secondaryBackground, // ✅ inner = secondaryBackground
+              color: _surface, // ✅ inner = secondaryBackground
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: destructive
-                    ? theme.error.withOpacity(0.18)
-                    : theme.alternate.withOpacity(0.35),
+                    ? _coral.withOpacity(0.18)
+                    : _hairline.withOpacity(0.35),
                 width: 1,
               ),
             ),
@@ -505,8 +528,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.bodyMedium.override(
-                          fontFamily: theme.bodyMediumFamily,
-                          color: destructive ? theme.error : theme.primaryText,
+                          fontFamily: _bodyFont,
+                          color: destructive ? _coral : _ink,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 0.0,
                         ),
@@ -517,8 +540,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: theme.bodySmall.override(
-                          fontFamily: theme.bodySmallFamily,
-                          color: theme.secondaryText,
+                          fontFamily: _bodyFont,
+                          color: _inkMute,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.0,
                         ),
@@ -529,7 +552,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                 const SizedBox(width: 10),
                 Icon(
                   Icons.chevron_right_rounded,
-                  color: theme.secondaryText,
+                  color: _inkMute,
                   size: 22,
                 ),
               ],
@@ -557,9 +580,9 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
             child: Container(
               decoration: BoxDecoration(
-                color: theme.primaryBackground,
+                color: _paper,
                 borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: theme.alternate.withOpacity(0.75)),
+                border: Border.all(color: _hairline.withOpacity(0.75)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.10),
@@ -580,7 +603,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                         height: 5,
                         margin: const EdgeInsets.only(bottom: 10),
                         decoration: BoxDecoration(
-                          color: theme.alternate.withOpacity(0.55),
+                          color: _hairline.withOpacity(0.55),
                           borderRadius: BorderRadius.circular(999),
                         ),
                       ),
@@ -593,9 +616,9 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.titleMedium.override(
-                              fontFamily: theme.titleMediumFamily,
+                              fontFamily: _displayFont,
                               fontWeight: FontWeight.w900,
-                              color: theme.primaryText,
+                              color: _ink,
                             ),
                           ),
                         ),
@@ -606,7 +629,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                             padding: const EdgeInsets.all(6),
                             child: Icon(
                               Icons.close_rounded,
-                              color: theme.secondaryText,
+                              color: _inkMute,
                               size: 20,
                             ),
                           ),
@@ -617,7 +640,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                     _actionModuleRow(
                       theme: theme,
                       icon: Icons.delete_outline_rounded,
-                      iconColor: theme.error,
+                      iconColor: _coral,
                       title: 'Remove listing',
                       subtitle:
                           'Removes it from this project (does not delete it).',
@@ -631,7 +654,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                     _actionModuleRow(
                       theme: theme,
                       icon: Icons.close_rounded,
-                      iconColor: theme.secondaryText,
+                      iconColor: _inkMute,
                       title: 'Cancel',
                       subtitle: 'Close this menu.',
                       onTap: () => Navigator.pop(ctx),
@@ -650,38 +673,39 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
   // Theme helpers (TYPOGRAPHY LOCKED)
   // -----------------------------
   TextStyle _appTitleStyle(FlutterFlowTheme theme) {
-    return theme.titleLarge.copyWith(
+    return theme.titleLarge.override(
+      fontFamily: _displayFont,
       fontWeight: FontWeight.w900,
       letterSpacing: 0.2,
     );
   }
 
   TextStyle _appSubtitleStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+        fontFamily: _bodyFont,
+        color: _inkMute,
       );
 
   TextStyle _sectionTitleStyle(FlutterFlowTheme t) => t.titleMedium.override(
-        fontFamily: t.titleMediumFamily,
+        fontFamily: _displayFont,
         fontWeight: FontWeight.w900,
-        color: t.primaryText,
+        color: _ink,
       );
 
   Color _projectsColor(FlutterFlowTheme theme) {
     try {
       final c = (theme as dynamic).projectsColour as Color?;
-      return c ?? theme.primary;
+      return c ?? _ink;
     } catch (_) {
-      return theme.primary;
+      return _ink;
     }
   }
 
   Color _tertiaryText(FlutterFlowTheme theme) {
     try {
       final c = (theme as dynamic).tertiaryText as Color?;
-      return c ?? theme.primaryText;
+      return c ?? _ink;
     } catch (_) {
-      return theme.primaryText;
+      return _ink;
     }
   }
 
@@ -721,10 +745,10 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: colorOverride ?? theme.primaryBackground,
+        color: colorOverride ?? _paper,
         borderRadius: BorderRadius.circular(_radius),
         border: Border.all(
-          color: (borderColorOverride ?? theme.alternate).withOpacity(0.9),
+          color: (borderColorOverride ?? _hairline).withOpacity(0.9),
         ),
       ),
       child: ClipRRect(
@@ -795,7 +819,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.labelSmall.override(
-                  fontFamily: theme.labelSmallFamily,
+                  fontFamily: _bodyFont,
                   color: accent,
                   letterSpacing: 0.0,
                   fontWeight: FontWeight.w900,
@@ -819,8 +843,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
     int? count,
   }) {
     final fg = theme.tertiaryText;
-    final overlay = Colors.white.withOpacity(0.18);
-    final overlayBorder = Colors.white.withOpacity(0.22);
+    final overlay = _paper.withOpacity(0.18);
+    final overlayBorder = _paper.withOpacity(0.22);
 
     return InkWell(
       onTap: onTap,
@@ -859,7 +883,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                         child: Text(
                           '$count',
                           style: theme.labelSmall.override(
-                            fontFamily: theme.labelSmallFamily,
+                            fontFamily: _bodyFont,
                             color: fg,
                             letterSpacing: 0.0,
                             fontWeight: FontWeight.w900,
@@ -874,7 +898,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.titleLarge.override(
-                    fontFamily: theme.titleLargeFamily,
+                    fontFamily: _displayFont,
                     color: fg,
                     letterSpacing: 0.0,
                     fontWeight: FontWeight.w900,
@@ -886,7 +910,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: theme.bodySmall.override(
-                    fontFamily: theme.bodySmallFamily,
+                    fontFamily: _bodyFont,
                     color: fg.withOpacity(0.90),
                     letterSpacing: 0.0,
                     fontWeight: FontWeight.w700,
@@ -923,8 +947,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
             child: Text(
               label,
               style: theme.bodySmall.override(
-                fontFamily: theme.bodySmallFamily,
-                color: theme.secondaryText,
+                fontFamily: _bodyFont,
+                color: _inkMute,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -957,8 +981,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                 Text(
                   title,
                   style: theme.bodyMedium.override(
-                    fontFamily: theme.bodyMediumFamily,
-                    color: theme.primaryText,
+                    fontFamily: _bodyFont,
+                    color: _ink,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -966,8 +990,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                 Text(
                   subtitle,
                   style: theme.bodySmall.override(
-                    fontFamily: theme.bodySmallFamily,
-                    color: theme.secondaryText,
+                    fontFamily: _bodyFont,
+                    color: _inkMute,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -991,9 +1015,9 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: theme.secondaryBackground,
+          color: _surface,
           borderRadius: BorderRadius.circular(_radius),
-          border: Border.all(color: theme.alternate.withOpacity(0.9)),
+          border: Border.all(color: _hairline.withOpacity(0.9)),
         ),
         child: Padding(
           padding: const EdgeInsets.all(14),
@@ -1006,7 +1030,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                   color: accent,
                   borderRadius: BorderRadius.circular(_radius),
                 ),
-                child: Icon(icon, size: 22, color: Colors.white),
+                child: Icon(icon, size: 22, color: _paper),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1018,8 +1042,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.bodyMedium.override(
-                        fontFamily: theme.bodyMediumFamily,
-                        color: theme.primaryText,
+                        fontFamily: _bodyFont,
+                        color: _ink,
                         letterSpacing: 0.0,
                         fontWeight: FontWeight.w800,
                       ),
@@ -1030,8 +1054,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.labelSmall.override(
-                        fontFamily: theme.labelSmallFamily,
-                        color: theme.secondaryText,
+                        fontFamily: _bodyFont,
+                        color: _inkMute,
                         letterSpacing: 0.0,
                         fontWeight: FontWeight.w600,
                       ),
@@ -1040,8 +1064,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                 ),
               ),
               const SizedBox(width: 8),
-              Icon(Icons.open_in_new_rounded,
-                  size: 18, color: theme.secondaryText),
+              Icon(Icons.open_in_new_rounded, size: 18, color: _inkMute),
             ],
           ),
         ),
@@ -1063,9 +1086,9 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: theme.secondaryBackground,
+          color: _surface,
           borderRadius: BorderRadius.circular(_radius),
-          border: Border.all(color: theme.alternate.withOpacity(0.9)),
+          border: Border.all(color: _hairline.withOpacity(0.9)),
         ),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(14, 14, 10, 14),
@@ -1079,7 +1102,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                   borderRadius: BorderRadius.circular(_radius),
                 ),
                 child: const Icon(Icons.storefront_outlined,
-                    size: 22, color: Colors.white),
+                    size: 22, color: _paper),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1091,8 +1114,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.bodyMedium.override(
-                        fontFamily: theme.bodyMediumFamily,
-                        color: theme.primaryText,
+                        fontFamily: _bodyFont,
+                        color: _ink,
                         letterSpacing: 0.0,
                         fontWeight: FontWeight.w800,
                       ),
@@ -1103,8 +1126,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.labelSmall.override(
-                        fontFamily: theme.labelSmallFamily,
-                        color: theme.secondaryText,
+                        fontFamily: _bodyFont,
+                        color: _inkMute,
                         letterSpacing: 0.0,
                         fontWeight: FontWeight.w600,
                       ),
@@ -1118,8 +1141,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                           Text(
                             ratingText,
                             style: theme.labelSmall.override(
-                              fontFamily: theme.labelSmallFamily,
-                              color: theme.secondaryText,
+                              fontFamily: _bodyFont,
+                              color: _inkMute,
                               letterSpacing: 0.0,
                               fontWeight: FontWeight.w700,
                             ),
@@ -1138,7 +1161,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                   child: Icon(
                     Icons.delete_outline_rounded,
                     size: 20,
-                    color: theme.secondaryText,
+                    color: _inkMute,
                   ),
                 ),
               ),
@@ -1162,14 +1185,13 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.upload_file_rounded,
-                size: 18, color: Colors.white),
+            const Icon(Icons.upload_file_rounded, size: 18, color: _paper),
             const SizedBox(width: 8),
             Text(
               'Upload',
               style: theme.bodySmall.override(
-                fontFamily: theme.bodySmallFamily,
-                color: Colors.white,
+                fontFamily: _bodyFont,
+                color: _paper,
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -1187,18 +1209,17 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
     final tertiaryText = _tertiaryText(theme);
 
     // ✅ REMOVED: todoAccent (tile removed)
-    // final todoAccent = _themeColorOr(theme, 'todoColour', theme.primary);
-    final timelineAccent =
-        _themeColorOr(theme, 'timelineColour', theme.primary);
-    final costAccent = _themeColorOr(theme, 'projectCostColour', theme.primary);
-    final quotesAccent = _themeColorOr(theme, 'getQuotesColour', theme.primary);
-    final snagAccent = _themeColorOr(theme, 'snagListColour', theme.primary);
+    // final todoAccent = _themeColorOr(theme, 'todoColour', _ink);
+    final timelineAccent = _themeColorOr(theme, 'timelineColour', _ink);
+    final costAccent = _themeColorOr(theme, 'projectCostColour', _ink);
+    final quotesAccent = _themeColorOr(theme, 'getQuotesColour', _ink);
+    final snagAccent = _themeColorOr(theme, 'snagListColour', _ink);
 
     if (widget.projectRef == null) {
       return Container(
         width: widget.width ?? double.infinity,
         height: widget.height ?? double.infinity,
-        color: theme.primaryBackground,
+        color: _paper,
         child: SafeArea(
           child: Padding(
             padding:
@@ -1211,19 +1232,19 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: theme.error,
+                      color: _coral,
                       borderRadius: BorderRadius.circular(_radius),
                     ),
                     child: const Icon(Icons.error_outline,
-                        color: Colors.white, size: 22),
+                        color: _paper, size: 22),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'No project selected. Please open this page from My Projects.',
                       style: theme.bodyMedium.override(
-                        fontFamily: theme.bodyMediumFamily,
-                        color: theme.primaryText,
+                        fontFamily: _bodyFont,
+                        color: _ink,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -1241,7 +1262,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
       return Container(
         width: widget.width ?? double.infinity,
         height: widget.height ?? double.infinity,
-        color: theme.primaryBackground,
+        color: _paper,
         child: SafeArea(
           child: Padding(
             padding:
@@ -1261,7 +1282,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
       return Container(
         width: widget.width ?? double.infinity,
         height: widget.height ?? double.infinity,
-        color: theme.primaryBackground,
+        color: _paper,
         child: SafeArea(
           child: Padding(
             padding:
@@ -1306,7 +1327,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
     return Container(
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
-      color: theme.primaryBackground,
+      color: _paper,
       child: SafeArea(
         top: true,
         bottom: true,
@@ -1330,13 +1351,12 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: theme.primaryBackground,
+                          color: _paper,
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                              color: theme.alternate.withOpacity(0.9)),
+                          border: Border.all(color: _hairline.withOpacity(0.9)),
                         ),
                         child: Icon(Icons.arrow_back_rounded,
-                            size: 22, color: theme.primaryText),
+                            size: 22, color: _ink),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -1347,7 +1367,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                           Text(
                             'Project',
                             style: _appTitleStyle(theme).copyWith(
-                              color: theme.primaryText,
+                              color: _ink,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -1375,13 +1395,13 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const Icon(Icons.edit_outlined,
-                                size: 18, color: Colors.white),
+                                size: 18, color: _paper),
                             const SizedBox(width: 8),
                             Text(
                               'Edit',
                               style: theme.bodySmall.override(
-                                fontFamily: theme.bodySmallFamily,
-                                color: Colors.white,
+                                fontFamily: _bodyFont,
+                                color: _paper,
                                 fontWeight: FontWeight.w900,
                               ),
                             ),
@@ -1401,7 +1421,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                   theme: theme,
                   padding: const EdgeInsets.all(16),
                   colorOverride: projectsAccent,
-                  borderColorOverride: theme.alternate.withOpacity(0.35),
+                  borderColorOverride: _hairline.withOpacity(0.35),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -1438,7 +1458,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: theme.titleLarge.override(
-                                    fontFamily: theme.titleLargeFamily,
+                                    fontFamily: _displayFont,
                                     color: tertiaryText,
                                     fontWeight: FontWeight.w900,
                                   ),
@@ -1460,7 +1480,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: theme.bodySmall.override(
-                                fontFamily: theme.bodySmallFamily,
+                                fontFamily: _bodyFont,
                                 color: tertiaryText.withOpacity(0.92),
                                 fontWeight: FontWeight.w800,
                               ),
@@ -1474,7 +1494,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.labelSmall.override(
-                          fontFamily: theme.labelSmallFamily,
+                          fontFamily: _bodyFont,
                           color: tertiaryText.withOpacity(0.92),
                           fontWeight: FontWeight.w800,
                         ),
@@ -1483,7 +1503,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                       Text(
                         projectNotes,
                         style: theme.bodySmall.override(
-                          fontFamily: theme.bodySmallFamily,
+                          fontFamily: _bodyFont,
                           color: tertiaryText.withOpacity(0.92),
                           fontWeight: FontWeight.w700,
                         ),
@@ -1608,7 +1628,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                 else if (_docRows.isEmpty)
                   _cardShell(
                     theme: theme,
-                    colorOverride: theme.secondaryBackground,
+                    colorOverride: _surface,
                     child: Row(
                       children: [
                         Container(
@@ -1629,8 +1649,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                               Text(
                                 'No documents yet.',
                                 style: theme.bodyMedium.override(
-                                  fontFamily: theme.bodyMediumFamily,
-                                  color: theme.primaryText,
+                                  fontFamily: _bodyFont,
+                                  color: _ink,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
@@ -1638,8 +1658,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                               Text(
                                 'Upload PDFs, images, and files linked to this project.',
                                 style: theme.bodySmall.override(
-                                  fontFamily: theme.bodySmallFamily,
-                                  color: theme.secondaryText,
+                                  fontFamily: _bodyFont,
+                                  color: _inkMute,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -1658,7 +1678,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(Icons.add_rounded,
-                                color: Colors.white, size: 18),
+                                color: _paper, size: 18),
                           ),
                         ),
                       ],
@@ -1716,7 +1736,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                 else if (_listingRows.isEmpty)
                   _cardShell(
                     theme: theme,
-                    colorOverride: theme.secondaryBackground,
+                    colorOverride: _surface,
                     child: Row(
                       children: [
                         Container(
@@ -1734,8 +1754,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                           child: Text(
                             'No listings added yet.',
                             style: theme.bodyMedium.override(
-                              fontFamily: theme.bodyMediumFamily,
-                              color: theme.primaryText,
+                              fontFamily: _bodyFont,
+                              color: _ink,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
@@ -1778,8 +1798,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                                     content: Text(
                                       'This listing link is missing. Please re-add the listing.',
                                       style: theme.bodySmall.override(
-                                        fontFamily: theme.bodySmallFamily,
-                                        color: Colors.white,
+                                        fontFamily: _bodyFont,
+                                        color: _paper,
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),
