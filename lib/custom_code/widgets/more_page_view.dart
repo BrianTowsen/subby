@@ -27,6 +27,30 @@ class _MorePageViewState extends State<MorePageView> {
   static const double _vPad = 24;
   static const double _radius = 16;
 
+  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
+  //
+  // Neutrals
+  static const Color _ink = Color(0xFF14243F);
+  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _surface = Color(0xFFE3E4E8);
+  static const Color _hairline = Color(0xFFE3E4E8);
+  static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
+  // Brand accent — YELLOW. Always ink foreground, never white.
+  static const Color _spark = Color(0xFFFFE74C); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFF14243F);
+  // Status
+  static const Color _live =
+      Color(0xFFFFB000); // gold — live / open-now / warning
+  static const Color _coral = Color(0xFFC8102E);
+  // Type
+  static const String _displayFont = 'Inter Tight';
+  static const String _bodyFont = 'Inter';
+  static const String _monoFont = 'Inter';
+  // ────────────────────────────────────────────────────────────────────
+
   // ✅ Route names (adjust if your FF route names differ)
   static const String _termsRouteName = 'termsPage';
   static const String _privacyRouteName = 'privacyPage';
@@ -37,37 +61,56 @@ class _MorePageViewState extends State<MorePageView> {
   static const String _profileRouteName = 'profilePage';
 
   // =========================================================
-  // ✅ TYPOGRAPHY (THEME TOKENS ONLY)
+  // ✅ TYPOGRAPHY (locked palette — explicit family + colour)
+  //    Signatures unchanged so all call sites compile as-is.
   // =========================================================
 
-  TextStyle _appTitleStyle(FlutterFlowTheme theme) {
-    return theme.titleLarge.copyWith(
-      fontWeight: FontWeight.w900, // 🔥 Extra bold
-      letterSpacing: 0.2,
-    );
-  }
-
-  TextStyle _pageSubtitle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+  TextStyle _appTitleStyle(FlutterFlowTheme theme) => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 20,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.4,
+        height: 1.05,
+        color: _ink,
       );
 
-  TextStyle _headerTitleOnPrimary(FlutterFlowTheme t) => t.titleLarge.override(
-        fontFamily: t.titleLargeFamily,
-        color: Colors.white,
+  TextStyle _pageSubtitle(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+        color: _inkMute,
       );
 
-  TextStyle _sectionTitleStyle(FlutterFlowTheme t) => t.titleMedium.override(
-        fontFamily: t.titleMediumFamily,
+  // Band is now a neutral contained surface → ink foreground, never white.
+  TextStyle _headerTitleOnPrimary(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 18,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.2,
+        color: _ink,
       );
 
-  TextStyle _tileTitle(FlutterFlowTheme t) => t.bodyMedium.override(
-        fontFamily: t.bodyMediumFamily,
+  TextStyle _sectionTitleStyle(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.2,
+        color: _ink,
       );
 
-  TextStyle _tileSubtitle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+  TextStyle _tileTitle(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 15,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.2,
+        color: _ink,
+      );
+
+  TextStyle _tileSubtitle(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+        color: _inkMute,
       );
 
   // =========================================================
@@ -86,9 +129,9 @@ class _MorePageViewState extends State<MorePageView> {
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          color: theme.primaryBackground,
+          color: _paper,
           borderRadius: BorderRadius.circular(_radius),
-          border: Border.all(color: theme.alternate, width: 1),
+          border: Border.all(color: _hairline, width: 1),
           boxShadow: [
             BoxShadow(
               blurRadius: 10,
@@ -104,12 +147,12 @@ class _MorePageViewState extends State<MorePageView> {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: theme.secondaryBackground,
+                color: _surface,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: theme.alternate, width: 1),
+                border: Border.all(color: _hairlineOnSurface, width: 1),
               ),
               alignment: Alignment.center,
-              child: Icon(icon, size: 19, color: theme.primary),
+              child: Icon(icon, size: 19, color: _ink),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -124,9 +167,9 @@ class _MorePageViewState extends State<MorePageView> {
                 ],
               ),
             ),
-            Icon(
+            const Icon(
               Icons.chevron_right_rounded,
-              color: theme.secondaryText,
+              color: _inkMute,
               size: 22,
             ),
           ],
@@ -159,7 +202,7 @@ class _MorePageViewState extends State<MorePageView> {
       width: width,
       height: height,
       child: Container(
-        color: theme.primaryBackground,
+        color: _paper,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -171,22 +214,21 @@ class _MorePageViewState extends State<MorePageView> {
                   Container(
                     width: 36,
                     height: 36,
-                    decoration: BoxDecoration(
-                      color: theme.primary,
+                    decoration: const BoxDecoration(
+                      color: _ink, // ink chip
                       shape: BoxShape.circle,
                     ),
                     alignment: Alignment.center,
-                    child: Icon(
+                    child: const Icon(
                       Icons.grid_view_rounded,
                       size: 20,
-                      color: theme.primaryBackground,
+                      color: _paper, // white icon on ink
                     ),
                   ),
                   const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // ✅ FIX (was _pageTitle)
                       Text('Subby', style: _appTitleStyle(theme)),
                       const SizedBox(height: 2),
                       Text('More', style: _pageSubtitle(theme)),
@@ -196,10 +238,16 @@ class _MorePageViewState extends State<MorePageView> {
               ),
             ),
 
-            // Primary header band
+            // Section band — saturated brand fill becomes a neutral contained
+            // surface; foreground flips to ink (per SUBBY PALETTE rule).
             Container(
               width: double.infinity,
-              color: theme.primary,
+              decoration: const BoxDecoration(
+                color: _surface,
+                border: Border(
+                  bottom: BorderSide(color: _hairlineOnSurface, width: 1),
+                ),
+              ),
               padding: const EdgeInsets.fromLTRB(_hPad, 16, _hPad, 16),
               child: Text('Menu', style: _headerTitleOnPrimary(theme)),
             ),
@@ -271,14 +319,16 @@ class _MorePageViewState extends State<MorePageView> {
                           onTap: () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text(
+                                content: const Text(
                                   'Add a support page later.',
-                                  style: theme.bodyMedium.override(
-                                    fontFamily: theme.bodyMediumFamily,
-                                    color: Colors.white,
+                                  style: TextStyle(
+                                    fontFamily: _bodyFont,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: _paper,
                                   ),
                                 ),
-                                backgroundColor: theme.primary,
+                                backgroundColor: _ink,
                               ),
                             );
                           },

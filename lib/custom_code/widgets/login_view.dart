@@ -43,6 +43,30 @@ class LoginView extends StatefulWidget {
 }
 
 class _LoginViewState extends State<LoginView> {
+  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
+  //
+  // Neutrals
+  static const Color _ink = Color(0xFF14243F);
+  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _surface = Color(0xFFE3E4E8);
+  static const Color _hairline = Color(0xFFE3E4E8);
+  static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
+  // Brand accent — YELLOW. Always ink foreground, never white.
+  static const Color _spark = Color(0xFFFFE74C); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFF14243F);
+  // Status
+  static const Color _live =
+      Color(0xFFFFB000); // gold — live / open-now / warning
+  static const Color _coral = Color(0xFFC8102E);
+  // Type
+  static const String _displayFont = 'Inter Tight';
+  static const String _bodyFont = 'Inter';
+  static const String _monoFont = 'Inter';
+  // ────────────────────────────────────────────────────────────────────
+
   // Match Subby system spacing
   static const double _hPad = 24;
   static const double _vPad = 24;
@@ -82,56 +106,57 @@ class _LoginViewState extends State<LoginView> {
   // =========================================================
   // ✅ TYPOGRAPHY (match ListingResultsPageView)
   // =========================================================
-  TextStyle _titleStyle(FlutterFlowTheme t) => t.titleLarge.copyWith(
+  TextStyle _titleStyle(FlutterFlowTheme t) => t.titleLarge.override(
+        fontFamily: _displayFont,
         fontWeight: FontWeight.w900,
         letterSpacing: 0.2,
       );
 
   TextStyle _subtitleStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+        fontFamily: _bodyFont,
+        color: _inkMute,
       );
 
   TextStyle _chipLabelStyle(FlutterFlowTheme t) => t.labelMedium.override(
-        fontFamily: t.labelMediumFamily,
+        fontFamily: _bodyFont,
       );
 
   TextStyle _toggleTextStyle(FlutterFlowTheme t, {required bool selected}) =>
       t.labelMedium.override(
-        fontFamily: t.labelMediumFamily,
-        color: selected ? Colors.white : t.primaryText,
+        fontFamily: _bodyFont,
+        color: selected ? _paper : _ink,
       );
 
   TextStyle _labelStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+        fontFamily: _bodyFont,
+        color: _inkMute,
         fontWeight: FontWeight.w600,
         fontSize: 11,
       );
 
   TextStyle _inputTextStyle(FlutterFlowTheme t) => t.bodyMedium.override(
-        fontFamily: t.bodyMediumFamily,
+        fontFamily: _bodyFont,
       );
 
   TextStyle _hintStyle(FlutterFlowTheme t) => t.bodyMedium.override(
-        fontFamily: t.bodyMediumFamily,
-        color: t.secondaryText,
+        fontFamily: _bodyFont,
+        color: _inkMute,
       );
 
   TextStyle _buttonTextStyle(FlutterFlowTheme t, {required Color color}) =>
       t.labelLarge.override(
-        fontFamily: t.labelLargeFamily,
+        fontFamily: _bodyFont,
         color: color,
         fontWeight: FontWeight.w700,
       );
 
   TextStyle _snackTextStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.primaryText,
+        fontFamily: _bodyFont,
+        color: _ink,
       );
 
   TextStyle _otpDigitStyle(FlutterFlowTheme t) => t.bodyMedium.override(
-        fontFamily: t.bodyMediumFamily,
+        fontFamily: _bodyFont,
         fontWeight: FontWeight.w700,
         fontSize: 18,
       );
@@ -226,32 +251,32 @@ class _LoginViewState extends State<LoginView> {
       hintText: hint,
       hintStyle: _hintStyle(theme),
       filled: true,
-      fillColor: theme.primaryBackground,
+      fillColor: _paper,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: theme.alternate, width: 1),
+        borderSide: BorderSide(color: _hairline, width: 1),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: theme.primary, width: 1.6),
+        borderSide: BorderSide(color: _ink, width: 1.6),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: theme.error, width: 1.2),
+        borderSide: BorderSide(color: _coral, width: 1.2),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: theme.error, width: 1.6),
+        borderSide: BorderSide(color: _coral, width: 1.6),
       ),
       suffixIcon: suffix,
     );
   }
 
   BoxDecoration _liftedCardDecoration(FlutterFlowTheme t) => BoxDecoration(
-        color: t.primaryBackground,
+        color: _paper,
         borderRadius: BorderRadius.circular(_radius),
-        border: Border.all(color: t.alternate, width: 1),
+        border: Border.all(color: _hairline, width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
@@ -273,10 +298,10 @@ class _LoginViewState extends State<LoginView> {
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           elevation: 0,
-          backgroundColor: theme.secondaryBackground,
+          backgroundColor: _surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
-            side: BorderSide(color: theme.alternate, width: 1),
+            side: BorderSide(color: _hairline, width: 1),
           ),
           duration: const Duration(milliseconds: 1600),
           content: Row(
@@ -285,13 +310,13 @@ class _LoginViewState extends State<LoginView> {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: theme.primary.withOpacity(0.12),
+                  color: _ink.withOpacity(0.08),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   success ? Icons.check_rounded : Icons.info_outline_rounded,
                   size: 16,
-                  color: theme.primary,
+                  color: _ink,
                 ),
               ),
               const SizedBox(width: 10),
@@ -315,12 +340,12 @@ class _LoginViewState extends State<LoginView> {
         width: 32,
         height: 32,
         decoration: BoxDecoration(
-          color: t.secondaryBackground,
+          color: _surface,
           shape: BoxShape.circle,
-          border: Border.all(color: t.alternate, width: 1),
+          border: Border.all(color: _hairline, width: 1),
         ),
         alignment: Alignment.center,
-        child: Icon(icon, size: 16, color: t.secondaryText),
+        child: Icon(icon, size: 16, color: _inkMute),
       ),
     );
   }
@@ -492,9 +517,9 @@ class _LoginViewState extends State<LoginView> {
     return Container(
       height: 38,
       decoration: BoxDecoration(
-        color: theme.primaryBackground,
+        color: _paper,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: theme.alternate, width: 1),
+        border: Border.all(color: _hairline, width: 1),
       ),
       child: LayoutBuilder(
         builder: (context, c) {
@@ -512,7 +537,7 @@ class _LoginViewState extends State<LoginView> {
                   width: pillW,
                   margin: const EdgeInsets.all(2),
                   decoration: BoxDecoration(
-                    color: theme.primary,
+                    color: _ink,
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),
@@ -574,11 +599,11 @@ class _LoginViewState extends State<LoginView> {
   }) {
     final disabled = onPressed == null || loading;
 
-    final bg = outline ? theme.primaryBackground : theme.primary;
-    final fg = outline ? theme.primaryText : Colors.white;
-    final border = outline ? theme.alternate : theme.primary;
+    final bg = outline ? _paper : _spark;
+    final fg = outline ? _ink : _sparkInk;
+    final border = outline ? _hairline : _spark;
 
-    final spinnerColor = outline ? theme.primary : Colors.white;
+    final spinnerColor = outline ? _ink : _sparkInk;
 
     return GestureDetector(
       onTap: disabled ? null : onPressed,
@@ -629,20 +654,20 @@ class _LoginViewState extends State<LoginView> {
       margin: const EdgeInsets.only(top: 14),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: theme.error.withOpacity(0.10),
+        color: _coral.withOpacity(0.10),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: theme.error.withOpacity(0.35)),
+        border: Border.all(color: _coral.withOpacity(0.35)),
       ),
       child: Row(
         children: [
-          Icon(Icons.error_outline, size: 18, color: theme.error),
+          Icon(Icons.error_outline, size: 18, color: _coral),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               msg,
               style: theme.bodyMedium.override(
-                fontFamily: theme.bodyMediumFamily,
-                color: theme.error,
+                fontFamily: _bodyFont,
+                color: _coral,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -669,14 +694,14 @@ class _LoginViewState extends State<LoginView> {
           decoration: InputDecoration(
             counterText: '',
             filled: true,
-            fillColor: theme.primaryBackground,
+            fillColor: _paper,
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: theme.alternate, width: 1),
+              borderSide: BorderSide(color: _hairline, width: 1),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: theme.primary, width: 1.6),
+              borderSide: BorderSide(color: _ink, width: 1.6),
             ),
           ),
           onChanged: (v) {
@@ -800,7 +825,7 @@ class _LoginViewState extends State<LoginView> {
                 onPressed: () => setState(() => _obscurePw = !_obscurePw),
                 icon: Icon(
                   _obscurePw ? Icons.visibility_off : Icons.visibility,
-                  color: theme.secondaryText,
+                  color: _inkMute,
                   size: 20,
                 ),
               ),
@@ -823,8 +848,8 @@ class _LoginViewState extends State<LoginView> {
               child: Text(
                 'Forgot password?',
                 style: theme.labelMedium.override(
-                  fontFamily: theme.labelMediumFamily,
-                  color: theme.primary,
+                  fontFamily: _bodyFont,
+                  color: _ink,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -848,7 +873,7 @@ class _LoginViewState extends State<LoginView> {
       height: height,
       child: SafeArea(
         child: Container(
-          color: theme.primaryBackground,
+          color: _paper,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

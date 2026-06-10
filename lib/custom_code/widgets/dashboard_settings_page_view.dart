@@ -33,6 +33,30 @@ class DashboardSettingsPageView extends StatefulWidget {
 }
 
 class _DashboardSettingsPageViewState extends State<DashboardSettingsPageView> {
+  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
+  //
+  // Neutrals
+  static const Color _ink = Color(0xFF14243F);
+  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _surface = Color(0xFFE3E4E8);
+  static const Color _hairline = Color(0xFFE3E4E8);
+  static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
+  // Brand accent — YELLOW. Always ink foreground, never white.
+  static const Color _spark = Color(0xFFFFE74C); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFF14243F);
+  // Status
+  static const Color _live =
+      Color(0xFFFFB000); // gold — live / open-now / warning
+  static const Color _coral = Color(0xFFC8102E);
+  // Type
+  static const String _displayFont = 'Inter Tight';
+  static const String _bodyFont = 'Inter';
+  static const String _monoFont = 'Inter';
+  // ────────────────────────────────────────────────────────────────────
+
   static const double _hPad = 24;
   static const double _radius = 16;
   static const double _gap = 12;
@@ -79,25 +103,26 @@ class _DashboardSettingsPageViewState extends State<DashboardSettingsPageView> {
   // -----------------------------
   // Typography (Subby style)
   // -----------------------------
-  TextStyle _titleStyle(FlutterFlowTheme t) => t.titleLarge.copyWith(
+  TextStyle _titleStyle(FlutterFlowTheme t) => t.titleLarge.override(
+        fontFamily: _displayFont,
         fontWeight: FontWeight.w900,
         letterSpacing: 0.2,
       );
 
   TextStyle _subtitleStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+        fontFamily: _bodyFont,
+        color: _inkMute,
       );
 
   TextStyle _rowTitleStyle(FlutterFlowTheme t) => t.bodyMedium.override(
-        fontFamily: t.bodyMediumFamily,
+        fontFamily: _bodyFont,
         fontWeight: FontWeight.w800,
-        color: t.primaryText,
+        color: _ink,
       );
 
   TextStyle _rowMetaStyle(FlutterFlowTheme t) => t.labelSmall.override(
-        fontFamily: t.labelSmallFamily,
-        color: t.secondaryText,
+        fontFamily: _bodyFont,
+        color: _inkMute,
       );
 
   @override
@@ -215,9 +240,9 @@ class _DashboardSettingsPageViewState extends State<DashboardSettingsPageView> {
   Widget _cardShell(FlutterFlowTheme theme, Widget child) {
     return Container(
       decoration: BoxDecoration(
-        color: theme.primaryBackground,
+        color: _paper,
         borderRadius: BorderRadius.circular(_radius),
-        border: Border.all(color: theme.alternate.withOpacity(0.9)),
+        border: Border.all(color: _hairline.withOpacity(0.9)),
         boxShadow: [
           BoxShadow(
             blurRadius: 14,
@@ -241,14 +266,14 @@ class _DashboardSettingsPageViewState extends State<DashboardSettingsPageView> {
       index: index,
       child: Container(
         height: _tileH,
-        color: theme.primaryBackground,
+        color: _paper,
         child: Row(
           children: [
             const SizedBox(width: 10),
             Icon(
               Icons.drag_handle_rounded,
               size: 22,
-              color: theme.secondaryText,
+              color: _inkMute,
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -270,7 +295,7 @@ class _DashboardSettingsPageViewState extends State<DashboardSettingsPageView> {
               child: Switch(
                 value: visible,
                 onChanged: (v) => _toggleVisible(id, v),
-                activeColor: theme.primary,
+                activeColor: _ink,
               ),
             ),
             const SizedBox(width: 6),
@@ -288,15 +313,17 @@ class _DashboardSettingsPageViewState extends State<DashboardSettingsPageView> {
       return Container(
         width: widget.width ?? double.infinity,
         height: widget.height ?? double.infinity,
-        color: theme.primaryBackground,
-        child: const Center(child: CircularProgressIndicator()),
+        color: _paper,
+        child: const Center(
+            child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(_ink))),
       );
     }
 
     return Container(
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
-      color: theme.primaryBackground,
+      color: _paper,
       child: Column(
         children: [
           Container(
@@ -315,13 +342,13 @@ class _DashboardSettingsPageViewState extends State<DashboardSettingsPageView> {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: theme.secondaryBackground,
+                      color: _surface,
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: theme.alternate),
+                      border: Border.all(color: _hairline),
                     ),
                     child: Icon(
                       Icons.arrow_back_rounded,
-                      color: theme.secondaryText,
+                      color: _inkMute,
                       size: 20,
                     ),
                   ),
@@ -366,7 +393,7 @@ class _DashboardSettingsPageViewState extends State<DashboardSettingsPageView> {
                             if (index != _tileOrder.length - 1)
                               Divider(
                                 height: 1,
-                                color: theme.alternate.withOpacity(0.75),
+                                color: _hairline.withOpacity(0.75),
                               ),
                           ],
                         );
@@ -386,17 +413,17 @@ class _DashboardSettingsPageViewState extends State<DashboardSettingsPageView> {
                               vertical: 12,
                             ),
                             decoration: BoxDecoration(
-                              color: theme.secondaryBackground,
+                              color: _surface,
                               borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: theme.alternate),
+                              border: Border.all(color: _hairline),
                             ),
                             child: Center(
                               child: Text(
                                 'Reset Defaults',
                                 style: theme.bodyMedium.override(
-                                  fontFamily: theme.bodyMediumFamily,
+                                  fontFamily: _bodyFont,
                                   fontWeight: FontWeight.w800,
-                                  color: theme.primaryText,
+                                  color: _ink,
                                 ),
                               ),
                             ),
@@ -414,7 +441,7 @@ class _DashboardSettingsPageViewState extends State<DashboardSettingsPageView> {
                               vertical: 12,
                             ),
                             decoration: BoxDecoration(
-                              color: theme.primary,
+                              color: _spark,
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: const Center(
@@ -422,7 +449,7 @@ class _DashboardSettingsPageViewState extends State<DashboardSettingsPageView> {
                                 'Done',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w800,
-                                  color: Colors.white,
+                                  color: _sparkInk,
                                 ),
                               ),
                             ),

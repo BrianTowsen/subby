@@ -29,48 +29,86 @@ class _TermsPageViewState extends State<TermsPageView> {
   static const double _vPad = 24;
   static const double _radius = 16;
 
-  // ---------------- TYPOGRAPHY (HomePageView baseline) ----------------
-  // Page title (“Subby”): titleLarge
-  TextStyle _appTitleStyle(FlutterFlowTheme theme) {
-    return theme.titleLarge.copyWith(
-      fontWeight: FontWeight.w900, // 🔥 Extra bold
-      letterSpacing: 0.2,
-    );
-  }
+  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
+  //
+  // Neutrals
+  static const Color _ink = Color(0xFF14243F);
+  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _surface = Color(0xFFE3E4E8);
+  static const Color _hairline = Color(0xFFE3E4E8);
+  static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
+  // Brand accent — YELLOW. Always ink foreground, never white.
+  static const Color _spark = Color(0xFFFFE74C); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFF14243F);
+  // Status
+  static const Color _live =
+      Color(0xFFFFB000); // gold — live / open-now / warning
+  static const Color _coral = Color(0xFFC8102E);
+  // Type
+  static const String _displayFont = 'Inter Tight';
+  static const String _bodyFont = 'Inter';
+  static const String _monoFont = 'Inter';
+  // ────────────────────────────────────────────────────────────────────
 
-  // Subtitle: bodySmall (secondaryText)
-  TextStyle _pageSubtitle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+  // ---------------- TYPOGRAPHY (locked palette) ----------------
+  // Signatures unchanged so all call sites compile as-is.
+  TextStyle _appTitleStyle(FlutterFlowTheme theme) => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 20,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.4,
+        height: 1.05,
+        color: _ink,
       );
 
-  // Section titles: titleMedium
-  TextStyle _sectionTitle(FlutterFlowTheme t) => t.titleMedium.override(
-        fontFamily: t.titleMediumFamily,
+  TextStyle _pageSubtitle(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+        color: _inkMute,
       );
 
-  // Body: bodyMedium
-  TextStyle _body(FlutterFlowTheme t) => t.bodyMedium.override(
-        fontFamily: t.bodyMediumFamily,
+  TextStyle _sectionTitle(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.2,
+        color: _ink,
       );
 
-  // Small/meta: bodySmall (secondaryText)
-  TextStyle _meta(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+  TextStyle _body(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        height: 1.45,
+        color: _ink,
       );
 
-  // Hint: bodyMedium + secondaryText (keeps baseline families; reads well)
-  TextStyle _hint(FlutterFlowTheme t) => t.bodyMedium.override(
-        fontFamily: t.bodyMediumFamily,
-        color: t.secondaryText,
+  TextStyle _meta(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+        color: _inkMute,
       );
 
-  // Header title on primary band: titleLarge (white)
-  TextStyle _headerTitleOnPrimary(FlutterFlowTheme t) => t.titleLarge.override(
-        fontFamily: t.titleLargeFamily,
-        color: Colors.white,
-        fontWeight: FontWeight.w900,
+  TextStyle _hint(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        height: 1.45,
+        color: _inkMute,
+      );
+
+  // Band is now a neutral contained surface → ink foreground, never white.
+  TextStyle _headerTitleOnPrimary(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 18,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.2,
+        color: _ink,
       );
   // -------------------------------------------------------------------
 
@@ -90,7 +128,7 @@ class _TermsPageViewState extends State<TermsPageView> {
       width: width,
       height: height,
       child: Container(
-        color: theme.primaryBackground,
+        color: _paper,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -106,15 +144,15 @@ class _TermsPageViewState extends State<TermsPageView> {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: theme.secondaryBackground,
+                        color: _surface,
                         shape: BoxShape.circle,
-                        border: Border.all(color: theme.alternate, width: 1),
+                        border: Border.all(color: _hairlineOnSurface, width: 1),
                       ),
                       alignment: Alignment.center,
-                      child: Icon(
+                      child: const Icon(
                         Icons.arrow_back_rounded,
                         size: 20,
-                        color: theme.primaryText,
+                        color: _ink,
                       ),
                     ),
                   ),
@@ -122,7 +160,6 @@ class _TermsPageViewState extends State<TermsPageView> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // ✅ FIX: use existing title style
                       Text('Subby', style: _appTitleStyle(theme)),
                       const SizedBox(height: 2),
                       Text('Terms of Service', style: _pageSubtitle(theme)),
@@ -132,10 +169,16 @@ class _TermsPageViewState extends State<TermsPageView> {
               ),
             ),
 
-            // Primary header band
+            // Section band — saturated brand fill becomes a neutral contained
+            // surface; foreground flips to ink (per SUBBY PALETTE rule).
             Container(
               width: double.infinity,
-              color: theme.primary,
+              decoration: const BoxDecoration(
+                color: _surface,
+                border: Border(
+                  bottom: BorderSide(color: _hairlineOnSurface, width: 1),
+                ),
+              ),
               padding: const EdgeInsets.fromLTRB(_hPad, 16, _hPad, 16),
               child: Text(
                 'Terms of Service',
@@ -152,14 +195,14 @@ class _TermsPageViewState extends State<TermsPageView> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: theme.secondaryBackground,
+                    color: _paper,
                     borderRadius: BorderRadius.circular(_radius),
-                    border: Border.all(color: theme.alternate),
+                    border: Border.all(color: _hairline),
                     boxShadow: [
                       BoxShadow(
                         blurRadius: 12,
                         offset: const Offset(0, 6),
-                        color: Colors.black.withOpacity(0.08),
+                        color: Colors.black.withOpacity(0.04),
                       ),
                     ],
                   ),

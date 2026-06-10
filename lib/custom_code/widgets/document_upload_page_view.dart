@@ -48,6 +48,30 @@ class DocumentUploadPageView extends StatefulWidget {
 }
 
 class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
+  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
+  //
+  // Neutrals
+  static const Color _ink = Color(0xFF14243F);
+  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _surface = Color(0xFFE3E4E8);
+  static const Color _hairline = Color(0xFFE3E4E8);
+  static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
+  // Brand accent — YELLOW. Always ink foreground, never white.
+  static const Color _spark = Color(0xFFFFE74C); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFF14243F);
+  // Status
+  static const Color _live =
+      Color(0xFFFFB000); // gold — live / paid / done / warning
+  static const Color _coral = Color(0xFFC8102E);
+  // Type
+  static const String _displayFont = 'Inter Tight';
+  static const String _bodyFont = 'Inter';
+  static const String _monoFont = 'Inter';
+  // ────────────────────────────────────────────────────────────────────
+
   static const double _hPad = 24;
   static const double _vPad = 24;
   static const double _radius = 16;
@@ -120,29 +144,30 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
   // Theme helpers (match ProjectDetailPageView)
   // -----------------------------
   TextStyle _appTitleStyle(FlutterFlowTheme theme) {
-    return theme.titleLarge.copyWith(
+    return theme.titleLarge.override(
+      fontFamily: _displayFont,
       fontWeight: FontWeight.w900,
       letterSpacing: 0.2,
     );
   }
 
   TextStyle _appSubtitleStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+        fontFamily: _bodyFont,
+        color: _inkMute,
       );
 
   TextStyle _sectionTitleStyle(FlutterFlowTheme t) => t.titleMedium.override(
-        fontFamily: t.titleMediumFamily,
+        fontFamily: _displayFont,
         fontWeight: FontWeight.w900,
-        color: t.primaryText,
+        color: _ink,
       );
 
   Color _projectsColor(FlutterFlowTheme theme) {
     try {
       final c = (theme as dynamic).projectsColour as Color?;
-      return c ?? theme.primary;
+      return c ?? _ink;
     } catch (_) {
-      return theme.primary;
+      return _ink;
     }
   }
 
@@ -159,10 +184,10 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: colorOverride ?? theme.primaryBackground,
+        color: colorOverride ?? _paper,
         borderRadius: BorderRadius.circular(_radius),
         border: Border.all(
-          color: (borderColorOverride ?? theme.alternate).withOpacity(0.9),
+          color: (borderColorOverride ?? _hairline).withOpacity(0.9),
         ),
       ),
       child: ClipRRect(
@@ -216,8 +241,8 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
             child: Text(
               label,
               style: theme.bodySmall.override(
-                fontFamily: theme.bodySmallFamily,
-                color: theme.secondaryText,
+                fontFamily: _bodyFont,
+                color: _inkMute,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -254,8 +279,8 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
                 Text(
                   title,
                   style: theme.bodyMedium.override(
-                    fontFamily: theme.bodyMediumFamily,
-                    color: theme.primaryText,
+                    fontFamily: _bodyFont,
+                    color: _ink,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -263,8 +288,8 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
                 Text(
                   subtitle,
                   style: theme.bodySmall.override(
-                    fontFamily: theme.bodySmallFamily,
-                    color: theme.secondaryText,
+                    fontFamily: _bodyFont,
+                    color: _inkMute,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -289,9 +314,9 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: theme.secondaryBackground,
+          color: _surface,
           borderRadius: BorderRadius.circular(_radius),
-          border: Border.all(color: theme.alternate.withOpacity(0.9)),
+          border: Border.all(color: _hairline.withOpacity(0.9)),
         ),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(14, 14, 10, 14),
@@ -304,7 +329,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
                   color: accent,
                   borderRadius: BorderRadius.circular(_radius),
                 ),
-                child: Icon(icon, size: 22, color: Colors.white),
+                child: Icon(icon, size: 22, color: _paper),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -316,8 +341,8 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.bodyMedium.override(
-                        fontFamily: theme.bodyMediumFamily,
-                        color: theme.primaryText,
+                        fontFamily: _bodyFont,
+                        color: _ink,
                         letterSpacing: 0.0,
                         fontWeight: FontWeight.w800,
                       ),
@@ -328,8 +353,8 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.labelSmall.override(
-                        fontFamily: theme.labelSmallFamily,
-                        color: theme.secondaryText,
+                        fontFamily: _bodyFont,
+                        color: _inkMute,
                         letterSpacing: 0.0,
                         fontWeight: FontWeight.w600,
                       ),
@@ -346,7 +371,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
                     child: Icon(
                       Icons.more_horiz_rounded,
                       size: 20,
-                      color: theme.secondaryText,
+                      color: _inkMute,
                     ),
                   ),
                 ),
@@ -511,7 +536,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
       return Container(
         width: widget.width ?? double.infinity,
         height: widget.height ?? double.infinity,
-        color: theme.primaryBackground,
+        color: _paper,
         child: SafeArea(
           child: Padding(
             padding:
@@ -530,7 +555,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
     return Container(
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
-      color: theme.primaryBackground,
+      color: _paper,
       child: SafeArea(
         top: true,
         bottom: true,
@@ -552,15 +577,14 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: theme.primaryBackground,
+                          color: _paper,
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                              color: theme.alternate.withOpacity(0.9)),
+                          border: Border.all(color: _hairline.withOpacity(0.9)),
                         ),
                         child: Icon(
                           Icons.arrow_back_rounded,
                           size: 22,
-                          color: theme.primaryText,
+                          color: _ink,
                         ),
                       ),
                     ),
@@ -572,7 +596,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
                           Text(
                             'Documents',
                             style: _appTitleStyle(theme).copyWith(
-                              color: theme.primaryText,
+                              color: _ink,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -591,7 +615,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
                 // UPLOAD CARD
                 _cardShell(
                   theme: theme,
-                  colorOverride: theme.secondaryBackground,
+                  colorOverride: _surface,
                   child: Row(
                     children: [
                       Container(
@@ -612,8 +636,8 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
                             Text(
                               'Upload a document',
                               style: theme.bodyMedium.override(
-                                fontFamily: theme.bodyMediumFamily,
-                                color: theme.primaryText,
+                                fontFamily: _bodyFont,
+                                color: _ink,
                                 fontWeight: FontWeight.w900,
                               ),
                             ),
@@ -621,8 +645,8 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
                             Text(
                               'PDF, images, or other files supported by your app.',
                               style: theme.bodySmall.override(
-                                fontFamily: theme.bodySmallFamily,
-                                color: theme.secondaryText,
+                                fontFamily: _bodyFont,
+                                color: _inkMute,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -638,8 +662,8 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
                               horizontal: 12, vertical: 10),
                           decoration: BoxDecoration(
                             color: _isUploading
-                                ? theme.alternate.withOpacity(0.4)
-                                : accent,
+                                ? _hairline.withOpacity(0.4)
+                                : _spark,
                             borderRadius: BorderRadius.circular(14),
                           ),
                           child: Row(
@@ -652,27 +676,27 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2.2,
                                     valueColor:
-                                        AlwaysStoppedAnimation(Colors.white),
+                                        AlwaysStoppedAnimation(_sparkInk),
                                   ),
                                 ),
                                 const SizedBox(width: 10),
                                 Text(
                                   'Uploading',
                                   style: theme.bodySmall.override(
-                                    fontFamily: theme.bodySmallFamily,
-                                    color: Colors.white,
+                                    fontFamily: _bodyFont,
+                                    color: _sparkInk,
                                     fontWeight: FontWeight.w900,
                                   ),
                                 ),
                               ] else ...[
                                 const Icon(Icons.add_rounded,
-                                    size: 18, color: Colors.white),
+                                    size: 18, color: _sparkInk),
                                 const SizedBox(width: 8),
                                 Text(
                                   'Upload',
                                   style: theme.bodySmall.override(
-                                    fontFamily: theme.bodySmallFamily,
-                                    color: Colors.white,
+                                    fontFamily: _bodyFont,
+                                    color: _sparkInk,
                                     fontWeight: FontWeight.w900,
                                   ),
                                 ),
@@ -703,7 +727,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
                 else if (_docRows.isEmpty)
                   _cardShell(
                     theme: theme,
-                    colorOverride: theme.secondaryBackground,
+                    colorOverride: _surface,
                     child: Row(
                       children: [
                         Container(
@@ -721,8 +745,8 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
                           child: Text(
                             'No documents yet.',
                             style: theme.bodyMedium.override(
-                              fontFamily: theme.bodyMediumFamily,
-                              color: theme.primaryText,
+                              fontFamily: _bodyFont,
+                              color: _ink,
                               fontWeight: FontWeight.w800,
                             ),
                           ),

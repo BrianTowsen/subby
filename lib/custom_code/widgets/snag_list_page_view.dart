@@ -40,6 +40,30 @@ class SnagListPageView extends StatefulWidget {
 
 class _SnagListPageViewState extends State<SnagListPageView>
     with SingleTickerProviderStateMixin {
+  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
+  //
+  // Neutrals
+  static const Color _ink = Color(0xFF14243F);
+  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _surface = Color(0xFFE3E4E8);
+  static const Color _hairline = Color(0xFFE3E4E8);
+  static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
+  // Brand accent — YELLOW. Always ink foreground, never white.
+  static const Color _spark = Color(0xFFFFE74C); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFF14243F);
+  // Status
+  static const Color _live =
+      Color(0xFFFFB000); // gold — live / open-now / done / warning
+  static const Color _coral = Color(0xFFC8102E);
+  // Type
+  static const String _displayFont = 'Inter Tight';
+  static const String _bodyFont = 'Inter';
+  static const String _monoFont = 'Inter';
+  // ────────────────────────────────────────────────────────────────────
+
   static const double _hPad = 24;
   static const double _vPad = 24;
   static const double _radius = 16;
@@ -106,9 +130,9 @@ class _SnagListPageViewState extends State<SnagListPageView>
     // FlutterFlow custom color name: SnagListColour -> getter typically snagListColour
     try {
       final c = (theme as dynamic).snagListColour as Color?;
-      return c ?? theme.primary;
+      return c ?? _ink;
     } catch (_) {
-      return theme.primary;
+      return _ink;
     }
   }
 
@@ -116,7 +140,8 @@ class _SnagListPageViewState extends State<SnagListPageView>
   // ✅ TYPOGRAPHY (CONSISTENT: token + explicit family)
   // =========================================================
   TextStyle _titleStyle(FlutterFlowTheme theme) {
-    return theme.titleLarge.copyWith(
+    return theme.titleLarge.override(
+      fontFamily: _displayFont,
       fontWeight: FontWeight.w900,
       letterSpacing: 0.2,
     );
@@ -124,37 +149,37 @@ class _SnagListPageViewState extends State<SnagListPageView>
 
   TextStyle _subtitleStyle(FlutterFlowTheme theme) {
     return theme.bodySmall.override(
-      fontFamily: theme.bodySmallFamily,
-      color: theme.secondaryText,
+      fontFamily: _bodyFont,
+      color: _inkMute,
     );
   }
 
   TextStyle _sectionTitleStyle(FlutterFlowTheme theme) {
     return theme.titleSmall.override(
-      fontFamily: theme.titleSmallFamily,
+      fontFamily: _displayFont,
       fontWeight: FontWeight.w800,
-      color: theme.primaryText,
+      color: _ink,
     );
   }
 
   TextStyle _rowTitleStyle(FlutterFlowTheme theme) {
     return theme.bodyMedium.override(
-      fontFamily: theme.bodyMediumFamily,
+      fontFamily: _bodyFont,
       fontWeight: FontWeight.w900,
-      color: theme.primaryText,
+      color: _ink,
     );
   }
 
   TextStyle _rowMetaStyle(FlutterFlowTheme theme) {
     return theme.bodySmall.override(
-      fontFamily: theme.bodySmallFamily,
-      color: theme.secondaryText,
+      fontFamily: _bodyFont,
+      color: _inkMute,
     );
   }
 
   TextStyle _pillTextStyle(FlutterFlowTheme theme) {
     return theme.labelSmall.override(
-      fontFamily: theme.labelSmallFamily,
+      fontFamily: _bodyFont,
       fontWeight: FontWeight.w800,
       letterSpacing: 0.2,
     );
@@ -171,10 +196,10 @@ class _SnagListPageViewState extends State<SnagListPageView>
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: theme.primaryBackground,
+        color: _paper,
         borderRadius: BorderRadius.circular(_radius),
         border: Border.all(
-          color: theme.alternate.withOpacity(0.9),
+          color: _hairline.withOpacity(0.9),
           width: 1,
         ),
         boxShadow: [
@@ -193,7 +218,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
     return Container(
       width: double.infinity,
       height: 1.5,
-      color: theme.alternate.withOpacity(0.75),
+      color: _hairline.withOpacity(0.75),
     );
   }
 
@@ -246,14 +271,14 @@ class _SnagListPageViewState extends State<SnagListPageView>
   Color _statusColor(FlutterFlowTheme theme, Color accent, String status) {
     switch (status) {
       case 'closed':
-        return theme.success;
+        return _live;
       case 'in_progress':
         return accent;
       case 'review':
-        return theme.tertiary;
+        return _inkMute;
       case 'open':
       default:
-        return theme.error;
+        return _coral;
     }
   }
 
@@ -274,12 +299,12 @@ class _SnagListPageViewState extends State<SnagListPageView>
   Color _severityColor(FlutterFlowTheme theme, String sev) {
     switch (sev) {
       case 'critical':
-        return theme.error;
+        return _coral;
       case 'major':
-        return theme.tertiary;
+        return _inkMute;
       case 'minor':
       default:
-        return theme.secondaryText;
+        return _inkMute;
     }
   }
 
@@ -311,11 +336,11 @@ class _SnagListPageViewState extends State<SnagListPageView>
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: theme.alternate.withOpacity(0.35),
+                  color: _hairline.withOpacity(0.35),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(Icons.folder_off_rounded,
-                    color: theme.secondaryText, size: 22),
+                child:
+                    Icon(Icons.folder_off_rounded, color: _inkMute, size: 22),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -401,14 +426,14 @@ class _SnagListPageViewState extends State<SnagListPageView>
             color: accent,
             borderRadius: BorderRadius.circular(999),
           ),
-          labelColor: Colors.white,
-          unselectedLabelColor: theme.secondaryText,
+          labelColor: _paper,
+          unselectedLabelColor: _inkMute,
           labelStyle: theme.bodyMedium.override(
-            fontFamily: theme.bodyMediumFamily,
+            fontFamily: _bodyFont,
             fontWeight: FontWeight.w900,
           ),
           unselectedLabelStyle: theme.bodyMedium.override(
-            fontFamily: theme.bodyMediumFamily,
+            fontFamily: _bodyFont,
             fontWeight: FontWeight.w800,
           ),
           tabs: const [
@@ -542,9 +567,9 @@ class _SnagListPageViewState extends State<SnagListPageView>
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: theme.secondaryBackground,
+                color: _surface,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: theme.alternate.withOpacity(0.9)),
+                border: Border.all(color: _hairline.withOpacity(0.9)),
                 image: photoUrl.isNotEmpty
                     ? DecorationImage(
                         image: NetworkImage(photoUrl),
@@ -553,8 +578,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
                     : null,
               ),
               child: photoUrl.isEmpty
-                  ? Icon(Icons.photo_camera_rounded,
-                      color: theme.secondaryText, size: 22)
+                  ? Icon(Icons.photo_camera_rounded, color: _inkMute, size: 22)
                   : null,
             ),
             const SizedBox(width: 12),
@@ -633,7 +657,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
             'Add Snag page not linked yet.',
             style: FlutterFlowTheme.of(context).bodyMedium.override(
                   fontFamily: FlutterFlowTheme.of(context).bodyMediumFamily,
-                  color: Colors.white,
+                  color: _paper,
                   fontWeight: FontWeight.w800,
                 ),
           ),
@@ -661,7 +685,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
     return Container(
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
-      color: theme.primaryBackground,
+      color: _paper,
       child: SafeArea(
         top: true,
         bottom: true,
@@ -685,16 +709,16 @@ class _SnagListPageViewState extends State<SnagListPageView>
                             width: 44,
                             height: 44,
                             decoration: BoxDecoration(
-                              color: theme.primaryBackground,
+                              color: _paper,
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                color: theme.alternate.withOpacity(0.9),
+                                color: _hairline.withOpacity(0.9),
                               ),
                             ),
                             child: Icon(
                               Icons.arrow_back_rounded,
                               size: 22,
-                              color: theme.primaryText,
+                              color: _ink,
                             ),
                           ),
                         ),
@@ -708,7 +732,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
                           ),
                           child: const Icon(
                             Icons.checklist_rounded,
-                            color: Colors.white,
+                            color: _paper,
                             size: 22,
                           ),
                         ),
@@ -720,7 +744,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
                               Text(
                                 'Snag List',
                                 style: _titleStyle(theme).copyWith(
-                                  color: theme.primaryText,
+                                  color: _ink,
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -763,7 +787,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
                               minHeight: _stickyTabsHeight,
                               maxHeight: _stickyTabsHeight,
                               child: Container(
-                                color: theme.primaryBackground,
+                                color: _paper,
                                 padding: const EdgeInsets.only(bottom: 12),
                                 alignment: Alignment.bottomCenter,
                                 child: _buildTabs(theme, accent),
@@ -889,7 +913,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
                   child: Container(
                     height: 56,
                     decoration: BoxDecoration(
-                      color: accent,
+                      color: _spark,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
@@ -903,13 +927,13 @@ class _SnagListPageViewState extends State<SnagListPageView>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Icon(Icons.add_rounded,
-                            color: Colors.white, size: 22),
+                            color: _sparkInk, size: 22),
                         const SizedBox(width: 10),
                         Text(
                           'Add Snag',
                           style: theme.bodyMedium.override(
-                            fontFamily: theme.bodyMediumFamily,
-                            color: Colors.white,
+                            fontFamily: _bodyFont,
+                            color: _sparkInk,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 0.2,
                           ),

@@ -40,6 +40,30 @@ class ProjectCostHomePageView extends StatefulWidget {
 }
 
 class _ProjectCostHomePageViewState extends State<ProjectCostHomePageView> {
+  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
+  //
+  // Neutrals
+  static const Color _ink = Color(0xFF14243F);
+  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _surface = Color(0xFFE3E4E8);
+  static const Color _hairline = Color(0xFFE3E4E8);
+  static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
+  // Brand accent — YELLOW. Always ink foreground, never white.
+  static const Color _spark = Color(0xFFFFE74C); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFF14243F);
+  // Status
+  static const Color _live =
+      Color(0xFFFFB000); // gold — live / paid / done / warning
+  static const Color _coral = Color(0xFFC8102E);
+  // Type
+  static const String _displayFont = 'Inter Tight';
+  static const String _bodyFont = 'Inter';
+  static const String _monoFont = 'Inter';
+  // ────────────────────────────────────────────────────────────────────
+
   static const double _hPad = 24;
   static const double _vPad = 24;
   static const double _radius = 16;
@@ -144,9 +168,9 @@ class _ProjectCostHomePageViewState extends State<ProjectCostHomePageView> {
     // Try FF custom color "ProjectCostColour" -> getter typically projectCostColour
     try {
       final c = (theme as dynamic).projectCostColour as Color?;
-      return c ?? theme.primary;
+      return c ?? _ink;
     } catch (_) {
-      return theme.primary;
+      return _ink;
     }
   }
 
@@ -154,28 +178,29 @@ class _ProjectCostHomePageViewState extends State<ProjectCostHomePageView> {
   // Typography (match Timeline baseline)
   // -----------------------------
   TextStyle _appTitleStyle(FlutterFlowTheme theme) {
-    return theme.titleLarge.copyWith(
+    return theme.titleLarge.override(
+      fontFamily: _displayFont,
       fontWeight: FontWeight.w900,
       letterSpacing: 0.2,
     );
   }
 
   TextStyle _appSubtitleStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+        fontFamily: _bodyFont,
+        color: _inkMute,
       );
 
   TextStyle _sectionTitleStyle(FlutterFlowTheme t) => t.titleMedium.override(
-        fontFamily: t.titleMediumFamily,
+        fontFamily: _displayFont,
       );
 
   TextStyle _metaStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+        fontFamily: _bodyFont,
+        color: _inkMute,
       );
 
   TextStyle _cardTitleStyle(FlutterFlowTheme t) => t.bodyMedium.override(
-        fontFamily: t.bodyMediumFamily,
+        fontFamily: _bodyFont,
       );
 
   // -----------------------------
@@ -189,10 +214,10 @@ class _ProjectCostHomePageViewState extends State<ProjectCostHomePageView> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: theme.primaryBackground,
+        color: _paper,
         borderRadius: BorderRadius.circular(_radius),
         border: Border.all(
-          color: theme.alternate.withOpacity(0.9),
+          color: _hairline.withOpacity(0.9),
           width: 1,
         ),
         boxShadow: [
@@ -246,7 +271,7 @@ class _ProjectCostHomePageViewState extends State<ProjectCostHomePageView> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.labelSmall.override(
-                  fontFamily: theme.labelSmallFamily,
+                  fontFamily: _bodyFont,
                   color: accent,
                   letterSpacing: 0.0,
                   fontWeight: FontWeight.w800,
@@ -342,7 +367,7 @@ class _ProjectCostHomePageViewState extends State<ProjectCostHomePageView> {
                     'No project selected',
                     style: _cardTitleStyle(theme).copyWith(
                       fontWeight: FontWeight.w800,
-                      color: theme.primaryText,
+                      color: _ink,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -414,7 +439,7 @@ class _ProjectCostHomePageViewState extends State<ProjectCostHomePageView> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(_radius),
                 child: Container(
-                  color: theme.primaryBackground,
+                  color: _paper,
                   child: Row(
                     children: [
                       Container(width: 4, color: accent),
@@ -428,7 +453,7 @@ class _ProjectCostHomePageViewState extends State<ProjectCostHomePageView> {
                         ),
                         child: const Icon(
                           Icons.account_balance_wallet_outlined,
-                          color: Colors.white,
+                          color: _paper,
                           size: 22,
                         ),
                       ),
@@ -452,14 +477,14 @@ class _ProjectCostHomePageViewState extends State<ProjectCostHomePageView> {
                                 overflow: TextOverflow.ellipsis,
                                 style: _cardTitleStyle(theme).copyWith(
                                   fontWeight: FontWeight.w800,
-                                  color: theme.primaryText,
+                                  color: _ink,
                                 ),
                               ),
                               const SizedBox(height: 8),
                               Row(
                                 children: [
                                   Icon(Icons.location_on_outlined,
-                                      size: 16, color: theme.secondaryText),
+                                      size: 16, color: _inkMute),
                                   const SizedBox(width: 6),
                                   Expanded(
                                     child: Text(
@@ -488,8 +513,7 @@ class _ProjectCostHomePageViewState extends State<ProjectCostHomePageView> {
                           ),
                         ),
                       ),
-                      Icon(Icons.chevron_right_rounded,
-                          color: theme.secondaryText),
+                      Icon(Icons.chevron_right_rounded, color: _inkMute),
                       const SizedBox(width: 10),
                     ],
                   ),
@@ -510,7 +534,7 @@ class _ProjectCostHomePageViewState extends State<ProjectCostHomePageView> {
     return Container(
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
-      color: theme.primaryBackground,
+      color: _paper,
       child: SafeArea(
         top: true,
         bottom: true,
@@ -533,16 +557,16 @@ class _ProjectCostHomePageViewState extends State<ProjectCostHomePageView> {
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: theme.primaryBackground,
+                          color: _paper,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: theme.alternate.withOpacity(0.9),
+                            color: _hairline.withOpacity(0.9),
                           ),
                         ),
                         child: Icon(
                           Icons.arrow_back_rounded,
                           size: 22,
-                          color: theme.primaryText,
+                          color: _ink,
                         ),
                       ),
                     ),
@@ -556,7 +580,7 @@ class _ProjectCostHomePageViewState extends State<ProjectCostHomePageView> {
                       ),
                       child: const Icon(
                         Icons.account_balance_wallet_outlined,
-                        color: Colors.white,
+                        color: _paper,
                         size: 22,
                       ),
                     ),
@@ -568,7 +592,7 @@ class _ProjectCostHomePageViewState extends State<ProjectCostHomePageView> {
                           Text(
                             'Project Cost',
                             style: _appTitleStyle(theme).copyWith(
-                              color: theme.primaryText,
+                              color: _ink,
                               fontWeight: FontWeight.w900,
                             ),
                           ),
@@ -589,7 +613,7 @@ class _ProjectCostHomePageViewState extends State<ProjectCostHomePageView> {
                 Text(
                   'Projects added',
                   style: _sectionTitleStyle(theme).copyWith(
-                    color: theme.primaryText,
+                    color: _ink,
                   ),
                 ),
                 const SizedBox(height: 10),

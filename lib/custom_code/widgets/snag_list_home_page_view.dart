@@ -45,6 +45,30 @@ class SnagListHomePageView extends StatefulWidget {
 }
 
 class _SnagListHomePageViewState extends State<SnagListHomePageView> {
+  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
+  //
+  // Neutrals
+  static const Color _ink = Color(0xFF14243F);
+  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _surface = Color(0xFFE3E4E8);
+  static const Color _hairline = Color(0xFFE3E4E8);
+  static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
+  // Brand accent — YELLOW. Always ink foreground, never white.
+  static const Color _spark = Color(0xFFFFE74C); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFF14243F);
+  // Status
+  static const Color _live =
+      Color(0xFFFFB000); // gold — live / open-now / done / warning
+  static const Color _coral = Color(0xFFC8102E);
+  // Type
+  static const String _displayFont = 'Inter Tight';
+  static const String _bodyFont = 'Inter';
+  static const String _monoFont = 'Inter';
+  // ────────────────────────────────────────────────────────────────────
+
   static const double _hPad = 24;
   static const double _vPad = 24;
   static const double _radius = 16;
@@ -143,9 +167,9 @@ class _SnagListHomePageViewState extends State<SnagListHomePageView> {
     // FlutterFlow custom color name: SnagListColour -> getter typically snagListColour
     try {
       final c = (theme as dynamic).snagListColour as Color?;
-      return c ?? theme.primary;
+      return c ?? _ink;
     } catch (_) {
-      return theme.primary;
+      return _ink;
     }
   }
 
@@ -153,32 +177,33 @@ class _SnagListHomePageViewState extends State<SnagListHomePageView> {
   // ✅ TYPOGRAPHY (CONSISTENT: token + explicit family)
   // =========================================================
   TextStyle _appTitleStyle(FlutterFlowTheme theme) {
-    return theme.titleLarge.copyWith(
+    return theme.titleLarge.override(
+      fontFamily: _displayFont,
       fontWeight: FontWeight.w900,
       letterSpacing: 0.2,
     );
   }
 
   TextStyle _appSubtitleStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+        fontFamily: _bodyFont,
+        color: _inkMute,
       );
 
   TextStyle _sectionTitleStyle(FlutterFlowTheme t) => t.titleMedium.override(
-        fontFamily: t.titleMediumFamily,
+        fontFamily: _displayFont,
       );
 
   TextStyle _metaStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: t.bodySmallFamily,
-        color: t.secondaryText,
+        fontFamily: _bodyFont,
+        color: _inkMute,
       );
 
   TextStyle _cardTitleStyle(FlutterFlowTheme t) => t.bodyMedium.override(
-        fontFamily: t.bodyMediumFamily,
+        fontFamily: _bodyFont,
       );
 
   TextStyle _pillTextStyle(FlutterFlowTheme t) => t.labelSmall.override(
-        fontFamily: t.labelSmallFamily,
+        fontFamily: _bodyFont,
         fontWeight: FontWeight.w800,
         letterSpacing: 0.2,
       );
@@ -194,10 +219,10 @@ class _SnagListHomePageViewState extends State<SnagListHomePageView> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: theme.primaryBackground,
+        color: _paper,
         borderRadius: BorderRadius.circular(_radius),
         border: Border.all(
-          color: theme.alternate.withOpacity(0.9),
+          color: _hairline.withOpacity(0.9),
           width: 1,
         ),
         boxShadow: [
@@ -337,14 +362,14 @@ class _SnagListHomePageViewState extends State<SnagListHomePageView> {
   Color _statusColor(FlutterFlowTheme theme, Color accent, String status) {
     switch (status) {
       case 'closed':
-        return theme.success;
+        return _live;
       case 'in_progress':
         return accent;
       case 'review':
-        return theme.tertiary;
+        return _inkMute;
       case 'open':
       default:
-        return theme.error;
+        return _coral;
     }
   }
 
@@ -420,7 +445,7 @@ class _SnagListHomePageViewState extends State<SnagListHomePageView> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(_radius),
             child: Container(
-              color: theme.primaryBackground,
+              color: _paper,
               child: Row(
                 children: [
                   Container(width: 4, color: accent),
@@ -433,7 +458,7 @@ class _SnagListHomePageViewState extends State<SnagListHomePageView> {
                       borderRadius: BorderRadius.circular(_radius),
                     ),
                     child: const Icon(Icons.checklist_rounded,
-                        color: Colors.white, size: 22),
+                        color: _paper, size: 22),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -455,7 +480,7 @@ class _SnagListHomePageViewState extends State<SnagListHomePageView> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: _cardTitleStyle(theme).copyWith(
-                              color: theme.primaryText,
+                              color: _ink,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
@@ -463,7 +488,7 @@ class _SnagListHomePageViewState extends State<SnagListHomePageView> {
                           Row(
                             children: [
                               Icon(Icons.location_on_outlined,
-                                  size: 16, color: theme.secondaryText),
+                                  size: 16, color: _inkMute),
                               const SizedBox(width: 6),
                               Expanded(
                                 child: Text(
@@ -502,7 +527,7 @@ class _SnagListHomePageViewState extends State<SnagListHomePageView> {
                       ),
                     ),
                   ),
-                  Icon(Icons.chevron_right_rounded, color: theme.secondaryText),
+                  Icon(Icons.chevron_right_rounded, color: _inkMute),
                   const SizedBox(width: 10),
                 ],
               ),
@@ -519,10 +544,10 @@ class _SnagListHomePageViewState extends State<SnagListHomePageView> {
 
     // If no project, show muted pills
     if (stream == null) {
-      final c = theme.secondaryText;
+      final c = _inkMute;
       return _countPill(
         theme: theme,
-        bg: theme.alternate.withOpacity(0.35),
+        bg: _hairline.withOpacity(0.35),
         fg: c,
         icon: _statusIcon(statusKey),
         label: '${_statusLabel(statusKey)} 0',
@@ -587,8 +612,7 @@ class _SnagListHomePageViewState extends State<SnagListHomePageView> {
                 color: accent.withOpacity(0.18),
                 borderRadius: BorderRadius.circular(_radius),
               ),
-              child: Icon(Icons.folder_open_rounded,
-                  color: theme.secondaryText, size: 22),
+              child: Icon(Icons.folder_open_rounded, color: _inkMute, size: 22),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -599,7 +623,7 @@ class _SnagListHomePageViewState extends State<SnagListHomePageView> {
                     'No project selected',
                     style: _cardTitleStyle(theme).copyWith(
                       fontWeight: FontWeight.w900,
-                      color: theme.primaryText,
+                      color: _ink,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -667,7 +691,7 @@ class _SnagListHomePageViewState extends State<SnagListHomePageView> {
     return Container(
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
-      color: theme.primaryBackground,
+      color: _paper,
       child: SafeArea(
         top: true,
         bottom: true,
@@ -690,16 +714,16 @@ class _SnagListHomePageViewState extends State<SnagListHomePageView> {
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: theme.primaryBackground,
+                          color: _paper,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: theme.alternate.withOpacity(0.9),
+                            color: _hairline.withOpacity(0.9),
                           ),
                         ),
                         child: Icon(
                           Icons.arrow_back_rounded,
                           size: 22,
-                          color: theme.primaryText,
+                          color: _ink,
                         ),
                       ),
                     ),
@@ -713,7 +737,7 @@ class _SnagListHomePageViewState extends State<SnagListHomePageView> {
                       ),
                       child: const Icon(
                         Icons.checklist_rounded,
-                        color: Colors.white,
+                        color: _paper,
                         size: 22,
                       ),
                     ),
@@ -725,7 +749,7 @@ class _SnagListHomePageViewState extends State<SnagListHomePageView> {
                           Text(
                             'Snag List',
                             style: _appTitleStyle(theme).copyWith(
-                              color: theme.primaryText,
+                              color: _ink,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -745,7 +769,7 @@ class _SnagListHomePageViewState extends State<SnagListHomePageView> {
                 Text(
                   'Projects added',
                   style: _sectionTitleStyle(theme).copyWith(
-                    color: theme.primaryText,
+                    color: _ink,
                   ),
                 ),
                 const SizedBox(height: 10),
