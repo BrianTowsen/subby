@@ -466,8 +466,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                   _accentMarker(_projBg),
                   const SizedBox(width: 10),
                   Expanded(
-                      child: Text('Home Building Projects',
-                          style: _stepHeadlineStyle)),
+                      child: Text('Home Projects', style: _stepHeadlineStyle)),
                 ],
               ),
               const SizedBox(height: _titleToDesc),
@@ -694,7 +693,6 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           decoration: BoxDecoration(
             color: _projTint,
             borderRadius: BorderRadius.circular(_radius),
-            border: Border.all(color: _projBg, width: 1.4),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -795,8 +793,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               _accentMarker(_yellow),
               const SizedBox(width: 10),
               Expanded(
-                  child: Text('Home Building Directory',
-                      style: _stepHeadlineStyle)),
+                  child: Text('Building Directory', style: _stepHeadlineStyle)),
             ],
           ),
           const SizedBox(height: _titleToDesc),

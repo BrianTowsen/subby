@@ -88,8 +88,8 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
   // gold never sit adjacent here — the collision risk is resolved by hierarchy.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF2B3443);
-  static const Color _inkSoft = Color(0xFF2B3443);
+  static const Color _ink = Color(0xFF14243F);
+  static const Color _inkSoft = Color(0xFF14243F);
   static const Color _inkMute = Color(0xFF6B7280);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFE3E4E8);
@@ -97,8 +97,8 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
   static const Color _hairline = Color(0xFFE3E4E8);
   static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
   // Brand accent — YELLOW. Always ink foreground, never white.
-  static const Color _spark = Color(0xFFF1BC16); // primary CTA / ranked accent
-  static const Color _sparkInk = Color(0xFF2B3443);
+  static const Color _spark = Color(0xFFFFE74C); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFF14243F);
   static const Color _calm = Color(0xFFB8910F);
   static const Color _calmInk = Color(0xFFFFFFFF);
   // Status
