@@ -98,8 +98,8 @@ class _HomePageViewState extends State<HomePageView> {
   // shared theme. Grep `SUBBY PALETTE (LOCK)` across widgets to confirm sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF2B3443); // headings, body, dark fills
-  static const Color _inkSoft = Color(0xFF2B3443);
+  static const Color _ink = Color(0xFF14243F); // headings, body, dark fills
+  static const Color _inkSoft = Color(0xFF14243F);
   static const Color _inkMute = Color(0xFF6B7280); // labels, captions, 2nd text
   static const Color _paper = Color(0xFFFFFFFF); // page bg, card fills
   static const Color _surface = Color(0xFFE3E4E8); // cards, surface fills
@@ -107,9 +107,9 @@ class _HomePageViewState extends State<HomePageView> {
   static const Color _hairline = Color(0xFFE3E4E8); // standard dividers
   static const Color _hairlineOnSurface = Color(0xFFD0D2D8); // on surface cards
   // Brand accent — YELLOW (was lime). Yellow ALWAYS takes ink foreground.
-  static const Color _spark = Color(0xFFF1BC16); // primary CTA / ranked accent
+  static const Color _spark = Color(0xFFFFE74C); // primary CTA / ranked accent
   static const Color _sparkInk =
-      Color(0xFF2B3443); // ink-on-yellow — never white
+      Color(0xFF14243F); // ink-on-yellow — never white
   static const Color _calm = Color(0xFFB8910F); // darker yellow — info accent
   static const Color _calmInk = Color(0xFFFFFFFF);
   // Status / achievement
