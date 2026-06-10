@@ -675,155 +675,168 @@ class _HomePageViewState extends State<HomePageView> {
     return SizedBox(
       width: width,
       height: height,
-      child: SafeArea(
-        child: Container(
-          color: _paper,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ---------- TOP BAR ----------
-              Padding(
-                padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 12),
-                child: Row(
-                  children: [
-                    // ✅ Back (to DashboardPage)
-                    InkWell(
-                      onTap: _goBackToDashboard,
-                      borderRadius: BorderRadius.circular(_rMed),
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: _surface,
-                          borderRadius: BorderRadius.circular(_rMed),
-                        ),
-                        child: const Icon(
-                          Icons.arrow_back_rounded,
-                          size: 20,
-                          color: _ink,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(width: 12),
-
-                    // ✅ Mono square mark (replaces construction-icon-in-circle)
-                    Container(
-                      width: 20,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        color: _ink,
-                        borderRadius: BorderRadius.circular(_rSmall),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Subby', style: _appTitleStyle),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Home building directory',
-                          style: _appSubtitleStyle,
-                        ),
-                      ],
-                    ),
-
-                    const Spacer(),
-
-                    // ✅ REMOVED: Add Listing / Edit Listing button in header
-                  ],
+      child: Stack(
+        children: [
+          SafeArea(
+            bottom: false,
+            child: Container(
+              color: _paper,
+              child: SingleChildScrollView(
+                padding: EdgeInsets.only(
+                  bottom: _navReserve + MediaQuery.of(context).padding.bottom,
                 ),
-              ),
-
-              // ---------- LOCATION + SEARCH BLOCK ----------
-              _buildPrimaryLocationSearchBar(),
-
-              const SizedBox(height: 24),
-
-              // ---------- TITLE (eyebrow + display title) ----------
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: _hPad),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('DIRECTORY', style: _eyebrowStyle),
-                    const SizedBox(height: 10),
-                    Text.rich(
-                      TextSpan(
-                        text: 'Welcome, how can we help you',
-                        style: _welcomeStyle,
-                        children: const [
-                          // sparing yellow — title period
-                          TextSpan(
-                            text: '.',
-                            style: TextStyle(color: _spark),
+                    // ---------- TOP BAR ----------
+                    Padding(
+                      padding:
+                          const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 12),
+                      child: Row(
+                        children: [
+                          // ✅ Back (to DashboardPage)
+                          InkWell(
+                            onTap: _goBackToDashboard,
+                            borderRadius: BorderRadius.circular(_rMed),
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: _surface,
+                                borderRadius: BorderRadius.circular(_rMed),
+                              ),
+                              child: const Icon(
+                                Icons.arrow_back_rounded,
+                                size: 20,
+                                color: _ink,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(width: 12),
+
+                          // ✅ Mono square mark (replaces construction-icon-in-circle)
+                          Container(
+                            width: 20,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              color: _ink,
+                              borderRadius: BorderRadius.circular(_rSmall),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Subby', style: _appTitleStyle),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Home building directory',
+                                style: _appSubtitleStyle,
+                              ),
+                            ],
+                          ),
+
+                          const Spacer(),
+
+                          // ✅ REMOVED: Add Listing / Edit Listing button in header
+                        ],
+                      ),
+                    ),
+
+                    // ---------- LOCATION + SEARCH BLOCK ----------
+                    _buildPrimaryLocationSearchBar(),
+
+                    const SizedBox(height: 24),
+
+                    // ---------- TITLE (eyebrow + display title) ----------
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: _hPad),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('DIRECTORY', style: _eyebrowStyle),
+                          const SizedBox(height: 10),
+                          Text.rich(
+                            TextSpan(
+                              text: 'Welcome, how can we help you',
+                              style: _welcomeStyle,
+                              children: const [
+                                // sparing yellow — title period
+                                TextSpan(
+                                  text: '.',
+                                  style: TextStyle(color: _spark),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
                     ),
+
+                    const SizedBox(height: _sectionGap),
+
+                    // ---------- MAIN TABS ----------
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: _hPad),
+                      child: _buildMainTabs(),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // ---------- SUB-CATEGORY ----------
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 260),
+                      switchInCurve: Curves.easeOut,
+                      switchOutCurve: Curves.easeIn,
+                      transitionBuilder: (child, animation) {
+                        final bool slideLeft =
+                            _selectedMainTabIndex > _previousTabIndex;
+                        final offsetAnimation = Tween<Offset>(
+                          begin: slideLeft
+                              ? const Offset(1.0, 0.0)
+                              : const Offset(-1.0, 0.0),
+                          end: Offset.zero,
+                        ).animate(animation);
+
+                        return SlideTransition(
+                          position: offsetAnimation,
+                          child:
+                              FadeTransition(opacity: animation, child: child),
+                        );
+                      },
+                      child: KeyedSubtree(
+                        key: ValueKey<int>(_selectedMainTabIndex),
+                        child: _buildSubcategoryGrid(),
+                      ),
+                    ),
                   ],
                 ),
               ),
-
-              const SizedBox(height: _sectionGap),
-
-              // ---------- MAIN TABS ----------
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: _hPad),
-                child: _buildMainTabs(),
-              ),
-
-              const SizedBox(height: 12),
-
-              // ---------- SUB-CATEGORY ----------
-              Expanded(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 260),
-                  switchInCurve: Curves.easeOut,
-                  switchOutCurve: Curves.easeIn,
-                  transitionBuilder: (child, animation) {
-                    final bool slideLeft =
-                        _selectedMainTabIndex > _previousTabIndex;
-                    final offsetAnimation = Tween<Offset>(
-                      begin: slideLeft
-                          ? const Offset(1.0, 0.0)
-                          : const Offset(-1.0, 0.0),
-                      end: Offset.zero,
-                    ).animate(animation);
-
-                    return SlideTransition(
-                      position: offsetAnimation,
-                      child: FadeTransition(opacity: animation, child: child),
-                    );
-                  },
-                  child: KeyedSubtree(
-                    key: ValueKey<int>(_selectedMainTabIndex),
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        return _buildSubcategoryTwoRowGrid(
-                            constraints.maxHeight);
-                      },
-                    ),
-                  ),
-                ),
-              ),
-              // Reserve room for the SubbyBottomNav that overlays this page in
-              // the Stack: bar content height + the Android system inset
-              // (Samsung gesture bar). Shrinking this Column child shrinks the
-              // Expanded above, so the grid's maxHeight adapts — no overflow.
-              SizedBox(
-                height: _navReserve + MediaQuery.of(context).padding.bottom,
-              ),
-            ],
+            ),
           ),
-        ),
+          // Left-edge swipe-back (iOS-style): swipe right from the edge to go
+          // back, mirroring the back button.
+          Positioned(
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: 24,
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onHorizontalDragEnd: (details) {
+                if ((details.primaryVelocity ?? 0) > 250) {
+                  _goBackToDashboard();
+                }
+              },
+              child: const SizedBox.expand(),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // =========================================================
-  // LOCATION + SEARCH BLOCK (white, surface fields, hairline search)
   // =========================================================
   Widget _buildPrimaryLocationSearchBar() {
     final regions = _regionsByProvince[_selectedProvince] ?? const <String>[];
@@ -1047,14 +1060,10 @@ class _HomePageViewState extends State<HomePageView> {
   // =========================================================
   // SUB-CATEGORY GRID
   // =========================================================
-  Widget _buildSubcategoryTwoRowGrid(double maxHeight) {
+  Widget _buildSubcategoryGrid() {
     final category = _selectedCategoryLabel;
     final items = _subcategories[category] ?? const <String>[];
 
-    // ✅ give the 2-row grid enough vertical room so labels never overflow
-    final double availableForGrid = (maxHeight - 64).clamp(220, 280);
-
-    const double tileWidth = 96;
     const double hGap = 10;
     const double vGap = 10;
 
@@ -1139,21 +1148,18 @@ class _HomePageViewState extends State<HomePageView> {
           ),
         ),
         const SizedBox(height: 12),
-        SizedBox(
-          height: availableForGrid,
-          child: GridView.builder(
-            clipBehavior: Clip.none,
-            padding: const EdgeInsets.fromLTRB(_hPad, 4, _hPad, 4),
-            scrollDirection: Axis.horizontal,
-            itemCount: items.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: hGap,
-              crossAxisSpacing: vGap,
-              mainAxisExtent: tileWidth,
-            ),
-            itemBuilder: (context, index) => tile(items[index]),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(_hPad, 4, _hPad, 4),
+          itemCount: items.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            mainAxisSpacing: vGap,
+            crossAxisSpacing: hGap,
+            childAspectRatio: 0.82,
           ),
+          itemBuilder: (context, index) => tile(items[index]),
         ),
         const SizedBox(height: 16),
       ],

@@ -11,14 +11,14 @@ import 'package:flutter/material.dart';
 // ======================= SubbyBottomNav (FULL FILE) =======================
 //
 // App-shell bottom navigation. The active tab is shown as a pill in that area's
-// accent (Home = ink, Explore = saffron, Saved = orange, More = steel) with the
+// accent (active tab = navy pill, white icon) with the
 // icon sitting ON the pill in the readable foreground. Inactive tabs are muted.
 //
 // PARAMETERS (match the FlutterFlow definition — nothing to add):
 //   * width, height   - the standard required pair (height is accepted but the
 //                       bar sizes itself; pass anything).
 //   * currentIndex    - which tab is active on THIS page:
-//                       0 Home . 1 Explore . 2 Saved . 3 More
+//                       0 Home . 1 Explore . 2 Saved
 //
 // ROUTES are app-global, so they're constants here (not per-page params). Edit
 // the four _route* values below to match your FlutterFlow page names.
@@ -33,7 +33,7 @@ class SubbyBottomNav extends StatefulWidget {
     super.key,
     this.width,
     this.height,
-    this.currentIndex, // 0 Home . 1 Explore . 2 Saved . 3 More
+    this.currentIndex, // 0 Home . 1 Explore . 2 Saved
   });
 
   final double? width;
@@ -46,13 +46,10 @@ class SubbyBottomNav extends StatefulWidget {
 
 class _SubbyBottomNavState extends State<SubbyBottomNav> {
   // PALETTE (matches the app)
-  static const Color _ink = Color(0xFF2B3443);
+  static const Color _ink = Color(0xFF14243F);
   static const Color _inkMute = Color(0xFF6B7280);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _hairline = Color(0xFFE3E4E8);
-  static const Color _orange = Color(0xFFFF7A00);
-  static const Color _saffron = Color(0xFFF1BC16);
-  static const Color _steel = Color(0xFF9EA3B0);
 
   static const String _bodyFont = 'Inter';
 
@@ -60,11 +57,10 @@ class _SubbyBottomNavState extends State<SubbyBottomNav> {
   static const String _routeHome = 'homePage';
   static const String _routeExplore = 'explorePage';
   static const String _routeSaved = 'savedPage';
-  static const String _routeMore = 'morePage';
 
   @override
   Widget build(BuildContext context) {
-    final sel = (widget.currentIndex ?? 0).clamp(0, 3);
+    final sel = (widget.currentIndex ?? 0).clamp(0, 2);
 
     return Container(
       width: widget.width ?? double.infinity,
@@ -103,8 +99,8 @@ class _SubbyBottomNavState extends State<SubbyBottomNav> {
                   active: sel == 1,
                   label: 'Explore',
                   icon: Icons.explore_rounded,
-                  accent: _saffron,
-                  onAccent: _ink,
+                  accent: _ink,
+                  onAccent: _paper,
                   route: _routeExplore,
                 ),
               ),
@@ -113,19 +109,9 @@ class _SubbyBottomNavState extends State<SubbyBottomNav> {
                   active: sel == 2,
                   label: 'Saved',
                   icon: Icons.bookmark_rounded,
-                  accent: _orange,
-                  onAccent: _ink,
+                  accent: _ink,
+                  onAccent: _paper,
                   route: _routeSaved,
-                ),
-              ),
-              Expanded(
-                child: _tab(
-                  active: sel == 3,
-                  label: 'More',
-                  icon: Icons.menu_rounded,
-                  accent: _steel,
-                  onAccent: _ink,
-                  route: _routeMore,
                 ),
               ),
             ],
