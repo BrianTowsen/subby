@@ -96,7 +96,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF2B3443); // Jet Black — softer blue-black
+  static const Color _ink =
+      Color(0xFF0C1B33); // deep navy ink — text, chrome, on-yellow content
   static const Color _inkMute = Color(0xFF6B7280);
   static const Color _paper = Color(0xFFFFFFFF); // White
   static const Color _surface = Color(0xFFE3E4E8);
@@ -104,30 +105,28 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   static const Color _steel =
       Color(0xFF9EA3B0); // Cool Steel — profile / account / "other"
 
-  // ── ACCENT-BACKGROUND CARD SYSTEM ──────────────────────────────────
-  // Both section cards are SOLID accent blocks with INK content. One rule:
-  // accent fill, ink text, ink chip + white icon, ink pill + white text.
-  // On a saturated fill, faded text loses contrast — so on-accent text is
-  // FULL ink, with hierarchy carried by size/weight, not opacity.
-  static const Color _onAccentChip = _ink; // icon chip fill (both cards)
-  static const Color _onAccentSub =
-      _ink; // secondary text — full ink for contrast
+  // ── TWO-SECTION CARD SYSTEM ────────────────────────────────────────
+  // Both cards live in the ink family so the darks never fight.
+  //  • PROJECTS = dark "ink-lifted" block, WHITE content
+  //    (white text, white-translucent chip + white icon, white-translucent
+  //     status pill + white text).
+  //  • DIRECTORY = yellow block, INK content
+  //    (ink text, ink chip + white icon, ink pill + white text).
 
-  // Accent — DIRECTORY = YELLOW (Saffron). Ink foreground only, never white.
-  static const Color _spark = Color(0xFFF1BC16); // saffron card background
-  static const Color _sparkInk = Color(0xFF2B3443);
+  // Accent — MY PROJECTS = INK-LIFTED (dark, white content)
+  static const Color _projBg = Color(0xFF1B2A44); // dark card background
+  static final Color _onDarkChip =
+      Colors.white.withOpacity(0.16); // chip fill on dark card
+  static final Color _onDarkSub =
+      Colors.white.withOpacity(0.82); // secondary text on dark card
+  static final Color _onDarkPill =
+      Colors.white.withOpacity(0.16); // status pill on dark card
+  static const Color _projTint = Color(0xFFE8EAEF); // pale navy — add-card fill
 
-  // Accent — MY PROJECTS = ORANGE.
-  // Card bg is the BRIGHT orange so ink reads with margin; Blazing Flame
-  // (F15025) is kept as the saturated accent on shapes that carry no text.
-  static const Color _orangeBg =
-      Color(0xFFFF7A00); // bright orange — card bg (ink reads on it)
-  static const Color _orange =
-      Color(0xFFF15025); // Blazing Flame — marker / add-card accent
-  static const Color _orangeDark =
-      Color(0xFFC2410C); // deep orange — (legacy, unused)
-  static const Color _orangeLight =
-      Color(0xFFFFE2C2); // light orange — add-card tint
+  // Accent — DIRECTORY = YELLOW (ink content)
+  static const Color _yellow = Color(0xFFFFE74C); // yellow card background
+  static const Color _onYellowChip = _ink; // ink chip + white icon
+  static const Color _onYellowSub = _ink; // secondary text on yellow
 
   // Geometry
   static const double _rSmall = 6;
@@ -468,7 +467,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             children: [
               Row(
                 children: [
-                  _accentMarker(_orange),
+                  _accentMarker(_projBg),
                   const SizedBox(width: 10),
                   Expanded(
                       child: Text('Home Building Projects',
@@ -585,7 +584,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: _ink,
+        color: _onDarkPill,
         borderRadius: BorderRadius.circular(_rPill),
       ),
       child: Text(
@@ -616,7 +615,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         width: _cardW,
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          color: _orangeBg,
+          color: _projBg,
           borderRadius: BorderRadius.circular(_radius),
         ),
         child: Column(
@@ -634,7 +633,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: _onAccentChip,
+                            color: _onDarkChip,
                             borderRadius: BorderRadius.circular(_rMed),
                           ),
                           child: const Icon(
@@ -652,14 +651,14 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                       name.isEmpty ? 'Untitled project' : name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: _tileTitleStyle.copyWith(color: _ink),
+                      style: _tileTitleStyle.copyWith(color: _paper),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       loc.isEmpty ? 'No location set' : loc,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: _tileSubtitleStyle.copyWith(color: _onAccentSub),
+                      style: _tileSubtitleStyle.copyWith(color: _onDarkSub),
                     ),
                     const Spacer(),
                     Row(
@@ -671,13 +670,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                                 : 'Updated ${_fmtDate(updatedAt)}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: _metaStyle.copyWith(color: _onAccentSub),
+                            style: _metaStyle.copyWith(color: _onDarkSub),
                           ),
                         ),
                         const Icon(
                           Icons.chevron_right_rounded,
                           size: 20,
-                          color: _ink,
+                          color: _paper,
                         ),
                       ],
                     ),
@@ -697,9 +696,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         child: Container(
           width: _addCardW,
           decoration: BoxDecoration(
-            color: _orangeLight.withOpacity(0.55),
+            color: _projTint,
             borderRadius: BorderRadius.circular(_radius),
-            border: Border.all(color: _orange, width: 1.4),
+            border: Border.all(color: _projBg, width: 1.4),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -708,7 +707,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: _orange,
+                  color: _projBg,
                   borderRadius: BorderRadius.circular(_rMed),
                 ),
                 child: const Icon(Icons.add_rounded, size: 24, color: _paper),
@@ -720,7 +719,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                   fontFamily: _displayFont,
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: _orangeDark,
+                  color: _projBg,
                 ),
               ),
               const SizedBox(height: 2),
@@ -729,7 +728,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                 style: TextStyle(
                   fontFamily: _bodyFont,
                   fontSize: 11,
-                  color: _orangeDark.withOpacity(0.8),
+                  color: _projBg.withOpacity(0.8),
                 ),
               ),
             ],
@@ -743,9 +742,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         child: Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: _orangeLight.withOpacity(0.55),
+            color: _projTint,
             borderRadius: BorderRadius.circular(_radius),
-            border: Border.all(color: _orange, width: 1.4),
+            border: Border.all(color: _projBg, width: 1.4),
           ),
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -755,7 +754,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: _orange,
+                    color: _projBg,
                     borderRadius: BorderRadius.circular(_rMed),
                   ),
                   child: const Icon(Icons.add_rounded, size: 26, color: _paper),
@@ -767,19 +766,19 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                     children: [
                       Text(
                         'Create your first project',
-                        style: _tileTitleStyle.copyWith(color: _orangeDark),
+                        style: _tileTitleStyle.copyWith(color: _projBg),
                       ),
                       const SizedBox(height: 3),
                       Text(
                         'Store plans, photos, notes, timeline, budget & key contacts.',
                         style: _tileSubtitleStyle.copyWith(
-                          color: _orangeDark.withOpacity(0.85),
+                          color: _projBg.withOpacity(0.85),
                         ),
                       ),
                     ],
                   ),
                 ),
-                const Icon(Icons.chevron_right_rounded, color: _orangeDark),
+                const Icon(Icons.chevron_right_rounded, color: _projBg),
               ],
             ),
           ),
@@ -797,7 +796,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         children: [
           Row(
             children: [
-              _accentMarker(_spark),
+              _accentMarker(_yellow),
               const SizedBox(width: 10),
               Expanded(
                   child: Text('Home Building Directory',
@@ -864,7 +863,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: _spark,
+        color: _yellow,
         borderRadius: BorderRadius.circular(_radius),
       ),
       child: Column(
@@ -878,12 +877,12 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                 padding: const EdgeInsets.fromLTRB(14, 12, 12, 10),
                 child: Row(
                   children: [
-                    // Ink chip + white icon — matches the project cards
+                    // Ink chip + white icon on the yellow card
                     Container(
                       width: emphasized ? 48 : 44,
                       height: emphasized ? 48 : 44,
                       decoration: BoxDecoration(
-                        color: _onAccentChip,
+                        color: _onYellowChip,
                         borderRadius: BorderRadius.circular(_rMed),
                       ),
                       child: const Icon(
@@ -906,7 +905,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                           Text(
                             'Compare options & manage your listing',
                             style: _tileSubtitleStyle.copyWith(
-                                color: _onAccentSub),
+                                color: _onYellowSub),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ],
