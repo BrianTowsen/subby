@@ -36,7 +36,7 @@ class ListingDetailPageView extends StatefulWidget {
 }
 
 class _ListingDetailPageViewState extends State<ListingDetailPageView> {
-  static const double _hPad = 24;
+  static const double _hPad = _pageHPad;
 
   // Bottom fixed CTA
   static const double _bottomCtaContainerHeight = 86;
@@ -89,24 +89,19 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
   //
   // Neutrals
   static const Color _ink = Color(0xFF14243F);
-  static const Color _inkSoft = Color(0xFF14243F);
   static const Color _inkMute = Color(0xFF6B7280);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFE3E4E8);
-  static const Color _surface2 = Color(0xFFE3E4E8);
   static const Color _hairline = Color(0xFFE3E4E8);
   static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
   // Brand accent — YELLOW. Always ink foreground, never white.
   static const Color _spark = Color(0xFFFFE74C); // primary CTA / ranked accent
   static const Color _sparkInk = Color(0xFF14243F);
-  static const Color _calm = Color(0xFFB8910F);
-  static const Color _calmInk = Color(0xFFFFFFFF);
   // Status
   static const Color _live =
       Color(0xFFFFB000); // gold — live / open-now / warning
   static const Color _liveInk =
       Color(0xFF7A5300); // gold-on-tint text (legible)
-  static const Color _steel = Color(0xFF9EA3B0);
   static const Color _coral = Color(0xFFC8102E); // legacy red — closed/error
   // Geometry
   static const double _rSmall = 6;
@@ -159,21 +154,21 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
   TextStyle _labelLarge(FlutterFlowTheme t, {Color? color}) => TextStyle(
         fontFamily: _bodyFont,
         fontSize: 14,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w500,
         color: color ?? _ink,
       );
 
   TextStyle _labelMedium(FlutterFlowTheme t, {Color? color}) => TextStyle(
         fontFamily: _bodyFont,
         fontSize: 13,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w500,
         color: color ?? _ink,
       );
 
   TextStyle get _ratingNumStyle => const TextStyle(
         fontFamily: _monoFont,
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
+        fontSize: 11,
+        fontWeight: FontWeight.w500,
         color: _ink,
         fontFeatures: [FontFeature.tabularFigures()],
       );

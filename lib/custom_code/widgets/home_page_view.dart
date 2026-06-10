@@ -99,23 +99,18 @@ class _HomePageViewState extends State<HomePageView> {
   //
   // Neutrals
   static const Color _ink = Color(0xFF14243F); // headings, body, dark fills
-  static const Color _inkSoft = Color(0xFF14243F);
   static const Color _inkMute = Color(0xFF6B7280); // labels, captions, 2nd text
   static const Color _paper = Color(0xFFFFFFFF); // page bg, card fills
   static const Color _surface = Color(0xFFE3E4E8); // cards, surface fills
-  static const Color _surface2 = Color(0xFFE3E4E8);
   static const Color _hairline = Color(0xFFE3E4E8); // standard dividers
   static const Color _hairlineOnSurface = Color(0xFFD0D2D8); // on surface cards
   // Brand accent — YELLOW (was lime). Yellow ALWAYS takes ink foreground.
   static const Color _spark = Color(0xFFFFE74C); // primary CTA / ranked accent
   static const Color _sparkInk =
       Color(0xFF14243F); // ink-on-yellow — never white
-  static const Color _calm = Color(0xFFB8910F); // darker yellow — info accent
-  static const Color _calmInk = Color(0xFFFFFFFF);
   // Status / achievement
   static const Color _live =
       Color(0xFFFFB000); // gold — live / open-now / warning
-  static const Color _steel = Color(0xFF9EA3B0);
   static const Color _coral = Color(0xFFC8102E);
   // Geometry & layout
   static const double _rSmall = 6;
@@ -163,16 +158,16 @@ class _HomePageViewState extends State<HomePageView> {
   // =========================================================
   TextStyle get _appTitleStyle => const TextStyle(
         fontFamily: _displayFont,
-        fontSize: 18,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.3,
+        fontSize: 20,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.4,
         height: 1.0,
         color: _ink,
       );
 
   TextStyle get _appSubtitleStyle => const TextStyle(
         fontFamily: _bodyFont,
-        fontSize: 11,
+        fontSize: 12,
         fontWeight: FontWeight.w400,
         color: _inkMute,
       );
@@ -180,16 +175,16 @@ class _HomePageViewState extends State<HomePageView> {
   TextStyle get _eyebrowStyle => const TextStyle(
         fontFamily: _bodyFont,
         fontSize: 11,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
         letterSpacing: 1.0,
         color: _inkMute,
       );
 
   TextStyle get _welcomeStyle => const TextStyle(
         fontFamily: _displayFont,
-        fontSize: 30,
+        fontSize: 20,
         fontWeight: FontWeight.w800,
-        letterSpacing: -0.6,
+        letterSpacing: -0.4,
         height: 1.05,
         color: _ink,
       );
@@ -197,21 +192,21 @@ class _HomePageViewState extends State<HomePageView> {
   TextStyle _tabTextStyle({required bool selected}) => TextStyle(
         fontFamily: _bodyFont,
         fontSize: 13,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w500,
         color: selected ? _paper : _inkMute,
       );
 
   TextStyle get _dropdownTextStyle => const TextStyle(
         fontFamily: _bodyFont,
         fontSize: 14,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
         color: _ink,
       );
 
   TextStyle get _dropdownLabelStyle => const TextStyle(
         fontFamily: _bodyFont,
-        fontSize: 10,
-        fontWeight: FontWeight.w600,
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
         letterSpacing: 0.6,
         color: _inkMute,
       );
@@ -231,22 +226,23 @@ class _HomePageViewState extends State<HomePageView> {
   TextStyle get _sectionTitleStyle => const TextStyle(
         fontFamily: _displayFont,
         fontSize: 20,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.3,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.4,
         color: _ink,
       );
 
   TextStyle get _sectionCountStyle => const TextStyle(
         fontFamily: _monoFont,
         fontSize: 11,
+        fontWeight: FontWeight.w500,
         color: _inkMute,
         fontFeatures: [FontFeature.tabularFigures()],
       );
 
   TextStyle get _gridTileLabelStyle => const TextStyle(
         fontFamily: _bodyFont,
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
         color: _ink,
       );
   // =========================================================
