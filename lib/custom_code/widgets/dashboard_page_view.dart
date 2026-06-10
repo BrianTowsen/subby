@@ -96,14 +96,12 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink =
-      Color(0xFF0C1B33); // deep navy ink — text, chrome, on-yellow content
+  static const Color _ink = Color(
+      0xFF14243F); // unified navy — text, chrome, projects card, on-yellow content
   static const Color _inkMute = Color(0xFF6B7280);
   static const Color _paper = Color(0xFFFFFFFF); // White
   static const Color _surface = Color(0xFFE3E4E8);
   static const Color _hairline = Color(0xFFE3E4E8);
-  static const Color _steel =
-      Color(0xFF9EA3B0); // Cool Steel — profile / account / "other"
 
   // ── TWO-SECTION CARD SYSTEM ────────────────────────────────────────
   // Both cards live in the ink family so the darks never fight.
@@ -113,15 +111,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   //  • DIRECTORY = yellow block, INK content
   //    (ink text, ink chip + white icon, ink pill + white text).
 
-  // Accent — MY PROJECTS = INK-LIFTED (dark, white content)
-  static const Color _projBg = Color(0xFF1B2A44); // dark card background
-  static final Color _onDarkChip =
-      Colors.white.withOpacity(0.16); // chip fill on dark card
+  // Accent — MY PROJECTS = INK (dark card = ink, one unified dark)
+  static const Color _projBg =
+      _ink; // same as ink — never a second competing dark
   static final Color _onDarkSub =
       Colors.white.withOpacity(0.82); // secondary text on dark card
-  static final Color _onDarkPill =
-      Colors.white.withOpacity(0.16); // status pill on dark card
   static const Color _projTint = Color(0xFFE8EAEF); // pale navy — add-card fill
+  // (icon chip + status pill on the dark card use _yellow / _ink — see below)
 
   // Accent — DIRECTORY = YELLOW (ink content)
   static const Color _yellow = Color(0xFFFFE74C); // yellow card background
@@ -447,7 +443,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           height: 40,
           decoration: const BoxDecoration(
             shape: BoxShape.circle,
-            color: _steel,
+            color: _projTint,
           ),
           child: const Icon(Icons.person_rounded, size: 20, color: _ink),
         ),
@@ -584,7 +580,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: _onDarkPill,
+        color: _yellow,
         borderRadius: BorderRadius.circular(_rPill),
       ),
       child: Text(
@@ -593,7 +589,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           fontFamily: _bodyFont,
           fontSize: 11,
           fontWeight: FontWeight.w700,
-          color: _paper,
+          color: _ink,
         ),
       ),
     );
@@ -633,13 +629,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: _onDarkChip,
+                            color: _yellow,
                             borderRadius: BorderRadius.circular(_rMed),
                           ),
                           child: const Icon(
                             Icons.folder_rounded,
                             size: 20,
-                            color: _paper,
+                            color: _ink,
                           ),
                         ),
                         const Spacer(),
