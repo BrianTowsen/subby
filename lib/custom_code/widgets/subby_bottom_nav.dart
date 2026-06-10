@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import 'package:flutter/services.dart'; // HapticFeedback
+
 // ======================= SubbyBottomNav (FULL FILE) =======================
 //
 // App-shell bottom navigation. The active tab is shown as a pill in that area's
@@ -58,9 +60,42 @@ class _SubbyBottomNavState extends State<SubbyBottomNav> {
   static const String _routeExplore = 'explorePage';
   static const String _routeSaved = 'savedPage';
 
+  // Tab nav FADES in (drill-down pages keep their default slide). The 180ms
+  // select delay + light haptic mirror the app's other bottom bar.
+  static const Duration _selectDelay = Duration(milliseconds: 180);
+
+  late int _selectedIndex;
+  bool _navigating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = (widget.currentIndex ?? 0).clamp(0, 2);
+  }
+
+  @override
+  void didUpdateWidget(covariant SubbyBottomNav oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final next = (widget.currentIndex ?? 0).clamp(0, 2);
+    if (next != _selectedIndex && mounted) {
+      setState(() => _selectedIndex = next);
+    }
+  }
+
+  String _routeForIndex(int index) {
+    switch (index) {
+      case 1:
+        return _routeExplore;
+      case 2:
+        return _routeSaved;
+      default:
+        return _routeHome;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final sel = (widget.currentIndex ?? 0).clamp(0, 2);
+    final sel = _selectedIndex.clamp(0, 2);
 
     return Container(
       width: widget.width ?? double.infinity,
@@ -91,7 +126,7 @@ class _SubbyBottomNavState extends State<SubbyBottomNav> {
                   icon: Icons.home_rounded,
                   accent: _ink,
                   onAccent: _paper,
-                  route: _routeHome,
+                  index: 0,
                 ),
               ),
               Expanded(
@@ -101,7 +136,7 @@ class _SubbyBottomNavState extends State<SubbyBottomNav> {
                   icon: Icons.explore_rounded,
                   accent: _ink,
                   onAccent: _paper,
-                  route: _routeExplore,
+                  index: 1,
                 ),
               ),
               Expanded(
@@ -111,7 +146,7 @@ class _SubbyBottomNavState extends State<SubbyBottomNav> {
                   icon: Icons.bookmark_rounded,
                   accent: _ink,
                   onAccent: _paper,
-                  route: _routeSaved,
+                  index: 2,
                 ),
               ),
             ],
@@ -127,10 +162,10 @@ class _SubbyBottomNavState extends State<SubbyBottomNav> {
     required IconData icon,
     required Color accent,
     required Color onAccent,
-    required String route,
+    required int index,
   }) {
     return InkWell(
-      onTap: () => _navigate(route),
+      onTap: () => _go(index),
       borderRadius: BorderRadius.circular(16),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
@@ -171,21 +206,49 @@ class _SubbyBottomNavState extends State<SubbyBottomNav> {
     );
   }
 
-  void _navigate(String route) {
-    final target = route.trim();
-    if (target.isEmpty) return;
+  Future<void> _go(int index) async {
+    index = index.clamp(0, 2);
+    final cur = widget.currentIndex ?? 0;
+    // Re-tap of the current tab, or a tap while a switch is in flight, is a
+    // silent no-op.
+    if (_navigating || index == cur) return;
 
-    // Tab semantics: switch branch rather than stack pages. go_router's
-    // goNamed replaces the location; fall back to pushNamed if the name
-    // isn't registered for go.
+    // Tab switch = light tactile tick (fires before the select delay).
+    HapticFeedback.lightImpact();
+
+    setState(() {
+      _selectedIndex = index;
+      _navigating = true;
+    });
+
+    final route = _routeForIndex(index).trim();
+    if (route.isEmpty) {
+      setState(() => _navigating = false);
+      return;
+    }
+
     try {
-      context.goNamed(target);
-    } catch (_) {
-      try {
-        context.pushNamed(target);
-      } catch (_) {
-        // route name not found - update the _route* constants above
-      }
+      await Future.delayed(_selectDelay);
+      if (!mounted) return;
+
+      // FADE between tab pages. Drill-down pages (no bottom nav) keep their
+      // own default slide transition.
+      context.pushReplacementNamed(
+        route,
+        extra: {
+          kTransitionInfoKey: const TransitionInfo(
+            hasTransition: true,
+            transitionType: PageTransitionType.fade,
+            duration: Duration(milliseconds: 180),
+          ),
+        },
+      );
+    } catch (e) {
+      debugPrint('SubbyBottomNav navigation failed: $e');
+    } finally {
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) setState(() => _navigating = false);
+      });
     }
   }
 }
