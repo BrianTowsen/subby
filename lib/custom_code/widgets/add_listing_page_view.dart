@@ -41,20 +41,20 @@ class _AddListingPageViewState extends State<AddListingPageView> {
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF14243F);
-  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _ink = Color(0xFF16202E);
+  static const Color _inkMute = Color(0xFF5A6675);
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _surface = Color(0xFFE3E4E8);
-  static const Color _hairline = Color(0xFFE3E4E8);
-  static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
+  static const Color _surface = Color(0xFFEEF1F4);
+  static const Color _hairline = Color(0xFFEEF1F4);
+  static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
   // Brand accent — YELLOW. Always ink foreground, never white.
-  static const Color _spark = Color(0xFFFFE74C); // primary CTA / ranked accent
-  static const Color _sparkInk = Color(0xFF14243F);
+  static const Color _spark = Color(0xFFAEE03F); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFF16202E);
   // Status
   static const Color _live =
-      Color(0xFFFFB000); // gold — live / open-now / warning
+      Color(0xFFFF6A2B); // orange — live / open-now / warning
   static const Color _coral =
-      Color(0xFFC8102E); // legacy red — error/destructive
+      Color(0xFFE0531C); // deep orange — error/destructive
   // Geometry
   static const double _rSmall = 6;
   static const double _rMed = 8;

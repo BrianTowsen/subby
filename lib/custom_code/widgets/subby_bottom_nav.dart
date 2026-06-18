@@ -48,10 +48,10 @@ class SubbyBottomNav extends StatefulWidget {
 
 class _SubbyBottomNavState extends State<SubbyBottomNav> {
   // PALETTE (matches the app)
-  static const Color _ink = Color(0xFF14243F);
-  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _ink = Color(0xFF16202E);
+  static const Color _inkMute = Color(0xFF5A6675);
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _hairline = Color(0xFFE3E4E8);
+  static const Color _hairline = Color(0xFFEEF1F4);
 
   static const String _bodyFont = 'Inter';
 
@@ -166,7 +166,7 @@ class _SubbyBottomNavState extends State<SubbyBottomNav> {
   }) {
     return InkWell(
       onTap: () => _go(index),
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(12),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Column(

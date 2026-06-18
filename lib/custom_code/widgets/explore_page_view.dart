@@ -68,18 +68,18 @@ class _ExplorePageViewState extends State<ExplorePageView> {
   // to ink. Yellow (_spark) is reserved for the "Show results" CTA only.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF14243F);
-  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _ink = Color(0xFF16202E);
+  static const Color _inkMute = Color(0xFF5A6675);
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _surface = Color(0xFFE3E4E8);
-  static const Color _hairline = Color(0xFFE3E4E8);
-  static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
+  static const Color _surface = Color(0xFFEEF1F4);
+  static const Color _hairline = Color(0xFFEEF1F4);
+  static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
   // Brand accent — YELLOW. Always ink foreground, never white.
-  static const Color _spark = Color(0xFFFFE74C); // primary CTA / ranked accent
-  static const Color _sparkInk = Color(0xFF14243F);
+  static const Color _spark = Color(0xFFAEE03F); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFF16202E);
   // Status
-  static const Color _live = Color(0xFFFFB000); // gold — live / open-now
-  static const Color _coral = Color(0xFFC8102E); // legacy red — error
+  static const Color _live = Color(0xFFFF6A2B); // orange — live / open-now
+  static const Color _coral = Color(0xFFE0531C); // deep orange — error
   // Geometry
   static const double _rSmall = 6;
   static const double _rMed = 8;
@@ -1477,8 +1477,8 @@ class _ExplorePageViewState extends State<ExplorePageView> {
 class _ExploreFilterHeaderDelegate extends SliverPersistentHeaderDelegate {
   // This is a separate class, so it can't see the palette consts that live as
   // static members of _ExplorePageViewState — give it its own copies.
-  static const Color _ink = Color(0xFF14243F);
-  static const Color _surface = Color(0xFFE3E4E8);
+  static const Color _ink = Color(0xFF16202E);
+  static const Color _surface = Color(0xFFEEF1F4);
 
   _ExploreFilterHeaderDelegate({
     required this.rebuildToken,

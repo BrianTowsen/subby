@@ -31,19 +31,19 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF14243F);
-  static const Color _inkMute = Color(0xFF6B7280);
+  static const Color _ink = Color(0xFF16202E);
+  static const Color _inkMute = Color(0xFF5A6675);
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _surface = Color(0xFFE3E4E8);
-  static const Color _hairline = Color(0xFFE3E4E8);
-  static const Color _hairlineOnSurface = Color(0xFFD0D2D8);
+  static const Color _surface = Color(0xFFEEF1F4);
+  static const Color _hairline = Color(0xFFEEF1F4);
+  static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
   // Brand accent — YELLOW. Always ink foreground, never white.
-  static const Color _spark = Color(0xFFFFE74C); // primary CTA / ranked accent
-  static const Color _sparkInk = Color(0xFF14243F);
+  static const Color _spark = Color(0xFFAEE03F); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFF16202E);
   // Status
   static const Color _live =
-      Color(0xFFFFB000); // gold — live / paid / done / warning
-  static const Color _coral = Color(0xFFC8102E);
+      Color(0xFFFF6A2B); // orange — live / paid / done / warning
+  static const Color _coral = Color(0xFFE0531C);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -52,7 +52,7 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
 
   static const double _hPad = 24;
   static const double _vPad = 24;
-  static const double _radius = 16;
+  static const double _radius = 12;
   static const double _gap = 12;
 
   static const String _kActiveProjectPath = 'subby_active_project_path';
@@ -349,13 +349,13 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
                 children: [
                   InkWell(
                     onTap: _handleBack,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(12),
                     child: Container(
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
                         color: _paper,
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: _hairline.withOpacity(0.9),
                         ),
