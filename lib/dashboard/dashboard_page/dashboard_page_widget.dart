@@ -73,7 +73,7 @@ class _DashboardPageWidgetState extends State<DashboardPageWidget> {
                   width: MediaQuery.sizeOf(context).width * 1.0,
                   height: 74.0,
                   currentIndex: 0,
-                  projectsRouteName: 'addProjectPage',
+                  projectsRouteName: 'dashboardPage',
                   directoryRouteName: 'homePage',
                   accountRouteName: 'profilePage',
                 ),
