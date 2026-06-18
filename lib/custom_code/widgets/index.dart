@@ -32,3 +32,4 @@ export 'get_quotes_page_view.dart' show GetQuotesPageView;
 export 'to_do_list_home_page_view.dart' show ToDoListHomePageView;
 export 'to_do_list_page_view.dart' show ToDoListPageView;
 export 'document_upload_page_view.dart' show DocumentUploadPageView;
+export 'main_bottom_nav.dart' show MainBottomNav;

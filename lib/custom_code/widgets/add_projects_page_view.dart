@@ -27,22 +27,22 @@ class AddProjectsPageView extends StatefulWidget {
 
 class _AddProjectsPageViewState extends State<AddProjectsPageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  // less-is-more system · ported from Clutch Putt · lime → yellow.
-  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
+  // Synced with DashboardPageView v4. Inline = authoritative for this file.
+  // Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
   static const Color _ink = Color(0xFF16202E);
   static const Color _inkMute = Color(0xFF5A6675);
+  static const Color _faint = Color(0xFF93A0B0);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _hairline = Color(0xFFEEF1F4);
-  static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
-  // Brand accent — YELLOW. Always ink foreground, never white.
+  static const Color _hairline = Color(0xFFEEF1F2);
+  static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
+  // Brand accent — LIME. Always ink foreground, never white.
   static const Color _spark = Color(0xFFAEE03F); // primary CTA / ranked accent
   static const Color _sparkInk = Color(0xFF16202E);
   // Status
-  static const Color _live =
-      Color(0xFFFF6A2B); // orange — live / open-now / warning
+  static const Color _live = Color(0xFFFF6A2B); // orange — live / warning
   static const Color _coral = Color(0xFFE0531C);
   // Type
   static const String _displayFont = 'Inter Tight';
@@ -50,8 +50,8 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
   static const String _monoFont = 'Inter';
   // ────────────────────────────────────────────────────────────────────
 
-  static const double _hPad = 24;
-  static const double _vPad = 24;
+  static const double _hPad = 20;
+  static const double _vPad = 18;
   static const double _radius = 12;
   static const double _gap = 12;
 
@@ -82,45 +82,47 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
   }
 
   // =========================================================
-  // ✅ TYPOGRAPHY
+  // ✅ TYPOGRAPHY (synced with the dashboard)
   // =========================================================
   TextStyle _appTitleStyle(FlutterFlowTheme t) => t.titleLarge.override(
         fontFamily: _displayFont,
-        fontWeight: FontWeight.w900,
-        letterSpacing: 0.2,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.4,
+        color: _ink,
       );
 
   TextStyle _appSubtitleStyle(FlutterFlowTheme t) => t.bodySmall.override(
         fontFamily: _bodyFont,
-        color: _inkMute,
+        color: _faint,
       );
 
-  // ✅ lock to w900 (consistent across Subby)
   TextStyle _sectionTitleStyle(FlutterFlowTheme t) => t.titleMedium.override(
         fontFamily: _displayFont,
         color: _ink,
-        fontWeight: FontWeight.w900,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.2,
       );
 
   TextStyle _fieldLabelStyle(FlutterFlowTheme t) => t.bodySmall.override(
         fontFamily: _bodyFont,
         color: _inkMute,
         letterSpacing: 0.0,
-        fontWeight: FontWeight.w800,
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
       );
 
   TextStyle _fieldTextStyle(FlutterFlowTheme t) => t.bodyMedium.override(
         fontFamily: _bodyFont,
         color: _ink,
         letterSpacing: 0.0,
-        fontWeight: FontWeight.w800,
+        fontWeight: FontWeight.w600,
       );
 
   TextStyle _helperStyle(FlutterFlowTheme t) => t.bodySmall.override(
         fontFamily: _bodyFont,
-        color: _inkMute,
+        color: _faint,
         letterSpacing: 0.0,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w500,
       );
 
   // =========================================================
@@ -142,7 +144,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
     return _hairline.withOpacity(0.10);
   }
 
-  Color _fieldBorder(FlutterFlowTheme theme) => _hairline.withOpacity(0.95);
+  Color _fieldBorder(FlutterFlowTheme theme) => _hairlineOnSurface;
 
   // =========================================================
   // ✅ SUBBY SHELLS (NO SHADOWS)
@@ -158,7 +160,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
         color: _paper,
         borderRadius: BorderRadius.circular(_radius),
         border: Border.all(
-          color: _hairline.withOpacity(0.95),
+          color: _hairline,
           width: 1,
         ),
         // ✅ no shadows
@@ -170,6 +172,22 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
     );
   }
 
+  // Accent marker + section title (matches the dashboard).
+  Widget _sectionHeader(FlutterFlowTheme theme, String label) => Row(
+        children: [
+          Container(
+            width: 9,
+            height: 16,
+            decoration: BoxDecoration(
+              color: _ink,
+              borderRadius: BorderRadius.circular(5),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(label, style: _sectionTitleStyle(theme)),
+        ],
+      );
+
   InputDecoration _fieldDecoration(
     FlutterFlowTheme theme, {
     required String hint,
@@ -179,9 +197,9 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
       hintText: hint,
       hintStyle: theme.bodySmall.override(
         fontFamily: _bodyFont,
-        color: _inkMute.withOpacity(0.85),
+        color: _inkMute.withOpacity(0.7),
         letterSpacing: 0.0,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w500,
       ),
       filled: true,
       fillColor: _fieldFill(theme),
@@ -237,12 +255,12 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
         child: Opacity(
           opacity: disabled ? 0.55 : 1,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             decoration: BoxDecoration(
-              color: isPrimary ? _spark : accent.withOpacity(0.12),
+              color: isPrimary ? _spark : _paper,
               borderRadius: BorderRadius.circular(999),
               border: Border.all(
-                color: isPrimary ? _spark : accent.withOpacity(0.25),
+                color: isPrimary ? _spark : _hairline,
                 width: 1,
               ),
               // ✅ no shadows
@@ -253,16 +271,16 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
                 Icon(
                   icon,
                   size: 18,
-                  color: isPrimary ? _sparkInk : accent,
+                  color: isPrimary ? _sparkInk : _inkMute,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   text,
                   style: theme.bodyMedium.override(
                     fontFamily: _bodyFont,
-                    color: isPrimary ? _sparkInk : accent,
+                    color: isPrimary ? _sparkInk : _ink,
                     letterSpacing: 0.0,
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
@@ -348,7 +366,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
             borderRadius: BorderRadius.circular(_radius),
             border: Border.all(color: _fieldBorder(theme), width: 1.2),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           child: Row(
             children: [
               Icon(icon, size: 18, color: _inkMute),
@@ -359,7 +377,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
                     value: safeValue,
                     isExpanded: true,
                     dropdownColor: _paper,
-                    icon: Icon(Icons.keyboard_arrow_down_rounded,
+                    icon: const Icon(Icons.keyboard_arrow_down_rounded,
                         color: _inkMute),
                     style: _fieldTextStyle(theme),
                     items: items
@@ -435,11 +453,10 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
                       value,
                       style: _fieldTextStyle(theme).copyWith(
                         color: value == 'Select date' ? _inkMute : _ink,
-                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ),
-                  Icon(Icons.chevron_right_rounded, color: _inkMute),
+                  const Icon(Icons.chevron_right_rounded, color: _inkMute),
                 ],
               ),
             ),
@@ -502,7 +519,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: accent,
+          backgroundColor: _ink,
           content: Text(
             'Project created!',
             style: theme.bodyMedium.override(
@@ -557,7 +574,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // =========================================================
-                // ✅ HEADER (no flash taps)
+                // ✅ HEADER (back + title)
                 // =========================================================
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -569,7 +586,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
                           final nav = Navigator.of(context);
                           if (nav.canPop()) nav.pop();
                         },
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(999),
                         splashFactory: NoSplash.splashFactory,
                         splashColor: Colors.transparent,
                         highlightColor: Colors.transparent,
@@ -577,45 +594,27 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
                         overlayColor:
                             WidgetStateProperty.all(Colors.transparent),
                         child: Container(
-                          width: 44,
-                          height: 44,
+                          width: 36,
+                          height: 36,
                           decoration: BoxDecoration(
-                            color: _paper,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: _hairline.withOpacity(0.9),
-                            ),
+                            color: _surface,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: _hairline),
                           ),
-                          child: Icon(Icons.arrow_back_rounded,
-                              size: 22, color: _ink),
+                          child: const Icon(Icons.arrow_back_ios_new_rounded,
+                              size: 16, color: _inkMute),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: accent,
-                        borderRadius: BorderRadius.circular(_radius),
-                      ),
-                      child: const Icon(Icons.add_rounded,
-                          color: _paper, size: 24),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Text('Add Project', style: _appTitleStyle(theme)),
+                          const SizedBox(height: 2),
                           Text(
-                            'Add Project',
-                            style: _appTitleStyle(theme).copyWith(
-                              color: _ink,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Create a workspace for tasks, costs and snags.',
+                            'Create a workspace for tasks, costs & snags.',
                             style: _appSubtitleStyle(theme),
                           ),
                         ],
@@ -624,13 +623,13 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
                   ],
                 ),
 
-                const SizedBox(height: 18),
+                const SizedBox(height: 20),
 
                 // =========================================================
                 // ✅ FORM
                 // =========================================================
-                Text('Project Details', style: _sectionTitleStyle(theme)),
-                const SizedBox(height: 10),
+                _sectionHeader(theme, 'Project details'),
+                const SizedBox(height: 12),
 
                 _subbyCardShell(
                   theme: theme,
@@ -649,7 +648,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
                             TextFormField(
                               controller: _nameCtrl,
                               style: _fieldTextStyle(theme),
-                              cursorColor: accent,
+                              cursorColor: _ink,
                               decoration: _fieldDecoration(
                                 theme,
                                 hint: 'e.g. Winston Ridge Renovation',
@@ -671,6 +670,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
 
                         // Status + Province
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
                               child: _dropdownField(
@@ -707,7 +707,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
                             TextFormField(
                               controller: _cityCtrl,
                               style: _fieldTextStyle(theme),
-                              cursorColor: accent,
+                              cursorColor: _ink,
                               decoration: _fieldDecoration(
                                 theme,
                                 hint: 'e.g. Durbanville',
@@ -730,7 +730,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
                             TextFormField(
                               controller: _addressCtrl,
                               style: _fieldTextStyle(theme),
-                              cursorColor: accent,
+                              cursorColor: _ink,
                               decoration: _fieldDecoration(
                                 theme,
                                 hint: 'Street address (optional)',
@@ -780,7 +780,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
                             TextFormField(
                               controller: _notesCtrl,
                               style: _fieldTextStyle(theme),
-                              cursorColor: accent,
+                              cursorColor: _ink,
                               maxLines: 6,
                               enabled: !_saving,
                               decoration: _fieldDecoration(
@@ -798,12 +798,12 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
                         // Archive toggle
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.all(14),
+                          padding: const EdgeInsets.all(13),
                           decoration: BoxDecoration(
                             color: _surface,
                             borderRadius: BorderRadius.circular(_radius),
                             border: Border.all(
-                              color: _hairline.withOpacity(0.95),
+                              color: _hairlineOnSurface,
                               width: 1,
                             ),
                           ),
@@ -813,10 +813,11 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
                                 width: 36,
                                 height: 36,
                                 decoration: BoxDecoration(
-                                  color: _hairline.withOpacity(0.35),
-                                  borderRadius: BorderRadius.circular(12),
+                                  color: _paper,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: _hairlineOnSurface),
                                 ),
-                                child: Icon(Icons.archive_outlined,
+                                child: const Icon(Icons.archive_outlined,
                                     color: _inkMute, size: 20),
                               ),
                               const SizedBox(width: 12),
@@ -830,10 +831,10 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
                                         fontFamily: _bodyFont,
                                         color: _ink,
                                         letterSpacing: 0.0,
-                                        fontWeight: FontWeight.w900,
+                                        fontWeight: FontWeight.w800,
                                       ),
                                     ),
-                                    const SizedBox(height: 4),
+                                    const SizedBox(height: 3),
                                     Text(
                                       'Keep this project hidden until you’re ready to use it.',
                                       style: _helperStyle(theme),
@@ -846,7 +847,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
                                 onChanged: _saving
                                     ? null
                                     : (v) => setState(() => _archived = v),
-                                activeColor: accent,
+                                activeColor: _spark,
                               ),
                             ],
                           ),
@@ -886,7 +887,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
                           ],
                         ),
 
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 12),
                         Text(
                           'This creates a new home building project.',
                           style: _helperStyle(theme),

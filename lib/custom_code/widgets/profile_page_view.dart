@@ -22,6 +22,7 @@ class ProfilePageView extends StatefulWidget {
     this.width,
     this.height,
     this.editPhotoRouteName,
+    this.notificationsRouteName,
   }) : super(key: key);
 
   final double? width;
@@ -31,29 +32,33 @@ class ProfilePageView extends StatefulWidget {
   /// Select Media -> Upload -> Update users.photo_url
   final String? editPhotoRouteName;
 
+  /// Optional FF route to a notifications / alerts settings page.
+  /// If unset, the Alerts tile shows a "coming soon" toast.
+  final String? notificationsRouteName;
+
   @override
   State<ProfilePageView> createState() => _ProfilePageViewState();
 }
 
 class _ProfilePageViewState extends State<ProfilePageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  // less-is-more system · ported from Clutch Putt · lime → yellow.
-  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
+  // Synced with DashboardPageView v4. Inline = authoritative for this file.
+  // Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
   static const Color _ink = Color(0xFF16202E);
   static const Color _inkMute = Color(0xFF5A6675);
+  static const Color _faint = Color(0xFF93A0B0); // muted labels / icons
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _hairline = Color(0xFFEEF1F4);
+  static const Color _hairline = Color(0xFFEEF1F2);
   static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
-  // Brand accent — YELLOW. Always ink foreground, never white.
-  static const Color _spark = Color(0xFFAEE03F); // primary CTA / ranked accent
+  // Brand accent — LIME. Always ink foreground, never white.
+  static const Color _spark = Color(0xFFAEE03F); // primary CTA / ring accent
   static const Color _sparkInk = Color(0xFF16202E);
   // Status
-  static const Color _live =
-      Color(0xFFFF6A2B); // orange — live / open-now / warning
-  static const Color _coral = Color(0xFFE0531C);
+  static const Color _live = Color(0xFFFF6A2B); // orange — live / warning
+  static const Color _coral = Color(0xFFE0531C); // destructive
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -65,41 +70,50 @@ class _ProfilePageViewState extends State<ProfilePageView> {
   static const String _createAccountRouteName = 'createAccountPage';
   static const String _editProfileRouteName = 'editProfilePage';
 
-  // ---------------- PADDING / RADIUS (match ListingResultsPageView) ----------------
-  static const double _hPad = 24;
-  static const double _vPad = 24;
+  // ---------------- PADDING / RADIUS ----------------
+  static const double _hPad = 20;
+  static const double _vPad = 18;
   static const double _radius = 12;
-  // -------------------------------------------------------------------------------
+  // --------------------------------------------------
 
   // =========================================================
-  // ✅ TYPOGRAPHY (match ListingResultsPageView)
+  // ✅ TYPOGRAPHY (synced with the dashboard)
   // =========================================================
   TextStyle _titleStyle(FlutterFlowTheme t) => t.titleLarge.override(
         fontFamily: _displayFont,
-        fontWeight: FontWeight.w900,
-        letterSpacing: 0.2,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.4,
+        color: _ink,
       );
 
-  TextStyle _subtitleStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: _bodyFont,
-        color: _inkMute,
+  TextStyle _heroNameStyle(FlutterFlowTheme t) => t.titleLarge.override(
+        fontFamily: _displayFont,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.4,
+        fontSize: 21,
+        color: _ink,
       );
 
+  // ignore: unused_element
   TextStyle _sectionTitleStyle(FlutterFlowTheme t) => t.titleMedium.override(
         fontFamily: _displayFont,
         fontWeight: FontWeight.w800,
+        letterSpacing: -0.2,
+        color: _ink,
       );
 
   TextStyle _labelStyle(FlutterFlowTheme t) => t.bodySmall.override(
         fontFamily: _bodyFont,
-        color: _inkMute,
+        color: _faint,
         fontWeight: FontWeight.w600,
         fontSize: 11,
       );
 
   TextStyle _valueStyle(FlutterFlowTheme t) => t.bodyMedium.override(
         fontFamily: _bodyFont,
-        fontWeight: FontWeight.w800,
+        fontWeight: FontWeight.w700,
+        fontSize: 14,
+        color: _ink,
       );
 
   TextStyle _mutedBodyStyle(FlutterFlowTheme t) => t.bodyMedium.override(
@@ -114,7 +128,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
   // =========================================================
 
   // =========================================================
-  // ✅ ListingResults-style helpers
+  // ✅ Shared helpers
   // =========================================================
   Widget _circleIconShell(
     FlutterFlowTheme t, {
@@ -132,29 +146,21 @@ class _ProfilePageViewState extends State<ProfilePageView> {
         border: Border.all(color: _hairline, width: 1),
       ),
       alignment: Alignment.center,
-      child: Icon(icon, size: size == 32 ? 16 : 18, color: iconColor),
+      child: Icon(icon, size: size <= 32 ? 16 : 18, color: iconColor),
     );
 
     if (onTap == null) return child;
-
     return GestureDetector(onTap: onTap, child: child);
   }
 
-  // ListingResults card recipe (primaryBackground + subtle shadow)
-  BoxDecoration _liftedCardDecoration(FlutterFlowTheme t) => BoxDecoration(
+  // Flat hairline card recipe — matches the dashboard (no heavy shadow).
+  BoxDecoration _cardDecoration(FlutterFlowTheme t) => BoxDecoration(
         color: _paper,
         borderRadius: BorderRadius.circular(_radius),
         border: Border.all(color: _hairline, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       );
 
-  // ListingResults pill button recipe (radius 999)
+  // Primary pill (lime, ink content)
   Widget _pillPrimaryButton(
     FlutterFlowTheme t, {
     required String label,
@@ -194,6 +200,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
     );
   }
 
+  // Outline pill
   Widget _pillOutlineButton(
     FlutterFlowTheme t, {
     required String label,
@@ -209,10 +216,11 @@ class _ProfilePageViewState extends State<ProfilePageView> {
 
     return SizedBox(
       width: double.infinity,
-      height: 52,
+      height: 50,
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
+          backgroundColor: _paper,
           side: BorderSide(color: bc, width: 1),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(999),
@@ -239,7 +247,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
     );
   }
 
-  // Subby-style snackbar used in ListingResults
+  // Subby-style snackbar
   void _showToast(String message) {
     if (!mounted) return;
     final theme = FlutterFlowTheme.of(context);
@@ -267,7 +275,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
                   color: _ink.withOpacity(0.08),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.info_outline_rounded,
                   size: 16,
                   color: _ink,
@@ -310,6 +318,15 @@ class _ProfilePageViewState extends State<ProfilePageView> {
     if (route.isEmpty) {
       _showToast(
           'Set editPhotoRouteName on the widget (to open your photo picker page).');
+      return;
+    }
+    context.pushNamed(route);
+  }
+
+  void _goNotifications() {
+    final route = (widget.notificationsRouteName ?? '').trim();
+    if (route.isEmpty) {
+      _showToast('Notification settings are coming soon.');
       return;
     }
     context.pushNamed(route);
@@ -402,6 +419,109 @@ class _ProfilePageViewState extends State<ProfilePageView> {
     }
   }
 
+  // Big lime-ringed avatar (mirrors the dashboard avatar).
+  Widget _avatar(FlutterFlowTheme theme, String photoUrl, String displayName) {
+    final initials = Center(
+      child: Text(
+        _initialsFromName(displayName),
+        style: theme.titleMedium.override(
+          fontFamily: _bodyFont,
+          fontWeight: FontWeight.w800,
+          fontSize: 26,
+          color: _spark,
+        ),
+      ),
+    );
+
+    return Container(
+      width: 80,
+      height: 80,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: _ink,
+        border: Border.all(color: _spark, width: 2.5),
+      ),
+      child: ClipOval(
+        child: photoUrl.isNotEmpty
+            ? Image.network(
+                photoUrl,
+                width: 80,
+                height: 80,
+                fit: BoxFit.cover,
+                errorBuilder: (context, _, __) => initials,
+              )
+            : initials,
+      ),
+    );
+  }
+
+  // Quick-action tiles row (Edit profile · Photo · Alerts)
+  Widget _quickActions(FlutterFlowTheme theme) => Row(
+        children: [
+          _actionTile(
+            theme,
+            icon: Icons.edit_outlined,
+            label: 'Edit profile',
+            primary: true,
+            onTap: () => context.pushNamed(_editProfileRouteName),
+          ),
+          const SizedBox(width: 10),
+          _actionTile(
+            theme,
+            icon: Icons.camera_alt_outlined,
+            label: 'Photo',
+            onTap: _goEditPhoto,
+          ),
+          const SizedBox(width: 10),
+          _actionTile(
+            theme,
+            icon: Icons.notifications_none_rounded,
+            label: 'Alerts',
+            onTap: _goNotifications,
+          ),
+        ],
+      );
+
+  Widget _actionTile(
+    FlutterFlowTheme theme, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    bool primary = false,
+  }) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+          decoration: BoxDecoration(
+            color: primary ? _spark : _paper,
+            borderRadius: BorderRadius.circular(12),
+            border: primary ? null : Border.all(color: _hairline, width: 1),
+          ),
+          child: Column(
+            children: [
+              Icon(icon, size: 20, color: _ink),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.labelMedium.override(
+                  fontFamily: _bodyFont,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  color: _ink,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _infoRow(
     FlutterFlowTheme theme, {
     required IconData icon,
@@ -411,7 +531,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
   }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: 13),
       decoration: BoxDecoration(
         border: Border(
           bottom: showDivider
@@ -421,7 +541,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: _inkMute),
+          Icon(icon, size: 18, color: _faint),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -452,7 +572,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
 
     final userRef = currentUserReference;
 
-    // ✅ Logged-out state (match ListingResults empty-state card + pill buttons)
+    // ✅ Logged-out state
     if (userRef == null) {
       return SizedBox(
         width: width,
@@ -464,22 +584,33 @@ class _ProfilePageViewState extends State<ProfilePageView> {
             child: Center(
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(20, 26, 20, 20),
                 decoration: BoxDecoration(
                   color: _surface,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: _hairline),
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.lock_outline, color: _inkMute, size: 34),
-                    const SizedBox(height: 10),
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: _paper,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: _hairlineOnSurface),
+                      ),
+                      child: const Icon(Icons.lock_outline,
+                          color: _inkMute, size: 24),
+                    ),
+                    const SizedBox(height: 14),
                     Text(
-                      'You are logged out.',
+                      'You are logged out',
                       style: theme.titleMedium.override(
                         fontFamily: _displayFont,
                         fontWeight: FontWeight.w800,
+                        color: _ink,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -492,7 +623,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 18),
                     _pillPrimaryButton(
                       theme,
                       label: 'Log in',
@@ -524,7 +655,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
             stream: userRef.snapshots(),
             builder: (context, snap) {
               if (!snap.hasData) {
-                return Center(
+                return const Center(
                   child: SizedBox(
                     width: 28,
                     height: 28,
@@ -549,169 +680,66 @@ class _ProfilePageViewState extends State<ProfilePageView> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ---------- TOP BAR (match ListingResultsPageView) ----------
+                  // ---------- HEADER ----------
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 8),
+                    padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 10),
                     child: Row(
                       children: [
                         _circleIconShell(
                           theme,
-                          size: 32,
+                          size: 36,
                           icon: Icons.arrow_back_ios_new_rounded,
                           iconColor: _inkMute,
                           onTap: () => context.pop(),
                         ),
                         const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Profile', style: _titleStyle(theme)),
-                              const SizedBox(height: 2),
-                              Text('Profile & account',
-                                  style: _subtitleStyle(theme)),
-                            ],
-                          ),
-                        ),
+                        Text('Profile', style: _titleStyle(theme)),
                       ],
                     ),
                   ),
 
-                  const SizedBox(height: 8),
-
                   // ---------- CONTENT ----------
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 24),
+                      padding: const EdgeInsets.fromLTRB(_hPad, 10, _hPad, 28),
                       child: Column(
                         children: [
-                          // Profile card (match ListingResults card recipe)
-                          Container(
-                            padding: const EdgeInsets.all(14),
-                            decoration: _liftedCardDecoration(theme),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // left "avatar tile" shell like listing icon tile
-                                Container(
-                                  width: 44,
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: _surface,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: photoUrl.isNotEmpty
-                                        ? Image.network(
-                                            photoUrl,
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (context, _, __) =>
-                                                Center(
-                                              child: Text(
-                                                _initialsFromName(displayName),
-                                                style:
-                                                    theme.bodyMedium.override(
-                                                  fontFamily: _bodyFont,
-                                                  fontWeight: FontWeight.w900,
-                                                ),
-                                              ),
-                                            ),
-                                          )
-                                        : Center(
-                                            child: Text(
-                                              _initialsFromName(displayName),
-                                              style: theme.bodyMedium.override(
-                                                fontFamily: _bodyFont,
-                                                fontWeight: FontWeight.w900,
-                                              ),
-                                            ),
-                                          ),
-                                  ),
+                          // Avatar hero (centered)
+                          Column(
+                            children: [
+                              _avatar(theme, photoUrl, displayName),
+                              const SizedBox(height: 14),
+                              Text(
+                                displayName.isEmpty ? 'Your name' : displayName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: _heroNameStyle(theme),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                email.isEmpty ? '—' : email,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.bodySmall.override(
+                                  fontFamily: _bodyFont,
+                                  color: _faint,
+                                  fontSize: 13,
                                 ),
-                                const SizedBox(width: 12),
-
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        displayName.isEmpty
-                                            ? 'Your name'
-                                            : displayName,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: theme.bodyMedium.override(
-                                          fontFamily: _bodyFont,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        email.isEmpty ? '—' : email,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: theme.bodySmall.override(
-                                          fontFamily: _bodyFont,
-                                          color: _inkMute,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 10),
-
-                                      // Photo edit pill icon (like bookmark button shell)
-                                      Row(
-                                        children: [
-                                          InkWell(
-                                            onTap: _goEditPhoto,
-                                            borderRadius:
-                                                BorderRadius.circular(999),
-                                            child: Container(
-                                              height: 38,
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 12),
-                                              decoration: BoxDecoration(
-                                                color: _paper,
-                                                borderRadius:
-                                                    BorderRadius.circular(999),
-                                                border: Border.all(
-                                                    color: _hairline, width: 1),
-                                              ),
-                                              child: Row(
-                                                children: [
-                                                  Icon(
-                                                      Icons.camera_alt_outlined,
-                                                      size: 18,
-                                                      color: _ink),
-                                                  const SizedBox(width: 8),
-                                                  Text(
-                                                    'Edit photo',
-                                                    style: theme.labelMedium
-                                                        .override(
-                                                      fontFamily: theme
-                                                          .labelMediumFamily,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
 
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 22),
 
-                          // Info card (same lifted card + internal dividers like profile rows)
+                          // Quick actions
+                          _quickActions(theme),
+
+                          const SizedBox(height: 18),
+
+                          // Details card
                           Container(
-                            padding: const EdgeInsets.fromLTRB(14, 6, 14, 6),
-                            decoration: _liftedCardDecoration(theme),
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                            decoration: _cardDecoration(theme),
                             child: Column(
                               children: [
                                 _infoRow(
@@ -739,45 +767,30 @@ class _ProfilePageViewState extends State<ProfilePageView> {
 
                           const SizedBox(height: 16),
 
-                          // Edit profile (pill)
-                          _pillPrimaryButton(
-                            theme,
-                            label: 'Edit Profile',
-                            icon: Icons.edit_outlined,
-                            onPressed: () =>
-                                context.pushNamed(_editProfileRouteName),
-                          ),
-
-                          const SizedBox(height: 18),
-
-                          // Account actions (lifted card + pill outline buttons)
-                          Container(
-                            padding: const EdgeInsets.all(14),
-                            decoration: _liftedCardDecoration(theme),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Text('Account',
-                                    style: _sectionTitleStyle(theme)),
-                                const SizedBox(height: 12),
-                                _pillOutlineButton(
+                          // Account actions (Logout / Delete)
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _pillOutlineButton(
                                   theme,
                                   label: 'Logout',
                                   icon: Icons.logout,
                                   onPressed: _logout,
                                 ),
-                                const SizedBox(height: 10),
-                                _pillOutlineButton(
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: _pillOutlineButton(
                                   theme,
-                                  label: 'Delete Profile',
+                                  label: 'Delete',
                                   icon: Icons.delete_outline,
                                   borderColor: _coral.withOpacity(0.6),
                                   textColor: _coral,
                                   iconColor: _coral,
                                   onPressed: _confirmAndDeleteProfile,
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
 
                           const SizedBox(height: 12),
