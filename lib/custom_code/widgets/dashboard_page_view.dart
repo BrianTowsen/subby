@@ -97,11 +97,11 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   //
   // Neutrals
   static const Color _ink = Color(
-      0xFF14243F); // unified navy — text, chrome, projects card, on-yellow content
-  static const Color _inkMute = Color(0xFF6B7280);
+      0xFF16202E); // unified ink — text, chrome, projects card, on-lime content
+  static const Color _inkMute = Color(0xFF5A6675);
   static const Color _paper = Color(0xFFFFFFFF); // White
-  static const Color _surface = Color(0xFFE3E4E8);
-  static const Color _hairline = Color(0xFFE3E4E8);
+  static const Color _surface = Color(0xFFEEF1F4);
+  static const Color _hairline = Color(0xFFEEF1F4);
 
   // ── TWO-SECTION CARD SYSTEM ────────────────────────────────────────
   // Both cards live in the ink family so the darks never fight.
@@ -116,11 +116,12 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       _ink; // same as ink — never a second competing dark
   static final Color _onDarkSub =
       Colors.white.withOpacity(0.82); // secondary text on dark card
-  static const Color _projTint = Color(0xFFE8EAEF); // pale navy — add-card fill
+  static const Color _projTint =
+      Color(0xFFEEF1F4); // pale neutral — add-card fill
   // (icon chip + status pill on the dark card use _yellow / _ink — see below)
 
   // Accent — DIRECTORY = YELLOW (ink content)
-  static const Color _yellow = Color(0xFFFFE74C); // yellow card background
+  static const Color _yellow = Color(0xFFAEE03F); // lime card background
   static const Color _onYellowChip = _ink; // ink chip + white icon
   static const Color _onYellowSub = _ink; // secondary text on yellow
 
@@ -368,7 +369,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         height: 18,
         decoration: BoxDecoration(
           color: c,
-          borderRadius: BorderRadius.circular(3),
+          borderRadius: BorderRadius.circular(6),
         ),
       );
 
