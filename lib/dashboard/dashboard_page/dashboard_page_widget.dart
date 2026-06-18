@@ -43,24 +43,43 @@ class _DashboardPageWidgetState extends State<DashboardPageWidget> {
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
-        body: Container(
-          width: double.infinity,
-          height: double.infinity,
-          child: custom_widgets.DashboardPageView(
-            width: double.infinity,
-            height: double.infinity,
-            directoryRouteName: 'homePage',
-            timelineRouteName: 'TimelineHomePage',
-            snagListRouteName: 'snagListHomePage',
-            profileRouteName: 'profilePage',
-            projectsRouteName: 'MyProjectsHomePage',
-            projectCostRouteName: 'projectCostHomePage',
-            getQuotesRouteName: 'getQuotesHomePage',
-            termsRouteName: 'termsPage',
-            privacyRouteName: 'privacyPage',
-            addListingRouteName: 'addListingPage',
-            editListingRouteName: 'editListingPage',
-          ),
+        body: Stack(
+          children: [
+            Container(
+              width: double.infinity,
+              height: double.infinity,
+              child: custom_widgets.DashboardPageView(
+                width: double.infinity,
+                height: double.infinity,
+                directoryRouteName: 'homePage',
+                timelineRouteName: 'TimelineHomePage',
+                snagListRouteName: 'snagListHomePage',
+                profileRouteName: 'profilePage',
+                projectsRouteName: 'MyProjectsHomePage',
+                projectCostRouteName: 'projectCostHomePage',
+                getQuotesRouteName: 'getQuotesHomePage',
+                termsRouteName: 'termsPage',
+                privacyRouteName: 'privacyPage',
+                addListingRouteName: 'addListingPage',
+                editListingRouteName: 'editListingPage',
+              ),
+            ),
+            Align(
+              alignment: AlignmentDirectional(0.0, 1.0),
+              child: Container(
+                width: MediaQuery.sizeOf(context).width * 1.0,
+                height: 74.0,
+                child: custom_widgets.MainBottomNav(
+                  width: MediaQuery.sizeOf(context).width * 1.0,
+                  height: 74.0,
+                  currentIndex: 0,
+                  projectsRouteName: 'addProjectPage',
+                  directoryRouteName: 'homePage',
+                  accountRouteName: 'profilePage',
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

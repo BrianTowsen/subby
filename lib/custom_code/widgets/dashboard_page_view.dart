@@ -10,23 +10,26 @@ import 'package:flutter/material.dart';
 
 // ======================= DashboardPageView (FULL FILE) =======================
 //
-// v3 — simplified entry page. Two sections only:
-//   1) My Projects  — horizontal rail of the user's live projects + Add card.
-//                      Accent = ORANGE (light + dark).
-//   2) Directory    — browse trades/suppliers + manage own listing.
-//                      Accent = YELLOW.
+// v4 — "Portfolio overview" home, big & minimal welcome.
 //
-// Removed in v3: the project-management grid (Timeline / Project Cost / Quotes /
-// Snag) — those now live INSIDE a project — and the Resources / legal footer,
-// which is moving to its own page. Profile/account access moved to a button in
-// the welcome header so the body is exactly the two sections.
+// WHAT CHANGED FROM v3 (UI only — all logic preserved):
+//   • Welcome header is now big & minimal: an uppercase date eyebrow + a
+//     lime-ringed initials avatar (notification dot), then a large two-line
+//     time-of-day greeting.
+//   • New at-a-glance STAT STRIP derived live from the projects stream:
+//     Active builds · On track · Needs you.
+//   • Projects are a vertical LIST with circular PROGRESS RINGS (was a rail).
+//   • The Directory section is GONE from this screen — it now lives in the new
+//     bottom nav. Its navigation logic is RETAINED in _goToListing() (+ the
+//     listing-check) so it can be wired up from the nav without rebuilding it.
 //
-// NOTE on widget params: the legacy route params (timeline / snag / projectCost /
-// getQuotes / terms / privacy / support) and the snag/myProjects counts are kept
-// on the constructor so the existing FlutterFlow component instance does NOT
-// break. They are no longer used by this screen and can be deleted from the FF
-// widget definition whenever convenient. Two new optional params were added:
-// projectDetailRouteName, addProjectsRouteName, projectParamName.
+// PRESERVED: every constructor param (used + legacy), _safeNavigate /
+// _goToProject / _goToAddProject, the active-projects query, the listing-exists
+// check, route fallbacks, and date formatting.
+//
+// PROJECT DOC FIELDS READ (all optional, safe fallbacks):
+//   name, city, province, status, updatedAt  (as before)
+//   progress : num — 0..1 OR 0..100, drives the ring. Missing ⇒ 0%.
 
 import '/custom_code/widgets/index.dart';
 import 'dart:ui';
@@ -43,11 +46,11 @@ class DashboardPageView extends StatefulWidget {
     this.directoryRouteName,
     this.projectsRouteName, // "View all" → MyProjectsHomePage
     this.profileRouteName,
-    this.projectDetailRouteName, // ✅ NEW — open a single project
-    this.addProjectsRouteName, // ✅ NEW — create a new project
-    this.projectParamName, // ✅ NEW — param name for the project ref (default "projectRef")
+    this.projectDetailRouteName, // open a single project
+    this.addProjectsRouteName, // create a new project
+    this.projectParamName, // param name for the project ref (default "projectRef")
 
-    /// Listing management routes (Directory tile) — USED
+    /// Listing management routes — RETAINED (Directory now lives in the nav)
     this.addListingRouteName,
     this.editListingRouteName,
 
@@ -73,6 +76,8 @@ class DashboardPageView extends StatefulWidget {
   final String? projectDetailRouteName;
   final String? addProjectsRouteName;
   final String? projectParamName;
+
+  // RETAINED for the Directory (now in the bottom nav)
   final String? addListingRouteName;
   final String? editListingRouteName;
 
@@ -96,34 +101,21 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(
-      0xFF16202E); // unified ink — text, chrome, projects card, on-lime content
+  static const Color _ink = Color(0xFF16202E); // text, chrome, dark surfaces
   static const Color _inkMute = Color(0xFF5A6675);
-  static const Color _paper = Color(0xFFFFFFFF); // White
+  static const Color _faint = Color(0xFF93A0B0); // muted labels, chevrons
+  static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _hairline = Color(0xFFEEF1F4);
+  static const Color _hairline = Color(0xFFEEF1F2);
 
-  // ── TWO-SECTION CARD SYSTEM ────────────────────────────────────────
-  // Both cards live in the ink family so the darks never fight.
-  //  • PROJECTS = dark "ink-lifted" block, WHITE content
-  //    (white text, white-translucent chip + white icon, white-translucent
-  //     status pill + white text).
-  //  • DIRECTORY = yellow block, INK content
-  //    (ink text, ink chip + white icon, ink pill + white text).
-
-  // Accent — MY PROJECTS = INK (dark card = ink, one unified dark)
-  static const Color _projBg =
-      _ink; // same as ink — never a second competing dark
-  static final Color _onDarkSub =
-      Colors.white.withOpacity(0.82); // secondary text on dark card
-  static const Color _projTint =
-      Color(0xFFEEF1F4); // pale neutral — add-card fill
-  // (icon chip + status pill on the dark card use _yellow / _ink — see below)
-
-  // Accent — DIRECTORY = YELLOW (ink content)
-  static const Color _yellow = Color(0xFFAEE03F); // lime card background
-  static const Color _onYellowChip = _ink; // ink chip + white icon
-  static const Color _onYellowSub = _ink; // secondary text on yellow
+  // Accents
+  static const Color _yellow = Color(0xFFAEE03F); // lime — "on site" / on track
+  static const Color _ringTrack = Color(0xFFEEF2F7);
+  static const Color _orange = Color(0xFFFF6A2B); // attention / snagging
+  static const Color _orangeTint = Color(0xFFFFE7DA);
+  static const Color _orangeBorder = Color(0xFFFFD9C6);
+  static const Color _orangeText = Color(0xFFC2693F);
+  static const Color _projTint = Color(0xFFEEF1F4); // add / empty card fill
 
   // Geometry
   static const double _rSmall = 6;
@@ -142,19 +134,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   static const double _radius = _rLarge;
 
   // Spacing rhythm
-  static const double _sectionBreak = 56;
   static const double _titleToDesc = 8;
-  static const double _descToTile = 16;
-
-  // Directory tile heights
-  static const double _tileH = 78;
-  static const double _tileHEmphasis = 88;
-
-  // Projects rail
-  static const double _railH = 152;
-  static const double _cardW = 224;
-  static const double _addCardW = 152;
-  static const double _betweenCards = 12;
 
   // Route fallbacks
   static const String _fallbackProfileRoute = 'profilePage';
@@ -164,7 +144,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   static const String _fallbackAddListingRoute = 'addListingPage';
   static const String _fallbackEditListingRoute = 'editListingPage';
 
-  // Listing exists (drives Add / Edit on the Directory tile)
+  // Listing exists (RETAINED — drives Add / Edit for the Directory in the nav)
+  // ignore: unused_field
   bool _hasListing = false;
   bool _listingCheckInFlight = false;
   int _lastListingCheckMs = 0;
@@ -184,6 +165,15 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     'Nov',
     'Dec',
   ];
+  static const List<String> _weekdays = [
+    'Mon',
+    'Tue',
+    'Wed',
+    'Thu',
+    'Fri',
+    'Sat',
+    'Sun',
+  ];
 
   String _fmtDate(DateTime? d) {
     if (d == null) return '';
@@ -191,60 +181,86 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     return '$dd ${_months[d.month - 1]} ${d.year}';
   }
 
+  // "WED 18 JUN"
+  String _eyebrowDate(DateTime d) =>
+      '${_weekdays[d.weekday - 1]} ${d.day} ${_months[d.month - 1]}'
+          .toUpperCase();
+
+  String _greeting() {
+    final h = DateTime.now().hour;
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+  }
+
+  String _initials(String name) {
+    final n = name.trim();
+    if (n.isEmpty) return '';
+    final parts = n.split(RegExp(r'\s+'));
+    if (parts.length == 1) {
+      final p = parts.first;
+      return (p.length >= 2 ? p.substring(0, 2) : p).toUpperCase();
+    }
+    return (parts.first[0] + parts.last[0]).toUpperCase();
+  }
+
   // =========================================================
   // TYPOGRAPHY
   // =========================================================
-  TextStyle get _appTitleStyle => const TextStyle(
-        fontFamily: _displayFont,
-        fontSize: 20,
-        fontWeight: FontWeight.w800,
-        letterSpacing: -0.4,
-        height: 1.05,
-        color: _ink,
-      );
-
-  TextStyle get _appSubtitleStyle => const TextStyle(
+  TextStyle get _eyebrowStyle => const TextStyle(
         fontFamily: _bodyFont,
         fontSize: 12,
-        color: _inkMute,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 1.2,
+        color: _faint,
+      );
+
+  TextStyle get _greetingStyle => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 28,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.6,
+        height: 1.08,
+        color: _ink,
       );
 
   TextStyle get _stepHeadlineStyle => const TextStyle(
         fontFamily: _displayFont,
-        fontSize: 20,
+        fontSize: 17,
         fontWeight: FontWeight.w800,
-        letterSpacing: -0.4,
+        letterSpacing: -0.3,
         height: 1.05,
         color: _ink,
       );
 
-  TextStyle get _stepDescStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 13,
-        fontWeight: FontWeight.w500,
-        color: _inkMute,
-      );
-
   TextStyle get _tileTitleStyle => const TextStyle(
         fontFamily: _displayFont,
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: FontWeight.w700,
-        letterSpacing: -0.2,
+        letterSpacing: -0.1,
         color: _ink,
       );
 
   TextStyle get _tileSubtitleStyle => const TextStyle(
         fontFamily: _bodyFont,
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
-        color: _inkMute,
-      );
-
-  TextStyle get _metaStyle => const TextStyle(
-        fontFamily: _monoFont,
         fontSize: 11,
         fontWeight: FontWeight.w500,
-        color: _inkMute,
+        color: _faint,
+      );
+
+  TextStyle get _statNumberStyle => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 26,
+        fontWeight: FontWeight.w800,
+        height: 1.0,
+        color: _ink,
+      );
+
+  TextStyle get _ringPctStyle => const TextStyle(
+        fontFamily: _monoFont,
+        fontSize: 12,
+        fontWeight: FontWeight.w800,
+        color: _ink,
         fontFeatures: [FontFeature.tabularFigures()],
       );
   // =========================================================
@@ -283,6 +299,35 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         widget.addProjectsRouteName,
         fallbackRoute: _fallbackAddProjectsRoute,
       );
+
+  // RETAINED — "View all" was removed (contractors top out at ~8–10 projects,
+  // all shown inline). Kept so the projects route can still be reached if needed.
+  // ignore: unused_element
+  void _goToProjects() => _safeNavigate(
+        widget.projectsRouteName,
+        fallbackRoute: _fallbackProjectsRoute,
+      );
+
+  void _goToProfile() => _safeNavigate(
+        widget.profileRouteName,
+        fallbackRoute: _fallbackProfileRoute,
+      );
+
+  // RETAINED: the Directory's add-vs-edit decision, ready for the bottom nav.
+  // ignore: unused_element
+  void _goToListing() {
+    if (_hasListing) {
+      _safeNavigate(
+        widget.editListingRouteName,
+        fallbackRoute: _fallbackEditListingRoute,
+      );
+    } else {
+      _safeNavigate(
+        widget.addListingRouteName,
+        fallbackRoute: _fallbackAddListingRoute,
+      );
+    }
+  }
 
   // Open a single project — mirrors the contract used by MyProjectsHomePageView
   // (serialized DocumentReference in both queryParameters and extra).
@@ -326,7 +371,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   }
 
   // -----------------------------
-  // Listing exists for current user (Directory Add / Edit label)
+  // Listing exists for current user (RETAINED for the Directory in the nav)
   // Debounced + only setState on change.
   // -----------------------------
   Future<void> _refreshHasListing({bool force = false}) async {
@@ -362,136 +407,197 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   }
 
   // -----------------------------
+  // Project field helpers
+  // -----------------------------
+  double _progress(Map<String, dynamic> data) {
+    final p = data['progress'];
+    double v = 0;
+    if (p is num) v = p.toDouble();
+    if (v > 1) v = v / 100.0; // accept 0..100 as well as 0..1
+    if (v.isNaN) v = 0;
+    return v.clamp(0.0, 1.0);
+  }
+
+  bool _needsAttention(String status) {
+    final t = status.toLowerCase();
+    return t.contains('snag') ||
+        t.contains('attention') ||
+        t.contains('block') ||
+        t.contains('overdue') ||
+        t.contains('delay');
+  }
+
+  String _capitalize(String s) =>
+      s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
+
+  // -----------------------------
   // Small shared bits
   // -----------------------------
   Widget _accentMarker(Color c) => Container(
-        width: 10,
-        height: 18,
+        width: 9,
+        height: 16,
         decoration: BoxDecoration(
           color: c,
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(5),
         ),
       );
 
-  // -----------------------------
-  // Welcome header (personalised) + account button
-  // -----------------------------
-  Widget _buildWelcomeHeader(FlutterFlowTheme theme) {
+  Widget _sectionHeader() => Row(
+        children: [
+          _accentMarker(_ink),
+          const SizedBox(width: 10),
+          Expanded(child: Text('Home Projects', style: _stepHeadlineStyle)),
+        ],
+      );
+
+  // =====================================================================
+  // WELCOME — big & minimal
+  // =====================================================================
+  Widget _buildWelcomeHeader() {
     final topInset = MediaQuery.of(context).padding.top;
     final name = currentUserDisplayName.trim();
-    final firstName = name.isNotEmpty ? name.split(' ').first : '';
-    final hasName = firstName.isNotEmpty;
+    final hasName = name.isNotEmpty;
+    final firstName = hasName ? name.split(RegExp(r'\s+')).first : '';
+    final initials = _initials(name);
+    final now = DateTime.now();
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(_hPad, topInset + 14, _hPad, 18),
+      padding: EdgeInsets.fromLTRB(_hPad, topInset + 16, _hPad, 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: _ink,
-                  borderRadius: BorderRadius.circular(_rMed),
-                ),
-                child: const Icon(Icons.home_rounded, size: 20, color: _paper),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (hasName) ...[
-                      Text('Welcome back', style: _appSubtitleStyle),
-                      const SizedBox(height: 1),
-                      Text(
-                        firstName,
-                        style: _appTitleStyle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ] else
-                      Text(
-                        'Welcome to Subby',
-                        style: _appTitleStyle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              _accountButton(),
+              _logo(),
+              const Spacer(),
+              _avatarButton(initials),
             ],
           ),
-          const SizedBox(height: 14),
-          Container(height: 1, width: double.infinity, color: _hairline),
+          const SizedBox(height: 18),
+          Text(_eyebrowDate(now), style: _eyebrowStyle),
+          const SizedBox(height: 6),
+          Text(
+            hasName ? '${_greeting()},\n$firstName' : _greeting(),
+            style: _greetingStyle,
+          ),
         ],
       ),
     );
   }
 
-  Widget _accountButton() => InkWell(
-        onTap: () => _safeNavigate(
-          widget.profileRouteName,
-          fallbackRoute: _fallbackProfileRoute,
-        ),
-        borderRadius: BorderRadius.circular(_rPill),
-        child: Container(
-          width: 40,
-          height: 40,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            color: _projTint,
+  Widget _logo() => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 26,
+            height: 26,
+            child: CustomPaint(
+              painter: _SubbyMarkPainter(peak: _ink, base: _yellow),
+            ),
           ),
-          child: const Icon(Icons.person_rounded, size: 20, color: _ink),
+          const SizedBox(width: 8),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Text(
+                'Subby',
+                style: TextStyle(
+                  fontFamily: _displayFont,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.4,
+                  height: 1.0,
+                  color: _ink,
+                ),
+              ),
+              SizedBox(width: 2),
+              Padding(
+                padding: EdgeInsets.only(top: 1),
+                child: Text(
+                  'SA',
+                  style: TextStyle(
+                    fontFamily: _displayFont,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                    color: Color(0xFF7A8696),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+
+  Widget _avatarButton(String initials) => SizedBox(
+        width: 44,
+        height: 44,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            InkWell(
+              onTap: _goToProfile,
+              borderRadius: BorderRadius.circular(_rPill),
+              child: Container(
+                width: 42,
+                height: 42,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _ink,
+                  border: Border.all(color: _yellow, width: 2),
+                ),
+                child: initials.isNotEmpty
+                    ? Text(
+                        initials,
+                        style: const TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: _yellow,
+                        ),
+                      )
+                    : const Icon(Icons.person_rounded,
+                        size: 20, color: _yellow),
+              ),
+            ),
+            // notification dot
+            Positioned(
+              top: -1,
+              right: -1,
+              child: Container(
+                width: 11,
+                height: 11,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _orange,
+                  border: Border.all(color: _paper, width: 2),
+                ),
+              ),
+            ),
+          ],
         ),
       );
 
   // =====================================================================
-  // SECTION 1 — MY PROJECTS (orange) — horizontal rail
+  // BODY — stat strip + projects (single stream)
   // =====================================================================
-  Widget _buildProjectsSection(FlutterFlowTheme theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  _accentMarker(_projBg),
-                  const SizedBox(width: 10),
-                  Expanded(
-                      child: Text('Home Projects', style: _stepHeadlineStyle)),
-                ],
-              ),
-              const SizedBox(height: _titleToDesc),
-              Text(
-                'Open a project to manage its plans, timeline, budget, quotes & snags.',
-                style: _stepDescStyle,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        _projectsRail(theme),
-      ],
-    );
-  }
-
-  Widget _projectsRail(FlutterFlowTheme theme) {
+  Widget _buildBody() {
     final q = _activeProjectsQuery();
 
     if (q == null) {
-      // Not signed in / no user ref — show the create prompt.
       return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: _hPad),
-        child: _emptyProjectsCard(),
+        padding: const EdgeInsets.fromLTRB(_hPad, 18, _hPad, 0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _sectionHeader(),
+            const SizedBox(height: 12),
+            _emptyProjectsCard(),
+          ],
+        ),
       );
     }
 
@@ -499,231 +605,261 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       stream: q.snapshots(),
       builder: (context, snap) {
         if (snap.hasError) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: _hPad),
-            child: _emptyProjectsCard(),
-          );
+          return _bodyShell(child: _emptyProjectsCard());
         }
 
         if (snap.connectionState == ConnectionState.waiting && !snap.hasData) {
-          return SizedBox(height: _railH, child: _railLoading());
+          return _bodyShell(child: _loadingList());
         }
 
         final docs = snap.data?.docs ?? const [];
 
         if (docs.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: _hPad),
-            child: _emptyProjectsCard(),
-          );
+          return _bodyShell(child: _emptyProjectsCard());
         }
 
-        return SizedBox(
-          height: _railH,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: _hPad),
-            itemCount: docs.length + 1, // + Add card
-            separatorBuilder: (_, __) => const SizedBox(width: _betweenCards),
-            itemBuilder: (context, i) {
-              if (i == docs.length) return _addProjectCard();
-              return _projectCard(docs[i]);
-            },
-          ),
+        // Derive stats from the same snapshot.
+        final active = docs.length;
+        int needs = 0;
+        for (final d in docs) {
+          final s = (d.data()['status'] as String?)?.trim() ?? '';
+          if (_needsAttention(s)) needs++;
+        }
+        final onTrack = active - needs;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(_hPad, 18, _hPad, 0),
+              child: _statStrip(active, onTrack, needs),
+            ),
+            const SizedBox(height: 22),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 0),
+              child: _sectionHeader(),
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: _hPad),
+              child: Column(
+                children: [
+                  for (final d in docs) ...[
+                    _projectCard(d),
+                    const SizedBox(height: 10),
+                  ],
+                  _newProjectButton(),
+                ],
+              ),
+            ),
+          ],
         );
       },
     );
   }
 
-  Widget _railLoading() => ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: _hPad),
+  Widget _bodyShell({required Widget child}) => Padding(
+        padding: const EdgeInsets.fromLTRB(_hPad, 18, _hPad, 0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _sectionHeader(),
+            const SizedBox(height: 12),
+            child,
+          ],
+        ),
+      );
+
+  // -----------------------------
+  // Stat strip
+  // -----------------------------
+  Widget _statStrip(int active, int onTrack, int needs) => Row(
         children: [
-          _skeletonCard(),
-          const SizedBox(width: _betweenCards),
-          _skeletonCard(),
+          Expanded(child: _statTile('$active', 'Active builds', dark: true)),
+          const SizedBox(width: 10),
+          Expanded(child: _statTile('$onTrack', 'On track')),
+          const SizedBox(width: 10),
+          Expanded(child: _statTile('$needs', 'Needs you', attention: true)),
         ],
       );
 
-  Widget _skeletonCard() => Container(
-        width: _cardW,
-        decoration: BoxDecoration(
-          color: _paper,
-          borderRadius: BorderRadius.circular(_radius),
-          border: Border.all(color: _hairline),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: _surface,
-                  borderRadius: BorderRadius.circular(_rMed),
-                ),
-              ),
-              const SizedBox(height: 14),
-              Container(height: 12, width: 130, color: _surface),
-              const SizedBox(height: 8),
-              Container(height: 10, width: 90, color: _surface),
-            ],
-          ),
-        ),
-      );
+  Widget _statTile(
+    String value,
+    String label, {
+    bool dark = false,
+    bool attention = false,
+  }) {
+    final Color bg = dark ? _ink : _paper;
+    final Color numColor = dark ? _paper : (attention ? _orange : _ink);
+    final Color labelColor = dark
+        ? Colors.white.withOpacity(0.7)
+        : (attention ? _orangeText : _faint);
 
-  Widget _statusPill(String status) {
-    final label =
-        status.isEmpty ? '' : status[0].toUpperCase() + status.substring(1);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.fromLTRB(13, 13, 13, 12),
       decoration: BoxDecoration(
-        color: _yellow,
-        borderRadius: BorderRadius.circular(_rPill),
+        color: bg,
+        borderRadius: BorderRadius.circular(11),
+        border: dark
+            ? null
+            : Border.all(color: attention ? _orangeBorder : _hairline),
       ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontFamily: _bodyFont,
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: _ink,
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(value, style: _statNumberStyle.copyWith(color: numColor)),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontFamily: _bodyFont,
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: labelColor,
+            ),
+          ),
+        ],
       ),
     );
   }
 
+  // -----------------------------
+  // Project card (progress ring)
+  // -----------------------------
   Widget _projectCard(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data();
     final name = (data['name'] as String?)?.trim() ?? '';
     final city = (data['city'] as String?)?.trim() ?? '';
     final province = (data['province'] as String?)?.trim() ?? '';
     final status = (data['status'] as String?)?.trim() ?? '';
-    final updatedAt = (data['updatedAt'] as Timestamp?)?.toDate();
     final loc = [city, province].where((x) => x.isNotEmpty).join(', ');
+    final attention = _needsAttention(status);
+    final progress = _progress(data);
 
     return InkWell(
       onTap: () => _goToProject(doc.reference),
       borderRadius: BorderRadius.circular(_radius),
       child: Container(
-        width: _cardW,
-        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          color: _projBg,
+          color: _paper,
           borderRadius: BorderRadius.circular(_radius),
+          border: Border.all(color: _hairline),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.all(13),
+        child: Row(
           children: [
+            _progressRing(progress, attention),
+            const SizedBox(width: 13),
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 14, 12, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: _yellow,
-                            borderRadius: BorderRadius.circular(_rMed),
-                          ),
-                          child: const Icon(
-                            Icons.folder_rounded,
-                            size: 20,
-                            color: _ink,
-                          ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          name.isEmpty ? 'Untitled project' : name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: _tileTitleStyle,
                         ),
-                        const Spacer(),
-                        if (status.isNotEmpty) _statusPill(status),
+                      ),
+                      if (status.isNotEmpty) ...[
+                        const SizedBox(width: 6),
+                        _miniPill(status, attention),
                       ],
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      name.isEmpty ? 'Untitled project' : name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: _tileTitleStyle.copyWith(color: _paper),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      loc.isEmpty ? 'No location set' : loc,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: _tileSubtitleStyle.copyWith(color: _onDarkSub),
-                    ),
-                    const Spacer(),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            updatedAt == null
-                                ? ''
-                                : 'Updated ${_fmtDate(updatedAt)}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: _metaStyle.copyWith(color: _onDarkSub),
-                          ),
-                        ),
-                        const Icon(
-                          Icons.chevron_right_rounded,
-                          size: 20,
-                          color: _paper,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    loc.isEmpty ? 'No location set' : loc,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _tileSubtitleStyle,
+                  ),
+                ],
               ),
             ),
+            const SizedBox(width: 8),
+            const Icon(Icons.chevron_right_rounded,
+                size: 20, color: Color(0xFFCDD6E2)),
           ],
         ),
       ),
     );
   }
 
-  Widget _addProjectCard() => InkWell(
-        onTap: _goToAddProject,
-        borderRadius: BorderRadius.circular(_radius),
-        child: Container(
-          width: _addCardW,
-          decoration: BoxDecoration(
-            color: _projTint,
-            borderRadius: BorderRadius.circular(_radius),
+  Widget _progressRing(double progress, bool attention) {
+    final Color arc = attention ? _orange : _ink;
+    final Color track = attention ? _orangeTint : _ringTrack;
+    return SizedBox(
+      width: 50,
+      height: 50,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          SizedBox(
+            width: 50,
+            height: 50,
+            child: CircularProgressIndicator(
+              value: progress,
+              strokeWidth: 5,
+              strokeCap: StrokeCap.round,
+              backgroundColor: track,
+              valueColor: AlwaysStoppedAnimation<Color>(arc),
+            ),
           ),
-          child: Column(
+          Text('${(progress * 100).round()}%', style: _ringPctStyle),
+        ],
+      ),
+    );
+  }
+
+  Widget _miniPill(String status, bool attention) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+        decoration: BoxDecoration(
+          color: attention ? _orangeTint : _yellow,
+          borderRadius: BorderRadius.circular(_rSmall),
+        ),
+        child: Text(
+          _capitalize(status),
+          style: TextStyle(
+            fontFamily: _bodyFont,
+            fontSize: 9,
+            fontWeight: FontWeight.w700,
+            color: attention ? _orange : _ink,
+          ),
+        ),
+      );
+
+  // -----------------------------
+  // New project button
+  // -----------------------------
+  Widget _newProjectButton() => InkWell(
+        onTap: _goToAddProject,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(13),
+          decoration: BoxDecoration(
+            color: _surface,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: const Color(0xFFCDD6E2), width: 1.4),
+          ),
+          child: const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: _projBg,
-                  borderRadius: BorderRadius.circular(_rMed),
-                ),
-                child: const Icon(Icons.add_rounded, size: 24, color: _paper),
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                'New Project',
-                style: TextStyle(
-                  fontFamily: _displayFont,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: _projBg,
-                ),
-              ),
-              const SizedBox(height: 2),
+              Icon(Icons.add_rounded, size: 18, color: Color(0xFF4B555D)),
+              SizedBox(width: 8),
               Text(
-                'Start a build',
+                'New project',
                 style: TextStyle(
                   fontFamily: _bodyFont,
-                  fontSize: 11,
-                  color: _projBg.withOpacity(0.8),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF4B555D),
                 ),
               ),
             ],
@@ -731,6 +867,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         ),
       );
 
+  // -----------------------------
+  // Empty / loading
+  // -----------------------------
   Widget _emptyProjectsCard() => InkWell(
         onTap: _goToAddProject,
         borderRadius: BorderRadius.circular(_radius),
@@ -739,7 +878,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           decoration: BoxDecoration(
             color: _projTint,
             borderRadius: BorderRadius.circular(_radius),
-            border: Border.all(color: _projBg, width: 1.4),
+            border: Border.all(color: _ink, width: 1.4),
           ),
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -749,7 +888,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: _projBg,
+                    color: _ink,
                     borderRadius: BorderRadius.circular(_rMed),
                   ),
                   child: const Icon(Icons.add_rounded, size: 26, color: _paper),
@@ -759,201 +898,71 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Create your first project',
-                        style: _tileTitleStyle.copyWith(color: _projBg),
-                      ),
+                      Text('Create your first project', style: _tileTitleStyle),
                       const SizedBox(height: 3),
                       Text(
                         'Store plans, photos, notes, timeline, budget & key contacts.',
                         style: _tileSubtitleStyle.copyWith(
-                          color: _projBg.withOpacity(0.85),
-                        ),
+                            color: _ink.withOpacity(0.7)),
                       ),
                     ],
                   ),
                 ),
-                const Icon(Icons.chevron_right_rounded, color: _projBg),
+                const Icon(Icons.chevron_right_rounded, color: _ink),
               ],
             ),
           ),
         ),
       );
 
-  // =====================================================================
-  // SECTION 2 — DIRECTORY (yellow)
-  // =====================================================================
-  Widget _buildDirectorySection(FlutterFlowTheme theme) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _loadingList() => Column(
         children: [
-          Row(
-            children: [
-              _accentMarker(_yellow),
-              const SizedBox(width: 10),
-              Expanded(
-                  child: Text('Building Directory', style: _stepHeadlineStyle)),
-            ],
-          ),
-          const SizedBox(height: _titleToDesc),
-          Text(
-            'Browse trades & suppliers, compare options, and manage your own listing.',
-            style: _stepDescStyle,
-          ),
-          const SizedBox(height: _descToTile),
-          _directoryTile(
-            theme: theme,
-            onNavigateDirectory: () => _safeNavigate(widget.directoryRouteName),
-          ),
+          _skeletonCard(),
+          const SizedBox(height: 10),
+          _skeletonCard(),
         ],
-      ),
-    );
-  }
+      );
 
-  Widget _directoryTile({
-    required FlutterFlowTheme theme,
-    required VoidCallback onNavigateDirectory,
-    bool emphasized = true,
-  }) {
-    Widget pillButton({
-      required String label,
-      required VoidCallback onTap,
-      IconData? icon,
-    }) {
-      // Primary action on a yellow card = ink button, white content.
-      return InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(_rMed),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-          decoration: BoxDecoration(
-            color: _ink,
-            borderRadius: BorderRadius.circular(_rMed),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (icon != null) ...[
-                Icon(icon, size: 16, color: _paper),
-                const SizedBox(width: 8),
-              ],
-              Text(
-                label,
-                style: const TextStyle(
-                  fontFamily: _bodyFont,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: _paper,
-                ),
+  Widget _skeletonCard() => Container(
+        decoration: BoxDecoration(
+          color: _paper,
+          borderRadius: BorderRadius.circular(_radius),
+          border: Border.all(color: _hairline),
+        ),
+        padding: const EdgeInsets.all(13),
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: const BoxDecoration(
+                color: _surface,
+                shape: BoxShape.circle,
               ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 13),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(height: 12, width: 140, color: _surface),
+                  const SizedBox(height: 8),
+                  Container(height: 10, width: 100, color: _surface),
+                ],
+              ),
+            ),
+          ],
         ),
       );
-    }
-
-    return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: _yellow,
-        borderRadius: BorderRadius.circular(_radius),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          InkWell(
-            onTap: onNavigateDirectory,
-            child: SizedBox(
-              height: emphasized ? _tileHEmphasis : _tileH,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 12, 12, 10),
-                child: Row(
-                  children: [
-                    // Ink chip + white icon on the yellow card
-                    Container(
-                      width: emphasized ? 48 : 44,
-                      height: emphasized ? 48 : 44,
-                      decoration: BoxDecoration(
-                        color: _onYellowChip,
-                        borderRadius: BorderRadius.circular(_rMed),
-                      ),
-                      child: const Icon(
-                        Icons.home_work_rounded,
-                        size: 22,
-                        color: _paper,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // No "Directory" here — the section header already
-                          // says it. Lead with the value instead.
-                          Text('Browse trades & suppliers',
-                              style: _tileTitleStyle.copyWith(color: _ink)),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Compare options & manage your listing',
-                            style: _tileSubtitleStyle.copyWith(
-                                color: _onYellowSub),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Icon(Icons.chevron_right_rounded, color: _ink),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-            child: Row(
-              children: [
-                Expanded(
-                  child: pillButton(
-                    label: _hasListing ? 'Edit Listing' : 'Add Listing',
-                    icon: _hasListing
-                        ? Icons.edit_outlined
-                        : Icons.add_circle_outline_rounded,
-                    onTap: () {
-                      if (_hasListing) {
-                        _safeNavigate(
-                          widget.editListingRouteName,
-                          fallbackRoute: _fallbackEditListingRoute,
-                        );
-                      } else {
-                        _safeNavigate(
-                          widget.addListingRouteName,
-                          fallbackRoute: _fallbackAddListingRoute,
-                        );
-                      }
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   // =====================================================================
   // BUILD
   // =====================================================================
   @override
   Widget build(BuildContext context) {
-    final theme = FlutterFlowTheme.of(context);
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _refreshHasListing(); // keep Add/Edit label fresh on return
+      _refreshHasListing(); // keep listing state fresh on return
     });
 
     return Container(
@@ -963,14 +972,50 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       child: SingleChildScrollView(
         child: Column(
           children: [
-            _buildWelcomeHeader(theme),
-            _buildProjectsSection(theme),
-            const SizedBox(height: _sectionBreak),
-            _buildDirectorySection(theme),
+            _buildWelcomeHeader(),
+            _buildBody(),
             SizedBox(height: 28 + MediaQuery.of(context).padding.bottom),
           ],
         ),
       ),
     );
   }
+}
+
+// Subby peak mark — drawn to match the SVG logo (viewBox 0 0 64 64):
+//   peak  : polyline 12,38 → 32,18 → 52,38
+//   base  : line     13,48 → 51,48 (lime)
+class _SubbyMarkPainter extends CustomPainter {
+  final Color peak;
+  final Color base;
+  const _SubbyMarkPainter({required this.peak, required this.base});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double s = size.width / 64.0;
+    Offset p(double x, double y) => Offset(x * s, y * s);
+
+    final peakPaint = Paint()
+      ..color = peak
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 7 * s
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    final path = Path()
+      ..moveTo(p(12, 38).dx, p(12, 38).dy)
+      ..lineTo(p(32, 18).dx, p(32, 18).dy)
+      ..lineTo(p(52, 38).dx, p(52, 38).dy);
+    canvas.drawPath(path, peakPaint);
+
+    final basePaint = Paint()
+      ..color = base
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 7 * s
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(p(13, 48), p(51, 48), basePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _SubbyMarkPainter old) =>
+      old.peak != peak || old.base != base;
 }
