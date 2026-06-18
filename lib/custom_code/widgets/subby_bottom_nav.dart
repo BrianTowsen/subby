@@ -213,8 +213,8 @@ class _SubbyBottomNavState extends State<SubbyBottomNav> {
     // silent no-op.
     if (_navigating || index == cur) return;
 
-    // Tab switch = light tactile tick (fires before the select delay).
-    HapticFeedback.lightImpact();
+    // Tab switch = medium tactile tick (fires before the select delay).
+    HapticFeedback.mediumImpact();
 
     setState(() {
       _selectedIndex = index;
