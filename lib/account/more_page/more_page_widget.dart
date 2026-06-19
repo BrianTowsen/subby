@@ -53,18 +53,6 @@ class _MorePageWidgetState extends State<MorePageWidget> {
                 height: double.infinity,
               ),
             ),
-            Align(
-              alignment: AlignmentDirectional(0.0, 1.0),
-              child: Container(
-                width: double.infinity,
-                height: 74.0,
-                child: custom_widgets.SubbyBottomNav(
-                  width: double.infinity,
-                  height: 74.0,
-                  currentIndex: 3,
-                ),
-              ),
-            ),
           ],
         ),
       ),

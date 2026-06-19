@@ -74,7 +74,18 @@ class _MainBottomNavState extends State<MainBottomNav> {
 
     final route = (_routeFor(index) ?? '').trim();
     if (route.isEmpty) return;
-    context.goNamed(route);
+
+    // Fade between tabs — no slide. 180ms matches the app's nav convention.
+    context.goNamed(
+      route,
+      extra: <String, dynamic>{
+        kTransitionInfoKey: const TransitionInfo(
+          hasTransition: true,
+          transitionType: PageTransitionType.fade,
+          duration: Duration(milliseconds: 180),
+        ),
+      },
+    );
   }
 
   Widget _navItem({
