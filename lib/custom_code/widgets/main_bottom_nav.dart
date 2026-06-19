@@ -8,28 +8,16 @@ import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
-import 'package:flutter/services.dart'; // HapticFeedback
+import '/custom_code/widgets/index.dart'; // (kept if FF expects it)
 
-// ======================= MainBottomNav (FULL FILE) =======================
-//
-// App-shell bottom navigation, styled to MATCH SubbyBottomNav. The active tab
-// is shown as a navy pill (navy fill, white icon) with the icon sitting ON the
-// pill in the readable foreground. Inactive tabs are muted. Three tabs:
-//   0 Projects . 1 Directory . 2 Account
-//
-// PARAMETERS (matches the FlutterFlow definition):
-//   * width, height        - standard pair (height accepted; bar sizes itself).
-//   * currentIndex         - which tab is active on THIS page (0..2).
-//   * projectsRouteName / directoryRouteName / accountRouteName
-//                          - FF route names; leave null to disable that tab.
+// Subby bottom nav — matches DashboardPageView v4 (Option C).
+// Three destinations only — More lives in the top-right menu button, not here.
+// Place at the bottom of your page scaffolds. Set `currentIndex` per page
+// (0 Projects · 1 Directory · 2 Account) so the right tab lights up, and pass
+// the FF route names for the tabs you want it to navigate to.
 //
 // Tapping a tab calls context.goNamed(route) (root switch). Empty routes and
 // taps on the already-active tab are ignored.
-//
-// ANDROID SAFE AREA: the row is wrapped in SafeArea(top:false) so the system
-// inset (gesture bar / 3-button nav) is reserved automatically; `minimum:
-// bottom 8` is a floor for devices with no inset. Place the bar at the very
-// bottom of the page, full-bleed, so it owns the inset.
 
 class MainBottomNav extends StatefulWidget {
   const MainBottomNav({
@@ -47,7 +35,7 @@ class MainBottomNav extends StatefulWidget {
   final double? width;
   final double? height;
 
-  /// 0 Projects . 1 Directory . 2 Account
+  /// 0 Projects · 1 Directory · 2 Account
   final int currentIndex;
 
   final String? projectsRouteName;
@@ -59,35 +47,14 @@ class MainBottomNav extends StatefulWidget {
 }
 
 class _MainBottomNavState extends State<MainBottomNav> {
-  // PALETTE (matches SubbyBottomNav)
-  static const Color _ink = Color(0xFF16202E);
-  static const Color _inkMute = Color(0xFF5A6675);
+  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  static const Color _ink = Color(0xFF16202E); // active
+  static const Color _faint = Color(0xFF93A0B0); // inactive
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _hairline = Color(0xFFEEF1F4);
+  static const Color _hairline = Color(0xFFEEF1F2);
+  // ────────────────────────────────────────────────────────────────────
 
-  static const String _bodyFont = 'Inter';
-
-  // Tab nav fades in; the 180ms select delay + medium haptic mirror
-  // SubbyBottomNav so both bars feel identical on tap.
-  static const Duration _selectDelay = Duration(milliseconds: 180);
-
-  late int _selectedIndex;
-  bool _navigating = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedIndex = widget.currentIndex.clamp(0, 2);
-  }
-
-  @override
-  void didUpdateWidget(covariant MainBottomNav oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    final next = widget.currentIndex.clamp(0, 2);
-    if (next != _selectedIndex && mounted) {
-      setState(() => _selectedIndex = next);
-    }
-  }
+  static const double _barHeight = 72;
 
   String? _routeFor(int index) {
     switch (index) {
@@ -102,98 +69,47 @@ class _MainBottomNavState extends State<MainBottomNav> {
     }
   }
 
-  Future<void> _handleTap(int index) async {
-    index = index.clamp(0, 2);
-    // Re-tap of the current tab, or a tap while a switch is in flight, is a
-    // silent no-op.
-    if (_navigating || index == widget.currentIndex) return;
-
-    // Tab switch = medium tactile tick (fires before the select delay).
-    HapticFeedback.mediumImpact();
-
-    setState(() {
-      _selectedIndex = index;
-      _navigating = true;
-    });
+  void _handleTap(int index) {
+    if (index == widget.currentIndex) return;
 
     final route = (_routeFor(index) ?? '').trim();
-    if (route.isEmpty) {
-      setState(() => _navigating = false);
-      return;
-    }
-
-    try {
-      await Future.delayed(_selectDelay);
-      if (!mounted) return;
-
-      // All tab navigation fades in.
-      context.goNamed(
-        route,
-        extra: {
-          kTransitionInfoKey: const TransitionInfo(
-            hasTransition: true,
-            transitionType: PageTransitionType.fade,
-            duration: Duration(milliseconds: 180),
-          ),
-        },
-      );
-    } catch (e) {
-      debugPrint('MainBottomNav navigation failed: $e');
-    } finally {
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (mounted) setState(() => _navigating = false);
-      });
-    }
+    if (route.isEmpty) return;
+    context.goNamed(route);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final sel = _selectedIndex.clamp(0, 2);
+  Widget _navItem({
+    required int index,
+    required IconData activeIcon,
+    required IconData inactiveIcon,
+    required String label,
+  }) {
+    final bool selected = index == widget.currentIndex;
+    final Color color = selected ? _ink : _faint;
 
-    return Container(
-      width: widget.width ?? double.infinity,
-      decoration: const BoxDecoration(
-        color: _paper,
-        border: Border(top: BorderSide(color: _hairline, width: 1)),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 16,
-            offset: Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        // Floor so it never hugs the gesture bar; SafeArea adds the real
-        // system inset on top of this where present (Samsung etc).
-        minimum: const EdgeInsets.only(bottom: 8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          child: Row(
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _handleTap(index),
+          splashFactory: NoSplash.splashFactory,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          hoverColor: Colors.transparent,
+          overlayColor: WidgetStateProperty.all(Colors.transparent),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Expanded(
-                child: _tab(
-                  active: sel == 0,
-                  label: 'Projects',
-                  icon: Icons.grid_view_rounded,
-                  index: 0,
-                ),
-              ),
-              Expanded(
-                child: _tab(
-                  active: sel == 1,
-                  label: 'Directory',
-                  icon: Icons.contacts_rounded,
-                  index: 1,
-                ),
-              ),
-              Expanded(
-                child: _tab(
-                  active: sel == 2,
-                  label: 'Account',
-                  icon: Icons.person_rounded,
-                  index: 2,
+              Icon(selected ? activeIcon : inactiveIcon,
+                  size: 23, color: color),
+              const SizedBox(height: 5),
+              Text(
+                label,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 10,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                  color: color,
+                  letterSpacing: 0.0,
                 ),
               ),
             ],
@@ -203,50 +119,41 @@ class _MainBottomNavState extends State<MainBottomNav> {
     );
   }
 
-  Widget _tab({
-    required bool active,
-    required String label,
-    required IconData icon,
-    required int index,
-  }) {
-    return InkWell(
-      onTap: () => _handleTap(index),
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              curve: Curves.easeOut,
-              width: 56,
-              height: 30,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: active ? _ink : Colors.transparent,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Icon(
-                icon,
-                size: 22,
-                color: active ? _paper : _inkMute,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontFamily: _bodyFont,
-                fontSize: 11,
-                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                color: active ? _ink : _inkMute,
-              ),
-            ),
-          ],
-        ),
+  @override
+  Widget build(BuildContext context) {
+    final double bottomInset = MediaQuery.of(context).padding.bottom;
+
+    return Container(
+      width: widget.width ?? double.infinity,
+      height: (widget.height ?? _barHeight) + bottomInset,
+      decoration: const BoxDecoration(
+        color: _paper,
+        border: Border(top: BorderSide(color: _hairline, width: 1)),
+      ),
+      // Three roomy tabs — a little extra horizontal inset keeps them centred.
+      padding: EdgeInsets.only(bottom: bottomInset, left: 24, right: 24),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          _navItem(
+            index: 0,
+            activeIcon: Icons.grid_view_rounded,
+            inactiveIcon: Icons.grid_view_outlined,
+            label: 'Projects',
+          ),
+          _navItem(
+            index: 1,
+            activeIcon: Icons.contacts_rounded,
+            inactiveIcon: Icons.contacts_outlined,
+            label: 'Directory',
+          ),
+          _navItem(
+            index: 2,
+            activeIcon: Icons.person_rounded,
+            inactiveIcon: Icons.person_outline_rounded,
+            label: 'Account',
+          ),
+        ],
       ),
     );
   }
