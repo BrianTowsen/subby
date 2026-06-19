@@ -48,7 +48,7 @@ class MainBottomNav extends StatefulWidget {
 
 class _MainBottomNavState extends State<MainBottomNav> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _ink = Color(0xFF16202E); // active
+  static const Color _teal = Color(0xFF0D9488); // active
   static const Color _faint = Color(0xFF93A0B0); // inactive
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _hairline = Color(0xFFEEF1F2);
@@ -95,7 +95,7 @@ class _MainBottomNavState extends State<MainBottomNav> {
     required String label,
   }) {
     final bool selected = index == widget.currentIndex;
-    final Color color = selected ? _ink : _faint;
+    final Color color = selected ? _teal : _faint;
 
     return Expanded(
       child: Material(
