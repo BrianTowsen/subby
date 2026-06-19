@@ -14,7 +14,7 @@ import 'package:flutter/material.dart';
 //
 // WHAT CHANGED FROM v3 (UI only — all logic preserved):
 //   • Welcome header is now big & minimal: an uppercase date eyebrow + a
-//     lime-ringed initials avatar (notification dot), then a large two-line
+//     teal-ringed initials avatar (notification dot), then a large two-line
 //     time-of-day greeting. The header logo is now the bold peak MARK only
 //     (no wordmark).
 //   • Empty state is a full ONBOARDING panel (no "Home Projects" header):
@@ -115,7 +115,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   static const Color _hairline = Color(0xFFEEF1F2);
 
   // Accents
-  static const Color _yellow = Color(0xFFAEE03F); // lime — "on site" / on track
+  static const Color _yellow =
+      Color(0xFF0D9488); // deep teal — "on site" / on track
   static const Color _ringTrack = Color(0xFFEEF2F7);
   static const Color _orange = Color(0xFFFF6A2B); // attention / snagging
   static const Color _orangeTint = Color(0xFFFFE7DA);
@@ -548,7 +549,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         width: 34,
         height: 34,
         child: CustomPaint(
-          painter: _SubbyMarkPainter(peak: _ink, base: _yellow),
+          painter: _SubbyMarkPainter(peak: _yellow, base: _yellow),
         ),
       );
 
@@ -814,7 +815,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             fontFamily: _bodyFont,
             fontSize: 9,
             fontWeight: FontWeight.w700,
-            color: attention ? _orange : _ink,
+            color: attention ? _orange : _paper,
           ),
         ),
       );
@@ -887,7 +888,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         const SizedBox(height: 18),
 
         // Feature checklist — the first item is the lead (ink mark), the
-        // rest are lime ticks.
+        // rest are teal ticks.
         _featureRow(
           lead: true,
           title: 'Home build, managed',
@@ -955,7 +956,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             ),
             child: lead
                 ? const Icon(Icons.check_rounded, size: 14, color: _paper)
-                : const Icon(Icons.check_rounded, size: 14, color: _ink),
+                : const Icon(Icons.check_rounded, size: 14, color: _paper),
           ),
           const SizedBox(width: 11),
           Expanded(
@@ -1183,7 +1184,7 @@ class _MoreSlidePanelState extends State<_MoreSlidePanel> {
 
 // Subby peak mark — bold, icon only (viewBox 0 0 64 64):
 //   peak  : polyline 12,40 → 32,18 → 52,40
-//   base  : line     14,50 → 50,50 (lime)
+//   base  : line     14,50 → 50,50 (teal)
 class _SubbyMarkPainter extends CustomPainter {
   final Color peak;
   final Color base;
