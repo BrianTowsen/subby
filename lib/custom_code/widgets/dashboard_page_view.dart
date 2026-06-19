@@ -15,7 +15,11 @@ import 'package:flutter/material.dart';
 // WHAT CHANGED FROM v3 (UI only — all logic preserved):
 //   • Welcome header is now big & minimal: an uppercase date eyebrow + a
 //     lime-ringed initials avatar (notification dot), then a large two-line
-//     time-of-day greeting.
+//     time-of-day greeting. The header logo is now the bold peak MARK only
+//     (no wordmark).
+//   • Empty state is a full ONBOARDING panel (no "Home Projects" header):
+//     a headline, a "what you get" checklist, then Create project (primary)
+//     and Create user profile (secondary — hidden once a profile exists).
 //   • New at-a-glance STAT STRIP derived live from the projects stream:
 //     Active builds · On track · Needs you.
 //   • Projects are a vertical LIST with circular PROGRESS RINGS (was a rail).
@@ -46,6 +50,7 @@ class DashboardPageView extends StatefulWidget {
     this.directoryRouteName,
     this.projectsRouteName, // "View all" → MyProjectsHomePage
     this.profileRouteName,
+    this.moreRouteName, // top-right menu → More hub
     this.projectDetailRouteName, // open a single project
     this.addProjectsRouteName, // create a new project
     this.projectParamName, // param name for the project ref (default "projectRef")
@@ -73,6 +78,7 @@ class DashboardPageView extends StatefulWidget {
   final String? directoryRouteName;
   final String? projectsRouteName;
   final String? profileRouteName;
+  final String? moreRouteName;
   final String? projectDetailRouteName;
   final String? addProjectsRouteName;
   final String? projectParamName;
@@ -138,6 +144,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
   // Route fallbacks
   static const String _fallbackProfileRoute = 'profilePage';
+  static const String _fallbackMoreRoute = 'MorePageView';
   static const String _fallbackProjectsRoute = 'MyProjectsHomePage';
   static const String _fallbackProjectDetailRoute = 'ProjectDetailPage';
   static const String _fallbackAddProjectsRoute = 'addProjectsPage';
@@ -313,6 +320,12 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         fallbackRoute: _fallbackProfileRoute,
       );
 
+  // Top-right menu button → the More hub (Manage · Support · Legal).
+  void _goToMore() => _safeNavigate(
+        widget.moreRouteName,
+        fallbackRoute: _fallbackMoreRoute,
+      );
+
   // RETAINED: the Directory's add-vs-edit decision, ready for the bottom nav.
   // ignore: unused_element
   void _goToListing() {
@@ -458,7 +471,6 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     final name = currentUserDisplayName.trim();
     final hasName = name.isNotEmpty;
     final firstName = hasName ? name.split(RegExp(r'\s+')).first : '';
-    final initials = _initials(name);
     final now = DateTime.now();
 
     return Padding(
@@ -470,7 +482,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             children: [
               _logo(),
               const Spacer(),
-              _avatarButton(initials),
+              _menuButton(),
             ],
           ),
           const SizedBox(height: 18),
@@ -485,99 +497,27 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     );
   }
 
-  Widget _logo() => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: 26,
-            height: 26,
-            child: CustomPaint(
-              painter: _SubbyMarkPainter(peak: _ink, base: _yellow),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text(
-                'Subby',
-                style: TextStyle(
-                  fontFamily: _displayFont,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.4,
-                  height: 1.0,
-                  color: _ink,
-                ),
-              ),
-              SizedBox(width: 2),
-              Padding(
-                padding: EdgeInsets.only(top: 1),
-                child: Text(
-                  'SA',
-                  style: TextStyle(
-                    fontFamily: _displayFont,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
-                    color: Color(0xFF7A8696),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+  // Icon-only mark — bold, no wordmark.
+  Widget _logo() => const SizedBox(
+        width: 34,
+        height: 34,
+        child: CustomPaint(
+          painter: _SubbyMarkPainter(peak: _ink, base: _yellow),
+        ),
       );
 
-  Widget _avatarButton(String initials) => SizedBox(
-        width: 44,
-        height: 44,
-        child: Stack(
-          clipBehavior: Clip.none,
+  Widget _menuButton() => InkWell(
+        onTap: _goToMore,
+        borderRadius: BorderRadius.circular(_rLarge),
+        child: Container(
+          width: 42,
+          height: 42,
           alignment: Alignment.center,
-          children: [
-            InkWell(
-              onTap: _goToProfile,
-              borderRadius: BorderRadius.circular(_rPill),
-              child: Container(
-                width: 42,
-                height: 42,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _ink,
-                  border: Border.all(color: _yellow, width: 2),
-                ),
-                child: initials.isNotEmpty
-                    ? Text(
-                        initials,
-                        style: const TextStyle(
-                          fontFamily: _bodyFont,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: _yellow,
-                        ),
-                      )
-                    : const Icon(Icons.person_rounded,
-                        size: 20, color: _yellow),
-              ),
-            ),
-            // notification dot
-            Positioned(
-              top: -1,
-              right: -1,
-              child: Container(
-                width: 11,
-                height: 11,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _orange,
-                  border: Border.all(color: _paper, width: 2),
-                ),
-              ),
-            ),
-          ],
+          decoration: BoxDecoration(
+            color: _surface,
+            borderRadius: BorderRadius.circular(_rLarge),
+          ),
+          child: const Icon(Icons.menu_rounded, size: 22, color: _ink),
         ),
       );
 
@@ -590,14 +530,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     if (q == null) {
       return Padding(
         padding: const EdgeInsets.fromLTRB(_hPad, 18, _hPad, 0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _sectionHeader(),
-            const SizedBox(height: 12),
-            _emptyProjectsCard(),
-          ],
-        ),
+        child: _buildOnboarding(),
       );
     }
 
@@ -605,7 +538,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       stream: q.snapshots(),
       builder: (context, snap) {
         if (snap.hasError) {
-          return _bodyShell(child: _emptyProjectsCard());
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(_hPad, 18, _hPad, 0),
+            child: _buildOnboarding(),
+          );
         }
 
         if (snap.connectionState == ConnectionState.waiting && !snap.hasData) {
@@ -615,7 +551,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         final docs = snap.data?.docs ?? const [];
 
         if (docs.isEmpty) {
-          return _bodyShell(child: _emptyProjectsCard());
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(_hPad, 18, _hPad, 0),
+            child: _buildOnboarding(),
+          );
         }
 
         // Derive stats from the same snapshot.
@@ -868,53 +807,214 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       );
 
   // -----------------------------
-  // Empty / loading
+  // Onboarding (empty state) — headline, what-you-get checklist, actions.
+  // "Create user profile" only shows until the user has a profile (a name).
   // -----------------------------
-  Widget _emptyProjectsCard() => InkWell(
-        onTap: _goToAddProject,
-        borderRadius: BorderRadius.circular(_radius),
-        child: Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: _projTint,
-            borderRadius: BorderRadius.circular(_radius),
-            border: Border.all(color: _ink, width: 1.4),
+  Widget _buildOnboarding() {
+    final hasProfile = currentUserDisplayName.trim().isNotEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Create your first home building project',
+          style: TextStyle(
+            fontFamily: _displayFont,
+            fontSize: 25,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.55,
+            height: 1.12,
+            color: _ink,
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'One place to run the build, end to end:',
+          style: TextStyle(
+            fontFamily: _bodyFont,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            height: 1.45,
+            color: _inkMute,
+          ),
+        ),
+        const SizedBox(height: 18),
+
+        // Feature checklist — the first item is the lead (ink mark), the
+        // rest are lime ticks.
+        _featureRow(
+          lead: true,
+          title: 'Home build, managed',
+          desc: 'Your whole project in one organised place.',
+        ),
+        const SizedBox(height: 11),
+        _featureRow(
+          title: 'Plans & documents',
+          desc: 'Architectural drawings with version control.',
+        ),
+        const SizedBox(height: 11),
+        _featureRow(
+          title: 'Cost estimates & budget',
+          desc: 'Full financial control of the build.',
+        ),
+        const SizedBox(height: 11),
+        _featureRow(
+          title: 'Construction programme',
+          desc: 'Timeline, to-do list & snag list in one flow.',
+        ),
+        const SizedBox(height: 11),
+        _featureRow(
+          title: 'Material & labour quotes',
+          desc: 'Request and compare quotes from vetted trades.',
+        ),
+
+        const SizedBox(height: 24),
+
+        // Primary — create project.
+        _primaryButton(
+          label: 'Create project',
+          icon: Icons.add_rounded,
+          onTap: _goToAddProject,
+        ),
+
+        // Secondary — create profile (hidden once a profile exists).
+        if (!hasProfile) ...[
+          const SizedBox(height: 10),
+          _secondaryButton(
+            label: 'Create user profile',
+            icon: Icons.person_rounded,
+            onTap: _goToProfile,
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _featureRow({
+    required String title,
+    required String desc,
+    bool lead = false,
+  }) =>
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(top: 1),
+            width: 20,
+            height: 20,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: lead ? _ink : _yellow,
+              borderRadius: BorderRadius.circular(_rSmall),
+            ),
+            child: lead
+                ? const Icon(Icons.check_rounded, size: 14, color: _paper)
+                : const Icon(Icons.check_rounded, size: 14, color: _ink),
+          ),
+          const SizedBox(width: 11),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontFamily: _displayFont,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.1,
                     color: _ink,
-                    borderRadius: BorderRadius.circular(_rMed),
-                  ),
-                  child: const Icon(Icons.add_rounded, size: 26, color: _paper),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Create your first project', style: _tileTitleStyle),
-                      const SizedBox(height: 3),
-                      Text(
-                        'Store plans, photos, notes, timeline, budget & key contacts.',
-                        style: _tileSubtitleStyle.copyWith(
-                            color: _ink.withOpacity(0.7)),
-                      ),
-                    ],
                   ),
                 ),
-                const Icon(Icons.chevron_right_rounded, color: _ink),
+                const SizedBox(height: 1),
+                Text(
+                  desc,
+                  style: const TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                    color: Color(0xFF7A8696),
+                  ),
+                ),
               ],
             ),
+          ),
+        ],
+      );
+
+  Widget _primaryButton({
+    required String label,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) =>
+      InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(_rLarge),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(15),
+          decoration: BoxDecoration(
+            color: _ink,
+            borderRadius: BorderRadius.circular(_rLarge),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 18, color: _paper),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontFamily: _bodyFont,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: _paper,
+                ),
+              ),
+            ],
           ),
         ),
       );
 
+  Widget _secondaryButton({
+    required String label,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) =>
+      InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(_rLarge),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(15),
+          decoration: BoxDecoration(
+            color: _paper,
+            borderRadius: BorderRadius.circular(_rLarge),
+            border: Border.all(color: const Color(0xFFCDD6E2), width: 1.4),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 18, color: _ink),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontFamily: _bodyFont,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: _ink,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+  // -----------------------------
+  // Loading
+  // -----------------------------
   Widget _loadingList() => Column(
         children: [
           _skeletonCard(),
@@ -982,9 +1082,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   }
 }
 
-// Subby peak mark — drawn to match the SVG logo (viewBox 0 0 64 64):
-//   peak  : polyline 12,38 → 32,18 → 52,38
-//   base  : line     13,48 → 51,48 (lime)
+// Subby peak mark — bold, icon only (viewBox 0 0 64 64):
+//   peak  : polyline 12,40 → 32,18 → 52,40
+//   base  : line     14,50 → 50,50 (lime)
 class _SubbyMarkPainter extends CustomPainter {
   final Color peak;
   final Color base;
@@ -998,21 +1098,21 @@ class _SubbyMarkPainter extends CustomPainter {
     final peakPaint = Paint()
       ..color = peak
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 7 * s
+      ..strokeWidth = 11 * s
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
     final path = Path()
-      ..moveTo(p(12, 38).dx, p(12, 38).dy)
+      ..moveTo(p(12, 40).dx, p(12, 40).dy)
       ..lineTo(p(32, 18).dx, p(32, 18).dy)
-      ..lineTo(p(52, 38).dx, p(52, 38).dy);
+      ..lineTo(p(52, 40).dx, p(52, 40).dy);
     canvas.drawPath(path, peakPaint);
 
     final basePaint = Paint()
       ..color = base
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 7 * s
+      ..strokeWidth = 11 * s
       ..strokeCap = StrokeCap.round;
-    canvas.drawLine(p(13, 48), p(51, 48), basePaint);
+    canvas.drawLine(p(14, 50), p(50, 50), basePaint);
   }
 
   @override

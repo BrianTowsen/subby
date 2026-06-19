@@ -59,12 +59,15 @@ class _HomePageWidgetState extends State<HomePageWidget> {
             Align(
               alignment: AlignmentDirectional(0.0, 1.0),
               child: Container(
-                width: double.infinity,
+                width: MediaQuery.sizeOf(context).width * 1.0,
                 height: 74.0,
-                child: custom_widgets.SubbyBottomNav(
-                  width: double.infinity,
+                child: custom_widgets.MainBottomNav(
+                  width: MediaQuery.sizeOf(context).width * 1.0,
                   height: 74.0,
-                  currentIndex: 0,
+                  currentIndex: 1,
+                  projectsRouteName: 'dashboardPage',
+                  directoryRouteName: 'homePage',
+                  accountRouteName: 'profilePage',
                 ),
               ),
             ),
