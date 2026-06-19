@@ -17,9 +17,12 @@ import 'package:flutter/material.dart';
 //     teal-ringed initials avatar (notification dot), then a large two-line
 //     time-of-day greeting. The header logo is now the bold peak MARK only
 //     (no wordmark).
-//   • Empty state is a full ONBOARDING panel (no "Home Projects" header):
-//     a headline, a "what you get" checklist, then Create project (primary)
-//     and Create user profile (secondary — hidden once a profile exists).
+//   • Empty state is a lean ONBOARDING panel (Option C): a teal hero tile, a
+//     one-line headline, a single promise sentence and a row of capability
+//     chips (Plans · Budget · Programme · Snags · Quotes) — no dense
+//     checklist. Then Create project (primary) and Create user profile
+//     (secondary — hidden once a profile exists). The persistent bottom nav
+//     (MainBottomNav, overlaid by the scaffold) stays put underneath.
 //   • New at-a-glance STAT STRIP derived live from the projects stream:
 //     Active builds · On track · Needs you.
 //   • Projects are a vertical LIST with circular PROGRESS RINGS (was a rail).
@@ -854,8 +857,11 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       );
 
   // -----------------------------
-  // Onboarding (empty state) — headline, what-you-get checklist, actions.
-  // "Create user profile" only shows until the user has a profile (a name).
+  // Onboarding (empty state) — Option C: lean.
+  // A teal hero tile, a one-line headline, a single promise sentence and a
+  // row of capability chips — then Create project (primary) and Create user
+  // profile (secondary, hidden once a profile exists). The persistent bottom
+  // nav stays overlaid underneath (the build reserves space for it).
   // -----------------------------
   Widget _buildOnboarding() {
     final hasProfile = currentUserDisplayName.trim().isNotEmpty;
@@ -863,59 +869,60 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Hero tile.
+        Container(
+          width: 64,
+          height: 64,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: _yellow,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: const Icon(Icons.add_rounded, size: 34, color: _paper),
+        ),
+        const SizedBox(height: 20),
+
+        // Headline.
         const Text(
-          'Create your first home building project',
+          'Start your first building project',
           style: TextStyle(
             fontFamily: _displayFont,
-            fontSize: 25,
+            fontSize: 26,
             fontWeight: FontWeight.w800,
-            letterSpacing: -0.55,
-            height: 1.12,
+            letterSpacing: -0.6,
+            height: 1.08,
             color: _ink,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
+
+        // Single promise line.
         const Text(
-          'One place to run the build, end to end:',
+          'Plans, budget, programme, snags and quotes — managed '
+          'end to end, in one place.',
           style: TextStyle(
             fontFamily: _bodyFont,
-            fontSize: 13,
+            fontSize: 14,
             fontWeight: FontWeight.w500,
-            height: 1.45,
+            height: 1.5,
             color: _inkMute,
           ),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 22),
 
-        // Feature checklist — the first item is the lead (ink mark), the
-        // rest are teal ticks.
-        _featureRow(
-          lead: true,
-          title: 'Home build, managed',
-          desc: 'Your whole project in one organised place.',
+        // Capability chips.
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: const [
+            _CapabilityChip('Plans'),
+            _CapabilityChip('Budget'),
+            _CapabilityChip('Programme'),
+            _CapabilityChip('Snags'),
+            _CapabilityChip('Quotes'),
+          ],
         ),
-        const SizedBox(height: 11),
-        _featureRow(
-          title: 'Plans & documents',
-          desc: 'Architectural drawings with version control.',
-        ),
-        const SizedBox(height: 11),
-        _featureRow(
-          title: 'Cost estimates & budget',
-          desc: 'Full financial control of the build.',
-        ),
-        const SizedBox(height: 11),
-        _featureRow(
-          title: 'Construction programme',
-          desc: 'Timeline, to-do list & snag list in one flow.',
-        ),
-        const SizedBox(height: 11),
-        _featureRow(
-          title: 'Material & labour quotes',
-          desc: 'Request and compare quotes from vetted trades.',
-        ),
-
-        const SizedBox(height: 24),
+        const SizedBox(height: 28),
 
         // Primary — create project.
         _primaryButton(
@@ -936,59 +943,6 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       ],
     );
   }
-
-  Widget _featureRow({
-    required String title,
-    required String desc,
-    bool lead = false,
-  }) =>
-      Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            margin: const EdgeInsets.only(top: 1),
-            width: 20,
-            height: 20,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: lead ? _ink : _yellow,
-              borderRadius: BorderRadius.circular(_rSmall),
-            ),
-            child: lead
-                ? const Icon(Icons.check_rounded, size: 14, color: _paper)
-                : const Icon(Icons.check_rounded, size: 14, color: _paper),
-          ),
-          const SizedBox(width: 11),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontFamily: _displayFont,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.1,
-                    color: _ink,
-                  ),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  desc,
-                  style: const TextStyle(
-                    fontFamily: _bodyFont,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    height: 1.4,
-                    color: Color(0xFF7A8696),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      );
 
   Widget _primaryButton({
     required String label,
@@ -1126,6 +1080,38 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             // instead of resting underneath it.
             SizedBox(height: 72 + 28 + MediaQuery.of(context).padding.bottom),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// =====================================================================
+// Capability chip — the soft teal pills in the empty state (Plans, Budget…).
+// =====================================================================
+class _CapabilityChip extends StatelessWidget {
+  const _CapabilityChip(this.label);
+
+  final String label;
+
+  static const Color _tealTint = Color(0xFFE3F4F2);
+  static const Color _tealText = Color(0xFF0D6B62);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+      decoration: BoxDecoration(
+        color: _tealTint,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: _tealText,
         ),
       ),
     );
