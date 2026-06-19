@@ -25,7 +25,8 @@ class AddProjectsPageView extends StatefulWidget {
   State<AddProjectsPageView> createState() => _AddProjectsPageViewState();
 }
 
-class _AddProjectsPageViewState extends State<AddProjectsPageView> {
+class _AddProjectsPageViewState extends State<AddProjectsPageView>
+    with SingleTickerProviderStateMixin {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
   // Synced with DashboardPageView v4. Inline = authoritative for this file.
   // Grep `SUBBY PALETTE (LOCK)` to sync.
@@ -38,9 +39,9 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
   static const Color _surface = Color(0xFFEEF1F4);
   static const Color _hairline = Color(0xFFEEF1F2);
   static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
-  // Brand accent — LIME. Always ink foreground, never white.
-  static const Color _spark = Color(0xFFAEE03F); // primary CTA / ranked accent
-  static const Color _sparkInk = Color(0xFF16202E);
+  // Brand accent — TEAL. Used as the accent (focus ring, active switch); the
+  // primary CTA stays ink to match the dashboard's "Create project".
+  static const Color _teal = Color(0xFF0D9488);
   // Status
   static const Color _live = Color(0xFFFF6A2B); // orange — live / warning
   static const Color _coral = Color(0xFFE0531C);
@@ -50,10 +51,11 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
   static const String _monoFont = 'Inter';
   // ────────────────────────────────────────────────────────────────────
 
-  static const double _hPad = 20;
-  static const double _vPad = 18;
+  static const double _hPad = 22;
+  static const double _vPad = 8;
   static const double _radius = 12;
-  static const double _gap = 12;
+  static const double _gap = 12; // horizontal gap inside rows
+  static const double _fieldGap = 20; // vertical rhythm between fields (open)
 
   final _formKey = GlobalKey<FormState>();
 
@@ -72,13 +74,59 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
   bool _archived = false;
   bool _saving = false;
 
+  // ─── Swipe-to-dismiss (follow the thumb, snap back or close) ────────
+  double _dragX = 0;
+  late final AnimationController _snapCtrl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 220),
+  );
+  Animation<double>? _snapAnim;
+
   @override
   void dispose() {
+    _snapCtrl.dispose();
     _nameCtrl.dispose();
     _cityCtrl.dispose();
     _addressCtrl.dispose();
     _notesCtrl.dispose();
     super.dispose();
+  }
+
+  // Only rightward drags count; deferToChild lets text fields / dropdowns
+  // claim their own horizontal gestures first.
+  void _onDragUpdate(DragUpdateDetails d) {
+    if (_snapCtrl.isAnimating) _snapCtrl.stop();
+    setState(() {
+      _dragX = (_dragX + d.delta.dx).clamp(0.0, double.infinity);
+    });
+  }
+
+  void _onDragEnd(DragEndDetails d) {
+    final double width = MediaQuery.sizeOf(context).width;
+    final double v = d.primaryVelocity ?? 0;
+    final bool shouldClose = _dragX > width * 0.30 || v > 700;
+
+    if (shouldClose) {
+      _animateDragTo(width, then: () {
+        final nav = Navigator.of(context);
+        if (nav.canPop()) nav.pop();
+      });
+    } else {
+      _animateDragTo(0);
+    }
+  }
+
+  void _animateDragTo(double target, {VoidCallback? then}) {
+    _snapAnim = Tween<double>(begin: _dragX, end: target).animate(
+      CurvedAnimation(parent: _snapCtrl, curve: Curves.easeOutCubic),
+    )..addListener(() {
+        setState(() => _dragX = _snapAnim!.value);
+      });
+    _snapCtrl
+      ..reset()
+      ..forward().whenComplete(() {
+        if (then != null) then();
+      });
   }
 
   // =========================================================
@@ -128,15 +176,6 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
   // =========================================================
   // ✅ COLORS
   // =========================================================
-  Color _projectsColor(FlutterFlowTheme theme) {
-    try {
-      final c = (theme as dynamic).projectsColour as Color?;
-      return c ?? _ink;
-    } catch (_) {
-      return _ink;
-    }
-  }
-
   // High-contrast field fill so inputs are visible on white/flat backgrounds
   Color _fieldFill(FlutterFlowTheme theme) {
     final sb = _surface;
@@ -147,32 +186,8 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
   Color _fieldBorder(FlutterFlowTheme theme) => _hairlineOnSurface;
 
   // =========================================================
-  // ✅ SUBBY SHELLS (NO SHADOWS)
+  // ✅ SECTION HEADER (matches the dashboard)
   // =========================================================
-  Widget _subbyCardShell({
-    required FlutterFlowTheme theme,
-    required Widget child,
-    EdgeInsets padding = const EdgeInsets.all(16),
-  }) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: _paper,
-        borderRadius: BorderRadius.circular(_radius),
-        border: Border.all(
-          color: _hairline,
-          width: 1,
-        ),
-        // ✅ no shadows
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(_radius),
-        child: Padding(padding: padding, child: child),
-      ),
-    );
-  }
-
-  // Accent marker + section title (matches the dashboard).
   Widget _sectionHeader(FlutterFlowTheme theme, String label) => Row(
         children: [
           Container(
@@ -217,22 +232,21 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(_radius),
-        borderSide: BorderSide(color: _ink, width: 1.7),
+        borderSide: const BorderSide(color: _teal, width: 1.7),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(_radius),
-        borderSide: BorderSide(color: _coral, width: 1.2),
+        borderSide: const BorderSide(color: _coral, width: 1.2),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(_radius),
-        borderSide: BorderSide(color: _coral, width: 1.2),
+        borderSide: const BorderSide(color: _coral, width: 1.2),
       ),
     );
   }
 
   Widget _pillButton({
     required FlutterFlowTheme theme,
-    required Color accent,
     required String text,
     required IconData icon,
     required VoidCallback onTap,
@@ -257,10 +271,10 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             decoration: BoxDecoration(
-              color: isPrimary ? _spark : _paper,
+              color: isPrimary ? _ink : _paper,
               borderRadius: BorderRadius.circular(999),
               border: Border.all(
-                color: isPrimary ? _spark : _hairline,
+                color: isPrimary ? _ink : _hairline,
                 width: 1,
               ),
               // ✅ no shadows
@@ -271,14 +285,14 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
                 Icon(
                   icon,
                   size: 18,
-                  color: isPrimary ? _sparkInk : _inkMute,
+                  color: isPrimary ? _paper : _inkMute,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   text,
                   style: theme.bodyMedium.override(
                     fontFamily: _bodyFont,
-                    color: isPrimary ? _sparkInk : _ink,
+                    color: isPrimary ? _paper : _ink,
                     letterSpacing: 0.0,
                     fontWeight: FontWeight.w700,
                   ),
@@ -301,6 +315,43 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
       initialDate: initial,
       firstDate: DateTime(2020),
       lastDate: DateTime(2100),
+      builder: (context, child) {
+        final base = Theme.of(context);
+        return Theme(
+          data: base.copyWith(
+            colorScheme: base.colorScheme.copyWith(
+              primary: _teal, // selected day + header background
+              onPrimary: _paper, // text on the selected day / header
+              onSurface: _ink, // body text (days, year list)
+              surface: _paper,
+            ),
+            datePickerTheme: DatePickerThemeData(
+              backgroundColor: _paper,
+              headerBackgroundColor: _teal,
+              headerForegroundColor: _paper,
+              todayForegroundColor: const WidgetStatePropertyAll(_ink),
+              todayBorder: const BorderSide(color: _teal, width: 1.4),
+              dayStyle: const TextStyle(
+                fontFamily: _bodyFont,
+                fontWeight: FontWeight.w600,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: _teal,
+                textStyle: const TextStyle(
+                  fontFamily: _bodyFont,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked == null) return;
 
@@ -469,7 +520,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
   // =========================================================
   // ✅ SAVE (Firestore)
   // =========================================================
-  Future<void> _saveProject(FlutterFlowTheme theme, Color accent) async {
+  Future<void> _saveProject(FlutterFlowTheme theme) async {
     if (_saving) return;
 
     if (currentUserReference == null) {
@@ -556,347 +607,354 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView> {
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
-    final accent = _projectsColor(theme);
 
-    return Container(
-      width: widget.width ?? double.infinity,
-      height: widget.height ?? double.infinity,
-      color: _paper,
-      child: SafeArea(
-        top: true,
-        bottom: true,
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: _hPad, vertical: _vPad),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // =========================================================
-                // ✅ HEADER (back + title)
-                // =========================================================
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+    return GestureDetector(
+      behavior: HitTestBehavior.deferToChild,
+      onHorizontalDragUpdate: _onDragUpdate,
+      onHorizontalDragEnd: _onDragEnd,
+      child: Transform.translate(
+        offset: Offset(_dragX, 0),
+        child: Container(
+          width: widget.width ?? double.infinity,
+          height: widget.height ?? double.infinity,
+          color: _paper,
+          child: SafeArea(
+            top: true,
+            bottom: true,
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: _hPad, vertical: _vPad),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () {
-                          final nav = Navigator.of(context);
-                          if (nav.canPop()) nav.pop();
-                        },
-                        borderRadius: BorderRadius.circular(999),
-                        splashFactory: NoSplash.splashFactory,
-                        splashColor: Colors.transparent,
-                        highlightColor: Colors.transparent,
-                        hoverColor: Colors.transparent,
-                        overlayColor:
-                            WidgetStateProperty.all(Colors.transparent),
-                        child: Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: _surface,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: _hairline),
+                    // =========================================================
+                    // ✅ HEADER (back + title)
+                    // =========================================================
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () {
+                              final nav = Navigator.of(context);
+                              if (nav.canPop()) nav.pop();
+                            },
+                            borderRadius: BorderRadius.circular(999),
+                            splashFactory: NoSplash.splashFactory,
+                            splashColor: Colors.transparent,
+                            highlightColor: Colors.transparent,
+                            hoverColor: Colors.transparent,
+                            overlayColor:
+                                WidgetStateProperty.all(Colors.transparent),
+                            child: Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: _surface,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: _hairline),
+                              ),
+                              child: const Icon(
+                                  Icons.arrow_back_ios_new_rounded,
+                                  size: 16,
+                                  color: _inkMute),
+                            ),
                           ),
-                          child: const Icon(Icons.arrow_back_ios_new_rounded,
-                              size: 16, color: _inkMute),
                         ),
-                      ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Add project', style: _appTitleStyle(theme)),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Create a workspace for tasks, costs & snags.',
+                                style: _appSubtitleStyle(theme),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
+
+                    const SizedBox(height: 26),
+
+                    // =========================================================
+                    // ✅ FORM (open layout — no surrounding card)
+                    // =========================================================
+                    _sectionHeader(theme, 'Project details'),
+                    const SizedBox(height: 18),
+
+                    Form(
+                      key: _formKey,
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Add Project', style: _appTitleStyle(theme)),
-                          const SizedBox(height: 2),
+                          // Project name
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Project name',
+                                  style: _fieldLabelStyle(theme)),
+                              const SizedBox(height: 8),
+                              TextFormField(
+                                controller: _nameCtrl,
+                                style: _fieldTextStyle(theme),
+                                cursorColor: _teal,
+                                decoration: _fieldDecoration(
+                                  theme,
+                                  hint: 'e.g. Winston Ridge Renovation',
+                                  icon: Icons.home_work_outlined,
+                                ),
+                                enabled: !_saving,
+                                onChanged: (_) => setState(() {}),
+                                validator: (v) {
+                                  if ((v ?? '').trim().isEmpty) {
+                                    return 'Project name is required';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: _fieldGap),
+
+                          // Status + Province
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: _dropdownField(
+                                  theme: theme,
+                                  label: 'Status',
+                                  value: _status,
+                                  items: _statusOptions,
+                                  icon: Icons.flag_outlined,
+                                  onChanged: (v) => setState(() => _status = v),
+                                ),
+                              ),
+                              const SizedBox(width: _gap),
+                              Expanded(
+                                child: _dropdownField(
+                                  theme: theme,
+                                  label: 'Province',
+                                  value: _province,
+                                  items: _provinceOptions,
+                                  icon: Icons.map_outlined,
+                                  onChanged: (v) =>
+                                      setState(() => _province = v),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: _fieldGap),
+
+                          // City
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('City / Area',
+                                  style: _fieldLabelStyle(theme)),
+                              const SizedBox(height: 8),
+                              TextFormField(
+                                controller: _cityCtrl,
+                                style: _fieldTextStyle(theme),
+                                cursorColor: _teal,
+                                decoration: _fieldDecoration(
+                                  theme,
+                                  hint: 'e.g. Durbanville',
+                                  icon: Icons.location_city_outlined,
+                                ),
+                                enabled: !_saving,
+                                onChanged: (_) => setState(() {}),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: _fieldGap),
+
+                          // Address
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Address', style: _fieldLabelStyle(theme)),
+                              const SizedBox(height: 8),
+                              TextFormField(
+                                controller: _addressCtrl,
+                                style: _fieldTextStyle(theme),
+                                cursorColor: _teal,
+                                decoration: _fieldDecoration(
+                                  theme,
+                                  hint: 'Street address (optional)',
+                                  icon: Icons.place_outlined,
+                                ),
+                                enabled: !_saving,
+                                onChanged: (_) => setState(() {}),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: _fieldGap),
+
+                          // Dates
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _dateField(
+                                  theme: theme,
+                                  label: 'Start date',
+                                  value: _dateLabel(_startDate),
+                                  icon: Icons.calendar_month_outlined,
+                                  onTap: () => _pickDate(isStart: true),
+                                ),
+                              ),
+                              const SizedBox(width: _gap),
+                              Expanded(
+                                child: _dateField(
+                                  theme: theme,
+                                  label: 'End date',
+                                  value: _dateLabel(_endDate),
+                                  icon: Icons.event_outlined,
+                                  onTap: () => _pickDate(isStart: false),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: _fieldGap),
+
+                          // Notes
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Notes', style: _fieldLabelStyle(theme)),
+                              const SizedBox(height: 8),
+                              TextFormField(
+                                controller: _notesCtrl,
+                                style: _fieldTextStyle(theme),
+                                cursorColor: _teal,
+                                maxLines: 6,
+                                enabled: !_saving,
+                                decoration: _fieldDecoration(
+                                  theme,
+                                  hint:
+                                      'Anything important (budget notes, build phases, key contacts)…',
+                                  icon: Icons.notes_outlined,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: _fieldGap),
+
+                          // Archive toggle
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(13),
+                            decoration: BoxDecoration(
+                              color: _surface,
+                              borderRadius: BorderRadius.circular(_radius),
+                              border: Border.all(
+                                color: _hairlineOnSurface,
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: _paper,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border:
+                                        Border.all(color: _hairlineOnSurface),
+                                  ),
+                                  child: const Icon(Icons.archive_outlined,
+                                      color: _inkMute, size: 20),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Archive',
+                                        style: theme.bodyMedium.override(
+                                          fontFamily: _bodyFont,
+                                          color: _ink,
+                                          letterSpacing: 0.0,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 3),
+                                      Text(
+                                        'Keep this project hidden until you’re ready to use it.',
+                                        style: _helperStyle(theme),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Switch.adaptive(
+                                  value: _archived,
+                                  onChanged: _saving
+                                      ? null
+                                      : (v) => setState(() => _archived = v),
+                                  activeColor: _teal,
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 26),
+
+                          // Actions
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _pillButton(
+                                  theme: theme,
+                                  text: _saving ? 'Saving…' : 'Save Project',
+                                  icon: Icons.check_rounded,
+                                  onTap: () => _saveProject(theme),
+                                  isPrimary: true,
+                                  disabled: _saving,
+                                ),
+                              ),
+                              const SizedBox(width: _gap),
+                              Expanded(
+                                child: _pillButton(
+                                  theme: theme,
+                                  text: 'Cancel',
+                                  icon: Icons.close_rounded,
+                                  onTap: () {
+                                    final nav = Navigator.of(context);
+                                    if (nav.canPop()) nav.pop();
+                                  },
+                                  isPrimary: false,
+                                  disabled: _saving,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 12),
                           Text(
-                            'Create a workspace for tasks, costs & snags.',
-                            style: _appSubtitleStyle(theme),
+                            'This creates a new home building project.',
+                            style: _helperStyle(theme),
                           ),
                         ],
                       ),
                     ),
                   ],
                 ),
-
-                const SizedBox(height: 20),
-
-                // =========================================================
-                // ✅ FORM
-                // =========================================================
-                _sectionHeader(theme, 'Project details'),
-                const SizedBox(height: 12),
-
-                _subbyCardShell(
-                  theme: theme,
-                  padding: const EdgeInsets.all(16),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        // Project name
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Project name',
-                                style: _fieldLabelStyle(theme)),
-                            const SizedBox(height: 8),
-                            TextFormField(
-                              controller: _nameCtrl,
-                              style: _fieldTextStyle(theme),
-                              cursorColor: _ink,
-                              decoration: _fieldDecoration(
-                                theme,
-                                hint: 'e.g. Winston Ridge Renovation',
-                                icon: Icons.home_work_outlined,
-                              ),
-                              enabled: !_saving,
-                              onChanged: (_) => setState(() {}),
-                              validator: (v) {
-                                if ((v ?? '').trim().isEmpty) {
-                                  return 'Project name is required';
-                                }
-                                return null;
-                              },
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: _gap),
-
-                        // Status + Province
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: _dropdownField(
-                                theme: theme,
-                                label: 'Status',
-                                value: _status,
-                                items: _statusOptions,
-                                icon: Icons.flag_outlined,
-                                onChanged: (v) => setState(() => _status = v),
-                              ),
-                            ),
-                            const SizedBox(width: _gap),
-                            Expanded(
-                              child: _dropdownField(
-                                theme: theme,
-                                label: 'Province',
-                                value: _province,
-                                items: _provinceOptions,
-                                icon: Icons.map_outlined,
-                                onChanged: (v) => setState(() => _province = v),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: _gap),
-
-                        // City
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('City / Area', style: _fieldLabelStyle(theme)),
-                            const SizedBox(height: 8),
-                            TextFormField(
-                              controller: _cityCtrl,
-                              style: _fieldTextStyle(theme),
-                              cursorColor: _ink,
-                              decoration: _fieldDecoration(
-                                theme,
-                                hint: 'e.g. Durbanville',
-                                icon: Icons.location_city_outlined,
-                              ),
-                              enabled: !_saving,
-                              onChanged: (_) => setState(() {}),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: _gap),
-
-                        // Address
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Address', style: _fieldLabelStyle(theme)),
-                            const SizedBox(height: 8),
-                            TextFormField(
-                              controller: _addressCtrl,
-                              style: _fieldTextStyle(theme),
-                              cursorColor: _ink,
-                              decoration: _fieldDecoration(
-                                theme,
-                                hint: 'Street address (optional)',
-                                icon: Icons.place_outlined,
-                              ),
-                              enabled: !_saving,
-                              onChanged: (_) => setState(() {}),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: _gap),
-
-                        // Dates
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _dateField(
-                                theme: theme,
-                                label: 'Start date',
-                                value: _dateLabel(_startDate),
-                                icon: Icons.calendar_month_outlined,
-                                onTap: () => _pickDate(isStart: true),
-                              ),
-                            ),
-                            const SizedBox(width: _gap),
-                            Expanded(
-                              child: _dateField(
-                                theme: theme,
-                                label: 'End date',
-                                value: _dateLabel(_endDate),
-                                icon: Icons.event_outlined,
-                                onTap: () => _pickDate(isStart: false),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: _gap),
-
-                        // Notes
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Notes', style: _fieldLabelStyle(theme)),
-                            const SizedBox(height: 8),
-                            TextFormField(
-                              controller: _notesCtrl,
-                              style: _fieldTextStyle(theme),
-                              cursorColor: _ink,
-                              maxLines: 6,
-                              enabled: !_saving,
-                              decoration: _fieldDecoration(
-                                theme,
-                                hint:
-                                    'Anything important (budget notes, build phases, key contacts)…',
-                                icon: Icons.notes_outlined,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: _gap),
-
-                        // Archive toggle
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(13),
-                          decoration: BoxDecoration(
-                            color: _surface,
-                            borderRadius: BorderRadius.circular(_radius),
-                            border: Border.all(
-                              color: _hairlineOnSurface,
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  color: _paper,
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: _hairlineOnSurface),
-                                ),
-                                child: const Icon(Icons.archive_outlined,
-                                    color: _inkMute, size: 20),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Archive',
-                                      style: theme.bodyMedium.override(
-                                        fontFamily: _bodyFont,
-                                        color: _ink,
-                                        letterSpacing: 0.0,
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 3),
-                                    Text(
-                                      'Keep this project hidden until you’re ready to use it.',
-                                      style: _helperStyle(theme),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Switch.adaptive(
-                                value: _archived,
-                                onChanged: _saving
-                                    ? null
-                                    : (v) => setState(() => _archived = v),
-                                activeColor: _spark,
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 18),
-
-                        // Actions
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _pillButton(
-                                theme: theme,
-                                accent: accent,
-                                text: _saving ? 'Saving…' : 'Save Project',
-                                icon: Icons.check_rounded,
-                                onTap: () => _saveProject(theme, accent),
-                                isPrimary: true,
-                                disabled: _saving,
-                              ),
-                            ),
-                            const SizedBox(width: _gap),
-                            Expanded(
-                              child: _pillButton(
-                                theme: theme,
-                                accent: accent,
-                                text: 'Cancel',
-                                icon: Icons.close_rounded,
-                                onTap: () {
-                                  final nav = Navigator.of(context);
-                                  if (nav.canPop()) nav.pop();
-                                },
-                                isPrimary: false,
-                                disabled: _saving,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 12),
-                        Text(
-                          'This creates a new home building project.',
-                          style: _helperStyle(theme),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
