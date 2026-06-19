@@ -53,9 +53,9 @@ class _ProfilePageViewState extends State<ProfilePageView> {
   static const Color _surface = Color(0xFFEEF1F4);
   static const Color _hairline = Color(0xFFEEF1F2);
   static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
-  // Brand accent — LIME. Always ink foreground, never white.
-  static const Color _spark = Color(0xFFAEE03F); // primary CTA / ring accent
-  static const Color _sparkInk = Color(0xFF16202E);
+  // Brand accent — TEAL. White foreground on solid teal; teal ink elsewhere.
+  static const Color _spark = Color(0xFF0D9488); // primary CTA / ring accent
+  static const Color _sparkInk = Color(0xFFFFFFFF); // content on solid teal
   // Status
   static const Color _live = Color(0xFFFF6A2B); // orange — live / warning
   static const Color _coral = Color(0xFFE0531C); // destructive
@@ -130,29 +130,6 @@ class _ProfilePageViewState extends State<ProfilePageView> {
   // =========================================================
   // ✅ Shared helpers
   // =========================================================
-  Widget _circleIconShell(
-    FlutterFlowTheme t, {
-    required double size,
-    required IconData icon,
-    required Color iconColor,
-    VoidCallback? onTap,
-  }) {
-    final child = Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: _surface,
-        shape: BoxShape.circle,
-        border: Border.all(color: _hairline, width: 1),
-      ),
-      alignment: Alignment.center,
-      child: Icon(icon, size: size <= 32 ? 16 : 18, color: iconColor),
-    );
-
-    if (onTap == null) return child;
-    return GestureDetector(onTap: onTap, child: child);
-  }
-
   // Flat hairline card recipe — matches the dashboard (no heavy shadow).
   BoxDecoration _cardDecoration(FlutterFlowTheme t) => BoxDecoration(
         color: _paper,
@@ -160,7 +137,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
         border: Border.all(color: _hairline, width: 1),
       );
 
-  // Primary pill (lime, ink content)
+  // Primary pill (teal, white content)
   Widget _pillPrimaryButton(
     FlutterFlowTheme t, {
     required String label,
@@ -419,7 +396,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
     }
   }
 
-  // Big lime-ringed avatar (mirrors the dashboard avatar).
+  // Big teal-ringed avatar (mirrors the dashboard avatar).
   Widget _avatar(FlutterFlowTheme theme, String photoUrl, String displayName) {
     final initials = Center(
       child: Text(
@@ -489,6 +466,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
     required VoidCallback onTap,
     bool primary = false,
   }) {
+    final Color fg = primary ? _paper : _ink;
     return Expanded(
       child: InkWell(
         onTap: onTap,
@@ -502,7 +480,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
           ),
           child: Column(
             children: [
-              Icon(icon, size: 20, color: _ink),
+              Icon(icon, size: 20, color: fg),
               const SizedBox(height: 8),
               Text(
                 label,
@@ -512,7 +490,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
                   fontFamily: _bodyFont,
                   fontWeight: FontWeight.w700,
                   fontSize: 12,
-                  color: _ink,
+                  color: fg,
                 ),
               ),
             ],
@@ -680,28 +658,18 @@ class _ProfilePageViewState extends State<ProfilePageView> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ---------- HEADER ----------
+                  // ---------- HEADER (no back button — MainBottomNav owns nav) ----------
                   Padding(
                     padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 10),
-                    child: Row(
-                      children: [
-                        _circleIconShell(
-                          theme,
-                          size: 36,
-                          icon: Icons.arrow_back_ios_new_rounded,
-                          iconColor: _inkMute,
-                          onTap: () => context.pop(),
-                        ),
-                        const SizedBox(width: 12),
-                        Text('Profile', style: _titleStyle(theme)),
-                      ],
-                    ),
+                    child: Text('Profile', style: _titleStyle(theme)),
                   ),
 
                   // ---------- CONTENT ----------
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(_hPad, 10, _hPad, 28),
+                      // 74 = MainBottomNav height; +24 breathing room so the
+                      // Logout / Delete row clears the overlaid bar.
+                      padding: const EdgeInsets.fromLTRB(_hPad, 10, _hPad, 98),
                       child: Column(
                         children: [
                           // Avatar hero (centered)

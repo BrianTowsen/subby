@@ -28,19 +28,19 @@ class _MorePageViewState extends State<MorePageView> {
   static const double _radius = 12;
 
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  // less-is-more system · ported from Clutch Putt · lime → yellow.
-  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
+  // less-is-more system. Inline = authoritative for this file.
+  // Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
   static const Color _ink = Color(0xFF16202E);
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _hairline = Color(0xFFEEF1F4);
+  static const Color _hairline = Color(0xFFEEF1F2); // synced with Profile
   static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
-  // Brand accent — YELLOW. Always ink foreground, never white.
-  static const Color _spark = Color(0xFFAEE03F); // primary CTA / ranked accent
-  static const Color _sparkInk = Color(0xFF16202E);
+  // Brand accent — TEAL. White foreground on solid teal.
+  static const Color _spark = Color(0xFF0D9488); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFFFFFFFF);
   // Status
   static const Color _live =
       Color(0xFFFF6A2B); // orange — live / open-now / warning
@@ -132,13 +132,7 @@ class _MorePageViewState extends State<MorePageView> {
           color: _paper,
           borderRadius: BorderRadius.circular(_radius),
           border: Border.all(color: _hairline, width: 1),
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-              color: Colors.black.withOpacity(0.03),
-            ),
-          ],
+          // flat hairline — no shadow (matches ProfilePageView)
         ),
         padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
         child: Row(
@@ -177,6 +171,22 @@ class _MorePageViewState extends State<MorePageView> {
       ),
     );
   }
+
+  // Close the slide-over panel (matches the swipe-to-dismiss gesture).
+  Widget _closeButton() => GestureDetector(
+        onTap: () => Navigator.of(context).maybePop(),
+        child: Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: _surface,
+            shape: BoxShape.circle,
+            border: Border.all(color: _hairlineOnSurface, width: 1),
+          ),
+          alignment: Alignment.center,
+          child: const Icon(Icons.close_rounded, size: 18, color: _ink),
+        ),
+      );
 
   Widget _sectionTitle(String text) {
     final theme = FlutterFlowTheme.of(context);
@@ -226,14 +236,17 @@ class _MorePageViewState extends State<MorePageView> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Subby', style: _appTitleStyle(theme)),
-                      const SizedBox(height: 2),
-                      Text('More', style: _pageSubtitle(theme)),
-                    ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Subby', style: _appTitleStyle(theme)),
+                        const SizedBox(height: 2),
+                        Text('More', style: _pageSubtitle(theme)),
+                      ],
+                    ),
                   ),
+                  _closeButton(),
                 ],
               ),
             ),
