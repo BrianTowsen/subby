@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
@@ -29,23 +31,22 @@ class ProjectCostView extends StatefulWidget {
 class _ProjectCostViewState extends State<ProjectCostView>
     with SingleTickerProviderStateMixin {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // Synced with DashboardPageView / AddProjectsPageView (flat teal system).
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF16202E);
+  static const Color _ink = Color(0xFF017374); // text, chrome, accent
   static const Color _inkMute = Color(0xFF5A6675);
+  static const Color _faint = Color(0xFF93A0B0);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _hairline = Color(0xFFEEF1F4);
-  static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
-  // Brand accent — YELLOW. Always ink foreground, never white.
-  static const Color _spark = Color(0xFFAEE03F); // primary CTA / ranked accent
-  static const Color _sparkInk = Color(0xFF16202E);
+  static const Color _hairline = Color(0xFFEEF1F2);
+  static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
+  // Brand accent — TEAL.
+  static const Color _teal = Color(0xFF017374);
+  static const Color _tealTint = Color(0xFFE3F4F2);
   // Status
-  static const Color _live =
-      Color(0xFFFF6A2B); // orange — live / paid / done / warning
-  static const Color _coral = Color(0xFFE0531C);
+  static const Color _live = Color(0xFFE5771E); // orange — spent / paid
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -53,19 +54,13 @@ class _ProjectCostViewState extends State<ProjectCostView>
   // ────────────────────────────────────────────────────────────────────
 
   static const double _hPad = 24;
-  static const double _vPad = 24;
+  static const double _vPad = 14;
   static const double _radius = 12;
   static const double _gap = 12;
 
-  // ✅ subtle sliver breathing room (no clipping)
-  static const double _sliverSidePad = 2;
-  static const double _sliverTopGap = 8;
-
-  // ✅ IMPORTANT: sticky header must be tall enough for a shadowed card
-  static const double _stickyTabsHeight = 92;
-
-  // ✅ content padding moved INSIDE containers so scrollbar can sit on the edge
-  static const double _contentHPad = _hPad + _sliverSidePad;
+  static const double _sliverTopGap = 4;
+  static const double _stickyTabsHeight = 58;
+  static const double _contentHPad = _hPad;
 
   static const String _kActiveProjectPath = 'subby_active_project_path';
 
@@ -73,10 +68,7 @@ class _ProjectCostViewState extends State<ProjectCostView>
 
   DocumentReference? _projectRef;
 
-  // Expanded state per section
   final Set<String> _expandedCategoryKeysBudget = {};
-  final Set<String> _expandedCategoryKeysInvoices = {};
-  final Set<String> _expandedCategoryKeysSpend = {};
 
   @override
   void initState() {
@@ -95,23 +87,16 @@ class _ProjectCostViewState extends State<ProjectCostView>
     final prefs = await SharedPreferences.getInstance();
     final path = (prefs.getString(_kActiveProjectPath) ?? '').trim();
     if (path.isEmpty) return;
-
     if (mounted) {
       setState(() => _projectRef = FirebaseFirestore.instance.doc(path));
     }
   }
 
-  // -----------------------------
-  // Back navigation (safe)
-  // -----------------------------
   void _handleBack() {
     final nav = Navigator.of(context);
     if (nav.canPop()) nav.pop();
   }
 
-  // -----------------------------
-  // Theme helpers
-  // -----------------------------
   Color _projectCostColor(FlutterFlowTheme theme) {
     try {
       final c = (theme as dynamic).projectCostColour as Color?;
@@ -121,58 +106,55 @@ class _ProjectCostViewState extends State<ProjectCostView>
     }
   }
 
-  // -----------------------------
-  // Typography (token + explicit family)
-  // -----------------------------
-  TextStyle _titleStyle(FlutterFlowTheme theme) {
-    return theme.titleLarge.override(
-      fontFamily: _displayFont,
-      fontWeight: FontWeight.w900,
-      letterSpacing: 0.2,
-    );
-  }
+  // =========================================================
+  // ✅ TYPOGRAPHY (flat teal system)
+  // =========================================================
+  TextStyle _pageTitle(FlutterFlowTheme t) => t.titleLarge.override(
+        fontFamily: _displayFont,
+        color: _ink,
+        fontWeight: FontWeight.w900,
+        fontSize: 30,
+        lineHeight: 1.05,
+        letterSpacing: -0.5,
+      );
 
-  TextStyle _subtitleStyle(FlutterFlowTheme theme) {
-    return theme.bodySmall.override(
-      fontFamily: _bodyFont,
-      color: _inkMute,
-    );
-  }
+  TextStyle _pageSubtitle(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+        color: _faint,
+      );
 
-  TextStyle _sectionTitleStyle(FlutterFlowTheme theme) {
-    return theme.titleSmall.override(
-      fontFamily: _displayFont,
-      fontWeight: FontWeight.w800,
-      color: _ink,
-    );
-  }
+  TextStyle _uLabel(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 11,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0.6,
+        color: _inkMute,
+      );
 
-  TextStyle _rowTitleStyle(FlutterFlowTheme theme) {
-    return theme.bodyMedium.override(
-      fontFamily: _bodyFont,
-      fontWeight: FontWeight.w900,
-      color: _ink,
-    );
-  }
+  TextStyle _rowTitleStyle(FlutterFlowTheme theme) => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 15,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.1,
+        color: _ink,
+      );
 
-  TextStyle _rowMetaStyle(FlutterFlowTheme theme) {
-    return theme.bodySmall.override(
-      fontFamily: _bodyFont,
-      color: _inkMute,
-    );
-  }
+  TextStyle _rowMetaStyle(FlutterFlowTheme theme) => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: _faint,
+      );
 
-  TextStyle _pillTextStyle(FlutterFlowTheme theme) {
-    return theme.labelSmall.override(
-      fontFamily: _bodyFont,
-      fontWeight: FontWeight.w800,
-      letterSpacing: 0.2,
-    );
-  }
+  TextStyle _moneyStyle(FlutterFlowTheme theme) => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 14,
+        fontWeight: FontWeight.w700,
+        color: _ink,
+      );
 
-  // -----------------------------
-  // Formatting
-  // -----------------------------
   String _fmtDate(DateTime d) => DateFormat('d MMM').format(d);
 
   String _money(num v) {
@@ -186,123 +168,102 @@ class _ProjectCostViewState extends State<ProjectCostView>
 
   String _pct(double v) => '${(v.clamp(0.0, 1.0) * 100).round()}%';
 
-  // ---------------------------------------
-  // ✅ Subby card shell (match Timeline)
-  // ---------------------------------------
-  Widget _subbyCardShell({
-    required FlutterFlowTheme theme,
-    required Widget child,
-    EdgeInsets padding = const EdgeInsets.all(16),
-  }) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: _paper,
-        borderRadius: BorderRadius.circular(_radius),
-        border: Border.all(
-          color: _hairline.withOpacity(0.9),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 16,
-            offset: const Offset(0, 10),
-            color: Colors.black.withOpacity(0.08),
+  Widget _minBack() => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _handleBack,
+          borderRadius: BorderRadius.circular(999),
+          splashFactory: NoSplash.splashFactory,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          hoverColor: Colors.transparent,
+          overlayColor: WidgetStateProperty.all(Colors.transparent),
+          child: Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: _surface,
+              shape: BoxShape.circle,
+              border: Border.all(color: _hairline),
+            ),
+            child: const Icon(Icons.arrow_back_ios_new_rounded,
+                size: 15, color: _inkMute),
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(_radius),
-        child: Padding(padding: padding, child: child),
-      ),
-    );
-  }
+        ),
+      );
 
-  Widget _divider(FlutterFlowTheme theme) {
-    return Container(
-      width: double.infinity,
-      height: 1.5,
-      color: _hairline.withOpacity(0.75),
-    );
-  }
+  Widget _flatCard(Widget child,
+          {EdgeInsets padding = const EdgeInsets.all(14), Color? fill}) =>
+      Container(
+        width: double.infinity,
+        padding: padding,
+        decoration: BoxDecoration(
+          color: fill ?? _paper,
+          borderRadius: BorderRadius.circular(_radius),
+          border: Border.all(color: _hairline),
+        ),
+        child: child,
+      );
 
-  Widget _pill(
-    FlutterFlowTheme theme, {
-    required String text,
-    required Color bg,
-    required Color fg,
-    IconData? icon,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: bg.withOpacity(0.9)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 14, color: fg),
-            const SizedBox(width: 6),
-          ],
-          Text(text, style: _pillTextStyle(theme).copyWith(color: fg)),
-        ],
-      ),
-    );
-  }
-
-  Widget _progressBar(
-    FlutterFlowTheme theme, {
-    required double value,
-    required Color fillColor,
-  }) {
+  Widget _progressBar(double value, Color fill) {
     final v = value.clamp(0.0, 1.0);
     return ClipRRect(
       borderRadius: BorderRadius.circular(999),
       child: SizedBox(
-        height: 10,
+        height: 8,
         child: LinearProgressIndicator(
           value: v,
-          backgroundColor: _hairline.withOpacity(0.55),
-          valueColor: AlwaysStoppedAnimation<Color>(fillColor),
+          backgroundColor: _surface,
+          valueColor: AlwaysStoppedAnimation<Color>(fill),
         ),
       ),
     );
   }
 
+  Widget _softPill(String text, {required Color fg, required Color bg}) =>
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(text,
+            style: const TextStyle(
+              fontFamily: _bodyFont,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ).copyWith(color: fg)),
+      );
+
   // -----------------------------
-  // Sticky tabs card
+  // Underline tabs
   // -----------------------------
   Widget _buildTabs(FlutterFlowTheme theme, Color accent) {
-    return Padding(
+    return Container(
+      color: _paper,
       padding: const EdgeInsets.symmetric(horizontal: _contentHPad),
-      child: _subbyCardShell(
-        theme: theme,
-        padding: const EdgeInsets.all(6),
-        child: TabBar(
-          controller: _tabController,
-          indicator: BoxDecoration(
-            color: accent,
-            borderRadius: BorderRadius.circular(999),
-          ),
-          labelColor: _paper,
-          unselectedLabelColor: _inkMute,
-          labelStyle: theme.bodyMedium.override(
-            fontFamily: _bodyFont,
-            fontWeight: FontWeight.w900,
-          ),
-          unselectedLabelStyle: theme.bodyMedium.override(
-            fontFamily: _bodyFont,
-            fontWeight: FontWeight.w800,
-          ),
-          tabs: const [
-            Tab(text: 'Budget'),
-            Tab(text: 'Invoices'),
-            Tab(text: 'Spend'),
-          ],
-        ),
+      alignment: Alignment.bottomLeft,
+      child: TabBar(
+        controller: _tabController,
+        isScrollable: true,
+        tabAlignment: TabAlignment.start,
+        labelPadding: const EdgeInsets.only(right: 24),
+        indicatorSize: TabBarIndicatorSize.label,
+        indicatorColor: _teal,
+        indicatorWeight: 2,
+        dividerColor: _hairlineOnSurface,
+        labelColor: _teal,
+        unselectedLabelColor: _faint,
+        labelStyle: theme.bodyMedium.override(
+            fontFamily: _bodyFont, fontWeight: FontWeight.w800, fontSize: 14),
+        unselectedLabelStyle: theme.bodyMedium.override(
+            fontFamily: _bodyFont, fontWeight: FontWeight.w600, fontSize: 14),
+        tabs: const [
+          Tab(text: 'Budget'),
+          Tab(text: 'Invoices'),
+          Tab(text: 'Spend'),
+        ],
       ),
     );
   }
@@ -315,7 +276,7 @@ class _ProjectCostViewState extends State<ProjectCostView>
       _CostCategory(
         key: 'planning',
         title: 'Planning & Permits',
-        icon: Icons.description_rounded,
+        icon: Icons.description_outlined,
         lines: [
           _CostLine('Architect / drawings', 14500.0, 1.0),
           _CostLine('Municipal permits', 6200.0, 1.0),
@@ -325,7 +286,7 @@ class _ProjectCostViewState extends State<ProjectCostView>
       _CostCategory(
         key: 'site',
         title: 'Site Prep',
-        icon: Icons.construction_rounded,
+        icon: Icons.construction_outlined,
         lines: [
           _CostLine('Site clearing', 9800.0, 1.0),
           _CostLine('Temporary fencing', 7200.0, 0.4),
@@ -335,7 +296,7 @@ class _ProjectCostViewState extends State<ProjectCostView>
       _CostCategory(
         key: 'foundation',
         title: 'Foundations',
-        icon: Icons.foundation_rounded,
+        icon: Icons.foundation_outlined,
         lines: [
           _CostLine('Excavation', 20000.0, 0.3),
           _CostLine('Concrete work', 24000.0, 0.0),
@@ -345,7 +306,7 @@ class _ProjectCostViewState extends State<ProjectCostView>
       _CostCategory(
         key: 'structure',
         title: 'Structure',
-        icon: Icons.account_tree_rounded,
+        icon: Icons.account_tree_outlined,
         lines: [
           _CostLine('Bricks / blocks', 48200.0, 0.0),
           _CostLine('Labour (structure)', 34200.0, 0.0),
@@ -356,218 +317,131 @@ class _ProjectCostViewState extends State<ProjectCostView>
 
   List<_InvoiceItem> _mockInvoices() {
     return [
-      _InvoiceItem(
-        title: 'Architect Invoice #102',
-        vendor: 'Studio North',
-        amount: 8500.0,
-        date: DateTime(2026, 1, 7),
-        paid: true,
-      ),
-      _InvoiceItem(
-        title: 'Site Clearing Invoice #44',
-        vendor: 'Cape Earthworks',
-        amount: 9800.0,
-        date: DateTime(2026, 1, 14),
-        paid: true,
-      ),
-      _InvoiceItem(
-        title: 'Temporary Fencing Deposit',
-        vendor: 'SecureFence',
-        amount: 1800.0,
-        date: DateTime(2026, 1, 16),
-        paid: false,
-      ),
-      _InvoiceItem(
-        title: 'Excavation Progress Claim',
-        vendor: 'Cape Earthworks',
-        amount: 6000.0,
-        date: DateTime(2026, 1, 23),
-        paid: false,
-      ),
+      _InvoiceItem('Architect Invoice #102', 'Studio North', 8500.0,
+          DateTime(2026, 1, 7), true),
+      _InvoiceItem('Site Clearing Invoice #44', 'Cape Earthworks', 9800.0,
+          DateTime(2026, 1, 14), true),
+      _InvoiceItem('Temporary Fencing Deposit', 'SecureFence', 1800.0,
+          DateTime(2026, 1, 16), false),
+      _InvoiceItem('Excavation Progress Claim', 'Cape Earthworks', 6000.0,
+          DateTime(2026, 1, 23), false),
     ];
   }
 
   List<_SpendTx> _mockSpend() {
     return [
-      _SpendTx(
-        title: 'Cement bags (x20)',
-        merchant: 'BuildIt',
-        amount: 2380.0,
-        date: DateTime(2026, 1, 21),
-        category: 'Foundations',
-      ),
-      _SpendTx(
-        title: 'Rebar offcut',
-        merchant: 'SteelMart',
-        amount: 640.0,
-        date: DateTime(2026, 1, 22),
-        category: 'Foundations',
-      ),
-      _SpendTx(
-        title: 'Site consumables',
-        merchant: 'Builders Warehouse',
-        amount: 420.0,
-        date: DateTime(2026, 1, 18),
-        category: 'Site Prep',
-      ),
-      _SpendTx(
-        title: 'Transport / delivery',
-        merchant: 'Courier',
-        amount: 280.0,
-        date: DateTime(2026, 1, 18),
-        category: 'Site Prep',
-      ),
+      _SpendTx('Cement bags (x20)', 'BuildIt', 2380.0, DateTime(2026, 1, 21),
+          'Foundations'),
+      _SpendTx('Rebar offcut', 'SteelMart', 640.0, DateTime(2026, 1, 22),
+          'Foundations'),
+      _SpendTx('Site consumables', 'Builders Warehouse', 420.0,
+          DateTime(2026, 1, 18), 'Site Prep'),
+      _SpendTx('Transport / delivery', 'Courier', 280.0, DateTime(2026, 1, 18),
+          'Site Prep'),
     ];
   }
 
   // -----------------------------
-  // Summary cards
+  // Clean stat tile (bordered, no shadow)
   // -----------------------------
+  Widget _statTile(FlutterFlowTheme theme,
+      {required String label,
+      required String value,
+      required Color valueColor}) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _paper,
+        borderRadius: BorderRadius.circular(_radius),
+        border: Border.all(color: _hairline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.titleLarge.override(
+              fontFamily: _displayFont,
+              color: valueColor,
+              fontWeight: FontWeight.w800,
+              fontSize: 22,
+              letterSpacing: -0.4,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(label,
+              style: const TextStyle(
+                  fontFamily: _bodyFont,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: _faint)),
+        ],
+      ),
+    );
+  }
+
   Widget _buildTopSummary(FlutterFlowTheme theme, Color accent) {
     final cats = _mockBudgetCategories();
-    final totalBudget = cats.fold<double>(
-      0.0,
-      (sum, c) => sum + c.lines.fold<double>(0.0, (s, l) => s + l.amount),
-    );
-
+    final totalBudget = cats.fold<double>(0.0,
+        (sum, c) => sum + c.lines.fold<double>(0.0, (s, l) => s + l.amount));
     final committed = cats.fold<double>(
-      0.0,
-      (sum, c) =>
-          sum +
-          c.lines.fold<double>(0.0, (s, l) => s + (l.amount * l.progress)),
-    );
-
+        0.0,
+        (sum, c) =>
+            sum +
+            c.lines.fold<double>(0.0, (s, l) => s + (l.amount * l.progress)));
     final spent = _mockSpend().fold<double>(0.0, (s, t) => s + t.amount);
     final remaining = (totalBudget - spent).clamp(0.0, double.infinity);
-
     final budgetProgress =
         totalBudget <= 0 ? 0.0 : (spent / totalBudget).clamp(0.0, 1.0);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: _contentHPad),
-      child: _subbyCardShell(
-        theme: theme,
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Overview', style: _sectionTitleStyle(theme)),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: _summaryStat(
-                    theme: theme,
-                    accent: accent,
-                    label: 'Budget',
-                    value: _money(totalBudget),
-                    icon: Icons.payments_outlined,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _summaryStat(
-                    theme: theme,
-                    accent: _live,
-                    label: 'Spent',
-                    value: _money(spent),
-                    icon: Icons.receipt_long_outlined,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: _summaryStat(
-                    theme: theme,
-                    accent: _inkMute,
-                    label: 'Committed',
-                    value: _money(committed),
-                    icon: Icons.assignment_turned_in_outlined,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _summaryStat(
-                    theme: theme,
-                    accent: accent,
-                    label: 'Remaining',
-                    value: _money(remaining),
-                    icon: Icons.account_balance_wallet_outlined,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _progressBar(theme,
-                      value: budgetProgress, fillColor: accent),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  '${_pct(budgetProgress)} used',
-                  style: theme.bodySmall.override(
-                    fontFamily: _bodyFont,
-                    color: _inkMute,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _summaryStat({
-    required FlutterFlowTheme theme,
-    required Color accent,
-    required String label,
-    required String value,
-    required IconData icon,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: accent.withOpacity(0.10),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: accent.withOpacity(0.22)),
-      ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: accent.withOpacity(0.16),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, size: 18, color: accent),
+          Row(
+            children: [
+              Expanded(
+                  child: _statTile(theme,
+                      label: 'Budget',
+                      value: _money(totalBudget),
+                      valueColor: _teal)),
+              const SizedBox(width: 10),
+              Expanded(
+                  child: _statTile(theme,
+                      label: 'Spent', value: _money(spent), valueColor: _live)),
+            ],
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: _rowMetaStyle(theme)),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.bodyMedium.override(
-                    fontFamily: _bodyFont,
-                    fontWeight: FontWeight.w900,
-                    color: _ink,
-                  ),
-                ),
-              ],
-            ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                  child: _statTile(theme,
+                      label: 'Committed',
+                      value: _money(committed),
+                      valueColor: _teal)),
+              const SizedBox(width: 10),
+              Expanded(
+                  child: _statTile(theme,
+                      label: 'Remaining',
+                      value: _money(remaining),
+                      valueColor: _teal)),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(child: _progressBar(budgetProgress, _teal)),
+              const SizedBox(width: 10),
+              Text('${_pct(budgetProgress)} used',
+                  style: const TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: _faint)),
+            ],
           ),
         ],
       ),
@@ -579,22 +453,21 @@ class _ProjectCostViewState extends State<ProjectCostView>
   // -----------------------------
   Widget _buildBudgetTab(FlutterFlowTheme theme, Color accent) {
     final cats = _mockBudgetCategories();
-
     return ListView(
-      padding: const EdgeInsets.fromLTRB(0, 0, 0, 28),
+      padding: const EdgeInsets.fromLTRB(0, 12, 0, 28),
       children: [
-        const SizedBox(height: 12),
         _buildTopSummary(theme, accent),
-        const SizedBox(height: 12),
-        Column(
-          children: List.generate(cats.length, (i) {
-            final c = cats[i];
-            return Padding(
-              padding: EdgeInsets.only(bottom: i == cats.length - 1 ? 0 : _gap),
-              child: _buildCategoryCardBudget(theme, accent, c),
-            );
-          }),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(_contentHPad, 22, _contentHPad, 4),
+          child: Text('CATEGORIES', style: _uLabel(theme)),
         ),
+        ...List.generate(cats.length, (i) {
+          return Padding(
+            padding: EdgeInsets.fromLTRB(
+                _contentHPad, i == 0 ? 4 : _gap, _contentHPad, 0),
+            child: _buildCategoryCardBudget(theme, accent, cats[i]),
+          );
+        }),
       ],
     );
   }
@@ -602,19 +475,21 @@ class _ProjectCostViewState extends State<ProjectCostView>
   Widget _buildCategoryCardBudget(
       FlutterFlowTheme theme, Color accent, _CostCategory c) {
     final isExpanded = _expandedCategoryKeysBudget.contains(c.key);
-
     final total = c.lines.fold<double>(0.0, (s, l) => s + l.amount);
     final committed =
         c.lines.fold<double>(0.0, (s, l) => s + (l.amount * l.progress));
     final prog = total <= 0 ? 0.0 : (committed / total).clamp(0.0, 1.0);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: _contentHPad),
-      child: _subbyCardShell(
-        theme: theme,
-        padding: const EdgeInsets.all(14),
+    return _flatCard(
+      Material(
+        color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(_radius),
+          splashFactory: NoSplash.splashFactory,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          hoverColor: Colors.transparent,
+          overlayColor: WidgetStateProperty.all(Colors.transparent),
           onTap: () {
             setState(() {
               if (isExpanded) {
@@ -628,57 +503,40 @@ class _ProjectCostViewState extends State<ProjectCostView>
             children: [
               Row(
                 children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: accent.withOpacity(0.14),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(c.icon, color: accent, size: 22),
-                  ),
+                  Icon(c.icon, color: _teal, size: 22),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(c.title, style: _rowTitleStyle(theme)),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${_money(committed)} committed • ${_money(total)} budget',
-                          style: _rowMetaStyle(theme),
-                        ),
+                        const SizedBox(height: 3),
+                        Text('${_money(committed)} of ${_money(total)}',
+                            style: _rowMetaStyle(theme)),
                       ],
                     ),
                   ),
                   const SizedBox(width: 10),
-                  _pill(
-                    theme,
-                    text: _pct(prog),
-                    bg: accent.withOpacity(0.12),
-                    fg: accent,
-                  ),
-                  const SizedBox(width: 8),
+                  Text(_pct(prog),
+                      style: const TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: _teal)),
+                  const SizedBox(width: 6),
                   Icon(
-                    isExpanded
-                        ? Icons.keyboard_arrow_up_rounded
-                        : Icons.keyboard_arrow_down_rounded,
-                    color: _inkMute,
-                  ),
+                      isExpanded
+                          ? Icons.keyboard_arrow_up_rounded
+                          : Icons.keyboard_arrow_down_rounded,
+                      color: _faint),
                 ],
               ),
               const SizedBox(height: 12),
-              _progressBar(theme, value: prog, fillColor: accent),
+              _progressBar(prog, _teal),
               if (isExpanded) ...[
-                const SizedBox(height: 12),
-                _divider(theme),
-                const SizedBox(height: 10),
-                ...c.lines.map(
-                  (l) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: _buildBudgetLine(theme, accent, l),
-                  ),
-                ),
+                const SizedBox(height: 14),
+                Container(height: 1, color: _hairlineOnSurface),
+                ...c.lines.map((l) => _buildBudgetLine(theme, l)),
               ],
             ],
           ),
@@ -687,51 +545,34 @@ class _ProjectCostViewState extends State<ProjectCostView>
     );
   }
 
-  Widget _buildBudgetLine(
-      FlutterFlowTheme theme, Color accent, _CostLine line) {
+  Widget _buildBudgetLine(FlutterFlowTheme theme, _CostLine line) {
     return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: _surface,
-        borderRadius: BorderRadius.circular(_radius),
-        border: Border.all(color: _hairline.withOpacity(0.9)),
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: _hairline, width: 1)),
       ),
-      child: Column(
+      child: Row(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(line.title, style: _rowTitleStyle(theme)),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                _money(line.amount),
-                style: theme.bodyMedium.override(
-                  fontFamily: _bodyFont,
-                  fontWeight: FontWeight.w900,
-                  color: _ink,
-                ),
-              ),
-            ],
+          Expanded(
+            child: Text(line.title,
+                style: const TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: _ink)),
           ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: _progressBar(
-                  theme,
-                  value: line.progress,
-                  fillColor: accent,
-                ),
-              ),
-              const SizedBox(width: 10),
-              _pill(
-                theme,
-                text: _pct(line.progress),
-                bg: accent.withOpacity(0.12),
-                fg: accent,
-              ),
-            ],
+          const SizedBox(width: 10),
+          Text(_money(line.amount), style: _moneyStyle(theme)),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 36,
+            child: Text(_pct(line.progress),
+                textAlign: TextAlign.right,
+                style: const TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: _faint)),
           ),
         ],
       ),
@@ -743,116 +584,78 @@ class _ProjectCostViewState extends State<ProjectCostView>
   // -----------------------------
   Widget _buildInvoicesTab(FlutterFlowTheme theme, Color accent) {
     final invoices = _mockInvoices();
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(0, 0, 0, 28),
-      children: [
-        const SizedBox(height: 12),
-        _buildInvoicesSummary(theme, accent, invoices),
-        const SizedBox(height: 12),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: _contentHPad),
-          child: Column(
-            children: List.generate(invoices.length, (i) {
-              final inv = invoices[i];
-              return Padding(
-                padding: EdgeInsets.only(
-                    bottom: i == invoices.length - 1 ? 0 : _gap),
-                child: _buildInvoiceCard(theme, accent, inv),
-              );
-            }),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInvoicesSummary(
-      FlutterFlowTheme theme, Color accent, List<_InvoiceItem> invoices) {
     final total = invoices.fold<double>(0.0, (s, i) => s + i.amount);
     final paid =
         invoices.where((i) => i.paid).fold<double>(0.0, (s, i) => s + i.amount);
     final outstanding = (total - paid).clamp(0.0, double.infinity);
     final prog = total <= 0 ? 0.0 : (paid / total).clamp(0.0, 1.0);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: _contentHPad),
-      child: _subbyCardShell(
-        theme: theme,
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Invoices', style: _sectionTitleStyle(theme)),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: _summaryStat(
-                    theme: theme,
-                    accent: _live,
-                    label: 'Paid',
-                    value: _money(paid),
-                    icon: Icons.verified_outlined,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _summaryStat(
-                    theme: theme,
-                    accent: accent,
-                    label: 'Outstanding',
-                    value: _money(outstanding),
-                    icon: Icons.pending_actions_outlined,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                    child: _progressBar(theme, value: prog, fillColor: _live)),
-                const SizedBox(width: 10),
-                Text(
-                  '${_pct(prog)} paid',
-                  style: theme.bodySmall.override(
-                    fontFamily: _bodyFont,
-                    color: _inkMute,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-          ],
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(0, 12, 0, 28),
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: _contentHPad),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                      child: _statTile(theme,
+                          label: 'Paid',
+                          value: _money(paid),
+                          valueColor: _live)),
+                  const SizedBox(width: 10),
+                  Expanded(
+                      child: _statTile(theme,
+                          label: 'Outstanding',
+                          value: _money(outstanding),
+                          valueColor: _teal)),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(child: _progressBar(prog, _live)),
+                  const SizedBox(width: 10),
+                  Text('${_pct(prog)} paid',
+                      style: const TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: _faint)),
+                ],
+              ),
+            ],
+          ),
         ),
-      ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(_contentHPad, 8, _contentHPad, 0),
+          child: Column(
+            children:
+                invoices.map((inv) => _buildInvoiceRow(theme, inv)).toList(),
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildInvoiceCard(
-      FlutterFlowTheme theme, Color accent, _InvoiceItem inv) {
-    final pillColor = inv.paid ? _live : accent;
-
-    return _subbyCardShell(
-      theme: theme,
-      padding: const EdgeInsets.all(14),
+  Widget _buildInvoiceRow(FlutterFlowTheme theme, _InvoiceItem inv) {
+    final c = inv.paid ? _live : _teal;
+    final tint = inv.paid ? const Color(0x1FE5771E) : _tealTint;
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: _hairlineOnSurface, width: 1)),
+      ),
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: pillColor.withOpacity(0.14),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
+          Icon(
               inv.paid
                   ? Icons.receipt_long_rounded
                   : Icons.receipt_long_outlined,
-              color: pillColor,
-              size: 22,
-            ),
-          ),
+              color: c,
+              size: 22),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -862,13 +665,11 @@ class _ProjectCostViewState extends State<ProjectCostView>
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: _rowTitleStyle(theme)),
-                const SizedBox(height: 4),
-                Text(
-                  '${inv.vendor} • ${_fmtDate(inv.date)}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: _rowMetaStyle(theme),
-                ),
+                const SizedBox(height: 3),
+                Text('${inv.vendor} · ${_fmtDate(inv.date)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _rowMetaStyle(theme)),
               ],
             ),
           ),
@@ -876,21 +677,9 @@ class _ProjectCostViewState extends State<ProjectCostView>
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                _money(inv.amount),
-                style: theme.bodyMedium.override(
-                  fontFamily: _bodyFont,
-                  fontWeight: FontWeight.w900,
-                  color: _ink,
-                ),
-              ),
+              Text(_money(inv.amount), style: _moneyStyle(theme)),
               const SizedBox(height: 6),
-              _pill(
-                theme,
-                text: inv.paid ? 'Paid' : 'Due',
-                bg: pillColor.withOpacity(0.12),
-                fg: pillColor,
-              ),
+              _softPill(inv.paid ? 'Paid' : 'Due', fg: c, bg: tint),
             ],
           ),
         ],
@@ -904,84 +693,57 @@ class _ProjectCostViewState extends State<ProjectCostView>
   Widget _buildSpendTab(FlutterFlowTheme theme, Color accent) {
     final txs = _mockSpend();
     txs.sort((a, b) => b.date.compareTo(a.date));
-
     final total = txs.fold<double>(0.0, (s, t) => s + t.amount);
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(0, 0, 0, 28),
+      padding: const EdgeInsets.fromLTRB(0, 12, 0, 28),
       children: [
-        const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: _contentHPad),
-          child: _subbyCardShell(
-            theme: theme,
-            padding: const EdgeInsets.all(14),
-            child: Row(
+          child: _flatCard(
+            Row(
               children: [
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Spend', style: _sectionTitleStyle(theme)),
-                      const SizedBox(height: 6),
                       Text('Total spend to date', style: _rowMetaStyle(theme)),
+                      const SizedBox(height: 4),
+                      Text(_money(total),
+                          style: theme.titleLarge.override(
+                            fontFamily: _displayFont,
+                            color: _ink,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 24,
+                            letterSpacing: -0.5,
+                          )),
                     ],
                   ),
                 ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: accent.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: accent.withOpacity(0.25)),
-                  ),
-                  child: Text(
-                    _money(total),
-                    style: theme.titleSmall.override(
-                      fontFamily: _displayFont,
-                      fontWeight: FontWeight.w900,
-                      color: _ink,
-                    ),
-                  ),
-                ),
+                const Icon(Icons.payments_outlined, color: _teal, size: 26),
               ],
             ),
           ),
         ),
-        const SizedBox(height: 12),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: _contentHPad),
+          padding: const EdgeInsets.fromLTRB(_contentHPad, 8, _contentHPad, 0),
           child: Column(
-            children: List.generate(txs.length, (i) {
-              return Padding(
-                padding:
-                    EdgeInsets.only(bottom: i == txs.length - 1 ? 0 : _gap),
-                child: _buildSpendCard(theme, accent, txs[i]),
-              );
-            }),
+            children: txs.map((t) => _buildSpendRow(theme, t)).toList(),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSpendCard(FlutterFlowTheme theme, Color accent, _SpendTx t) {
-    return _subbyCardShell(
-      theme: theme,
-      padding: const EdgeInsets.all(14),
+  Widget _buildSpendRow(FlutterFlowTheme theme, _SpendTx t) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: _hairlineOnSurface, width: 1)),
+      ),
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: _surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: _hairline.withOpacity(0.9)),
-            ),
-            child: Icon(Icons.shopping_bag_outlined, color: accent, size: 22),
-          ),
+          const Icon(Icons.shopping_bag_outlined, color: _teal, size: 22),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -991,33 +753,21 @@ class _ProjectCostViewState extends State<ProjectCostView>
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: _rowTitleStyle(theme)),
-                const SizedBox(height: 4),
-                Text(
-                  '${t.merchant} • ${t.category} • ${_fmtDate(t.date)}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: _rowMetaStyle(theme),
-                ),
+                const SizedBox(height: 3),
+                Text('${t.merchant} · ${t.category} · ${_fmtDate(t.date)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _rowMetaStyle(theme)),
               ],
             ),
           ),
           const SizedBox(width: 10),
-          Text(
-            _money(t.amount),
-            style: theme.bodyMedium.override(
-              fontFamily: _bodyFont,
-              fontWeight: FontWeight.w900,
-              color: _ink,
-            ),
-          ),
+          Text(_money(t.amount), style: _moneyStyle(theme)),
         ],
       ),
     );
   }
 
-  // -----------------------------
-  // Build page
-  // -----------------------------
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
@@ -1031,73 +781,25 @@ class _ProjectCostViewState extends State<ProjectCostView>
         top: true,
         bottom: true,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: _vPad),
+          padding: const EdgeInsets.only(top: _vPad),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: _hPad),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    InkWell(
-                      onTap: _handleBack,
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: _paper,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: _hairline.withOpacity(0.9),
-                          ),
-                        ),
-                        child: Icon(
-                          Icons.arrow_back_rounded,
-                          size: 22,
-                          color: _ink,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: accent,
-                        borderRadius: BorderRadius.circular(_radius),
-                      ),
-                      child: const Icon(
-                        Icons.account_balance_wallet_outlined,
-                        color: _paper,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Project Cost',
-                            style: _titleStyle(theme).copyWith(
-                              color: _ink,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Budget, invoices and spend tracking',
-                            style: _subtitleStyle(theme),
-                          ),
-                        ],
-                      ),
-                    ),
+                    _minBack(),
+                    const SizedBox(height: 18),
+                    Text('Project Cost', style: _pageTitle(theme)),
+                    const SizedBox(height: 8),
+                    Text('Budget, invoices and spend',
+                        style: _pageSubtitle(theme)),
                   ],
                 ),
               ),
-
               const SizedBox(height: 18),
 
               Expanded(
@@ -1105,112 +807,63 @@ class _ProjectCostViewState extends State<ProjectCostView>
                   headerSliverBuilder: (context, inner) {
                     return [
                       const SliverToBoxAdapter(
-                        child: SizedBox(height: _sliverTopGap),
-                      ),
-
-                      // Project preview (wired)
+                          child: SizedBox(height: _sliverTopGap)),
                       SliverToBoxAdapter(
                         child: Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: _contentHPad),
-                            child: _projectRef == null
-                                ? _subbyCardShell(
-                                    theme: theme,
-                                    child: Text(
-                                      'No project selected.',
-                                      style: theme.bodyMedium.override(
-                                        fontFamily: _bodyFont,
-                                        color: _inkMute,
-                                      ),
-                                    ),
-                                  )
-                                : StreamBuilder<DocumentSnapshot<Object?>>(
-                                    stream: _projectRef!.snapshots(),
-                                    builder: (context, snap) {
-                                      final raw = snap.data?.data();
-                                      final data = raw is Map<String, dynamic>
-                                          ? raw
-                                          : <String, dynamic>{};
-
-                                      final name = (data['name'] ??
-                                              data['projectName'] ??
-                                              data['title'] ??
-                                              'Project')
-                                          .toString();
-
-                                      return _subbyCardShell(
-                                        theme: theme,
-                                        padding: const EdgeInsets.all(14),
-                                        child: Row(
-                                          children: [
-                                            Container(
-                                              width: 44,
-                                              height: 44,
-                                              decoration: BoxDecoration(
-                                                color: accent.withOpacity(0.14),
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                              ),
-                                              child: Icon(
-                                                Icons.folder_rounded,
-                                                color: accent,
-                                                size: 22,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    name,
+                          padding: const EdgeInsets.fromLTRB(
+                              _contentHPad, 0, _contentHPad, 14),
+                          child: _projectRef == null
+                              ? _flatCard(Text('No project selected.',
+                                  style: _rowMetaStyle(theme)))
+                              : StreamBuilder<DocumentSnapshot<Object?>>(
+                                  stream: _projectRef!.snapshots(),
+                                  builder: (context, snap) {
+                                    final raw = snap.data?.data();
+                                    final data = raw is Map<String, dynamic>
+                                        ? raw
+                                        : <String, dynamic>{};
+                                    final name = (data['name'] ??
+                                            data['projectName'] ??
+                                            data['title'] ??
+                                            'Project')
+                                        .toString();
+                                    return _flatCard(
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.folder_open_rounded,
+                                              color: _teal, size: 22),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(name,
                                                     maxLines: 1,
                                                     overflow:
                                                         TextOverflow.ellipsis,
-                                                    style: theme.titleMedium
-                                                        .override(
-                                                      fontFamily: theme
-                                                          .titleMediumFamily,
-                                                      color: _ink,
-                                                      fontWeight:
-                                                          FontWeight.w900,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 6),
-                                                  Text(
-                                                    'Cost dashboard (UI) • Wire Firestore next',
-                                                    style: theme.bodySmall
-                                                        .override(
-                                                      fontFamily: _bodyFont,
-                                                      color: _inkMute,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
+                                                    style:
+                                                        _rowTitleStyle(theme)),
+                                                const SizedBox(height: 2),
+                                                Text('Cost dashboard',
+                                                    style:
+                                                        _rowMetaStyle(theme)),
+                                              ],
                                             ),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  ),
-                          ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
                         ),
                       ),
-
                       SliverPersistentHeader(
                         pinned: true,
                         delegate: _StickyHeaderDelegate(
                           minHeight: _stickyTabsHeight,
                           maxHeight: _stickyTabsHeight,
-                          child: Container(
-                            color: _paper,
-                            padding: const EdgeInsets.only(bottom: 12),
-                            alignment: Alignment.bottomCenter,
-                            child: _buildTabs(theme, accent),
-                          ),
+                          child: _buildTabs(theme, accent),
                         ),
                       ),
                     ];
@@ -1256,7 +909,7 @@ class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return child;
+    return SizedBox.expand(child: child);
   }
 
   @override
@@ -1272,7 +925,7 @@ class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
 // ============================================================================
 class _CostLine {
   final String title;
-  final double amount; // ✅ double
+  final double amount;
   final double progress; // 0..1
   const _CostLine(this.title, this.amount, this.progress);
 }
@@ -1282,7 +935,6 @@ class _CostCategory {
   final String title;
   final IconData icon;
   final List<_CostLine> lines;
-
   const _CostCategory({
     required this.key,
     required this.title,
@@ -1294,31 +946,17 @@ class _CostCategory {
 class _InvoiceItem {
   final String title;
   final String vendor;
-  final double amount; // ✅ double
+  final double amount;
   final DateTime date;
   final bool paid;
-
-  _InvoiceItem({
-    required this.title,
-    required this.vendor,
-    required this.amount,
-    required this.date,
-    required this.paid,
-  });
+  _InvoiceItem(this.title, this.vendor, this.amount, this.date, this.paid);
 }
 
 class _SpendTx {
   final String title;
   final String merchant;
-  final double amount; // ✅ double
+  final double amount;
   final DateTime date;
   final String category;
-
-  _SpendTx({
-    required this.title,
-    required this.merchant,
-    required this.amount,
-    required this.date,
-    required this.category,
-  });
+  _SpendTx(this.title, this.merchant, this.amount, this.date, this.category);
 }

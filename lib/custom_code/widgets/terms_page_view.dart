@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:intl/intl.dart';
 
 class TermsPageView extends StatefulWidget {
@@ -25,92 +27,97 @@ class TermsPageView extends StatefulWidget {
 }
 
 class _TermsPageViewState extends State<TermsPageView> {
-  static const double _hPad = 24;
-  static const double _vPad = 24;
-  static const double _radius = 12;
-
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // Synced with DashboardPageView / AddProjectsPageView.
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF16202E);
+  static const Color _ink = Color(0xFF017374); // text, chrome
   static const Color _inkMute = Color(0xFF5A6675);
+  static const Color _faint = Color(0xFF93A0B0); // muted labels, chevrons
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _hairline = Color(0xFFEEF1F4);
-  static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
-  // Brand accent — YELLOW. Always ink foreground, never white.
-  static const Color _spark = Color(0xFFAEE03F); // primary CTA / ranked accent
-  static const Color _sparkInk = Color(0xFF16202E);
+  static const Color _hairline = Color(0xFFEEF1F2);
+  static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
+  // Brand accent — TEAL.
+  static const Color _teal = Color(0xFF017374);
   // Status
-  static const Color _live =
-      Color(0xFFFF6A2B); // orange — live / open-now / warning
-  static const Color _coral = Color(0xFFE0531C);
+  static const Color _live = Color(0xFFE5771E); // orange — live / warning
+  static const Color _coral = Color(0xFFE5771E);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
   static const String _monoFont = 'Inter';
   // ────────────────────────────────────────────────────────────────────
 
-  // ---------------- TYPOGRAPHY (locked palette) ----------------
-  // Signatures unchanged so all call sites compile as-is.
-  TextStyle _appTitleStyle(FlutterFlowTheme theme) => const TextStyle(
+  static const double _hPad = 24;
+  static const double _vPad = 14;
+  static const double _radius = 12;
+
+  // =========================================================
+  // ✅ TYPOGRAPHY (locked palette — explicit family + colour)
+  //    Signatures unchanged so all call sites compile as-is.
+  // =========================================================
+  TextStyle _pageTitle(FlutterFlowTheme t) => t.titleLarge.override(
         fontFamily: _displayFont,
-        fontSize: 20,
-        fontWeight: FontWeight.w800,
-        letterSpacing: -0.4,
-        height: 1.05,
         color: _ink,
+        fontWeight: FontWeight.w900,
+        fontSize: 30,
+        lineHeight: 1.05,
+        letterSpacing: -0.5,
       );
 
   TextStyle _pageSubtitle(FlutterFlowTheme t) => const TextStyle(
         fontFamily: _bodyFont,
         fontSize: 13,
         fontWeight: FontWeight.w500,
-        color: _inkMute,
-      );
-
-  TextStyle _sectionTitle(FlutterFlowTheme t) => const TextStyle(
-        fontFamily: _displayFont,
-        fontSize: 16,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.2,
-        color: _ink,
+        color: _faint,
       );
 
   TextStyle _body(FlutterFlowTheme t) => const TextStyle(
         fontFamily: _bodyFont,
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-        height: 1.45,
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+        height: 1.5,
         color: _ink,
-      );
-
-  TextStyle _meta(FlutterFlowTheme t) => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 13,
-        fontWeight: FontWeight.w500,
-        color: _inkMute,
       );
 
   TextStyle _hint(FlutterFlowTheme t) => const TextStyle(
         fontFamily: _bodyFont,
         fontSize: 14,
         fontWeight: FontWeight.w500,
-        height: 1.45,
+        height: 1.55,
         color: _inkMute,
       );
 
-  // Band is now a neutral contained surface → ink foreground, never white.
-  TextStyle _headerTitleOnPrimary(FlutterFlowTheme t) => const TextStyle(
-        fontFamily: _displayFont,
-        fontSize: 18,
-        fontWeight: FontWeight.w800,
-        letterSpacing: -0.2,
-        color: _ink,
+  // Minimal circular back button (matches AddProjectsPageView).
+  Widget _backButton() => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => context.safePop(),
+          borderRadius: BorderRadius.circular(999),
+          splashFactory: NoSplash.splashFactory,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          hoverColor: Colors.transparent,
+          overlayColor: WidgetStateProperty.all(Colors.transparent),
+          child: Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: _surface,
+              shape: BoxShape.circle,
+              border: Border.all(color: _hairline),
+            ),
+            child: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              size: 15,
+              color: _inkMute,
+            ),
+          ),
+        ),
       );
-  // -------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -132,57 +139,30 @@ class _TermsPageViewState extends State<TermsPageView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top bar (Home-style)
+            // Back button
             Padding(
-              padding: EdgeInsets.fromLTRB(_hPad, topInset + _vPad, _hPad, 12),
+              padding: EdgeInsets.fromLTRB(_hPad, topInset + _vPad, _hPad, 0),
               child: Row(
                 children: [
-                  InkWell(
-                    borderRadius: BorderRadius.circular(999),
-                    onTap: () => context.safePop(),
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: _surface,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: _hairlineOnSurface, width: 1),
-                      ),
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.arrow_back_rounded,
-                        size: 20,
-                        color: _ink,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Subby', style: _appTitleStyle(theme)),
-                      const SizedBox(height: 2),
-                      Text('Terms of Service', style: _pageSubtitle(theme)),
-                    ],
-                  ),
+                  _backButton(),
+                  const Spacer(),
                 ],
               ),
             ),
 
-            // Section band — saturated brand fill becomes a neutral contained
-            // surface; foreground flips to ink (per SUBBY PALETTE rule).
-            Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                color: _surface,
-                border: Border(
-                  bottom: BorderSide(color: _hairlineOnSurface, width: 1),
-                ),
-              ),
-              padding: const EdgeInsets.fromLTRB(_hPad, 16, _hPad, 16),
-              child: Text(
-                'Terms of Service',
-                style: _headerTitleOnPrimary(theme),
+            // Big title + subtitle (no section band)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(_hPad, 20, _hPad, 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Terms of Service', style: _pageTitle(theme)),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Last updated ${DateFormat('d MMM yyyy').format(DateTime.now())}',
+                    style: _pageSubtitle(theme),
+                  ),
+                ],
               ),
             ),
 
@@ -190,42 +170,25 @@ class _TermsPageViewState extends State<TermsPageView> {
             Expanded(
               child: SingleChildScrollView(
                 padding:
-                    EdgeInsets.fromLTRB(_hPad, 16, _hPad, bottomInset + 24),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: _paper,
-                    borderRadius: BorderRadius.circular(_radius),
-                    border: Border.all(color: _hairline),
-                    boxShadow: [
-                      BoxShadow(
-                        blurRadius: 12,
-                        offset: const Offset(0, 6),
-                        color: Colors.black.withOpacity(0.04),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Last updated: ${DateFormat('d MMM yyyy').format(DateTime.now())}',
-                        style: _meta(theme),
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        'Add your Terms of Service text here.',
-                        style: _body(theme),
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        'Tip: Keep this content short in-app, and link to the full policy if you prefer.',
-                        style: _hint(theme),
-                      ),
-                      const SizedBox(height: 4),
-                    ],
-                  ),
+                    EdgeInsets.fromLTRB(_hPad, 20, _hPad, bottomInset + 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      height: 1,
+                      color: _hairlineOnSurface,
+                      margin: const EdgeInsets.only(bottom: 20),
+                    ),
+                    Text(
+                      'Add your Terms of Service text here.',
+                      style: _body(theme),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      'Tip: Keep this content short in-app, and link to the full policy if you prefer.',
+                      style: _hint(theme),
+                    ),
+                  ],
                 ),
               ),
             ),
