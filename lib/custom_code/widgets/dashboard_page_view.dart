@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import 'index.dart'; // Imports other custom widgets
+
 // ======================= DashboardPageView (FULL FILE) =======================
 //
 // v5 — "Focus" home: most-recent project as a HERO card with a large
@@ -470,6 +472,19 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         .limit(20);
   }
 
+  // Archived projects (archived == true). Mirrors MyProjectsHomePageView's
+  // archived query so the two screens stay in sync.
+  Query<Map<String, dynamic>>? _archivedProjectsQuery() {
+    final userRef = currentUserReference;
+    if (userRef == null) return null;
+    return FirebaseFirestore.instance
+        .collection('projects')
+        .where('ownerRef', isEqualTo: userRef)
+        .where('archived', isEqualTo: true)
+        .orderBy('updatedAt', descending: true)
+        .limit(20);
+  }
+
   // -----------------------------
   // Listing exists for current user (RETAINED for the Directory in the nav)
   // Debounced + only setState on change.
@@ -546,8 +561,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         children: [
           _accentMarker(_ink),
           const SizedBox(width: 10),
-          Expanded(
-              child: Text('Home Building Projects', style: _stepHeadlineStyle)),
+          Expanded(child: Text('Building Projects', style: _stepHeadlineStyle)),
         ],
       );
 
@@ -688,9 +702,120 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                 ],
               ),
             ),
+
+            // Archived Building Projects — collapsed list below the active set.
+            _buildArchivedSection(),
           ],
         );
       },
+    );
+  }
+
+  // -----------------------------
+  // Archived Building Projects section
+  // -----------------------------
+  Widget _buildArchivedSection() {
+    final q = _archivedProjectsQuery();
+    if (q == null) return const SizedBox.shrink();
+
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: q.snapshots(),
+      builder: (context, snap) {
+        final docs = snap.data?.docs ?? const [];
+        // Hide the whole section when there's nothing archived.
+        if (docs.isEmpty) return const SizedBox.shrink();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 30),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: _hPad),
+              child: _archivedSectionHeader(),
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: _hPad),
+              child: Column(
+                children: [for (final d in docs) _archivedRow(d)],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _archivedSectionHeader() => Row(
+        children: [
+          _accentMarker(_faint),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Archived Building Projects',
+              style: _stepHeadlineStyle.copyWith(color: _inkMute),
+            ),
+          ),
+        ],
+      );
+
+  // A muted row: archive glyph, name, location, chevron — taps through to the
+  // same project detail page as an active project.
+  Widget _archivedRow(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data();
+    final name = (data['name'] as String?)?.trim() ?? '';
+    final city = (data['city'] as String?)?.trim() ?? '';
+    final province = (data['province'] as String?)?.trim() ?? '';
+    final loc = [city, province].where((x) => x.isNotEmpty).join(', ');
+
+    return InkWell(
+      onTap: () => _goToProject(doc.reference),
+      child: Container(
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: Color(0xFFF1F4F7))),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 11),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(
+                color: _surface,
+                shape: BoxShape.circle,
+              ),
+              child:
+                  const Icon(Icons.archive_outlined, size: 19, color: _faint),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name.isEmpty ? 'Untitled project' : name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style:
+                        _tileTitleStyle.copyWith(fontSize: 14, color: _inkMute),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    loc.isEmpty ? 'No location set' : loc,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _tileSubtitleStyle,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.chevron_right_rounded,
+                size: 20, color: Color(0xFFCDD6E2)),
+          ],
+        ),
+      ),
     );
   }
 
