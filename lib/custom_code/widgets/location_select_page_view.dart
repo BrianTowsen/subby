@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 class LocationSelectPageView extends StatefulWidget {
@@ -16,9 +18,9 @@ class LocationSelectPageView extends StatefulWidget {
     this.width,
     this.height,
     this.initialProvince,
-    this.initialRegion, // NEW
-    this.category, // Associations / Professionals / Trades / Suppliers
-    this.searchText, // optional
+    this.initialRegion,
+    this.category,
+    this.searchText,
   });
 
   final double? width;
@@ -34,106 +36,57 @@ class LocationSelectPageView extends StatefulWidget {
 }
 
 class _LocationSelectPageViewState extends State<LocationSelectPageView> {
-  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  // less-is-more system · ported from Clutch Putt · lime → yellow.
-  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
-  //
-  // Neutrals
-  static const Color _ink = Color(0xFF16202E);
-  static const Color _inkMute = Color(0xFF5A6675);
+  // ─── SUBBY PALETTE — DIRECTORY (amber / sunshine) ──────────────────
+  static const Color _amber = Color(0xFFE5771E); // accent
+  static const Color _sunshine = Color(0xFFFDB617); // secondary highlight
+  static const Color _inkMute = Color(0xFF5A6675); // labels
+  static const Color _faint = Color(0xFF93A0B0); // subtitles / unselected
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _hairline = Color(0xFFEEF1F4);
-  static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
-  // Brand accent — YELLOW. Always ink foreground, never white.
-  static const Color _spark = Color(0xFFAEE03F); // primary CTA / ranked accent
-  static const Color _sparkInk = Color(0xFF16202E);
-  // Status
-  static const Color _live =
-      Color(0xFFFF6A2B); // orange — live / open-now / warning
-  static const Color _coral = Color(0xFFE0531C);
-  // Geometry
-  static const double _rSmall = 6;
-  static const double _rMed = 8;
-  static const double _rLarge = 12;
-  static const double _rPill = 999;
-  static const double _pageHPad = 20;
-  static const double _sectionGap = 32;
-  static const double _navReserve = 96;
-  // Type
+  static const Color _hairline = Color(0xFFEEF1F2);
+  static const Color _rule = Color(0xFFE2E7EE);
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
-  static const String _monoFont = 'Inter';
-  // ────────────────────────────────────────────────────────────────────
-
-  static const double _hPad = _pageHPad;
-  static const double _vPad = _pageHPad;
+  static const double _hPad = 24;
+  static const double _vPad = 14;
 
   late String _category;
   String? _province;
   String? _city;
 
-  // =========================================================
-  // ✅ TYPOGRAPHY (locked palette — explicit family + colour)
-  // =========================================================
-  TextStyle get _appTitleStyle => const TextStyle(
+  TextStyle get _titleStyle => const TextStyle(
         fontFamily: _displayFont,
-        fontSize: 20,
-        fontWeight: FontWeight.w800,
-        letterSpacing: -0.4,
+        fontSize: 30,
+        fontWeight: FontWeight.w900,
+        color: _amber,
         height: 1.05,
-        color: _ink,
       );
 
-  TextStyle get _descStyle => const TextStyle(
+  TextStyle get _subtitleStyle => const TextStyle(
         fontFamily: _bodyFont,
         fontSize: 13,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w600,
+        color: _faint,
+      );
+
+  TextStyle get _uLabelStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 11,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0.6,
         color: _inkMute,
       );
 
-  TextStyle get _sectionLabelStyle => const TextStyle(
+  TextStyle get _valueStyle => const TextStyle(
         fontFamily: _bodyFont,
-        fontSize: 13,
-        fontWeight: FontWeight.w500,
-        color: _ink,
-      );
-
-  TextStyle _chipTextStyle({required bool selected}) => TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 13,
-        fontWeight: FontWeight.w500,
-        color: selected ? _paper : _inkMute,
-      );
-
-  TextStyle get _regionRowTextStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-        color: _ink,
-      );
-
-  TextStyle get _ctaTextStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 14,
+        fontSize: 16,
         fontWeight: FontWeight.w700,
-        color: _sparkInk, // ink-on-yellow
+        color: _amber,
       );
 
-  TextStyle get _infoTitleStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 13,
-        fontWeight: FontWeight.w500,
-        color: _ink,
-      );
-
-  TextStyle get _infoSubtitleStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
-        color: _inkMute,
-      );
-  // =========================================================
+  static const BoxDecoration _uRule = BoxDecoration(
+    border: Border(bottom: BorderSide(color: _rule, width: 1)),
+  );
 
   @override
   void initState() {
@@ -162,6 +115,18 @@ class _LocationSelectPageViewState extends State<LocationSelectPageView> {
         return 'Browse trades by location.';
     }
   }
+
+  static const List<String> _provinces = [
+    'Gauteng',
+    'Western Cape',
+    'KwaZulu-Natal',
+    'Eastern Cape',
+    'Free State',
+    'North West',
+    'Limpopo',
+    'Mpumalanga',
+    'Northern Cape',
+  ];
 
   List<String> _citiesForProvince(String? province) {
     if (province == null) return const <String>[];
@@ -226,185 +191,98 @@ class _LocationSelectPageViewState extends State<LocationSelectPageView> {
     final double width = widget.width ?? MediaQuery.sizeOf(context).width;
     final double height = widget.height ?? MediaQuery.sizeOf(context).height;
 
-    final provinces = const [
-      'Gauteng',
-      'Western Cape',
-      'KwaZulu-Natal',
-      'Eastern Cape',
-      'Free State',
-      'North West',
-      'Limpopo',
-      'Mpumalanga',
-      'Northern Cape',
-    ];
-
     final cities = _citiesForProvince(_province);
-
     if (_province != null && cities.isNotEmpty && _city != null) {
-      if (!cities.contains(_city)) {
-        _city = null;
-      }
+      if (!cities.contains(_city)) _city = null;
     }
+
+    final provinceItems = <String>['Select province', ..._provinces];
+    final provinceValue = _province ?? 'Select province';
 
     return SizedBox(
       width: width,
       height: height,
-      child: SafeArea(
-        child: Container(
-          color: _paper,
+      child: Container(
+        color: _paper,
+        child: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ---------- TOP BAR ----------
               Padding(
-                padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 10),
-                child: Row(
+                padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    GestureDetector(
-                      onTap: () => context.pop(),
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: _surface,
-                          borderRadius: BorderRadius.circular(_rMed),
-                        ),
-                        child: const Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          size: 16,
-                          color: _ink,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Choose your area',
-                        style: _appTitleStyle,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // ---------- DESCRIPTION ----------
-              Padding(
-                padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 16),
-                child: Text(
-                  _descriptionForCategory(_category),
-                  style: _descStyle,
-                ),
-              ),
-
-              // ---------- PROVINCE ----------
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: _hPad),
-                child: Text('Province', style: _sectionLabelStyle),
-              ),
-              const SizedBox(height: 8),
-
-              SizedBox(
-                height: 40,
-                child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: _hPad),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: provinces.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
-                  itemBuilder: (context, index) {
-                    final p = provinces[index];
-                    final selected = p == _province;
-
-                    return GestureDetector(
-                      onTap: () {
+                    _backButton(),
+                    const SizedBox(height: 20),
+                    Text('Choose your area', style: _titleStyle),
+                    const SizedBox(height: 8),
+                    Text(_descriptionForCategory(_category),
+                        style: _subtitleStyle),
+                    const SizedBox(height: 26),
+                    _uSelect(
+                      label: 'Province',
+                      icon: Icons.map_outlined,
+                      value: provinceValue,
+                      items: provinceItems,
+                      onChanged: (v) {
                         setState(() {
-                          _province = p;
+                          _province = v == 'Select province' ? null : v;
                           _city = null;
                         });
                       },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        decoration: BoxDecoration(
-                          color: selected ? _ink : _paper,
-                          borderRadius: BorderRadius.circular(_rPill),
-                          border: Border.all(
-                            color: selected ? _ink : _hairline,
-                            width: 1,
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            p,
-                            style: _chipTextStyle(selected: selected),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
+                    ),
+                    const SizedBox(height: 18),
+                    Text('REGION', style: _uLabelStyle),
+                  ],
                 ),
               ),
-
-              const SizedBox(height: 18),
-
-              // ---------- REGION ----------
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: _hPad),
-                child: Text('Region', style: _sectionLabelStyle),
-              ),
-              const SizedBox(height: 8),
-
               Expanded(
-                child: ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 24),
+                child: ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 8),
+                  physics: const BouncingScrollPhysics(),
                   itemCount: cities.isEmpty ? 1 : cities.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
                     if (cities.isEmpty) {
-                      return _infoCard(
-                        context,
-                        title: _province == null
-                            ? 'Select a province first'
-                            : 'No regions configured',
-                        subtitle: _province == null
-                            ? 'Choose a province to continue.'
-                            : 'Add regions for $_province later.',
+                      return Container(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: _uRule,
+                        child: Text(
+                          _province == null
+                              ? 'Select a province first'
+                              : 'No regions configured for $_province.',
+                          style: _subtitleStyle,
+                        ),
                       );
                     }
-
                     final c = cities[index];
                     final selected = c == _city;
-
-                    return GestureDetector(
+                    return InkWell(
                       onTap: () => setState(() => _city = c),
                       child: Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: selected ? _surface : _paper,
-                          borderRadius: BorderRadius.circular(_rLarge),
-                          border: Border.all(
-                            color: selected ? _ink : _hairline,
-                            width: selected ? 1.2 : 1,
-                          ),
-                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: _uRule,
                         child: Row(
                           children: [
-                            const Icon(
-                              Icons.location_city_rounded,
-                              size: 20,
-                              color: _inkMute,
-                            ),
+                            Icon(Icons.location_city_outlined,
+                                size: 19, color: selected ? _amber : _faint),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
                                 c,
-                                style: _regionRowTextStyle,
+                                style: selected
+                                    ? _valueStyle
+                                    : const TextStyle(
+                                        fontFamily: _bodyFont,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: _inkMute,
+                                      ),
                               ),
                             ),
                             if (selected)
-                              const Icon(
-                                Icons.check_circle_rounded,
-                                size: 18,
-                                color: _ink,
-                              ),
+                              const Icon(Icons.check_circle_rounded,
+                                  size: 20, color: _amber),
                           ],
                         ),
                       ),
@@ -412,40 +290,22 @@ class _LocationSelectPageViewState extends State<LocationSelectPageView> {
                   },
                 ),
               ),
-
-              // ---------- CTA (primary action — yellow, ink-on-yellow) ----------
               Padding(
-                padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 18),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _spark,
-                      foregroundColor: _sparkInk,
-                      disabledBackgroundColor: _surface,
-                      disabledForegroundColor: _inkMute,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(_rMed),
-                      ),
-                      elevation: 0,
-                    ),
-                    onPressed: (_province == null)
-                        ? null
-                        : () {
-                            context.pop({
-                              'province': _province,
-                              'region': _city ?? '',
-                              'provinceSlug': _province != null
-                                  ? functions.slugify(_province!)
-                                  : '',
-                            });
-                          },
-                    child: Text(
-                      'Use this location',
-                      style: _ctaTextStyle,
-                    ),
-                  ),
+                padding: const EdgeInsets.fromLTRB(_hPad, 8, _hPad, 18),
+                child: _primaryButton(
+                  label: 'Use this location',
+                  icon: Icons.check_rounded,
+                  onTap: (_province == null)
+                      ? null
+                      : () {
+                          context.pop({
+                            'province': _province,
+                            'region': _city ?? '',
+                            'provinceSlug': _province != null
+                                ? functions.slugify(_province!)
+                                : '',
+                          });
+                        },
                 ),
               ),
             ],
@@ -455,25 +315,133 @@ class _LocationSelectPageViewState extends State<LocationSelectPageView> {
     );
   }
 
-  Widget _infoCard(
-    BuildContext context, {
-    required String title,
-    required String subtitle,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: _surface,
-        borderRadius: BorderRadius.circular(_rLarge),
-        border: Border.all(color: _hairlineOnSurface, width: 1),
+  // =========================================================
+  // UI helpers
+  // =========================================================
+  Widget _backButton() {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => context.pop(),
+        customBorder: const CircleBorder(),
+        child: Container(
+          width: 36,
+          height: 36,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: _surface,
+            shape: BoxShape.circle,
+            border: Border.all(color: _hairline),
+          ),
+          child: const Icon(Icons.arrow_back_ios_new_rounded,
+              size: 15, color: _inkMute),
+        ),
       ),
+    );
+  }
+
+  Widget _uSelect({
+    required String label,
+    required IconData icon,
+    required String value,
+    required List<String> items,
+    required ValueChanged<String> onChanged,
+  }) {
+    final safeValue = items.contains(value) ? value : items.first;
+    final isPlaceholder = safeValue.startsWith('Select ');
+    final hintStyle = const TextStyle(
+      fontFamily: _bodyFont,
+      fontSize: 16,
+      fontWeight: FontWeight.w600,
+      color: Color(0xFF94A0AD),
+    );
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: _uRule,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: _infoTitleStyle),
-          const SizedBox(height: 4),
-          Text(subtitle, style: _infoSubtitleStyle),
+          Text(label.toUpperCase(), style: _uLabelStyle),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Icon(icon, size: 19, color: _amber),
+              const SizedBox(width: 10),
+              Expanded(
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: safeValue,
+                    isExpanded: true,
+                    isDense: true,
+                    dropdownColor: _paper,
+                    icon:
+                        const Icon(Icons.expand_more_rounded, color: _inkMute),
+                    style: isPlaceholder ? hintStyle : _valueStyle,
+                    items: items
+                        .map(
+                          (e) => DropdownMenuItem<String>(
+                            value: e,
+                            child: Text(
+                              e,
+                              overflow: TextOverflow.ellipsis,
+                              style: e.startsWith('Select ')
+                                  ? hintStyle
+                                  : _valueStyle,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (v) {
+                      if (v == null) return;
+                      onChanged(v);
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _primaryButton({
+    required String label,
+    required IconData icon,
+    required VoidCallback? onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Opacity(
+          opacity: onTap == null ? 0.5 : 1,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              color: _amber,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 18, color: _paper),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                    color: _paper,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

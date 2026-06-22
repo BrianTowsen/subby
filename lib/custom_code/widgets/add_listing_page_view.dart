@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'dart:typed_data';
@@ -36,55 +38,28 @@ class AddListingPageView extends StatefulWidget {
 }
 
 class _AddListingPageViewState extends State<AddListingPageView> {
-  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  // less-is-more system · ported from Clutch Putt · lime → yellow.
-  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
-  //
-  // Neutrals
-  static const Color _ink = Color(0xFF16202E);
-  static const Color _inkMute = Color(0xFF5A6675);
+  // ─── SUBBY PALETTE — DIRECTORY (amber / sunshine) ──────────────────
+  // Directory section colours. Teal is reserved for Projects. The minimal
+  // underline layout is ported from AddProjectsPageView (Option C).
+  static const Color _amber =
+      Color(0xFFE5771E); // accent: title, icon, value, CTA
+  static const Color _sunshine = Color(0xFFFDB617); // secondary highlight
+  static const Color _inkMute = Color(0xFF5A6675); // uppercase micro-labels
+  static const Color _faint = Color(0xFF93A0B0); // subtitles / helpers
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _hairline = Color(0xFFEEF1F4);
-  static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
-  // Brand accent — YELLOW. Always ink foreground, never white.
-  static const Color _spark = Color(0xFFAEE03F); // primary CTA / ranked accent
-  static const Color _sparkInk = Color(0xFF16202E);
-  // Status
-  static const Color _live =
-      Color(0xFFFF6A2B); // orange — live / open-now / warning
-  static const Color _coral =
-      Color(0xFFE0531C); // deep orange — error/destructive
-  // Geometry
-  static const double _rSmall = 6;
-  static const double _rMed = 8;
-  static const double _rLarge = 12;
-  static const double _rPill = 999;
-  static const double _pageHPad = 20;
-  static const double _sectionGap = 32;
-  static const double _navReserve = 96;
+  static const Color _hairline = Color(0xFFEEF1F2);
+  static const Color _rule = Color(0xFFE2E7EE); // underline divider
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
-  static const String _monoFont = 'Inter';
-  // ────────────────────────────────────────────────────────────────────
-
-  static const double _hPad = _pageHPad;
-  static const double _vPad = _pageHPad;
-
-  static const double _cardRadius = _rLarge;
-
-  BoxDecoration get _cardDecoration => BoxDecoration(
-        color: _paper,
-        borderRadius: BorderRadius.circular(_cardRadius),
-        border: Border.all(color: _hairline, width: 1),
-      );
+  // Geometry
+  static const double _hPad = 24;
+  static const double _vPad = 14;
 
   // ---------------------------------------------------------
   // Form state
   // ---------------------------------------------------------
-  int _selectedTabIndex = 0; // 0..3
-
   final TextEditingController _nameCtrl = TextEditingController();
   final TextEditingController _aboutCtrl = TextEditingController();
   final TextEditingController _phoneCtrl = TextEditingController();
@@ -92,7 +67,7 @@ class _AddListingPageViewState extends State<AddListingPageView> {
   final TextEditingController _whatsCtrl = TextEditingController();
   final TextEditingController _suburbCtrl = TextEditingController();
 
-  // ✅ Required dropdown selections
+  String _listingType = 'Professionals';
   String _selectedProvince = 'Select province';
   String _selectedRegion = 'Select region';
   String _selectedSpeciality = 'Select speciality';
@@ -104,81 +79,67 @@ class _AddListingPageViewState extends State<AddListingPageView> {
   String? _heroFileName;
 
   // ---------------------------------------------------------
-  // Typography (locked palette — explicit family + colour)
+  // Typography (underline system)
   // ---------------------------------------------------------
   TextStyle get _titleStyle => const TextStyle(
         fontFamily: _displayFont,
-        fontSize: 20,
-        fontWeight: FontWeight.w800,
-        letterSpacing: -0.4,
+        fontSize: 30,
+        fontWeight: FontWeight.w900,
+        color: _amber,
         height: 1.05,
-        color: _ink,
       );
 
   TextStyle get _subtitleStyle => const TextStyle(
         fontFamily: _bodyFont,
         fontSize: 13,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w600,
+        color: _faint,
+      );
+
+  TextStyle get _uLabelStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 11,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0.6,
         color: _inkMute,
       );
 
-  TextStyle get _sectionTitleStyle => const TextStyle(
-        fontFamily: _displayFont,
+  TextStyle get _valueStyle => const TextStyle(
+        fontFamily: _bodyFont,
         fontSize: 16,
         fontWeight: FontWeight.w700,
-        letterSpacing: -0.2,
-        color: _ink,
+        color: _amber,
       );
 
-  TextStyle _tabTextStyle({required bool selected}) => TextStyle(
+  TextStyle get _hintStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: Color(0xFF94A0AD),
+      );
+
+  TextStyle get _helperStyle => const TextStyle(
         fontFamily: _bodyFont,
         fontSize: 13,
-        fontWeight: FontWeight.w500,
-        color: selected ? _paper : _inkMute,
+        fontWeight: FontWeight.w600,
+        color: _faint,
       );
 
-  TextStyle get _fieldTextStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 14,
-        color: _ink,
-      );
-
-  TextStyle get _hintTextStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 14,
-        color: _inkMute,
-      );
-
-  TextStyle get _labelStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
-        color: _inkMute,
-      );
-
-  TextStyle get _primaryBtnTextStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 14,
-        fontWeight: FontWeight.w700,
-        color: _sparkInk, // ink-on-yellow
-      );
+  static const BoxDecoration _uRule = BoxDecoration(
+    border: Border(bottom: BorderSide(color: _rule, width: 1)),
+  );
 
   // ---------------------------------------------------------
-  // Listing type labels
+  // Listing type
   // ---------------------------------------------------------
-  String get _listingTypeLabel {
-    switch (_selectedTabIndex) {
-      case 0:
-        return 'Professionals';
-      case 1:
-        return 'Trades';
-      case 2:
-        return 'Suppliers';
-      case 3:
-      default:
-        return 'Associations';
-    }
-  }
+  static const List<String> _listingTypes = [
+    'Professionals',
+    'Trades',
+    'Suppliers',
+    'Associations',
+  ];
+
+  String get _listingTypeLabel => _listingType;
 
   // ---------------------------------------------------------
   // Dropdown data
@@ -304,8 +265,7 @@ class _AddListingPageViewState extends State<AddListingPageView> {
   }
 
   List<String> get _currentSpecialities {
-    final label = _listingTypeLabel;
-    final list = _subcategories[label] ?? const <String>[];
+    final list = _subcategories[_listingTypeLabel] ?? const <String>[];
     if (list.isEmpty) return const <String>[_placeholderSpeciality];
     return <String>[_placeholderSpeciality, ...list];
   }
@@ -321,19 +281,19 @@ class _AddListingPageViewState extends State<AddListingPageView> {
 
   void _toast(String message, {bool error = false}) {
     if (!mounted) return;
-
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          backgroundColor: error ? _coral : _ink,
+          backgroundColor: error ? const Color(0xFFC24A1A) : _amber,
           content: Text(
             message,
             style: const TextStyle(
               fontFamily: _bodyFont,
               fontSize: 14,
+              fontWeight: FontWeight.w700,
               color: Colors.white,
             ),
           ),
@@ -343,7 +303,7 @@ class _AddListingPageViewState extends State<AddListingPageView> {
   }
 
   // ---------------------------------------------------------
-  // Hero photo (FilePicker + FirebaseStorage; uploaded on save)
+  // Hero photo
   // ---------------------------------------------------------
   Future<void> _pickHeroPhoto() async {
     if (_isSaving) return;
@@ -369,76 +329,6 @@ class _AddListingPageViewState extends State<AddListingPageView> {
       debugPrint('\u26a0\ufe0f pick hero failed: $e');
       _toast('Could not pick image.', error: true);
     }
-  }
-
-  Widget _buildHeroPhotoPicker() {
-    final hasPhoto = _heroBytes != null && _heroBytes!.isNotEmpty;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        InkWell(
-          onTap: _isSaving ? null : _pickHeroPhoto,
-          borderRadius: BorderRadius.circular(_cardRadius),
-          child: Container(
-            width: double.infinity,
-            height: 170,
-            decoration: BoxDecoration(
-              color: _surface,
-              borderRadius: BorderRadius.circular(_cardRadius),
-              border: Border.all(color: _hairlineOnSurface, width: 1),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: hasPhoto
-                ? Image.memory(_heroBytes!, fit: BoxFit.cover)
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.add_a_photo_outlined,
-                          size: 30, color: _inkMute),
-                      const SizedBox(height: 8),
-                      Text('Add a cover photo', style: _hintTextStyle),
-                    ],
-                  ),
-          ),
-        ),
-        if (hasPhoto) ...[
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              TextButton(
-                onPressed: _isSaving ? null : _pickHeroPhoto,
-                child: const Text(
-                  'Change',
-                  style: TextStyle(
-                    fontFamily: _bodyFont,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: _ink,
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: _isSaving
-                    ? null
-                    : () => setState(() {
-                          _heroBytes = null;
-                          _heroFileName = null;
-                        }),
-                child: const Text(
-                  'Remove',
-                  style: TextStyle(
-                    fontFamily: _bodyFont,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: _inkMute,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ],
-    );
   }
 
   bool _validate() {
@@ -503,8 +393,6 @@ class _AddListingPageViewState extends State<AddListingPageView> {
 
       final doc = FirebaseFirestore.instance.collection('subby_listings').doc();
 
-      // Upload hero photo (optional) -> users/<uid>/listings/<id>/...
-      // (public-read, owner-write under existing Storage rules)
       String heroUrl = '';
       List<String> photoUrls = const <String>[];
       if (_heroBytes != null && _heroBytes!.isNotEmpty) {
@@ -581,390 +469,339 @@ class _AddListingPageViewState extends State<AddListingPageView> {
     final double width = widget.width ?? MediaQuery.sizeOf(context).width;
     final double height = widget.height ?? MediaQuery.sizeOf(context).height;
 
-    return SizedBox(
-      width: width,
-      height: height,
-      child: SafeArea(
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: SizedBox(
+        width: width,
+        height: height,
         child: Container(
           color: _paper,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: SafeArea(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, _vPad),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _backButton(),
+                  const SizedBox(height: 20),
+                  Text('Add listing', style: _titleStyle),
+                  const SizedBox(height: 8),
+                  Text('Create your directory profile.', style: _subtitleStyle),
+                  const SizedBox(height: 26),
+                  _uSelect(
+                    label: 'Listing type',
+                    icon: Icons.workspace_premium_outlined,
+                    value: _listingType,
+                    items: _listingTypes,
+                    onChanged: (v) => setState(() {
+                      _listingType = v;
+                      _selectedSpeciality = _placeholderSpeciality;
+                    }),
+                  ),
+                  _photoRow(),
+                  _uText(
+                    label: 'Name *',
+                    controller: _nameCtrl,
+                    icon: Icons.storefront_outlined,
+                    hint: 'e.g. Acme Builders',
+                  ),
+                  _uSelect(
+                    label: 'Speciality *',
+                    icon: Icons.handyman_outlined,
+                    value: _selectedSpeciality,
+                    items: _currentSpecialities,
+                    onChanged: (v) => setState(() => _selectedSpeciality = v),
+                  ),
+                  _uText(
+                    label: 'About *',
+                    controller: _aboutCtrl,
+                    icon: Icons.notes_outlined,
+                    hint: 'Short description of your services…',
+                    maxLines: 4,
+                  ),
+                  _uText(
+                    label: 'Phone number',
+                    controller: _phoneCtrl,
+                    icon: Icons.call_outlined,
+                    hint: 'e.g. 082 123 4567',
+                    keyboardType: TextInputType.phone,
+                  ),
+                  _uText(
+                    label: 'WhatsApp number',
+                    controller: _whatsCtrl,
+                    icon: Icons.chat_outlined,
+                    hint: 'e.g. 082 123 4567',
+                    keyboardType: TextInputType.phone,
+                  ),
+                  _uText(
+                    label: 'Email',
+                    controller: _emailCtrl,
+                    icon: Icons.mail_outlined,
+                    hint: 'e.g. hello@company.co.za',
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  _uSelect(
+                    label: 'Province *',
+                    icon: Icons.map_outlined,
+                    value: _selectedProvince,
+                    items: _provinces,
+                    onChanged: (v) => setState(() {
+                      _selectedProvince = v;
+                      _selectedRegion = _placeholderRegion;
+                    }),
+                  ),
+                  _uSelect(
+                    label: 'City / Region *',
+                    icon: Icons.location_city_outlined,
+                    value: _currentRegions.contains(_selectedRegion)
+                        ? _selectedRegion
+                        : _placeholderRegion,
+                    items: _currentRegions,
+                    onChanged: (v) => setState(() => _selectedRegion = v),
+                  ),
+                  _uText(
+                    label: 'Suburb (optional)',
+                    controller: _suburbCtrl,
+                    icon: Icons.place_outlined,
+                    hint: 'e.g. Sandton',
+                  ),
+                  const SizedBox(height: 28),
+                  _primaryButton(
+                    label: _isSaving ? 'Saving…' : 'Continue',
+                    icon: _isSaving
+                        ? Icons.hourglass_top_rounded
+                        : Icons.arrow_forward_rounded,
+                    onTap: _isSaving ? null : _saveListing,
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    'Next: photos, services, tags and verification.',
+                    style: _helperStyle,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // =========================================================
+  // UI helpers (underline system)
+  // =========================================================
+  Widget _backButton() {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => context.safePop(),
+        customBorder: const CircleBorder(),
+        child: Container(
+          width: 36,
+          height: 36,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: _surface,
+            shape: BoxShape.circle,
+            border: Border.all(color: _hairline),
+          ),
+          child: const Icon(Icons.arrow_back_ios_new_rounded,
+              size: 15, color: _inkMute),
+        ),
+      ),
+    );
+  }
+
+  Widget _uText({
+    required String label,
+    required TextEditingController controller,
+    required IconData icon,
+    required String hint,
+    int maxLines = 1,
+    TextInputType? keyboardType,
+  }) {
+    final multiline = maxLines > 1;
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: _uRule,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label.toUpperCase(), style: _uLabelStyle),
+          const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: multiline
+                ? CrossAxisAlignment.start
+                : CrossAxisAlignment.center,
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 12),
-                child: Row(
-                  children: [
-                    InkWell(
-                      onTap: () => context.safePop(),
-                      borderRadius: BorderRadius.circular(_rMed),
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: _surface,
-                          borderRadius: BorderRadius.circular(_rMed),
-                        ),
-                        alignment: Alignment.center,
-                        child: const Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          size: 18,
-                          color: _ink,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Add Listing', style: _titleStyle),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Create your directory profile',
-                          style: _subtitleStyle,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                padding: EdgeInsets.only(top: multiline ? 3 : 0),
+                child: Icon(icon, size: 19, color: _amber),
               ),
-
-              // ---------- LISTING TYPE (contained surface block) ----------
-              Padding(
-                padding: const EdgeInsets.fromLTRB(_hPad, 4, _hPad, 0),
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: _surface,
-                    borderRadius: BorderRadius.circular(_rLarge),
-                  ),
-                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Listing type', style: _sectionTitleStyle),
-                      const SizedBox(height: 10),
-                      _buildTypeTabs(),
-                      const SizedBox(height: 10),
-                      Text(
-                        'You are creating a ${_listingTypeLabel.toLowerCase()} listing.',
-                        style: _subtitleStyle,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
+              const SizedBox(width: 10),
               Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 18),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildSection(
-                        title: 'Photo',
-                        child: _buildHeroPhotoPicker(),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildSection(
-                        title: 'Business details',
-                        child: Column(
-                          children: [
-                            _field(
-                              label: 'Name *',
-                              controller: _nameCtrl,
-                              hint: 'e.g. Acme Builders',
-                            ),
-                            const SizedBox(height: 12),
-                            _dropdownField(
-                              label: 'Speciality *',
-                              value: _selectedSpeciality,
-                              items: _currentSpecialities,
-                              onChanged: (v) {
-                                if (v == null) return;
-                                setState(() => _selectedSpeciality = v);
-                              },
-                            ),
-                            const SizedBox(height: 12),
-                            _field(
-                              label: 'About *',
-                              controller: _aboutCtrl,
-                              hint: 'Short description of your services',
-                              maxLines: 4,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildSection(
-                        title: 'Contact',
-                        child: Column(
-                          children: [
-                            _field(
-                              label: 'Phone number',
-                              controller: _phoneCtrl,
-                              hint: 'e.g. 082 123 4567',
-                              keyboardType: TextInputType.phone,
-                            ),
-                            const SizedBox(height: 12),
-                            _field(
-                              label: 'WhatsApp number',
-                              controller: _whatsCtrl,
-                              hint: 'e.g. 082 123 4567',
-                              keyboardType: TextInputType.phone,
-                            ),
-                            const SizedBox(height: 12),
-                            _field(
-                              label: 'Email',
-                              controller: _emailCtrl,
-                              hint: 'e.g. hello@company.co.za',
-                              keyboardType: TextInputType.emailAddress,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildSection(
-                        title: 'Location',
-                        child: Column(
-                          children: [
-                            _dropdownField(
-                              label: 'Province *',
-                              value: _selectedProvince,
-                              items: _provinces,
-                              onChanged: (v) {
-                                if (v == null) return;
-                                setState(() {
-                                  _selectedProvince = v;
-                                  _selectedRegion = _placeholderRegion;
-                                });
-                              },
-                            ),
-                            const SizedBox(height: 12),
-                            _dropdownField(
-                              label: 'City / Region *',
-                              value: _currentRegions.contains(_selectedRegion)
-                                  ? _selectedRegion
-                                  : _placeholderRegion,
-                              items: _currentRegions,
-                              onChanged: (v) {
-                                if (v == null) return;
-                                setState(() => _selectedRegion = v);
-                              },
-                            ),
-                            const SizedBox(height: 12),
-                            _field(
-                              label: 'Suburb (optional)',
-                              controller: _suburbCtrl,
-                              hint: 'e.g. Sandton',
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      _buildPrimaryButton(
-                        label: _isSaving ? 'Saving…' : 'Continue',
-                        icon: _isSaving
-                            ? Icons.hourglass_top_rounded
-                            : Icons.arrow_forward_rounded,
-                        onTap: _isSaving ? () {} : _saveListing,
-                        disabled: _isSaving,
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        'Next: photos, services, tags and verification.',
-                        style: _subtitleStyle,
-                      ),
-                    ],
+                child: TextField(
+                  controller: controller,
+                  enabled: !_isSaving,
+                  cursorColor: _amber,
+                  maxLines: maxLines,
+                  keyboardType: keyboardType,
+                  style: _valueStyle,
+                  decoration: InputDecoration(
+                    isDense: true,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                    hintText: hint,
+                    hintStyle: _hintStyle,
                   ),
                 ),
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  // =========================================================
-  // UI helpers
-  // =========================================================
-  Widget _buildTypeTabs() {
-    final tabs = ['Professionals', 'Trades', 'Suppliers', 'Associations'];
-
-    return SizedBox(
-      height: 40,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: List.generate(tabs.length, (i) {
-            final selected = _selectedTabIndex == i;
-            return Padding(
-              padding: EdgeInsets.only(right: i == tabs.length - 1 ? 0 : 8),
-              child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _selectedTabIndex = i;
-                    _selectedSpeciality = _placeholderSpeciality;
-                  });
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 160),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: selected ? _ink : _paper,
-                    borderRadius: BorderRadius.circular(_rPill),
-                    border: Border.all(
-                      color: selected ? _ink : _hairlineOnSurface,
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    tabs[i],
-                    style: _tabTextStyle(selected: selected),
-                  ),
-                ),
-              ),
-            );
-          }),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSection({required String title, required Widget child}) {
-    return Container(
-      decoration: _cardDecoration,
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: _sectionTitleStyle),
-          const SizedBox(height: 12),
-          child,
         ],
       ),
     );
   }
 
-  Widget _field({
-    required String label,
-    required TextEditingController controller,
-    required String hint,
-    int maxLines = 1,
-    TextInputType? keyboardType,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: _labelStyle),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: _surface,
-            borderRadius: BorderRadius.circular(_rMed),
-            border: Border.all(color: _hairlineOnSurface, width: 1),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: TextField(
-            controller: controller,
-            maxLines: maxLines,
-            keyboardType: keyboardType,
-            style: _fieldTextStyle,
-            cursorColor: _ink,
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              isDense: true,
-              hintText: hint,
-              hintStyle: _hintTextStyle,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _dropdownField({
-    required String label,
-    required String value,
-    required List<String> items,
-    required ValueChanged<String?> onChanged,
-  }) {
-    final bool isPlaceholder = value.startsWith('Select ');
-    final Color textColor = isPlaceholder ? _inkMute : _ink;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: _labelStyle),
-        const SizedBox(height: 8),
-        Container(
-          height: 50,
-          decoration: BoxDecoration(
-            color: _surface,
-            borderRadius: BorderRadius.circular(_rMed),
-            border: Border.all(color: _hairlineOnSurface, width: 1),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: items.contains(value) ? value : items.first,
-              isExpanded: true,
-              icon: const Icon(Icons.keyboard_arrow_down_rounded,
-                  color: _inkMute),
-              dropdownColor: _paper,
-              style: _fieldTextStyle.copyWith(color: textColor),
-              items: items.map((s) {
-                final bool itemPlaceholder = s.startsWith('Select ');
-                return DropdownMenuItem<String>(
-                  value: s,
-                  child: Text(
-                    s,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: _fieldTextStyle.copyWith(
-                      color: itemPlaceholder ? _inkMute : textColor,
-                    ),
-                  ),
-                );
-              }).toList(),
-              onChanged: onChanged,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPrimaryButton({
+  Widget _uSelect({
     required String label,
     required IconData icon,
-    required VoidCallback onTap,
-    bool disabled = false,
+    required String value,
+    required List<String> items,
+    required ValueChanged<String> onChanged,
   }) {
+    final safeValue = items.contains(value) ? value : items.first;
+    final isPlaceholder = safeValue.startsWith('Select ');
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: _uRule,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label.toUpperCase(), style: _uLabelStyle),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Icon(icon, size: 19, color: _amber),
+              const SizedBox(width: 10),
+              Expanded(
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: safeValue,
+                    isExpanded: true,
+                    isDense: true,
+                    dropdownColor: _paper,
+                    icon:
+                        const Icon(Icons.expand_more_rounded, color: _inkMute),
+                    style: isPlaceholder ? _hintStyle : _valueStyle,
+                    items: items
+                        .map(
+                          (e) => DropdownMenuItem<String>(
+                            value: e,
+                            child: Text(
+                              e,
+                              overflow: TextOverflow.ellipsis,
+                              style: e.startsWith('Select ')
+                                  ? _hintStyle
+                                  : _valueStyle,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: _isSaving
+                        ? null
+                        : (v) {
+                            if (v == null) return;
+                            onChanged(v);
+                          },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _photoRow() {
+    final hasPhoto = _heroBytes != null && _heroBytes!.isNotEmpty;
     return InkWell(
-      onTap: disabled ? null : onTap,
-      borderRadius: BorderRadius.circular(_rMed),
+      onTap: _isSaving ? null : _pickHeroPhoto,
       child: Container(
-        height: 50,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: disabled ? _surface : _spark,
-          borderRadius: BorderRadius.circular(_rMed),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: _uRule,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, size: 20, color: disabled ? _inkMute : _sparkInk),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: disabled
-                  ? _primaryBtnTextStyle.copyWith(color: _inkMute)
-                  : _primaryBtnTextStyle,
+            Text('COVER PHOTO', style: _uLabelStyle),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                if (hasPhoto)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.memory(_heroBytes!,
+                        width: 44, height: 44, fit: BoxFit.cover),
+                  )
+                else
+                  const Icon(Icons.add_a_photo_outlined,
+                      size: 19, color: _amber),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    hasPhoto ? 'Cover photo added' : 'Add a cover photo',
+                    style: hasPhoto ? _valueStyle : _hintStyle,
+                  ),
+                ),
+                const Icon(Icons.chevron_right_rounded, color: _rule),
+              ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _primaryButton({
+    required String label,
+    required IconData icon,
+    required VoidCallback? onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Opacity(
+          opacity: onTap == null ? 0.7 : 1,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              color: _amber,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 18, color: _paper),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                    color: _paper,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
