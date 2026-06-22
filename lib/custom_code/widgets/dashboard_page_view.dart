@@ -116,7 +116,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF16202E); // text, chrome, dark surfaces
+  static const Color _ink = Color(0xFF017374); // text, chrome, dark surfaces
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _faint = Color(0xFF93A0B0); // muted labels, chevrons
   static const Color _paper = Color(0xFFFFFFFF);
@@ -125,12 +125,12 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
   // Accents
   static const Color _yellow =
-      Color(0xFF0D9488); // deep teal — "on site" / on track
+      Color(0xFF017374); // deep teal — "on site" / on track
   static const Color _ringTrack = Color(0xFFEEF2F7);
-  static const Color _orange = Color(0xFFFF6A2B); // attention / snagging
-  static const Color _orangeTint = Color(0xFFFFE7DA);
-  static const Color _orangeBorder = Color(0xFFFFD9C6);
-  static const Color _orangeText = Color(0xFFC2693F);
+  static const Color _orange = Color(0xFFE5771E); // attention / snagging
+  static const Color _orangeTint = Color(0xFFFBE3CC);
+  static const Color _orangeBorder = Color(0xFFE5771E);
+  static const Color _orangeText = Color(0xFFE5771E);
   static const Color _projTint = Color(0xFFEEF1F4); // add / empty card fill
 
   // Geometry
@@ -1323,7 +1323,7 @@ class _CapabilityChip extends StatelessWidget {
   final String label;
 
   static const Color _tealTint = Color(0xFFE3F4F2);
-  static const Color _tealText = Color(0xFF0D6B62);
+  static const Color _tealText = Color(0xFF017374);
 
   @override
   Widget build(BuildContext context) {

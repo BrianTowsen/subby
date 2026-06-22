@@ -46,17 +46,17 @@ class LoginView extends StatefulWidget {
 
 class _LoginViewState extends State<LoginView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _ink = Color(0xFF16202E);
+  static const Color _ink = Color(0xFF017374);
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
   static const Color _hairline = Color(0xFFEEF1F4);
   static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
   // Brand accent — TEAL (field icons / focus). Primary action is ink.
-  static const Color _teal = Color(0xFF0D9488);
+  static const Color _teal = Color(0xFF017374);
   // Status
-  static const Color _live = Color(0xFFFF6A2B);
-  static const Color _coral = Color(0xFFE0531C);
+  static const Color _live = Color(0xFFE5771E);
+  static const Color _coral = Color(0xFFE5771E);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';

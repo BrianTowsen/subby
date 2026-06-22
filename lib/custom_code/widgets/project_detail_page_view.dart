@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status bar over the dark hero)
 
 class ProjectDetailPageView extends StatefulWidget {
   const ProjectDetailPageView({
@@ -79,25 +80,25 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF16202E);
+  static const Color _ink = Color(0xFF017374);
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
   static const Color _hairline = Color(0xFFEEF1F4);
   static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
   // Brand accent — TEAL.
-  static const Color _spark = Color(0xFF0D9488); // primary CTA / ranked accent
+  static const Color _spark = Color(0xFF017374); // primary CTA / ranked accent
   static const Color _sparkInk = Color(0xFFFFFFFF);
-  static const Color _teal = Color(0xFF0D9488);
-  static const Color _tealBright = Color(0xFF3FE0CF); // icon on ink chips
+  static const Color _teal = Color(0xFF017374);
+  static const Color _tealBright = Color(0xFFFEB518); // icon on ink chips
   static const Color _tealTint = Color(0xFFE3F4F2); // pill / chip fill
-  static const Color _tealText = Color(0xFF0D6B62); // pill text
+  static const Color _tealText = Color(0xFF017374); // pill text
   static const Color _tealSurface = Color(0xFFF0FAF8); // tinted module card
   static const Color _tealSurfaceBorder = Color(0xFFD3ECE8);
   // Status
   static const Color _live =
-      Color(0xFFFF6A2B); // orange — live / open-now / warning
-  static const Color _coral = Color(0xFFE0531C);
+      Color(0xFFE5771E); // orange — live / open-now / warning
+  static const Color _coral = Color(0xFFE5771E);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -744,149 +745,154 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
     required String address,
     required String dates,
   }) {
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(color: _ink),
-      padding: EdgeInsets.fromLTRB(_hPad, topInset + 8, _hPad, 22),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              _tapCard(
-                onTap: () => context.safePop(),
-                radius: BorderRadius.circular(999),
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.10),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.arrow_back_ios_new_rounded,
-                      size: 16, color: _paper),
-                ),
-              ),
-              const Spacer(),
-              _tapCard(
-                onTap: () => _safeNavigate(
-                  widget.editProjectRouteName,
-                  fallbackRoute: _fallbackEditRoute,
-                ),
-                radius: BorderRadius.circular(12),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: _teal,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.edit_outlined, size: 18, color: _paper),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Edit',
-                        style: theme.bodySmall.override(
-                          fontFamily: _bodyFont,
-                          color: _paper,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          Text(
-            'PROJECT',
-            style: theme.labelSmall.override(
-              fontFamily: _bodyFont,
-              color: _tealBright,
-              letterSpacing: 1.5,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 7),
-          Text(
-            name,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: theme.titleLarge.override(
-              fontFamily: _displayFont,
-              color: _paper,
-              fontWeight: FontWeight.w900,
-              fontSize: 26,
-              lineHeight: 1.08,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: _tealBright.withOpacity(0.14),
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      // White status-bar icons (time, signal, battery) over the dark ink hero.
+      value: SystemUiOverlayStyle.light,
+      child: Container(
+        width: double.infinity,
+        decoration: const BoxDecoration(color: _ink),
+        padding: EdgeInsets.fromLTRB(_hPad, topInset + 8, _hPad, 22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: const BoxDecoration(
-                    color: _tealBright,
-                    shape: BoxShape.circle,
+                _tapCard(
+                  onTap: () => context.safePop(),
+                  radius: BorderRadius.circular(999),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.10),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.arrow_back_ios_new_rounded,
+                        size: 16, color: _paper),
                   ),
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  status,
-                  style: theme.labelSmall.override(
-                    fontFamily: _bodyFont,
-                    color: _tealBright,
-                    letterSpacing: 0.0,
-                    fontWeight: FontWeight.w900,
+                const Spacer(),
+                _tapCard(
+                  onTap: () => _safeNavigate(
+                    widget.editProjectRouteName,
+                    fallbackRoute: _fallbackEditRoute,
+                  ),
+                  radius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFE5771E),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.edit_outlined,
+                            size: 18, color: _paper),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Edit',
+                          style: theme.bodySmall.override(
+                            fontFamily: _bodyFont,
+                            color: _paper,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Icon(Icons.location_on_outlined,
-                  size: 16, color: Colors.white.withOpacity(0.55)),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  address,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.bodySmall.override(
-                    fontFamily: _bodyFont,
-                    color: Colors.white.withOpacity(0.75),
-                    fontWeight: FontWeight.w700,
+            const SizedBox(height: 18),
+            Text(
+              'PROJECT',
+              style: theme.labelSmall.override(
+                fontFamily: _bodyFont,
+                color: _tealBright,
+                letterSpacing: 1.5,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 7),
+            Text(
+              name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.titleLarge.override(
+                fontFamily: _displayFont,
+                color: _paper,
+                fontWeight: FontWeight.w900,
+                fontSize: 26,
+                lineHeight: 1.08,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: _tealBright.withOpacity(0.14),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      color: _tealBright,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    status,
+                    style: theme.labelSmall.override(
+                      fontFamily: _bodyFont,
+                      color: _tealBright,
+                      letterSpacing: 0.0,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Icon(Icons.location_on_outlined,
+                    size: 16, color: Colors.white.withOpacity(0.55)),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    address,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.bodySmall.override(
+                      fontFamily: _bodyFont,
+                      color: Colors.white.withOpacity(0.75),
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 7),
-          Text(
-            dates,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.labelSmall.override(
-              fontFamily: _bodyFont,
-              color: Colors.white.withOpacity(0.55),
-              fontWeight: FontWeight.w700,
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 7),
+            Text(
+              dates,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.labelSmall.override(
+                fontFamily: _bodyFont,
+                color: Colors.white.withOpacity(0.55),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
