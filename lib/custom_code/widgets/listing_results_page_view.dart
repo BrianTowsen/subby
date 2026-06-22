@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -19,12 +21,10 @@ class ListingResultsPageView extends StatefulWidget {
     this.width,
     this.height,
     this.province,
-    this.city, // region label from HomePageView
+    this.city,
     this.speciality,
     this.category,
     this.searchText,
-
-    // ✅ NEW: index-safe params
     this.provinceSlug,
     this.categorySlug,
     this.specialitySlug,
@@ -48,58 +48,30 @@ class ListingResultsPageView extends StatefulWidget {
 }
 
 class _ListingResultsPageViewState extends State<ListingResultsPageView> {
-  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  // less-is-more system · ported from Clutch Putt · lime → yellow.
-  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
-  //
-  // Neutrals
-  static const Color _ink = Color(0xFF16202E);
-  static const Color _inkMute = Color(0xFF5A6675);
+  // ─── SUBBY PALETTE — DIRECTORY (amber / sunshine) ──────────────────
+  static const Color _amber = Color(0xFFE5771E); // accent: title, value, rating
+  static const Color _sunshine = Color(0xFFFDB617); // secondary highlight
+  static const Color _inkMute = Color(0xFF5A6675); // labels
+  static const Color _faint = Color(0xFF93A0B0); // meta
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _hairline = Color(0xFFEEF1F4);
-  static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
-  // Brand accent — YELLOW. Always ink foreground, never white.
-  static const Color _spark =
-      Color(0xFFAEE03F); // primary CTA / ranked accent / live data pip
-  static const Color _sparkInk = Color(0xFF16202E);
-  // Status
-  static const Color _live =
-      Color(0xFFFF6A2B); // orange — live / open-now / warning
-  static const Color _coral = Color(0xFFE0531C);
-  // Geometry
-  static const double _rSmall = 6;
-  static const double _rMed = 8;
-  static const double _rLarge = 12;
-  static const double _rPill = 999;
-  static const double _pageHPad = 20;
-  static const double _sectionGap = 32;
-  static const double _navReserve = 96;
-  // Type
+  static const Color _hairline = Color(0xFFEEF1F2);
+  static const Color _rule = Color(0xFFE2E7EE);
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
-  static const String _monoFont = 'Inter';
-  // ────────────────────────────────────────────────────────────────────
-
-  static const double _hPad = _pageHPad;
-  static const double _vPad = _pageHPad;
+  static const double _hPad = 24;
+  static const double _vPad = 14;
 
   String _sortBy = 'A–Z';
-
   bool _verifiedOnly = false;
   double _minRating = 0.0;
 
   bool get _hasActiveFilters => _verifiedOnly || _minRating > 0.0;
 
   final GlobalKey _sortKey = GlobalKey();
-  final GlobalKey _filterKey = GlobalKey();
 
-  // ✅ users/<uid> field where bookmarks live
   static const String _kSavedField = 'savedListingRefs';
 
-  // ------------------------------------------------------------
-  // Region keyword map (client-side matching only)
-  // ------------------------------------------------------------
   static const Map<String, List<String>> _regionKeywordMap = {
     'johannesburg': [
       'johannesburg',
@@ -158,73 +130,41 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
     'durban': ['durban', 'umhlanga', 'pinetown'],
   };
 
-  // =========================================================
-  // ✅ TYPOGRAPHY (locked palette — explicit family + colour)
-  // =========================================================
   TextStyle get _titleStyle => const TextStyle(
         fontFamily: _displayFont,
-        fontSize: 20,
-        fontWeight: FontWeight.w800,
-        letterSpacing: -0.4,
+        fontSize: 30,
+        fontWeight: FontWeight.w900,
+        color: _amber,
         height: 1.05,
-        color: _ink,
       );
 
   TextStyle get _subtitleStyle => const TextStyle(
         fontFamily: _bodyFont,
         fontSize: 13,
-        fontWeight: FontWeight.w500,
-        color: _inkMute,
+        fontWeight: FontWeight.w600,
+        color: _faint,
       );
 
-  TextStyle get _chipLabelStyle => const TextStyle(
+  TextStyle get _nameStyle => const TextStyle(
         fontFamily: _bodyFont,
-        fontSize: 13,
-        fontWeight: FontWeight.w500,
-        color: _ink,
-      );
-
-  TextStyle get _cardNameStyle => const TextStyle(
-        fontFamily: _displayFont,
         fontSize: 16,
         fontWeight: FontWeight.w700,
-        letterSpacing: -0.2,
-        color: _ink,
+        color: _amber,
       );
 
-  TextStyle get _cardMetaStyle => const TextStyle(
+  TextStyle get _metaStyle => const TextStyle(
         fontFamily: _bodyFont,
         fontSize: 12,
         fontWeight: FontWeight.w500,
-        color: _inkMute,
+        color: _faint,
       );
 
-  TextStyle get _cardSmallStyle => const TextStyle(
-        fontFamily: _monoFont,
-        fontSize: 11,
-        fontWeight: FontWeight.w500,
-        color: _ink,
-        fontFeatures: [FontFeature.tabularFigures()],
-      );
-
-  TextStyle get _snackTextStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 13,
-        fontWeight: FontWeight.w500,
-        color: _ink,
-      );
-
-  TextStyle get _sectionHeadingStyle => const TextStyle(
-        fontFamily: _displayFont,
-        fontSize: 16,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.2,
-        color: _ink,
-      );
-  // =========================================================
+  static const BoxDecoration _uRule = BoxDecoration(
+    border: Border(bottom: BorderSide(color: _rule, width: 1)),
+  );
 
   // ----------------------------
-  // Helpers
+  // Helpers (unchanged logic)
   // ----------------------------
   String _norm(String input) {
     var s = input.trim().toLowerCase();
@@ -232,7 +172,6 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
     return s;
   }
 
-  // Safe read from record snapshotData (so you’re not dependent on generated fields)
   String _readString(SubbyListingsRecord listing, String key) {
     try {
       final dynamic snapData = (listing as dynamic).snapshotData;
@@ -305,15 +244,12 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
   ) {
     var out = input;
 
-    // Region
     out = out.where((l) => _matchesRegionClient(l, regionParam)).toList();
 
-    // Search
     if (_norm(searchText).isNotEmpty) {
       out = out.where((l) => _matchesSearch(l, searchText)).toList();
     }
 
-    // Speciality
     final String sSlug = functions.slugify(speciality ?? '');
     if (sSlug.isNotEmpty) {
       out = out.where((l) {
@@ -326,12 +262,10 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
       }).toList();
     }
 
-    // Verified
     if (_verifiedOnly) {
       out = out.where((l) => l.isVerified == true).toList();
     }
 
-    // Rating
     if (_minRating > 0) {
       out = out.where((l) => (l.rating ?? 0.0) >= _minRating).toList();
     }
@@ -419,51 +353,25 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
     return <String>{};
   }
 
-  // ✅ Subby-style snackbar (locked palette)
   void _showBookmarkSnack({required bool wasSaved}) {
     if (!mounted) return;
-
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          elevation: 0,
-          backgroundColor: _surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(_rLarge),
-            side: const BorderSide(color: _hairlineOnSurface, width: 1),
+          backgroundColor: _amber,
+          content: Text(
+            wasSaved ? 'Saved to bookmarks' : 'Removed from bookmarks',
+            style: const TextStyle(
+              fontFamily: _bodyFont,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
           ),
           duration: const Duration(milliseconds: 1400),
-          content: Row(
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: _paper,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: _hairlineOnSurface, width: 1),
-                ),
-                child: Icon(
-                  wasSaved
-                      ? Icons.bookmark_rounded
-                      : Icons.bookmark_border_rounded,
-                  size: 16,
-                  color: _ink,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  wasSaved ? 'Saved to bookmarks' : 'Removed from bookmarks',
-                  style: _snackTextStyle,
-                ),
-              ),
-            ],
-          ),
         ),
       );
   }
@@ -509,7 +417,7 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
       isScrollControlled: true,
       backgroundColor: _paper,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(_rLarge)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (_) {
         return StatefulBuilder(
@@ -518,9 +426,9 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
               top: false,
               child: Padding(
                 padding: EdgeInsets.fromLTRB(
+                  20,
                   16,
-                  16,
-                  16,
+                  20,
                   MediaQuery.of(context).viewInsets.bottom + 16,
                 ),
                 child: Column(
@@ -529,7 +437,13 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                   children: [
                     Row(
                       children: [
-                        Text('Filters', style: _sectionHeadingStyle),
+                        const Text('Filters',
+                            style: TextStyle(
+                              fontFamily: _displayFont,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: _amber,
+                            )),
                         const Spacer(),
                         IconButton(
                           icon:
@@ -538,84 +452,61 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: _surface,
-                        borderRadius: BorderRadius.circular(_rLarge),
-                        border: Border.all(color: _hairlineOnSurface, width: 1),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: tempVerified,
+                      activeColor: _amber,
+                      onChanged: (v) => modalSetState(() => tempVerified = v),
+                      title: const Text(
+                        'Verified only',
+                        style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: _inkMute,
+                        ),
                       ),
-                      child: Column(
+                    ),
+                    const Divider(height: 1, thickness: 1, color: _rule),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Row(
                         children: [
-                          SwitchListTile(
-                            value: tempVerified,
-                            activeColor: _ink,
-                            onChanged: (v) =>
-                                modalSetState(() => tempVerified = v),
-                            title: const Text(
-                              'Verified only',
+                          const Text('Minimum rating',
                               style: TextStyle(
                                 fontFamily: _bodyFont,
-                                fontSize: 14,
-                                color: _ink,
-                              ),
-                            ),
-                          ),
-                          const Divider(
-                              height: 1,
-                              thickness: 1,
-                              color: _hairlineOnSurface),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                            child: Row(
-                              children: [
-                                const Text(
-                                  'Minimum rating',
-                                  style: TextStyle(
-                                    fontFamily: _bodyFont,
-                                    fontSize: 14,
-                                    color: _ink,
-                                  ),
-                                ),
-                                const Spacer(),
-                                Text(
-                                  tempMinRating.toStringAsFixed(1),
-                                  style: const TextStyle(
-                                    fontFamily: _monoFont,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: _inkMute,
-                                    fontFeatures: [
-                                      FontFeature.tabularFigures()
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
-                            child: SliderTheme(
-                              data: SliderTheme.of(context).copyWith(
-                                activeTrackColor: _ink,
-                                inactiveTrackColor: _hairlineOnSurface,
-                                thumbColor: _ink,
-                                overlayColor: _ink.withOpacity(0.12),
-                              ),
-                              child: Slider(
-                                value: tempMinRating,
-                                min: 0,
-                                max: 5,
-                                divisions: 10,
-                                onChanged: (v) =>
-                                    modalSetState(() => tempMinRating = v),
-                              ),
-                            ),
-                          ),
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: _inkMute,
+                              )),
+                          const Spacer(),
+                          Text(tempMinRating.toStringAsFixed(1),
+                              style: const TextStyle(
+                                fontFamily: _bodyFont,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: _amber,
+                              )),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        activeTrackColor: _amber,
+                        inactiveTrackColor: _rule,
+                        thumbColor: _amber,
+                        overlayColor: _amber.withOpacity(0.12),
+                      ),
+                      child: Slider(
+                        value: tempMinRating,
+                        min: 0,
+                        max: 5,
+                        divisions: 10,
+                        onChanged: (v) =>
+                            modalSetState(() => tempMinRating = v),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
                     Row(
                       children: [
                         Expanded(
@@ -627,23 +518,20 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                               });
                             },
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: _ink,
-                              side: const BorderSide(
-                                  color: _hairlineOnSurface, width: 1),
+                              foregroundColor: _inkMute,
+                              side: const BorderSide(color: _rule, width: 1),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(_rMed),
+                                borderRadius: BorderRadius.circular(999),
                               ),
                               padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
-                            child: const Text(
-                              'Reset',
-                              style: TextStyle(
-                                fontFamily: _bodyFont,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: _ink,
-                              ),
-                            ),
+                            child: const Text('Reset',
+                                style: TextStyle(
+                                  fontFamily: _bodyFont,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  color: _inkMute,
+                                )),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -651,23 +539,21 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                           child: ElevatedButton(
                             onPressed: () => Navigator.pop(context),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: _spark,
-                              foregroundColor: _sparkInk,
+                              backgroundColor: _amber,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(_rMed),
+                                borderRadius: BorderRadius.circular(999),
                               ),
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              elevation: 0,
                             ),
-                            child: const Text(
-                              'Apply',
-                              style: TextStyle(
-                                fontFamily: _bodyFont,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: _sparkInk,
-                              ),
-                            ),
+                            child: const Text('Apply',
+                                style: TextStyle(
+                                  fontFamily: _bodyFont,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                )),
                           ),
                         ),
                       ],
@@ -706,11 +592,6 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
         ? widget.categorySlug!.trim()
         : functions.slugify(categoryLabel ?? '');
 
-    final String specialitySlug =
-        (widget.specialitySlug ?? '').trim().isNotEmpty
-            ? widget.specialitySlug!.trim()
-            : functions.slugify(specialityLabel ?? '');
-
     final String searchText = (widget.searchText ?? '').trim();
 
     String subtitle;
@@ -734,138 +615,87 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
       title = 'Subbies near you';
     }
 
-    debugPrint(
-        'ListingResults query slugs: provinceSlug=$provinceSlug categorySlug=$categorySlug orderBy=name');
-
     final userRef = _currentUserRefOrNull();
 
     return SizedBox(
       width: width,
       height: height,
-      child: SafeArea(
-        child: Container(
-          color: _paper,
+      child: Container(
+        color: _paper,
+        child: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ---------- TOP BAR ----------
               Padding(
-                padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 8),
-                child: Row(
+                padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    GestureDetector(
-                      onTap: () => context.pop(),
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: _surface,
-                          borderRadius: BorderRadius.circular(_rMed),
-                        ),
-                        child: const Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          size: 16,
-                          color: _ink,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    _backButton(),
+                    const SizedBox(height: 20),
+                    Text(title, style: _titleStyle),
+                    const SizedBox(height: 8),
+                    Text(subtitle, style: _subtitleStyle),
+                    const SizedBox(height: 22),
+                    // sort + filter row
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: _uRule,
+                      child: Row(
                         children: [
-                          Text(title, style: _titleStyle),
-                          const SizedBox(height: 2),
-                          Text(subtitle, style: _subtitleStyle),
+                          InkWell(
+                            key: _sortKey,
+                            onTap: _openSortMenu,
+                            child: Row(
+                              children: [
+                                const Icon(Icons.sort_rounded,
+                                    size: 19, color: _amber),
+                                const SizedBox(width: 10),
+                                Text(_sortBy,
+                                    style: const TextStyle(
+                                      fontFamily: _bodyFont,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: _amber,
+                                    )),
+                              ],
+                            ),
+                          ),
+                          const Spacer(),
+                          InkWell(
+                            onTap: _openFiltersSheet,
+                            child: Row(
+                              children: [
+                                const Icon(Icons.tune_rounded,
+                                    size: 19, color: _amber),
+                                const SizedBox(width: 8),
+                                const Text('Filters',
+                                    style: TextStyle(
+                                      fontFamily: _bodyFont,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: _amber,
+                                    )),
+                                if (_hasActiveFilters) ...[
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    width: 7,
+                                    height: 7,
+                                    decoration: const BoxDecoration(
+                                      color: _sunshine,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   ],
                 ),
               ),
-
-              const SizedBox(height: 8),
-
-              // ---------- SORT + FILTER ----------
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: _hPad),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: InkWell(
-                        key: _sortKey,
-                        borderRadius: BorderRadius.circular(_rPill),
-                        onTap: _openSortMenu,
-                        child: Container(
-                          height: 38,
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          decoration: BoxDecoration(
-                            color: _paper,
-                            borderRadius: BorderRadius.circular(_rPill),
-                            border: Border.all(color: _hairline, width: 1),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.sort_rounded,
-                                  size: 18, color: _inkMute),
-                              const SizedBox(width: 8),
-                              Text(_sortBy, style: _chipLabelStyle),
-                              const Spacer(),
-                              const Icon(Icons.expand_more_rounded,
-                                  size: 18, color: _inkMute),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    InkWell(
-                      key: _filterKey,
-                      borderRadius: BorderRadius.circular(_rPill),
-                      onTap: _openFiltersSheet,
-                      child: Container(
-                        height: 38,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          color: _paper,
-                          borderRadius: BorderRadius.circular(_rPill),
-                          border: Border.all(color: _hairline, width: 1),
-                        ),
-                        child: Row(
-                          children: [
-                            Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                const Icon(Icons.tune_rounded,
-                                    size: 18, color: _inkMute),
-                                if (_hasActiveFilters)
-                                  Positioned(
-                                    right: -2,
-                                    top: -2,
-                                    child: Container(
-                                      width: 8,
-                                      height: 8,
-                                      decoration: const BoxDecoration(
-                                        color: _spark, // live data pip
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                            const SizedBox(width: 6),
-                            Text('Filters', style: _chipLabelStyle),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // ---------- LIST ----------
               Expanded(
                 child: StreamBuilder<DocumentSnapshot>(
                   stream: userRef?.snapshots(),
@@ -879,39 +709,39 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                       stream: querySubbyListingsRecord(
                         queryBuilder: (q) {
                           var query = q;
-
                           if (provinceSlug.isNotEmpty) {
                             query = query.where('provinceSlug',
                                 isEqualTo: provinceSlug);
                           }
-
                           if (categorySlug.isNotEmpty) {
                             query = query.where('categorySlug',
                                 isEqualTo: categorySlug);
                           }
-
                           query = query.orderBy('name');
                           return query;
                         },
                       ),
                       builder: (context, snapshot) {
                         if (snapshot.hasError) {
-                          return _buildErrorState(
+                          return _buildEmptyState(
+                            icon: Icons.warning_amber_rounded,
                             title: 'Couldn’t load listings',
                             subtitle:
-                                'This can happen while indexes are building or if permissions block reads.\nTry again in a moment.',
+                                'This can happen while indexes are building or if permissions block reads.',
                           );
                         }
 
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
-                          return _buildSubbyLoader();
+                          return const Center(
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2.4, color: _amber),
+                          );
                         }
 
                         final allListings =
                             snapshot.data ?? const <SubbyListingsRecord>[];
 
-                        // ✅ Speciality filter: pass the label (slug comparisons happen inside)
                         final filtered = _applyClientFilters(
                           allListings,
                           searchText,
@@ -923,24 +753,24 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
 
                         if (sorted.isEmpty) {
                           return _buildEmptyState(
+                            icon: Icons.search_off_rounded,
                             title: 'No listings found',
                             subtitle:
                                 'Try clearing filters or searching a different keyword.',
                           );
                         }
 
-                        return ListView.separated(
+                        return ListView.builder(
                           padding:
                               const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 24),
+                          physics: const BouncingScrollPhysics(),
                           itemCount: sorted.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 10),
                           itemBuilder: (context, index) {
                             final listing = sorted[index];
                             final isSaved =
                                 savedPaths.contains(listing.reference.path);
 
-                            return _buildListingCard(
+                            return _buildListingRow(
                               listing,
                               isSaved: isSaved,
                               onToggleSaved: () => _toggleSaved(
@@ -962,7 +792,7 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
     );
   }
 
-  Widget _buildListingCard(
+  Widget _buildListingRow(
     SubbyListingsRecord listing, {
     required bool isSaved,
     required VoidCallback onToggleSaved,
@@ -985,238 +815,148 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
             ? (listing.photoUrls ?? const <String>[]).first
             : '');
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: _paper,
-        borderRadius: BorderRadius.circular(_rLarge),
-        border: Border.all(color: _hairline, width: 1),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(
-              color: _surface,
-              borderRadius: BorderRadius.circular(_rMed),
+    String metaLine = area;
+    if (jobs > 0) metaLine = area.isEmpty ? '$jobs jobs' : '$area · $jobs jobs';
+
+    return InkWell(
+      onTap: () {
+        context.pushNamed(
+          'listingDetailPage',
+          queryParameters: {
+            'listingRef': serializeParam(
+              listing.reference,
+              ParamType.DocumentReference,
             ),
-            child: heroPhoto.isNotEmpty
-                ? Image.network(heroPhoto, fit: BoxFit.cover)
-                : const Icon(Icons.handyman_rounded, size: 24, color: _inkMute),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: _cardNameStyle,
-                      ),
-                    ),
-                    if (isVerified) ...[
-                      const SizedBox(width: 6),
-                      const Icon(Icons.verified_rounded, size: 16, color: _ink),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  speciality,
-                  style: _cardMetaStyle,
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.location_on_outlined,
-                        size: 14, color: _inkMute),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        area,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: _cardMetaStyle,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    if (rating > 0) ...[
-                      const Icon(Icons.star_rounded, size: 16, color: _ink),
-                      const SizedBox(width: 4),
-                      Text(rating.toStringAsFixed(1), style: _cardSmallStyle),
-                      const SizedBox(width: 6),
-                    ],
-                    if (jobs > 0)
-                      Text(
-                        rating > 0 ? '• $jobs jobs' : '$jobs jobs',
-                        style: _cardMetaStyle,
-                      ),
-                    if (rating <= 0 && jobs <= 0)
-                      Text('New', style: _cardMetaStyle),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Column(
-            children: [
-              InkWell(
-                onTap: onToggleSaved,
-                borderRadius: BorderRadius.circular(_rMed),
-                child: Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: _surface,
-                    borderRadius: BorderRadius.circular(_rMed),
-                  ),
-                  alignment: Alignment.center,
-                  child: Icon(
-                    isSaved
-                        ? Icons.bookmark_rounded
-                        : Icons.bookmark_border_rounded,
-                    size: 18,
-                    color: isSaved ? _ink : _inkMute,
-                  ),
-                ),
+          }.withoutNulls,
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: _uRule,
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: _surface,
+                borderRadius: BorderRadius.circular(10),
               ),
-              const SizedBox(height: 8),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _spark,
-                  foregroundColor: _sparkInk,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(_rMed),
-                  ),
-                  elevation: 0,
-                ),
-                onPressed: () {
-                  context.pushNamed(
-                    'listingDetailPage',
-                    queryParameters: {
-                      'listingRef': serializeParam(
-                        listing.reference,
-                        ParamType.DocumentReference,
+              child: heroPhoto.isNotEmpty
+                  ? Image.network(heroPhoto, fit: BoxFit.cover)
+                  : const Icon(Icons.handyman_rounded, size: 22, color: _faint),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: _nameStyle),
                       ),
-                    }.withoutNulls,
-                  );
-                },
-                child: const Text(
-                  'View',
-                  style: TextStyle(
+                      if (isVerified) ...[
+                        const SizedBox(width: 6),
+                        const Icon(Icons.verified_rounded,
+                            size: 15, color: _amber),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(speciality,
+                      style: const TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: _inkMute,
+                      )),
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on_outlined,
+                          size: 13, color: _faint),
+                      const SizedBox(width: 3),
+                      Flexible(
+                        child: Text(metaLine,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: _metaStyle),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            if (rating > 0) ...[
+              const Icon(Icons.star_rounded, size: 16, color: _amber),
+              const SizedBox(width: 3),
+              Text(rating.toStringAsFixed(1),
+                  style: const TextStyle(
                     fontFamily: _bodyFont,
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: _sparkInk,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSubbyLoader() {
-    return const Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: 28,
-            height: 28,
-            child: CircularProgressIndicator(
-              strokeWidth: 2.5,
-              valueColor: AlwaysStoppedAnimation<Color>(_ink),
-            ),
-          ),
-          SizedBox(height: 10),
-          Text(
-            'Finding subbies…',
-            style: TextStyle(
-              fontFamily: _bodyFont,
-              fontSize: 13,
-              color: _inkMute,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState({required String title, required String subtitle}) {
-    return Padding(
-      padding: const EdgeInsets.all(18),
-      child: Center(
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: _surface,
-            borderRadius: BorderRadius.circular(_rLarge),
-            border: Border.all(color: _hairlineOnSurface),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.search_off, color: _inkMute, size: 34),
-              const SizedBox(height: 10),
-              Text(
-                title,
-                style: _sectionHeadingStyle,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                subtitle,
-                style: _cardMetaStyle,
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
+                    color: _amber,
+                  )),
+            ] else
+              Text('New', style: _metaStyle),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildErrorState({required String title, required String subtitle}) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(_hPad, 8, _hPad, 24),
-      child: Align(
-        alignment: Alignment.topCenter,
+  Widget _buildEmptyState({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 24),
-            const Icon(Icons.warning_amber_rounded, size: 44, color: _live),
+            Icon(icon, size: 40, color: _faint),
             const SizedBox(height: 12),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: _sectionHeadingStyle,
-            ),
+            Text(title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontFamily: _displayFont,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: _amber,
+                )),
             const SizedBox(height: 6),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: _cardMetaStyle,
-            ),
+            Text(subtitle, textAlign: TextAlign.center, style: _subtitleStyle),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _backButton() {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => context.pop(),
+        customBorder: const CircleBorder(),
+        child: Container(
+          width: 36,
+          height: 36,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: _surface,
+            shape: BoxShape.circle,
+            border: Border.all(color: _hairline),
+          ),
+          child: const Icon(Icons.arrow_back_ios_new_rounded,
+              size: 15, color: _inkMute),
         ),
       ),
     );

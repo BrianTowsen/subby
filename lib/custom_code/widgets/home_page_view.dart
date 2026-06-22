@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,71 +22,32 @@ class HomePageView extends StatefulWidget {
     super.key,
     this.width,
     this.height,
-
-    /// ✅ Route name for Add Listing page (no params)
-    /// Defaults to 'addListingPage' (matches your FlutterFlow page route)
     this.addListingRouteName,
-
-    /// ✅ Route name for Edit Listing page (expects a listingRef param)
-    /// Defaults to 'editListingPage'
     this.editListingRouteName,
-
-    /// ✅ Param name on Edit Listing page that receives the listing reference
-    /// Defaults to 'listingRef'
     this.editListingParamName,
-
-    /// ✅ Route name for Listing Results page (no params required)
-    /// Defaults to 'ListingResultsPage' (override to 'listingResultsPage' if needed)
     this.listingResultsRouteName,
-
-    /// ✅ Route name for Location Select page (returns Map {province, region})
-    /// Defaults to 'LocationSelectPage' (override to 'locationSelectPage' if needed)
     this.locationSelectRouteName,
-
-    /// ✅ Listings collection name
-    /// Defaults to 'subby_listings'
     this.listingCollectionName,
-
-    /// ✅ Field name on listing docs that stores the owner as a DocumentReference (recommended)
-    /// Defaults to 'ownerRef'
     this.listingOwnerRefField,
-
-    /// ✅ Field name on listing docs that stores the owner as a String uid (fallback)
-    /// Defaults to 'ownerId'
     this.listingOwnerIdField,
-
-    /// ✅ Route name to send unregistered / no-profile users to create account
-    /// Defaults to 'createAccountPage'
     this.createAccountRouteName,
-
-    /// ✅ Users collection name for profile existence check
-    /// Defaults to 'users'
     this.usersCollectionName,
-
-    /// ✅ NEW: Dashboard route (no params)
-    /// Defaults to 'dashboardPage'
     this.dashboardRouteName,
   });
 
   final double? width;
   final double? height;
 
-  /// ✅ Route name override (optional)
   final String? addListingRouteName;
-
   final String? editListingRouteName;
   final String? editListingParamName;
-
   final String? listingResultsRouteName;
   final String? locationSelectRouteName;
-
   final String? listingCollectionName;
   final String? listingOwnerRefField;
   final String? listingOwnerIdField;
-
   final String? createAccountRouteName;
   final String? usersCollectionName;
-
   final String? dashboardRouteName;
 
   @override
@@ -92,159 +55,78 @@ class HomePageView extends StatefulWidget {
 }
 
 class _HomePageViewState extends State<HomePageView> {
-  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  // less-is-more system · ported from Clutch Putt · lime → yellow.
-  // This inline block is the authoritative source for this file — NOT a
-  // shared theme. Grep `SUBBY PALETTE (LOCK)` across widgets to confirm sync.
-  //
-  // Neutrals
-  static const Color _ink = Color(0xFF16202E); // headings, body, dark fills
-  static const Color _inkMute = Color(0xFF5A6675); // labels, captions, 2nd text
-  static const Color _paper = Color(0xFFFFFFFF); // page bg, card fills
-  static const Color _surface = Color(0xFFEEF1F4); // cards, surface fills
-  static const Color _hairline = Color(0xFFEEF1F4); // standard dividers
-  static const Color _hairlineOnSurface = Color(0xFFD7DCE3); // on surface cards
-  // Brand accent — YELLOW (was lime). Yellow ALWAYS takes ink foreground.
-  static const Color _spark = Color(0xFFAEE03F); // primary CTA / ranked accent
-  static const Color _sparkInk = Color(0xFF16202E); // ink-on-lime — never white
-  // Status / achievement
-  static const Color _live =
-      Color(0xFFFF6A2B); // orange — live / open-now / warning
-  static const Color _coral = Color(0xFFE0531C);
-  // Geometry & layout
-  static const double _rSmall = 6;
-  static const double _rMed = 8;
-  static const double _rLarge = 12;
-  static const double _rPill = 999;
-  static const double _pageHPad = 20;
-  static const double _sectionGap = 32;
-  static const double _navReserve = 96;
-  // Type — Inter Tight (display) · Inter (body) · mono retired to Inter
+  // ─── SUBBY PALETTE — DIRECTORY (amber / sunshine) ──────────────────
+  static const Color _amber = Color(0xFFE5771E); // accent
+  static const Color _sunshine = Color(0xFFFDB617); // secondary highlight
+  static const Color _inkMute = Color(0xFF5A6675); // labels
+  static const Color _faint = Color(0xFF93A0B0); // subtitles / inactive
+  static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _surface = Color(0xFFEEF1F4);
+  static const Color _hairline = Color(0xFFEEF1F2);
+  static const Color _rule = Color(0xFFE2E7EE);
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
-  static const String _monoFont = 'Inter';
-  // ────────────────────────────────────────────────────────────────────
+  static const double _hPad = 24;
+  static const double _vPad = 14;
+  static const double _navReserve = 96;
 
-  static const double _hPad = _pageHPad;
-  static const double _vPad = _pageHPad;
-
-  // ✅ Shared prefs keys (Home + Explore use same)
   static const String _kProvince = 'subby_app_province';
   static const String _kCity = 'subby_app_city';
   static const String _kCategory = 'subby_app_category';
 
   int _selectedMainTabIndex = 0;
-  int _previousTabIndex = 0; // for directional animation
 
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
 
-  final List<GlobalKey> _tabKeys = List.generate(4, (_) => GlobalKey());
-
   String _selectedProvince = 'Gauteng';
   String _selectedRegion = 'Johannesburg';
 
-  // These placeholders MUST match what ListingResultsPageView treats as non-meaningful
-  static const String _placeholderProvince = 'Select province';
   static const String _placeholderRegion = 'Select region';
 
-  // ✅ Listing ownership state (kept for future, but header button removed)
   bool _checkingListing = true;
   DocumentReference? _myListingRef;
 
-  // =========================================================
-  // ✅ TYPOGRAPHY (locked palette — explicit family + colour)
-  // =========================================================
-  TextStyle get _appTitleStyle => const TextStyle(
+  TextStyle get _titleStyle => const TextStyle(
         fontFamily: _displayFont,
-        fontSize: 20,
-        fontWeight: FontWeight.w800,
-        letterSpacing: -0.4,
-        height: 1.0,
-        color: _ink,
-      );
-
-  TextStyle get _appSubtitleStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 12,
-        fontWeight: FontWeight.w400,
-        color: _inkMute,
-      );
-
-  TextStyle get _eyebrowStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 11,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 1.0,
-        color: _inkMute,
-      );
-
-  TextStyle get _welcomeStyle => const TextStyle(
-        fontFamily: _displayFont,
-        fontSize: 20,
-        fontWeight: FontWeight.w800,
-        letterSpacing: -0.4,
+        fontSize: 30,
+        fontWeight: FontWeight.w900,
+        color: _amber,
         height: 1.05,
-        color: _ink,
       );
 
-  TextStyle _tabTextStyle({required bool selected}) => TextStyle(
+  TextStyle get _subtitleStyle => const TextStyle(
         fontFamily: _bodyFont,
         fontSize: 13,
-        fontWeight: FontWeight.w500,
-        color: selected ? _paper : _inkMute,
+        fontWeight: FontWeight.w600,
+        color: _faint,
       );
 
-  TextStyle get _dropdownTextStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 14,
-        fontWeight: FontWeight.w700,
-        color: _ink,
-      );
-
-  TextStyle get _dropdownLabelStyle => const TextStyle(
+  TextStyle get _uLabelStyle => const TextStyle(
         fontFamily: _bodyFont,
         fontSize: 11,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w800,
         letterSpacing: 0.6,
         color: _inkMute,
       );
 
-  TextStyle get _searchTextStyle => const TextStyle(
+  TextStyle get _valueStyle => const TextStyle(
         fontFamily: _bodyFont,
-        fontSize: 14,
-        color: _ink,
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+        color: _amber,
       );
 
-  TextStyle get _searchHintStyle => const TextStyle(
+  TextStyle get _hintStyle => const TextStyle(
         fontFamily: _bodyFont,
-        fontSize: 14,
-        color: _inkMute,
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: Color(0xFF94A0AD),
       );
 
-  TextStyle get _sectionTitleStyle => const TextStyle(
-        fontFamily: _displayFont,
-        fontSize: 20,
-        fontWeight: FontWeight.w800,
-        letterSpacing: -0.4,
-        color: _ink,
-      );
-
-  TextStyle get _sectionCountStyle => const TextStyle(
-        fontFamily: _monoFont,
-        fontSize: 11,
-        fontWeight: FontWeight.w500,
-        color: _inkMute,
-        fontFeatures: [FontFeature.tabularFigures()],
-      );
-
-  TextStyle get _gridTileLabelStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 13,
-        fontWeight: FontWeight.w500,
-        color: _ink,
-      );
-  // =========================================================
+  static const BoxDecoration _uRule = BoxDecoration(
+    border: Border(bottom: BorderSide(color: _rule, width: 1)),
+  );
 
   String get _selectedCategoryLabel {
     switch (_selectedMainTabIndex) {
@@ -259,10 +141,6 @@ class _HomePageViewState extends State<HomePageView> {
         return 'Associations';
     }
   }
-
-  // ----------------------------
-  // Slug helper (index strategy)
-  // ----------------------------
 
   String get _provinceSlug => functions.slugify(_selectedProvince);
   String get _categorySlug => functions.slugify(_selectedCategoryLabel);
@@ -373,7 +251,7 @@ class _HomePageViewState extends State<HomePageView> {
     ],
   };
 
-  IconData _iconForSubcategory(String category, String sub) {
+  IconData _iconForCategory(String category) {
     switch (category) {
       case 'Professionals':
         return Icons.assignment_ind_outlined;
@@ -389,7 +267,7 @@ class _HomePageViewState extends State<HomePageView> {
   }
 
   // =========================
-  // ✅ SharedPreferences sync
+  // SharedPreferences sync
   // =========================
   Future<void> _loadPersistedHomeState() async {
     try {
@@ -400,7 +278,6 @@ class _HomePageViewState extends State<HomePageView> {
 
       if (!mounted) return;
 
-      // Province/City
       if (prov.isNotEmpty && _provinces.contains(prov)) {
         final regions = _regionsByProvince[prov] ?? const <String>[];
         setState(() {
@@ -414,20 +291,14 @@ class _HomePageViewState extends State<HomePageView> {
         });
       }
 
-      // Category -> tab index (optional but keeps Home/Explore aligned)
       if (cat.isNotEmpty) {
         final idx = ['Professionals', 'Trades', 'Suppliers', 'Associations']
             .indexOf(cat);
         if (idx >= 0 && idx != _selectedMainTabIndex) {
-          setState(() {
-            _previousTabIndex = _selectedMainTabIndex;
-            _selectedMainTabIndex = idx;
-          });
+          setState(() => _selectedMainTabIndex = idx);
         }
       }
-    } catch (_) {
-      // ignore
-    }
+    } catch (_) {}
   }
 
   Future<void> _persistLocation() async {
@@ -445,15 +316,11 @@ class _HomePageViewState extends State<HomePageView> {
     } catch (_) {}
   }
 
-  // =========================================================
-  // ✅ Check if current user has a listing (kept for future use)
-  // =========================================================
   Future<void> _checkUserListing() async {
     try {
       final userRef = currentUserReference;
       final uid = currentUserUid;
 
-      // If not logged in, no listing
       if (userRef == null && (uid == null || uid.isEmpty)) {
         if (!mounted) return;
         setState(() {
@@ -471,7 +338,6 @@ class _HomePageViewState extends State<HomePageView> {
 
       DocumentReference? foundRef;
 
-      // 1) Try ownerRef == currentUserReference
       if (userRef != null && ownerRefField.isNotEmpty) {
         final snap = await colRef
             .where(ownerRefField, isEqualTo: userRef)
@@ -480,7 +346,6 @@ class _HomePageViewState extends State<HomePageView> {
         if (snap.docs.isNotEmpty) foundRef = snap.docs.first.reference;
       }
 
-      // 2) Fallback: ownerId == currentUserUid
       if (foundRef == null && uid != null && uid.isNotEmpty) {
         final snap =
             await colRef.where(ownerIdField, isEqualTo: uid).limit(1).get();
@@ -501,29 +366,17 @@ class _HomePageViewState extends State<HomePageView> {
     }
   }
 
-  // =========================================================
-  // ✅ Back to Dashboard (TimelineHomePageView style: POP reveal)
-  // - POP if possible (true uncover)
-  // - otherwise replace to dashboard with leftToRight transition
-  // =========================================================
   void _goBackToDashboard() {
     final nav = Navigator.of(context);
-
-    // ✅ Best case: this page was pushed from Dashboard -> pop reveals it.
     if (nav.canPop()) {
       nav.pop();
       return;
     }
-
     final target = (widget.dashboardRouteName ?? 'dashboardPage').trim();
-
-    // Fallback: if route name is weird/empty, just safePop
     if (target.isEmpty) {
       context.safePop();
       return;
     }
-
-    // ✅ If we can't pop, don't "push" dashboard on top — replace instead.
     context.pushReplacementNamed(
       target,
       extra: {
@@ -536,45 +389,6 @@ class _HomePageViewState extends State<HomePageView> {
     );
   }
 
-  // =========================================================
-  // ✅ Guard: must be logged in AND have users/<uid> profile doc
-  // If not, redirect to createAccountPage
-  // =========================================================
-  Future<bool> _ensureRegisteredProfile() async {
-    final String createRoute =
-        (widget.createAccountRouteName ?? 'createAccountPage').trim();
-    final String usersColl = (widget.usersCollectionName ?? 'users').trim();
-
-    // 1) Must be logged in
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      if (createRoute.isNotEmpty) context.pushNamed(createRoute);
-      return false;
-    }
-
-    // 2) Must have profile document
-    try {
-      final doc = await FirebaseFirestore.instance
-          .collection(usersColl)
-          .doc(user.uid)
-          .get();
-
-      if (!doc.exists) {
-        if (createRoute.isNotEmpty) context.pushNamed(createRoute);
-        return false;
-      }
-    } catch (_) {
-      // If we cannot verify, treat as not registered
-      if (createRoute.isNotEmpty) context.pushNamed(createRoute);
-      return false;
-    }
-
-    return true;
-  }
-
-  // =========================================================
-  // Location select page (returns {province, region})
-  // =========================================================
   Future<void> _openLocationSelect({String? searchText}) async {
     final route =
         (widget.locationSelectRouteName ?? 'LocationSelectPage').trim();
@@ -638,17 +452,112 @@ class _HomePageViewState extends State<HomePageView> {
     );
   }
 
+  void _openSubcategory(String sub) async {
+    final resultsRoute =
+        (widget.listingResultsRouteName ?? 'ListingResultsPage').trim();
+    final specialitySlug = functions.slugify(sub);
+
+    await _persistLocation();
+    await _persistCategory();
+
+    context.pushNamed(
+      resultsRoute,
+      queryParameters: {
+        'provinceSlug': serializeParam(_provinceSlug, ParamType.String),
+        'categorySlug': serializeParam(_categorySlug, ParamType.String),
+        'specialitySlug': serializeParam(specialitySlug, ParamType.String),
+        'category': serializeParam(_selectedCategoryLabel, ParamType.String),
+        'speciality': serializeParam(sub, ParamType.String),
+        'province': serializeParam(_selectedProvince, ParamType.String),
+        'city': serializeParam(_selectedRegion, ParamType.String),
+        'initialProvince': serializeParam(_selectedProvince, ParamType.String),
+        'initialRegion': serializeParam(_selectedRegion, ParamType.String),
+      }.withoutNulls,
+    );
+  }
+
+  void _selectProvince() async {
+    final picked =
+        await _pickFromSheet('Province', _provinces, _selectedProvince);
+    if (picked == null) return;
+    setState(() {
+      _selectedProvince = picked;
+      final newRegions =
+          _regionsByProvince[_selectedProvince] ?? const <String>[];
+      _selectedRegion =
+          newRegions.isNotEmpty ? newRegions.first : _placeholderRegion;
+    });
+    await _persistLocation();
+  }
+
+  void _selectRegion() async {
+    final regions = _regionsByProvince[_selectedProvince] ?? const <String>[];
+    if (regions.isEmpty) return;
+    final picked = await _pickFromSheet('Region', regions, _selectedRegion);
+    if (picked == null) return;
+    setState(() => _selectedRegion = picked);
+    await _persistLocation();
+  }
+
+  Future<String?> _pickFromSheet(
+      String title, List<String> items, String current) {
+    return showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: _paper,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 6),
+              child: Text(title,
+                  style: const TextStyle(
+                    fontFamily: _displayFont,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: _amber,
+                  )),
+            ),
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                children: items.map((e) {
+                  final selected = e == current;
+                  return ListTile(
+                    title: Text(e,
+                        style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 16,
+                          fontWeight:
+                              selected ? FontWeight.w700 : FontWeight.w600,
+                          color: selected ? _amber : _inkMute,
+                        )),
+                    trailing: selected
+                        ? const Icon(Icons.check_circle_rounded,
+                            color: _amber, size: 20)
+                        : null,
+                    onTap: () => Navigator.of(ctx).pop(e),
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
-
-    // ✅ Load shared Home/Explore state
     _loadPersistedHomeState();
-
-    // ✅ Check if user has a listing (kept, but header button removed)
     _checkUserListing();
-
-    // Ensure region valid for default province
     final regions = _regionsByProvince[_selectedProvince] ?? const <String>[];
     if (regions.isNotEmpty && !regions.contains(_selectedRegion)) {
       _selectedRegion = regions.first;
@@ -667,497 +576,209 @@ class _HomePageViewState extends State<HomePageView> {
     final double width = widget.width ?? MediaQuery.sizeOf(context).width;
     final double height = widget.height ?? MediaQuery.sizeOf(context).height;
 
+    final category = _selectedCategoryLabel;
+    final subs = _subcategories[category] ?? const <String>[];
+    final tabs = ['Professionals', 'Trades', 'Suppliers', 'Associations'];
+
     return SizedBox(
       width: width,
       height: height,
-      child: Stack(
-        children: [
-          SafeArea(
-            bottom: false,
-            child: Container(
-              color: _paper,
-              child: SingleChildScrollView(
-                padding: EdgeInsets.only(
-                  bottom: _navReserve + MediaQuery.of(context).padding.bottom,
+      child: Container(
+        color: _paper,
+        child: SafeArea(
+          bottom: false,
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: EdgeInsets.fromLTRB(_hPad, _vPad, _hPad,
+                _navReserve + MediaQuery.of(context).padding.bottom),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _backButton(),
+                const SizedBox(height: 20),
+                Text('Welcome', style: _titleStyle),
+                const SizedBox(height: 8),
+                Text('Find trades, pros & suppliers near you.',
+                    style: _subtitleStyle),
+                const SizedBox(height: 26),
+
+                _selectRow(
+                  label: 'Province',
+                  icon: Icons.location_on_outlined,
+                  value: _selectedProvince,
+                  onTap: _selectProvince,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ---------- TOP BAR ----------
-                    Padding(
-                      padding:
-                          const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 12),
-                      child: Row(
+                _selectRow(
+                  label: 'Region',
+                  icon: Icons.place_outlined,
+                  value: _selectedRegion,
+                  onTap: _selectRegion,
+                ),
+                // search
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  decoration: _uRule,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('SEARCH', style: _uLabelStyle),
+                      const SizedBox(height: 8),
+                      Row(
                         children: [
-                          // ✅ Back (to DashboardPage)
-                          InkWell(
-                            onTap: _goBackToDashboard,
-                            borderRadius: BorderRadius.circular(_rMed),
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: _surface,
-                                borderRadius: BorderRadius.circular(_rMed),
-                              ),
-                              child: const Icon(
-                                Icons.arrow_back_rounded,
-                                size: 20,
-                                color: _ink,
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(width: 12),
-
-                          // ✅ Mono square mark (replaces construction-icon-in-circle)
-                          Container(
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              color: _ink,
-                              borderRadius: BorderRadius.circular(_rSmall),
-                            ),
-                          ),
+                          const Icon(Icons.search, size: 19, color: _amber),
                           const SizedBox(width: 10),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Subby', style: _appTitleStyle),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Home building directory',
-                                style: _appSubtitleStyle,
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              focusNode: _searchFocusNode,
+                              cursorColor: _amber,
+                              style: _valueStyle,
+                              textInputAction: TextInputAction.search,
+                              onSubmitted: (_) => _goToResultsFromSearch(),
+                              decoration: InputDecoration(
+                                isDense: true,
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.zero,
+                                hintText: 'Trade, contractor or supplier',
+                                hintStyle: _hintStyle,
                               ),
-                            ],
-                          ),
-
-                          const Spacer(),
-
-                          // ✅ REMOVED: Add Listing / Edit Listing button in header
-                        ],
-                      ),
-                    ),
-
-                    // ---------- LOCATION + SEARCH BLOCK ----------
-                    _buildPrimaryLocationSearchBar(),
-
-                    const SizedBox(height: 24),
-
-                    // ---------- TITLE (eyebrow + display title) ----------
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: _hPad),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('DIRECTORY', style: _eyebrowStyle),
-                          const SizedBox(height: 10),
-                          Text.rich(
-                            TextSpan(
-                              text: 'Welcome, how can we help you',
-                              style: _welcomeStyle,
-                              children: const [
-                                // sparing yellow — title period
-                                TextSpan(
-                                  text: '.',
-                                  style: TextStyle(color: _spark),
-                                ),
-                              ],
                             ),
                           ),
+                          InkWell(
+                            onTap: () => _openLocationSelect(
+                                searchText: _searchController.text),
+                            child: const Icon(Icons.tune_rounded,
+                                size: 19, color: _inkMute),
+                          ),
                         ],
                       ),
-                    ),
-
-                    const SizedBox(height: _sectionGap),
-
-                    // ---------- MAIN TABS ----------
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: _hPad),
-                      child: _buildMainTabs(),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // ---------- SUB-CATEGORY ----------
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 260),
-                      switchInCurve: Curves.easeOut,
-                      switchOutCurve: Curves.easeIn,
-                      transitionBuilder: (child, animation) {
-                        final bool slideLeft =
-                            _selectedMainTabIndex > _previousTabIndex;
-                        final offsetAnimation = Tween<Offset>(
-                          begin: slideLeft
-                              ? const Offset(1.0, 0.0)
-                              : const Offset(-1.0, 0.0),
-                          end: Offset.zero,
-                        ).animate(animation);
-
-                        return SlideTransition(
-                          position: offsetAnimation,
-                          child:
-                              FadeTransition(opacity: animation, child: child),
-                        );
-                      },
-                      child: KeyedSubtree(
-                        key: ValueKey<int>(_selectedMainTabIndex),
-                        child: _buildSubcategoryGrid(),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+
+                // category tabs
+                const SizedBox(height: 22),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: List.generate(tabs.length, (index) {
+                      final selected = _selectedMainTabIndex == index;
+                      return Padding(
+                        padding: EdgeInsets.only(
+                            right: index == tabs.length - 1 ? 0 : 20),
+                        child: GestureDetector(
+                          onTap: () async {
+                            if (_selectedMainTabIndex == index) return;
+                            setState(() => _selectedMainTabIndex = index);
+                            await _persistCategory();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.only(bottom: 6),
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: selected ? _amber : Colors.transparent,
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                            child: Text(
+                              tabs[index],
+                              style: TextStyle(
+                                fontFamily: _bodyFont,
+                                fontSize: 14,
+                                fontWeight: selected
+                                    ? FontWeight.w800
+                                    : FontWeight.w600,
+                                color: selected ? _amber : _faint,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+
+                const SizedBox(height: 18),
+                Text('BROWSE ${category.toUpperCase()} · ${subs.length}',
+                    style: _uLabelStyle),
+
+                // subcategory rows
+                ...subs.map((sub) => InkWell(
+                      onTap: () => _openSubcategory(sub),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: _uRule,
+                        child: Row(
+                          children: [
+                            Icon(_iconForCategory(category),
+                                size: 19, color: _amber),
+                            const SizedBox(width: 10),
+                            Expanded(child: Text(sub, style: _valueStyle)),
+                            const Icon(Icons.chevron_right_rounded,
+                                color: _rule),
+                          ],
+                        ),
+                      ),
+                    )),
+              ],
             ),
           ),
-          // Left-edge swipe-back (iOS-style): swipe right from the edge to go
-          // back, mirroring the back button.
-          Positioned(
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: 24,
-            child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onHorizontalDragEnd: (details) {
-                if ((details.primaryVelocity ?? 0) > 250) {
-                  _goBackToDashboard();
-                }
-              },
-              child: const SizedBox.expand(),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  // =========================================================
-  Widget _buildPrimaryLocationSearchBar() {
-    final regions = _regionsByProvince[_selectedProvince] ?? const <String>[];
-    final regionItems =
-        regions.isNotEmpty ? regions : <String>[_placeholderRegion];
-
-    Widget surfaceField({
-      required String label,
-      required String value,
-      required List<String> items,
-      required ValueChanged<String?> onChanged,
-      required IconData icon,
-    }) {
-      return Container(
-        decoration: BoxDecoration(
-          color: _surface,
-          borderRadius: BorderRadius.circular(_rMed),
-        ),
-        padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+  Widget _selectRow({
+    required String label,
+    required IconData icon,
+    required String value,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: _uRule,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(label.toUpperCase(), style: _dropdownLabelStyle),
-            const SizedBox(height: 2),
+            Text(label.toUpperCase(), style: _uLabelStyle),
+            const SizedBox(height: 8),
             Row(
               children: [
-                Icon(icon, size: 16, color: _inkMute),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: value,
-                      isExpanded: true,
-                      isDense: true,
-                      dropdownColor: _paper,
-                      icon: const Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        color: _inkMute,
-                      ),
-                      style: _dropdownTextStyle,
-                      items: items.map((s) {
-                        return DropdownMenuItem<String>(
-                          value: s,
-                          child: Text(
-                            s,
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                            style: _dropdownTextStyle,
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: onChanged,
-                    ),
-                  ),
-                ),
+                Icon(icon, size: 19, color: _amber),
+                const SizedBox(width: 10),
+                Expanded(child: Text(value, style: _valueStyle)),
+                const Icon(Icons.expand_more_rounded, color: _inkMute),
               ],
             ),
           ],
         ),
-      );
-    }
-
-    return Container(
-      width: double.infinity,
-      color: _paper,
-      padding: const EdgeInsets.fromLTRB(_hPad, 4, _hPad, 0),
-      child: Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: surfaceField(
-                  label: 'Province',
-                  value: _selectedProvince,
-                  items: _provinces,
-                  icon: Icons.location_on_outlined,
-                  onChanged: (v) async {
-                    if (v == null) return;
-                    setState(() {
-                      _selectedProvince = v;
-                      final newRegions =
-                          _regionsByProvince[_selectedProvince] ??
-                              const <String>[];
-                      _selectedRegion = newRegions.isNotEmpty
-                          ? newRegions.first
-                          : _placeholderRegion;
-                    });
-                    await _persistLocation();
-                  },
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: surfaceField(
-                  label: 'Region',
-                  value: regionItems.contains(_selectedRegion)
-                      ? _selectedRegion
-                      : regionItems.first,
-                  items: regionItems,
-                  icon: Icons.place_outlined,
-                  onChanged: (v) async {
-                    if (v == null) return;
-                    setState(() => _selectedRegion = v);
-                    await _persistLocation();
-                  },
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          _buildSearchFieldWhite(),
-        ],
       ),
     );
   }
 
-  Widget _buildSearchFieldWhite() {
-    return Container(
-      height: 46,
-      decoration: BoxDecoration(
-        color: _paper,
-        borderRadius: BorderRadius.circular(_rMed),
-        border: Border.all(color: _hairline, width: 1),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Row(
-        children: [
-          const Icon(Icons.search, color: _inkMute),
-          const SizedBox(width: 8),
-          Expanded(
-            child: TextField(
-              controller: _searchController,
-              focusNode: _searchFocusNode,
-              style: _searchTextStyle,
-              cursorColor: _ink,
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                isDense: true,
-                hintText: 'Search for a trade, contractor or supplier',
-                hintStyle: _searchHintStyle,
-              ),
-              textInputAction: TextInputAction.search,
-              onSubmitted: (_) => _goToResultsFromSearch(),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.tune, size: 20, color: _inkMute),
-            onPressed: () async {
-              await _openLocationSelect(searchText: _searchController.text);
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  // =========================================================
-  // MAIN TABS
-  // =========================================================
-  Widget _buildMainTabs() {
-    final tabs = ['Professionals', 'Trades', 'Suppliers', 'Associations'];
-
-    return SizedBox(
-      height: 40,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: List.generate(tabs.length, (index) {
-            final selected = _selectedMainTabIndex == index;
-
-            return Padding(
-              padding: EdgeInsets.only(right: index == tabs.length - 1 ? 0 : 8),
-              child: GestureDetector(
-                onTap: () async {
-                  if (_selectedMainTabIndex == index) return;
-                  setState(() {
-                    _previousTabIndex = _selectedMainTabIndex;
-                    _selectedMainTabIndex = index;
-                  });
-                  await _persistCategory();
-
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    final ctx = _tabKeys[index].currentContext;
-                    if (ctx != null) {
-                      Scrollable.ensureVisible(
-                        ctx,
-                        duration: const Duration(milliseconds: 200),
-                        alignment: 0.5,
-                      );
-                    }
-                  });
-                },
-                child: AnimatedContainer(
-                  key: _tabKeys[index],
-                  duration: const Duration(milliseconds: 160),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: selected ? _ink : _paper,
-                    borderRadius: BorderRadius.circular(_rPill),
-                    border: Border.all(
-                      color: selected ? _ink : _hairline,
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    tabs[index],
-                    style: _tabTextStyle(selected: selected),
-                  ),
-                ),
-              ),
-            );
-          }),
-        ),
-      ),
-    );
-  }
-
-  // =========================================================
-  // SUB-CATEGORY GRID
-  // =========================================================
-  Widget _buildSubcategoryGrid() {
-    final category = _selectedCategoryLabel;
-    final items = _subcategories[category] ?? const <String>[];
-
-    const double hGap = 10;
-    const double vGap = 10;
-
-    Widget tile(String sub) {
-      final icon = _iconForSubcategory(category, sub);
-      final specialitySlug = functions.slugify(sub);
-      final resultsRoute =
-          (widget.listingResultsRouteName ?? 'ListingResultsPage').trim();
-
-      return GestureDetector(
-        onTap: () async {
-          await _persistLocation();
-          await _persistCategory();
-
-          context.pushNamed(
-            resultsRoute,
-            queryParameters: {
-              'provinceSlug': serializeParam(_provinceSlug, ParamType.String),
-              'categorySlug': serializeParam(_categorySlug, ParamType.String),
-              'specialitySlug':
-                  serializeParam(specialitySlug, ParamType.String),
-              'category': serializeParam(category, ParamType.String),
-              'speciality': serializeParam(sub, ParamType.String),
-              'province': serializeParam(_selectedProvince, ParamType.String),
-              'city': serializeParam(_selectedRegion, ParamType.String),
-              'initialProvince':
-                  serializeParam(_selectedProvince, ParamType.String),
-              'initialRegion':
-                  serializeParam(_selectedRegion, ParamType.String),
-            }.withoutNulls,
-          );
-        },
+  Widget _backButton() {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: _goBackToDashboard,
+        customBorder: const CircleBorder(),
         child: Container(
+          width: 36,
+          height: 36,
+          alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: _paper,
-            borderRadius: BorderRadius.circular(_rLarge),
-            border: Border.all(color: _hairline, width: 1),
+            color: _surface,
+            shape: BoxShape.circle,
+            border: Border.all(color: _hairline),
           ),
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: _surface,
-                  borderRadius: BorderRadius.circular(_rSmall),
-                ),
-                child: Icon(icon, size: 18, color: _ink),
-              ),
-              const SizedBox(height: 8),
-              Flexible(
-                child: Text(
-                  sub,
-                  maxLines: 2,
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis,
-                  style: _gridTileLabelStyle,
-                ),
-              ),
-            ],
-          ),
+          child: const Icon(Icons.arrow_back_ios_new_rounded,
+              size: 15, color: _inkMute),
         ),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 8),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: _hPad),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text('Browse $category', style: _sectionTitleStyle),
-              const Spacer(),
-              Text('${items.length} categories', style: _sectionCountStyle),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(_hPad, 4, _hPad, 4),
-          itemCount: items.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            mainAxisSpacing: vGap,
-            crossAxisSpacing: hGap,
-            childAspectRatio: 0.82,
-          ),
-          itemBuilder: (context, index) => tile(items[index]),
-        ),
-        const SizedBox(height: 16),
-      ],
+      ),
     );
   }
 }
