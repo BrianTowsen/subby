@@ -42,23 +42,20 @@ class ProfilePageView extends StatefulWidget {
 
 class _ProfilePageViewState extends State<ProfilePageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  // Synced with DashboardPageView v4. Inline = authoritative for this file.
-  // Grep `SUBBY PALETTE (LOCK)` to sync.
-  //
-  // Neutrals
   static const Color _ink = Color(0xFF16202E);
   static const Color _inkMute = Color(0xFF5A6675);
-  static const Color _faint = Color(0xFF93A0B0); // muted labels / icons
+  static const Color _faint = Color(0xFF93A0B0);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _hairline = Color(0xFFEEF1F2);
+  static const Color _hairline = Color(0xFFEEF1F4);
   static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
-  // Brand accent — TEAL. White foreground on solid teal; teal ink elsewhere.
-  static const Color _spark = Color(0xFF0D9488); // primary CTA / ring accent
-  static const Color _sparkInk = Color(0xFFFFFFFF); // content on solid teal
+  // Brand accent — TEAL.
+  static const Color _teal = Color(0xFF0D9488);
+  static const Color _spark = Color(0xFF0D9488);
+  static const Color _sparkInk = Color(0xFFFFFFFF);
   // Status
-  static const Color _live = Color(0xFFFF6A2B); // orange — live / warning
-  static const Color _coral = Color(0xFFE0531C); // destructive
+  static const Color _live = Color(0xFFFF6A2B);
+  static const Color _coral = Color(0xFFE0531C);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -70,49 +67,32 @@ class _ProfilePageViewState extends State<ProfilePageView> {
   static const String _createAccountRouteName = 'createAccountPage';
   static const String _editProfileRouteName = 'editProfilePage';
 
-  // ---------------- PADDING / RADIUS ----------------
-  static const double _hPad = 20;
-  static const double _vPad = 18;
+  static const double _hPad = 24;
+  static const double _vPad = 14;
   static const double _radius = 12;
-  // --------------------------------------------------
 
   // =========================================================
-  // ✅ TYPOGRAPHY (synced with the dashboard)
+  // ✅ TYPOGRAPHY
   // =========================================================
-  TextStyle _titleStyle(FlutterFlowTheme t) => t.titleLarge.override(
-        fontFamily: _displayFont,
-        fontWeight: FontWeight.w800,
-        letterSpacing: -0.4,
-        color: _ink,
-      );
-
   TextStyle _heroNameStyle(FlutterFlowTheme t) => t.titleLarge.override(
         fontFamily: _displayFont,
-        fontWeight: FontWeight.w800,
-        letterSpacing: -0.4,
+        fontWeight: FontWeight.w900,
         fontSize: 21,
         color: _ink,
       );
 
-  // ignore: unused_element
-  TextStyle _sectionTitleStyle(FlutterFlowTheme t) => t.titleMedium.override(
-        fontFamily: _displayFont,
-        fontWeight: FontWeight.w800,
-        letterSpacing: -0.2,
-        color: _ink,
-      );
-
-  TextStyle _labelStyle(FlutterFlowTheme t) => t.bodySmall.override(
+  TextStyle _uLabelStyle(FlutterFlowTheme t) => t.bodySmall.override(
         fontFamily: _bodyFont,
-        color: _faint,
-        fontWeight: FontWeight.w600,
+        color: _inkMute,
+        letterSpacing: 0.6,
+        fontWeight: FontWeight.w800,
         fontSize: 11,
       );
 
   TextStyle _valueStyle(FlutterFlowTheme t) => t.bodyMedium.override(
         fontFamily: _bodyFont,
         fontWeight: FontWeight.w700,
-        fontSize: 14,
+        fontSize: 15,
         color: _ink,
       );
 
@@ -127,17 +107,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
       );
   // =========================================================
 
-  // =========================================================
-  // ✅ Shared helpers
-  // =========================================================
-  // Flat hairline card recipe — matches the dashboard (no heavy shadow).
-  BoxDecoration _cardDecoration(FlutterFlowTheme t) => BoxDecoration(
-        color: _paper,
-        borderRadius: BorderRadius.circular(_radius),
-        border: Border.all(color: _hairline, width: 1),
-      );
-
-  // Primary pill (teal, white content)
+  // Primary pill (ink, white content)
   Widget _pillPrimaryButton(
     FlutterFlowTheme t, {
     required String label,
@@ -146,11 +116,11 @@ class _ProfilePageViewState extends State<ProfilePageView> {
   }) {
     return SizedBox(
       width: double.infinity,
-      height: 52,
+      height: 54,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: _spark,
+          backgroundColor: _ink,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(999),
@@ -160,15 +130,15 @@ class _ProfilePageViewState extends State<ProfilePageView> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 18, color: _sparkInk),
+              Icon(icon, size: 18, color: _paper),
               const SizedBox(width: 8),
             ],
             Text(
               label,
               style: t.labelLarge.override(
                 fontFamily: _bodyFont,
-                color: _sparkInk,
-                fontWeight: FontWeight.w700,
+                color: _paper,
+                fontWeight: FontWeight.w900,
               ),
             ),
           ],
@@ -187,13 +157,13 @@ class _ProfilePageViewState extends State<ProfilePageView> {
     Color? textColor,
     Color? iconColor,
   }) {
-    final bc = borderColor ?? _hairline;
+    final bc = borderColor ?? _hairlineOnSurface;
     final tc = textColor ?? _ink;
     final ic = iconColor ?? _inkMute;
 
     return SizedBox(
       width: double.infinity,
-      height: 50,
+      height: 52,
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
@@ -215,7 +185,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
               style: t.labelLarge.override(
                 fontFamily: _bodyFont,
                 color: tc,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ],
@@ -252,19 +222,11 @@ class _ProfilePageViewState extends State<ProfilePageView> {
                   color: _ink.withOpacity(0.08),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.info_outline_rounded,
-                  size: 16,
-                  color: _ink,
-                ),
+                child: const Icon(Icons.info_outline_rounded,
+                    size: 16, color: _ink),
               ),
               const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  message,
-                  style: _snackTextStyle(theme),
-                ),
-              ),
+              Expanded(child: Text(message, style: _snackTextStyle(theme))),
             ],
           ),
         ),
@@ -325,14 +287,15 @@ class _ProfilePageViewState extends State<ProfilePageView> {
     final ok = await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            backgroundColor: _surface,
+            backgroundColor: _paper,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: _hairline, width: 1),
             ),
             title: Text(
               'Delete profile?',
               style: theme.titleMedium.override(
-                  fontFamily: _displayFont, fontWeight: FontWeight.w800),
+                  fontFamily: _displayFont, fontWeight: FontWeight.w900),
             ),
             content: Text(
               'This will permanently delete your account and profile data. '
@@ -355,7 +318,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
                   style: theme.bodyMedium.override(
                     fontFamily: _bodyFont,
                     color: _coral,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
               ),
@@ -396,14 +359,14 @@ class _ProfilePageViewState extends State<ProfilePageView> {
     }
   }
 
-  // Big teal-ringed avatar (mirrors the dashboard avatar).
+  // Big teal-ringed avatar.
   Widget _avatar(FlutterFlowTheme theme, String photoUrl, String displayName) {
     final initials = Center(
       child: Text(
         _initialsFromName(displayName),
         style: theme.titleMedium.override(
           fontFamily: _bodyFont,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w900,
           fontSize: 26,
           color: _spark,
         ),
@@ -432,75 +395,8 @@ class _ProfilePageViewState extends State<ProfilePageView> {
     );
   }
 
-  // Quick-action tiles row (Edit profile · Photo · Alerts)
-  Widget _quickActions(FlutterFlowTheme theme) => Row(
-        children: [
-          _actionTile(
-            theme,
-            icon: Icons.edit_outlined,
-            label: 'Edit profile',
-            primary: true,
-            onTap: () => context.pushNamed(_editProfileRouteName),
-          ),
-          const SizedBox(width: 10),
-          _actionTile(
-            theme,
-            icon: Icons.camera_alt_outlined,
-            label: 'Photo',
-            onTap: _goEditPhoto,
-          ),
-          const SizedBox(width: 10),
-          _actionTile(
-            theme,
-            icon: Icons.notifications_none_rounded,
-            label: 'Alerts',
-            onTap: _goNotifications,
-          ),
-        ],
-      );
-
-  Widget _actionTile(
-    FlutterFlowTheme theme, {
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    bool primary = false,
-  }) {
-    final Color fg = primary ? _paper : _ink;
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
-          decoration: BoxDecoration(
-            color: primary ? _spark : _paper,
-            borderRadius: BorderRadius.circular(12),
-            border: primary ? null : Border.all(color: _hairline, width: 1),
-          ),
-          child: Column(
-            children: [
-              Icon(icon, size: 20, color: fg),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.labelMedium.override(
-                  fontFamily: _bodyFont,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
-                  color: fg,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _infoRow(
+  // Read-only underline info row.
+  Widget _uInfoRow(
     FlutterFlowTheme theme, {
     required IconData icon,
     required String label,
@@ -509,24 +405,24 @@ class _ProfilePageViewState extends State<ProfilePageView> {
   }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 13),
+      padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
         border: Border(
           bottom: showDivider
-              ? BorderSide(color: _hairline, width: 1)
+              ? const BorderSide(color: _hairline, width: 1)
               : BorderSide.none,
         ),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: _faint),
-          const SizedBox(width: 12),
+          Icon(icon, size: 19, color: _teal),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: _labelStyle(theme)),
-                const SizedBox(height: 2),
+                Text(label.toUpperCase(), style: _uLabelStyle(theme)),
+                const SizedBox(height: 4),
                 Text(
                   value.isEmpty ? '—' : value,
                   style: _valueStyle(theme),
@@ -537,6 +433,52 @@ class _ProfilePageViewState extends State<ProfilePageView> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // Tappable underline action row (chevron).
+  Widget _uActionRow(
+    FlutterFlowTheme theme, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    bool showDivider = true,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      splashFactory: NoSplash.splashFactory,
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: showDivider
+                ? const BorderSide(color: _hairline, width: 1)
+                : BorderSide.none,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: _teal),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                label,
+                style: theme.bodyMedium.override(
+                  fontFamily: _bodyFont,
+                  color: _ink,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                ),
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded,
+                size: 22, color: _hairlineOnSurface),
+          ],
+        ),
       ),
     );
   }
@@ -560,62 +502,52 @@ class _ProfilePageViewState extends State<ProfilePageView> {
             color: _paper,
             padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, _vPad),
             child: Center(
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(20, 26, 20, 20),
-                decoration: BoxDecoration(
-                  color: _surface,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: _hairline),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: _paper,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: _hairlineOnSurface),
-                      ),
-                      child: const Icon(Icons.lock_outline,
-                          color: _inkMute, size: 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: _surface,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: _hairlineOnSurface),
                     ),
-                    const SizedBox(height: 14),
-                    Text(
-                      'You are logged out',
-                      style: theme.titleMedium.override(
-                        fontFamily: _displayFont,
-                        fontWeight: FontWeight.w800,
-                        color: _ink,
-                      ),
-                      textAlign: TextAlign.center,
+                    child: const Icon(Icons.lock_outline,
+                        color: _inkMute, size: 24),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'You are logged out',
+                    style: theme.titleMedium.override(
+                      fontFamily: _displayFont,
+                      fontWeight: FontWeight.w900,
+                      color: _ink,
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Log in or create an account to continue.',
-                      style: theme.bodySmall.override(
-                        fontFamily: _bodyFont,
-                        color: _inkMute,
-                      ),
-                      textAlign: TextAlign.center,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Log in or create an account to continue.',
+                    style: theme.bodySmall.override(
+                      fontFamily: _bodyFont,
+                      color: _inkMute,
                     ),
-                    const SizedBox(height: 18),
-                    _pillPrimaryButton(
-                      theme,
-                      label: 'Log in',
-                      onPressed: () => context.pushNamed(_loginRouteName),
-                    ),
-                    const SizedBox(height: 10),
-                    _pillOutlineButton(
-                      theme,
-                      label: 'Create account',
-                      onPressed: () =>
-                          context.pushNamed(_createAccountRouteName),
-                    ),
-                  ],
-                ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 22),
+                  _pillPrimaryButton(
+                    theme,
+                    label: 'Log in',
+                    onPressed: () => context.pushNamed(_loginRouteName),
+                  ),
+                  const SizedBox(height: 10),
+                  _pillOutlineButton(
+                    theme,
+                    label: 'Create account',
+                    onPressed: () => context.pushNamed(_createAccountRouteName),
+                  ),
+                ],
               ),
             ),
           ),
@@ -655,85 +587,119 @@ class _ProfilePageViewState extends State<ProfilePageView> {
 
               final email = _bestEmail(emailDoc);
 
+              // ---------------------------------------------------------
+              // ✅ OPTION C — MINIMAL UNDERLINE
+              // ---------------------------------------------------------
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ---------- HEADER (no back button — MainBottomNav owns nav) ----------
+                  // ---------- HEADER ----------
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 10),
-                    child: Text('Profile', style: _titleStyle(theme)),
+                    padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 0),
+                    child: Text(
+                      'Profile',
+                      style: theme.titleLarge.override(
+                        fontFamily: _displayFont,
+                        color: _ink,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 30,
+                        lineHeight: 1.05,
+                      ),
+                    ),
                   ),
 
                   // ---------- CONTENT ----------
                   Expanded(
                     child: SingleChildScrollView(
-                      // 74 = MainBottomNav height; +24 breathing room so the
-                      // Logout / Delete row clears the overlaid bar.
-                      padding: const EdgeInsets.fromLTRB(_hPad, 10, _hPad, 98),
+                      padding: const EdgeInsets.fromLTRB(_hPad, 20, _hPad, 98),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Avatar hero (centered)
-                          Column(
-                            children: [
-                              _avatar(theme, photoUrl, displayName),
-                              const SizedBox(height: 14),
-                              Text(
-                                displayName.isEmpty ? 'Your name' : displayName,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: _heroNameStyle(theme),
-                              ),
-                              const SizedBox(height: 3),
-                              Text(
-                                email.isEmpty ? '—' : email,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.bodySmall.override(
-                                  fontFamily: _bodyFont,
-                                  color: _faint,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 22),
-
-                          // Quick actions
-                          _quickActions(theme),
-
-                          const SizedBox(height: 18),
-
-                          // Details card
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14),
-                            decoration: _cardDecoration(theme),
+                          Center(
                             child: Column(
                               children: [
-                                _infoRow(
-                                  theme,
-                                  icon: Icons.person_outline,
-                                  label: 'Display name',
-                                  value: displayName,
+                                _avatar(theme, photoUrl, displayName),
+                                const SizedBox(height: 14),
+                                Text(
+                                  displayName.isEmpty
+                                      ? 'Your name'
+                                      : displayName,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: _heroNameStyle(theme),
                                 ),
-                                _infoRow(
-                                  theme,
-                                  icon: Icons.phone_outlined,
-                                  label: 'Phone number',
-                                  value: phone,
-                                ),
-                                _infoRow(
-                                  theme,
-                                  icon: Icons.email_outlined,
-                                  label: 'Email',
-                                  value: email,
-                                  showDivider: false,
+                                const SizedBox(height: 3),
+                                Text(
+                                  email.isEmpty ? '—' : email,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.bodySmall.override(
+                                    fontFamily: _bodyFont,
+                                    color: _faint,
+                                    fontSize: 13,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
 
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 28),
+
+                          // Details (read-only underline rows)
+                          Text('ACCOUNT', style: _uLabelStyle(theme)),
+                          const SizedBox(height: 2),
+                          _uInfoRow(
+                            theme,
+                            icon: Icons.person_outline,
+                            label: 'Display name',
+                            value: displayName,
+                          ),
+                          _uInfoRow(
+                            theme,
+                            icon: Icons.phone_outlined,
+                            label: 'Phone number',
+                            value: phone,
+                          ),
+                          _uInfoRow(
+                            theme,
+                            icon: Icons.email_outlined,
+                            label: 'Email',
+                            value: email,
+                            showDivider: false,
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          // Edit profile (primary)
+                          _pillPrimaryButton(
+                            theme,
+                            label: 'Edit profile',
+                            icon: Icons.edit_outlined,
+                            onPressed: () =>
+                                context.pushNamed(_editProfileRouteName),
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          // Manage rows
+                          Text('MANAGE', style: _uLabelStyle(theme)),
+                          const SizedBox(height: 2),
+                          _uActionRow(
+                            theme,
+                            icon: Icons.camera_alt_outlined,
+                            label: 'Change photo',
+                            onTap: _goEditPhoto,
+                          ),
+                          _uActionRow(
+                            theme,
+                            icon: Icons.notifications_none_rounded,
+                            label: 'Notifications',
+                            onTap: _goNotifications,
+                            showDivider: false,
+                          ),
+
+                          const SizedBox(height: 24),
 
                           // Account actions (Logout / Delete)
                           Row(

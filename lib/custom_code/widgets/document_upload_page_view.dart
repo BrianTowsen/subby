@@ -72,7 +72,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
   // ────────────────────────────────────────────────────────────────────
 
   static const double _hPad = 24;
-  static const double _vPad = 24;
+  static const double _vPad = 14;
   static const double _radius = 12;
   static const double _gap = 12;
 
@@ -140,59 +140,37 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
   }
 
   // -----------------------------
-  // Theme helpers (match ProjectDetailPageView)
+  // Typography (Option C — minimal underline)
   // -----------------------------
-  TextStyle _appTitleStyle(FlutterFlowTheme theme) {
-    return theme.titleLarge.override(
-      fontFamily: _displayFont,
-      fontWeight: FontWeight.w900,
-      letterSpacing: 0.2,
-    );
-  }
-
   TextStyle _appSubtitleStyle(FlutterFlowTheme t) => t.bodySmall.override(
         fontFamily: _bodyFont,
         color: _inkMute,
       );
 
-  TextStyle _sectionTitleStyle(FlutterFlowTheme t) => t.titleMedium.override(
-        fontFamily: _displayFont,
-        fontWeight: FontWeight.w900,
-        color: _ink,
+  TextStyle _helperStyle(FlutterFlowTheme t) => t.bodySmall.override(
+        fontFamily: _bodyFont,
+        color: _inkMute,
+        letterSpacing: 0.0,
+        fontWeight: FontWeight.w600,
       );
 
-  // Teal accent for the page (icon chips, progress, highlights).
+  // Uppercase micro-label above each section.
+  TextStyle _uLabelStyle(FlutterFlowTheme t) => t.bodySmall.override(
+        fontFamily: _bodyFont,
+        color: _inkMute,
+        letterSpacing: 0.6,
+        fontWeight: FontWeight.w800,
+        fontSize: 11,
+      );
+
   Color _projectsColor(FlutterFlowTheme theme) => _teal;
 
   // -----------------------------
-  // UI helpers (match ProjectDetailPageView)
+  // Underline UI helpers
   // -----------------------------
-  Widget _cardShell({
-    required FlutterFlowTheme theme,
-    required Widget child,
-    EdgeInsets padding = const EdgeInsets.all(16),
-    Color? colorOverride,
-    Color? borderColorOverride,
-  }) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: colorOverride ?? _paper,
-        borderRadius: BorderRadius.circular(_radius),
-        border: Border.all(
-          color: (borderColorOverride ?? _hairline).withOpacity(0.9),
-        ),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(_radius),
-        child: Padding(padding: padding, child: child),
-      ),
-    );
-  }
-
-  Widget _sectionTitle(FlutterFlowTheme theme, String text) {
-    return Text(text, style: _sectionTitleStyle(theme));
-  }
+  static const BoxDecoration _uRule = BoxDecoration(
+    border: Border(bottom: BorderSide(color: _hairline, width: 1)),
+  );
 
   Widget _tapCard({
     required Widget child,
@@ -216,55 +194,139 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
     );
   }
 
-  Widget _loadingCard(FlutterFlowTheme theme, Color accent, String label) {
-    return _cardShell(
-      theme: theme,
-      child: Row(
-        children: [
-          SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(
-              strokeWidth: 2.4,
-              valueColor: AlwaysStoppedAnimation(accent),
-            ),
+  // Full-width ink upload button (with Uploading spinner state).
+  Widget _uploadButton(FlutterFlowTheme theme) {
+    return _tapCard(
+      onTap: _isUploading ? null : _pickAndUpload,
+      radius: BorderRadius.circular(999),
+      child: Opacity(
+        opacity: _isUploading ? 0.7 : 1,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: _ink,
+            borderRadius: BorderRadius.circular(999),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: theme.bodySmall.override(
-                fontFamily: _bodyFont,
-                color: _inkMute,
-                fontWeight: FontWeight.w700,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (_isUploading)
+                const Padding(
+                  padding: EdgeInsets.only(right: 10),
+                  child: SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.2,
+                      valueColor: AlwaysStoppedAnimation<Color>(_paper),
+                    ),
+                  ),
+                )
+              else
+                const Icon(Icons.upload_file_rounded, size: 18, color: _paper),
+              const SizedBox(width: 8),
+              Text(
+                _isUploading ? 'Uploading…' : 'Upload document',
+                style: theme.bodyMedium.override(
+                  fontFamily: _bodyFont,
+                  color: _paper,
+                  letterSpacing: 0.0,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 15,
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _errorCard(
+  // Hairline-divided document row.
+  Widget _uDocRow({
+    required FlutterFlowTheme theme,
+    required Color accent,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    VoidCallback? onTap,
+  }) {
+    return _tapCard(
+      onTap: onTap,
+      radius: BorderRadius.zero,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: _uRule,
+        child: Row(
+          children: [
+            Icon(icon, size: 22, color: accent),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.bodyMedium.override(
+                      fontFamily: _bodyFont,
+                      color: _ink,
+                      letterSpacing: 0.0,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.labelSmall.override(
+                      fontFamily: _bodyFont,
+                      color: _inkMute,
+                      letterSpacing: 0.0,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Icon(Icons.open_in_new_rounded,
+                size: 18, color: _hairlineOnSurface),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _stateRow(
     FlutterFlowTheme theme,
     Color accent,
+    IconData icon,
     String title,
-    String subtitle,
-  ) {
-    return _cardShell(
-      theme: theme,
+    String? subtitle, {
+    bool spinner = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 18),
+      decoration: _uRule,
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: accent.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(_radius),
-            ),
-            child: Icon(Icons.error_outline, color: accent, size: 22),
-          ),
-          const SizedBox(width: 12),
+          if (spinner)
+            SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.4,
+                valueColor: AlwaysStoppedAnimation(accent),
+              ),
+            )
+          else
+            Icon(icon, size: 22, color: accent),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,102 +337,17 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
                     fontFamily: _bodyFont,
                     color: _ink,
                     fontWeight: FontWeight.w800,
+                    fontSize: 15,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: theme.bodySmall.override(
-                    fontFamily: _bodyFont,
-                    color: _inkMute,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 4),
+                  Text(subtitle, style: _helperStyle(theme)),
+                ],
               ],
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _documentRow({
-    required FlutterFlowTheme theme,
-    required Color accent,
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    VoidCallback? onTap,
-    VoidCallback? onMore,
-  }) {
-    return _tapCard(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: _surface,
-          borderRadius: BorderRadius.circular(_radius),
-          border: Border.all(color: _hairline.withOpacity(0.9)),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 14, 10, 14),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: accent,
-                  borderRadius: BorderRadius.circular(_radius),
-                ),
-                child: Icon(icon, size: 22, color: _paper),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.bodyMedium.override(
-                        fontFamily: _bodyFont,
-                        color: _ink,
-                        letterSpacing: 0.0,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.labelSmall.override(
-                        fontFamily: _bodyFont,
-                        color: _inkMute,
-                        letterSpacing: 0.0,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (onMore != null)
-                InkWell(
-                  onTap: onMore,
-                  borderRadius: BorderRadius.circular(8),
-                  child: Padding(
-                    padding: const EdgeInsets.all(6),
-                    child: Icon(
-                      Icons.more_horiz_rounded,
-                      size: 20,
-                      color: _inkMute,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -402,8 +379,6 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
   // ✅ FilePicker + FirebaseStorage (NO FlutterFlow helper calls)
   // ============================================================
   Future<void> _pickAndUpload() async {
-    final theme = FlutterFlowTheme.of(context);
-    final accent = _projectsColor(theme);
     final projectRef = widget.projectRef;
 
     if (projectRef == null) return;
@@ -534,9 +509,10 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
           child: Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: _hPad, vertical: _vPad),
-            child: _errorCard(
+            child: _stateRow(
               theme,
-              accent,
+              _coral,
+              Icons.error_outline,
               'No project selected',
               'Open this page from a Project so we know where to upload.',
             ),
@@ -545,6 +521,9 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
       );
     }
 
+    // ---------------------------------------------------------
+    // ✅ OPTION C — MINIMAL UNDERLINE
+    // ---------------------------------------------------------
     return Container(
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
@@ -552,248 +531,119 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
       child: SafeArea(
         top: true,
         bottom: true,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ===== FIXED HEADER =====
-            Container(
-              decoration: BoxDecoration(
-                color: _paper,
-                border: Border(
-                  bottom:
-                      BorderSide(color: _hairline.withOpacity(0.9), width: 1),
-                ),
-              ),
-              padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 14),
-              child: Row(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, _vPad),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ===== TOP ROW: back =====
+              Row(
                 children: [
                   _tapCard(
                     onTap: _goBack,
                     radius: BorderRadius.circular(999),
                     child: Container(
-                      width: 40,
-                      height: 40,
+                      width: 36,
+                      height: 36,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: _surface,
                         shape: BoxShape.circle,
                         border: Border.all(color: _hairline.withOpacity(0.9)),
                       ),
-                      child: const Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        size: 16,
-                        color: _inkMute,
-                      ),
+                      child: const Icon(Icons.arrow_back_ios_new_rounded,
+                          size: 15, color: _inkMute),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Documents',
-                          style: _appTitleStyle(theme).copyWith(
-                            color: _ink,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Upload and manage project files.',
-                          style: _appSubtitleStyle(theme),
-                        ),
-                      ],
-                    ),
-                  ),
+                  const Spacer(),
                 ],
               ),
-            ),
-            // ===== SCROLLING CONTENT =====
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(_hPad, 16, _hPad, _vPad),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // UPLOAD CARD
-                    _cardShell(
-                      theme: theme,
-                      colorOverride: _surface,
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: accent.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(_radius),
-                            ),
-                            child: Icon(Icons.upload_rounded,
-                                color: accent, size: 22),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Upload a document',
-                                  style: theme.bodyMedium.override(
-                                    fontFamily: _bodyFont,
-                                    color: _ink,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'PDF, images, or other files supported by your app.',
-                                  style: theme.bodySmall.override(
-                                    fontFamily: _bodyFont,
-                                    color: _inkMute,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          _tapCard(
-                            onTap: _isUploading ? null : _pickAndUpload,
-                            radius: BorderRadius.circular(12),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: _isUploading
-                                    ? _hairline.withOpacity(0.4)
-                                    : _ink,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (_isUploading) ...[
-                                    SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2.2,
-                                        valueColor:
-                                            AlwaysStoppedAnimation(_paper),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Text(
-                                      'Uploading',
-                                      style: theme.bodySmall.override(
-                                        fontFamily: _bodyFont,
-                                        color: _paper,
-                                        fontWeight: FontWeight.w900,
-                                      ),
-                                    ),
-                                  ] else ...[
-                                    const Icon(Icons.add_rounded,
-                                        size: 18, color: _paper),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Upload',
-                                      style: theme.bodySmall.override(
-                                        fontFamily: _bodyFont,
-                                        color: _paper,
-                                        fontWeight: FontWeight.w900,
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
 
-                    const SizedBox(height: 18),
+              const SizedBox(height: 20),
 
-                    // DOCUMENT LIST
-                    _sectionTitle(theme, 'Project Documents'),
-                    const SizedBox(height: 10),
-
-                    if (_docsErr != null)
-                      _errorCard(
-                        theme,
-                        accent,
-                        'Couldn’t load documents',
-                        'This is usually a missing Firestore index or rules issue.',
-                      )
-                    else if (!_docsLoadedOnce)
-                      _loadingCard(theme, accent, 'Loading documents…')
-                    else if (_docRows.isEmpty)
-                      _cardShell(
-                        theme: theme,
-                        colorOverride: _surface,
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: accent.withOpacity(0.12),
-                                borderRadius: BorderRadius.circular(_radius),
-                              ),
-                              child: Icon(Icons.folder_open_rounded,
-                                  color: accent, size: 22),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'No documents yet.',
-                                style: theme.bodyMedium.override(
-                                  fontFamily: _bodyFont,
-                                  color: _ink,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    else
-                      Column(
-                        children: List.generate(_docRows.length, (i) {
-                          final d = _docRows[i].data();
-
-                          final title = (d['title'] ?? 'Document').toString();
-                          final type = (d['type'] ?? 'File').toString();
-                          final updatedAt = d['updatedAt'];
-                          final when = (updatedAt is Timestamp)
-                              ? dateTimeFormat('relative', updatedAt.toDate())
-                              : 'recently';
-
-                          final url = (d['fileUrl'] ?? '').toString();
-
-                          return Padding(
-                            padding: EdgeInsets.only(
-                                bottom: i == _docRows.length - 1 ? 0 : _gap),
-                            child: _documentRow(
-                              theme: theme,
-                              accent: accent,
-                              title: title,
-                              subtitle: '$type • Updated $when',
-                              icon: _iconForType(type),
-                              onTap: () async {
-                                if (url.trim().isEmpty) return;
-                                await launchURL(url);
-                              },
-                            ),
-                          );
-                        }),
-                      ),
-                  ],
+              // ===== TITLE =====
+              Text(
+                'Documents',
+                style: theme.titleLarge.override(
+                  fontFamily: _displayFont,
+                  color: _ink,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 30,
+                  lineHeight: 1.05,
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 8),
+              Text(
+                'Upload and manage project files.',
+                style: _appSubtitleStyle(theme).copyWith(fontSize: 13),
+              ),
+
+              const SizedBox(height: 24),
+
+              // ===== UPLOAD =====
+              _uploadButton(theme),
+              const SizedBox(height: 10),
+              Text(
+                'PDF, images, or other files supported by your app.',
+                style: _helperStyle(theme),
+              ),
+
+              const SizedBox(height: 28),
+
+              // ===== DOCUMENT LIST =====
+              Text('PROJECT DOCUMENTS', style: _uLabelStyle(theme)),
+              const SizedBox(height: 4),
+
+              if (_docsErr != null)
+                _stateRow(
+                  theme,
+                  _coral,
+                  Icons.error_outline,
+                  'Couldn’t load documents',
+                  'This is usually a missing Firestore index or rules issue.',
+                )
+              else if (!_docsLoadedOnce)
+                _stateRow(theme, accent, Icons.hourglass_empty_rounded,
+                    'Loading documents…', null,
+                    spinner: true)
+              else if (_docRows.isEmpty)
+                _stateRow(
+                  theme,
+                  accent,
+                  Icons.folder_open_rounded,
+                  'No documents yet.',
+                  'Upload PDFs, images, and files linked to this project.',
+                )
+              else
+                Column(
+                  children: List.generate(_docRows.length, (i) {
+                    final d = _docRows[i].data();
+
+                    final title = (d['title'] ?? 'Document').toString();
+                    final type = (d['type'] ?? 'File').toString();
+                    final updatedAt = d['updatedAt'];
+                    final when = (updatedAt is Timestamp)
+                        ? dateTimeFormat('relative', updatedAt.toDate())
+                        : 'recently';
+
+                    final url = (d['fileUrl'] ?? '').toString();
+
+                    return _uDocRow(
+                      theme: theme,
+                      accent: accent,
+                      title: title,
+                      subtitle: '$type • Updated $when',
+                      icon: _iconForType(type),
+                      onTap: () async {
+                        if (url.trim().isEmpty) return;
+                        await launchURL(url);
+                      },
+                    );
+                  }),
+                ),
+            ],
+          ),
         ),
       ),
     );

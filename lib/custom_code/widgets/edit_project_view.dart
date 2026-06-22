@@ -88,29 +88,9 @@ class _EditProjectViewState extends State<EditProjectView> {
   // ---------------------------------------------------------
   // ✅ TYPOGRAPHY (token + explicit family, minimal overrides)
   // ---------------------------------------------------------
-  TextStyle _appTitleStyle(FlutterFlowTheme t) => t.titleLarge.override(
-        fontFamily: _displayFont,
-        fontWeight: FontWeight.w900,
-        letterSpacing: 0.2,
-      );
-
   TextStyle _appSubtitleStyle(FlutterFlowTheme t) => t.bodySmall.override(
         fontFamily: _bodyFont,
         color: _inkMute,
-      );
-
-  // ✅ Keep section titles consistent across Subby
-  TextStyle _sectionTitleStyle(FlutterFlowTheme t) => t.titleMedium.override(
-        fontFamily: _displayFont,
-        color: _ink,
-        fontWeight: FontWeight.w900,
-      );
-
-  TextStyle _fieldLabelStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: _bodyFont,
-        color: _inkMute,
-        letterSpacing: 0.0,
-        fontWeight: FontWeight.w700,
       );
 
   TextStyle _fieldTextStyle(FlutterFlowTheme t) => t.bodyMedium.override(
@@ -118,6 +98,7 @@ class _EditProjectViewState extends State<EditProjectView> {
         color: _ink,
         letterSpacing: 0.0,
         fontWeight: FontWeight.w700,
+        fontSize: 16,
       );
 
   TextStyle _helperStyle(FlutterFlowTheme t) => t.bodySmall.override(
@@ -127,23 +108,23 @@ class _EditProjectViewState extends State<EditProjectView> {
         fontWeight: FontWeight.w600,
       );
 
+  // ✅ OPTION C — uppercase micro-label above each field.
+  TextStyle _uLabelStyle(FlutterFlowTheme t) => t.bodySmall.override(
+        fontFamily: _bodyFont,
+        color: _inkMute,
+        letterSpacing: 0.6,
+        fontWeight: FontWeight.w800,
+        fontSize: 11,
+      );
+
   // ---------------------------------------------------------
   // ✅ COLORS
   // ---------------------------------------------------------
   // Teal accent for secondary actions, switches, cursors & field focus.
   Color _projectsColor(FlutterFlowTheme theme) => _teal;
 
-  // Match AddProjectsPageView: high-contrast field fill + clearer borders
-  Color _fieldFill(FlutterFlowTheme theme) {
-    final sb = _surface;
-    if (sb != _paper) return sb;
-    return _hairline.withOpacity(0.10);
-  }
-
-  Color _fieldBorder(FlutterFlowTheme theme) => _hairline.withOpacity(0.95);
-
   // ---------------------------------------------------------
-  // ✅ SUBBY SHELLS (NO SHADOWS)
+  // ✅ SUBBY SHELLS (NO SHADOWS) — used by the loading state
   // ---------------------------------------------------------
   Widget _subbyCardShell({
     required FlutterFlowTheme theme,
@@ -159,7 +140,6 @@ class _EditProjectViewState extends State<EditProjectView> {
           color: _hairline.withOpacity(0.9),
           width: 1,
         ),
-        // ✅ NO SHADOWS (matches Dashboard + other pages)
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(_radius),
@@ -168,113 +148,274 @@ class _EditProjectViewState extends State<EditProjectView> {
     );
   }
 
-  InputDecoration _fieldDecoration(
-    FlutterFlowTheme theme, {
+  // =========================================================
+  // ✅ OPTION C — MINIMAL UNDERLINE FIELDS
+  // =========================================================
+  static const BoxDecoration _uRule = BoxDecoration(
+    border: Border(bottom: BorderSide(color: _hairline, width: 1)),
+  );
+
+  Widget _uText({
+    required FlutterFlowTheme theme,
+    required String label,
+    required TextEditingController controller,
+    required IconData icon,
     required String hint,
-    IconData? icon,
+    String? Function(String?)? validator,
+    int maxLines = 1,
   }) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: theme.bodySmall.override(
-        fontFamily: _bodyFont,
-        color: _inkMute.withOpacity(0.85),
-        letterSpacing: 0.0,
-        fontWeight: FontWeight.w600,
-      ),
-      filled: true,
-      fillColor: _fieldFill(theme),
-      prefixIcon: icon == null
-          ? null
-          : Padding(
-              padding: const EdgeInsets.only(left: 12, right: 8),
-              child: Icon(icon, size: 18, color: _inkMute),
-            ),
-      prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(_radius),
-        borderSide: BorderSide(color: _fieldBorder(theme), width: 1.2),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(_radius),
-        borderSide: const BorderSide(color: _teal, width: 1.7),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(_radius),
-        borderSide: BorderSide(color: _coral, width: 1.2),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(_radius),
-        borderSide: BorderSide(color: _coral, width: 1.2),
+    final multiline = maxLines > 1;
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: _uRule,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label.toUpperCase(), style: _uLabelStyle(theme)),
+          const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: multiline
+                ? CrossAxisAlignment.start
+                : CrossAxisAlignment.center,
+            children: [
+              Padding(
+                padding: EdgeInsets.only(top: multiline ? 3 : 0),
+                child: Icon(icon, size: 19, color: _teal),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: TextFormField(
+                  controller: controller,
+                  enabled: !_saving,
+                  cursorColor: _teal,
+                  maxLines: maxLines,
+                  validator: validator,
+                  style: _fieldTextStyle(theme),
+                  onChanged: (_) => setState(() {}),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    errorBorder: InputBorder.none,
+                    focusedErrorBorder: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                    hintText: hint,
+                    hintStyle: theme.bodyMedium.override(
+                      fontFamily: _bodyFont,
+                      color: _inkMute.withOpacity(0.8),
+                      letterSpacing: 0.0,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                    errorStyle: theme.bodySmall.override(
+                      fontFamily: _bodyFont,
+                      color: _coral,
+                      letterSpacing: 0.0,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Widget _pillButton({
+  Widget _uSelect({
     required FlutterFlowTheme theme,
-    required Color accent,
-    required String text,
+    required String label,
     required IconData icon,
-    required VoidCallback onTap,
-    bool isPrimary = true,
+    required String value,
+    required List<String> items,
+    required ValueChanged<String> onChanged,
   }) {
+    final safeValue = items.contains(value) ? value : items.first;
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: _uRule,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label.toUpperCase(), style: _uLabelStyle(theme)),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Icon(icon, size: 19, color: _teal),
+              const SizedBox(width: 10),
+              Expanded(
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: safeValue,
+                    isExpanded: true,
+                    isDense: true,
+                    dropdownColor: _paper,
+                    icon:
+                        const Icon(Icons.expand_more_rounded, color: _inkMute),
+                    style: _fieldTextStyle(theme),
+                    items: items
+                        .map(
+                          (e) => DropdownMenuItem<String>(
+                            value: e,
+                            child: Text(
+                              e,
+                              style: _fieldTextStyle(theme),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: _saving
+                        ? null
+                        : (v) {
+                            if (v == null) return;
+                            onChanged(v);
+                          },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _uDate({
+    required FlutterFlowTheme theme,
+    required String label,
+    required IconData icon,
+    required String value,
+    required VoidCallback onTap,
+  }) {
+    final isPlaceholder = value == 'Select date';
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: _saving ? null : onTap,
-        borderRadius: BorderRadius.circular(999),
-
-        // ✅ kill splash/highlight/overlay
         splashFactory: NoSplash.splashFactory,
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,
         hoverColor: Colors.transparent,
         overlayColor: WidgetStateProperty.all(Colors.transparent),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: _uRule,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label.toUpperCase(), style: _uLabelStyle(theme)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(icon, size: 19, color: _teal),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      value,
+                      style: _fieldTextStyle(theme).copyWith(
+                        color: isPlaceholder ? _inkMute : _ink,
+                      ),
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right_rounded,
+                      color: _hairlineOnSurface),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
+  Widget _uArchiveRow(FlutterFlowTheme theme, Color accent) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      decoration: _uRule,
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Archive this project',
+                  style: theme.bodyMedium.override(
+                    fontFamily: _bodyFont,
+                    color: _ink,
+                    letterSpacing: 0.0,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Hide it from Active Projects and keep your workspace clean.',
+                  style: _helperStyle(theme),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Switch.adaptive(
+            value: _archived,
+            onChanged: _saving ? null : (v) => setState(() => _archived = v),
+            activeColor: accent,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _primarySave(FlutterFlowTheme theme) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: _saving ? null : _saveChanges,
+        borderRadius: BorderRadius.circular(999),
+        splashFactory: NoSplash.splashFactory,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
         child: Opacity(
           opacity: _saving ? 0.7 : 1,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16),
             decoration: BoxDecoration(
-              color: isPrimary ? _ink : accent.withOpacity(0.12),
+              color: _ink,
               borderRadius: BorderRadius.circular(999),
-              border: Border.all(
-                color: isPrimary ? _ink : accent.withOpacity(0.25),
-                width: 1,
-              ),
-              // ✅ NO SHADOWS
             ),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (_saving && isPrimary)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 10),
+                if (_saving)
+                  const Padding(
+                    padding: EdgeInsets.only(right: 10),
                     child: SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          isPrimary ? _paper : accent,
-                        ),
+                        valueColor: AlwaysStoppedAnimation<Color>(_paper),
                       ),
                     ),
                   )
                 else
-                  Icon(
-                    icon,
-                    size: 18,
-                    color: isPrimary ? _paper : accent,
-                  ),
+                  const Icon(Icons.check_rounded, size: 18, color: _paper),
                 const SizedBox(width: 8),
                 Text(
-                  text,
+                  'Save Changes',
                   style: theme.bodyMedium.override(
                     fontFamily: _bodyFont,
-                    color: isPrimary ? _paper : accent,
+                    color: _paper,
                     letterSpacing: 0.0,
                     fontWeight: FontWeight.w900,
+                    fontSize: 15,
                   ),
                 ),
               ],
@@ -382,127 +523,6 @@ class _EditProjectViewState extends State<EditProjectView> {
     'Limpopo',
     'North West',
   ];
-
-  Widget _dropdownField({
-    required FlutterFlowTheme theme,
-    required String label,
-    required String value,
-    required List<String> items,
-    required IconData icon,
-    required ValueChanged<String> onChanged,
-  }) {
-    final safeValue = items.contains(value) ? value : items.first;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: _fieldLabelStyle(theme)),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: _fieldFill(theme),
-            borderRadius: BorderRadius.circular(_radius),
-            border: Border.all(color: _fieldBorder(theme), width: 1.2),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          child: Row(
-            children: [
-              Icon(icon, size: 18, color: _inkMute),
-              const SizedBox(width: 10),
-              Expanded(
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: safeValue,
-                    isExpanded: true,
-                    dropdownColor: _paper,
-                    icon: Icon(Icons.keyboard_arrow_down_rounded,
-                        color: _inkMute),
-                    style: _fieldTextStyle(theme),
-                    items: items
-                        .map(
-                          (e) => DropdownMenuItem<String>(
-                            value: e,
-                            child: Text(
-                              e,
-                              style: _fieldTextStyle(theme),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: _saving
-                        ? null
-                        : (v) {
-                            if (v == null) return;
-                            onChanged(v);
-                          },
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _dateField({
-    required FlutterFlowTheme theme,
-    required String label,
-    required String value,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: _fieldLabelStyle(theme)),
-        const SizedBox(height: 8),
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: _saving ? null : onTap,
-            borderRadius: BorderRadius.circular(_radius),
-
-            // ✅ kill splash/highlight/overlay
-            splashFactory: NoSplash.splashFactory,
-            splashColor: Colors.transparent,
-            highlightColor: Colors.transparent,
-            hoverColor: Colors.transparent,
-            overlayColor: WidgetStateProperty.all(Colors.transparent),
-
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-              decoration: BoxDecoration(
-                color: _fieldFill(theme),
-                borderRadius: BorderRadius.circular(_radius),
-                border: Border.all(
-                  color: _fieldBorder(theme),
-                  width: 1.2,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(icon, size: 18, color: _inkMute),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      value,
-                      style: _fieldTextStyle(theme).copyWith(
-                        color: value == 'Select date' ? _inkMute : _ink,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  Icon(Icons.chevron_right_rounded, color: _inkMute),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
   // ---------------------------------------------------------
   // ✅ LOAD + WIRE FIRESTORE
@@ -877,6 +897,9 @@ class _EditProjectViewState extends State<EditProjectView> {
       );
     }
 
+    // ---------------------------------------------------------
+    // ✅ OPTION C — MINIMAL UNDERLINE
+    // ---------------------------------------------------------
     return Container(
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
@@ -884,21 +907,14 @@ class _EditProjectViewState extends State<EditProjectView> {
       child: SafeArea(
         top: true,
         bottom: true,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ===== FIXED HEADER =====
-            Container(
-              decoration: BoxDecoration(
-                color: _paper,
-                border: Border(
-                  bottom:
-                      BorderSide(color: _hairline.withOpacity(0.9), width: 1),
-                ),
-              ),
-              padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 14),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(_hPad, 14, _hPad, _vPad),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ===== TOP ROW: back + delete =====
+              Row(
                 children: [
                   Material(
                     color: Colors.transparent,
@@ -907,65 +923,32 @@ class _EditProjectViewState extends State<EditProjectView> {
                         final nav = Navigator.of(context);
                         if (nav.canPop()) nav.pop();
                       },
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(999),
                       splashFactory: NoSplash.splashFactory,
                       splashColor: Colors.transparent,
                       highlightColor: Colors.transparent,
                       hoverColor: Colors.transparent,
                       overlayColor: WidgetStateProperty.all(Colors.transparent),
                       child: Container(
-                        width: 40,
-                        height: 40,
+                        width: 36,
+                        height: 36,
                         alignment: Alignment.center,
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           color: _surface,
                           shape: BoxShape.circle,
-                          border: Border.all(
-                            color: _hairline.withOpacity(0.9),
-                          ),
                         ),
                         child: const Icon(Icons.arrow_back_ios_new_rounded,
-                            size: 16, color: _inkMute),
+                            size: 15, color: _inkMute),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: accent,
-                      borderRadius: BorderRadius.circular(_radius),
-                    ),
-                    child:
-                        const Icon(Icons.edit_rounded, color: _paper, size: 22),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Edit Project',
-                          style: _appTitleStyle(theme).copyWith(
-                            color: _ink,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Update details, dates and notes.',
-                          style: _appSubtitleStyle(theme),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
+                  const Spacer(),
                   Material(
                     color: Colors.transparent,
                     child: InkWell(
                       onTap:
-                          _saving ? null : () => _confirmDelete(theme, accent),
-                      borderRadius: BorderRadius.circular(12),
+                          _saving ? null : () => _confirmDelete(theme, _coral),
+                      borderRadius: BorderRadius.circular(999),
                       splashFactory: NoSplash.splashFactory,
                       splashColor: Colors.transparent,
                       highlightColor: Colors.transparent,
@@ -973,16 +956,8 @@ class _EditProjectViewState extends State<EditProjectView> {
                       overlayColor: WidgetStateProperty.all(Colors.transparent),
                       child: Opacity(
                         opacity: _saving ? 0.7 : 1,
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: _paper,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: _hairline.withOpacity(0.9),
-                            ),
-                          ),
+                        child: const Padding(
+                          padding: EdgeInsets.all(6),
                           child: Icon(Icons.delete_outline_rounded,
                               size: 22, color: _coral),
                         ),
@@ -991,282 +966,148 @@ class _EditProjectViewState extends State<EditProjectView> {
                   ),
                 ],
               ),
-            ),
-            // ===== SCROLLING CONTENT =====
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(_hPad, 16, _hPad, _vPad),
+
+              const SizedBox(height: 20),
+
+              // ===== TITLE =====
+              Text(
+                'Edit Project',
+                style: theme.titleLarge.override(
+                  fontFamily: _displayFont,
+                  color: _ink,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 30,
+                  lineHeight: 1.05,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Update details, dates and notes.',
+                style: _appSubtitleStyle(theme).copyWith(fontSize: 13),
+              ),
+
+              const SizedBox(height: 26),
+
+              // ===== FORM =====
+              Form(
+                key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Project Details', style: _sectionTitleStyle(theme)),
-                    const SizedBox(height: 10),
-                    Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          // Project name
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Project name',
-                                  style: _fieldLabelStyle(theme)),
-                              const SizedBox(height: 8),
-                              TextFormField(
-                                controller: _nameCtrl,
-                                style: _fieldTextStyle(theme),
-                                cursorColor: accent,
-                                decoration: _fieldDecoration(
-                                  theme,
-                                  hint: 'e.g. Winston Ridge Renovation',
-                                  icon: Icons.home_work_outlined,
-                                ),
-                                enabled: !_saving,
-                                onChanged: (_) => setState(() {}),
-                                validator: (v) {
-                                  if ((v ?? '').trim().isEmpty) {
-                                    return 'Project name is required';
-                                  }
-                                  return null;
+                    _uText(
+                      theme: theme,
+                      label: 'Project name',
+                      controller: _nameCtrl,
+                      icon: Icons.home_work_outlined,
+                      hint: 'e.g. Winston Ridge Renovation',
+                      validator: (v) {
+                        if ((v ?? '').trim().isEmpty) {
+                          return 'Project name is required';
+                        }
+                        return null;
+                      },
+                    ),
+                    _uSelect(
+                      theme: theme,
+                      label: 'Status',
+                      icon: Icons.flag_outlined,
+                      value: _status,
+                      items: _statusOptions,
+                      onChanged: (v) => setState(() => _status = v),
+                    ),
+                    _uSelect(
+                      theme: theme,
+                      label: 'Province',
+                      icon: Icons.map_outlined,
+                      value: _province,
+                      items: _provinceOptions,
+                      onChanged: (v) => setState(() => _province = v),
+                    ),
+                    _uText(
+                      theme: theme,
+                      label: 'City / Area',
+                      controller: _cityCtrl,
+                      icon: Icons.location_city_outlined,
+                      hint: 'e.g. Durbanville',
+                    ),
+                    _uText(
+                      theme: theme,
+                      label: 'Address',
+                      controller: _addressCtrl,
+                      icon: Icons.place_outlined,
+                      hint: 'Street address (optional)',
+                    ),
+                    _uDate(
+                      theme: theme,
+                      label: 'Start date',
+                      icon: Icons.calendar_month_outlined,
+                      value: _dateLabel(_startDate),
+                      onTap: () => _pickDate(isStart: true),
+                    ),
+                    _uDate(
+                      theme: theme,
+                      label: 'End date',
+                      icon: Icons.event_outlined,
+                      value: _dateLabel(_endDate),
+                      onTap: () => _pickDate(isStart: false),
+                    ),
+                    _uText(
+                      theme: theme,
+                      label: 'Notes',
+                      controller: _notesCtrl,
+                      icon: Icons.notes_outlined,
+                      hint:
+                          'Anything important (budget notes, build phases, key contacts)…',
+                      maxLines: 4,
+                    ),
+                    _uArchiveRow(theme, accent),
+                    const SizedBox(height: 28),
+                    _primarySave(theme),
+                    const SizedBox(height: 16),
+                    Center(
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: _saving
+                              ? null
+                              : () {
+                                  final nav = Navigator.of(context);
+                                  if (nav.canPop()) nav.pop();
                                 },
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: _gap),
-
-                          // Status + Province
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _dropdownField(
-                                  theme: theme,
-                                  label: 'Status',
-                                  value: _status,
-                                  items: _statusOptions,
-                                  icon: Icons.flag_outlined,
-                                  onChanged: (v) => setState(() => _status = v),
-                                ),
-                              ),
-                              const SizedBox(width: _gap),
-                              Expanded(
-                                child: _dropdownField(
-                                  theme: theme,
-                                  label: 'Province',
-                                  value: _province,
-                                  items: _provinceOptions,
-                                  icon: Icons.map_outlined,
-                                  onChanged: (v) =>
-                                      setState(() => _province = v),
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: _gap),
-
-                          // City
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('City / Area',
-                                  style: _fieldLabelStyle(theme)),
-                              const SizedBox(height: 8),
-                              TextFormField(
-                                controller: _cityCtrl,
-                                style: _fieldTextStyle(theme),
-                                cursorColor: accent,
-                                decoration: _fieldDecoration(
-                                  theme,
-                                  hint: 'e.g. Durbanville',
-                                  icon: Icons.location_city_outlined,
-                                ),
-                                enabled: !_saving,
-                                onChanged: (_) => setState(() {}),
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: _gap),
-
-                          // Address
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Address', style: _fieldLabelStyle(theme)),
-                              const SizedBox(height: 8),
-                              TextFormField(
-                                controller: _addressCtrl,
-                                style: _fieldTextStyle(theme),
-                                cursorColor: accent,
-                                decoration: _fieldDecoration(
-                                  theme,
-                                  hint: 'Street address (optional)',
-                                  icon: Icons.place_outlined,
-                                ),
-                                enabled: !_saving,
-                                onChanged: (_) => setState(() {}),
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: _gap),
-
-                          // Dates
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _dateField(
-                                  theme: theme,
-                                  label: 'Start date',
-                                  value: _dateLabel(_startDate),
-                                  icon: Icons.calendar_month_outlined,
-                                  onTap: () => _pickDate(isStart: true),
-                                ),
-                              ),
-                              const SizedBox(width: _gap),
-                              Expanded(
-                                child: _dateField(
-                                  theme: theme,
-                                  label: 'End date',
-                                  value: _dateLabel(_endDate),
-                                  icon: Icons.event_outlined,
-                                  onTap: () => _pickDate(isStart: false),
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: _gap),
-
-                          // Notes
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Notes', style: _fieldLabelStyle(theme)),
-                              const SizedBox(height: 8),
-                              TextFormField(
-                                controller: _notesCtrl,
-                                style: _fieldTextStyle(theme),
-                                cursorColor: accent,
-                                maxLines: 6,
-                                enabled: !_saving,
-                                decoration: _fieldDecoration(
-                                  theme,
-                                  hint:
-                                      'Anything important (budget notes, build phases, key contacts)…',
-                                  icon: Icons.notes_outlined,
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: _gap),
-
-                          // Archive toggle
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: _surface,
-                              borderRadius: BorderRadius.circular(_radius),
-                              border: Border.all(
-                                color: _hairline.withOpacity(0.9),
-                                width: 1,
+                          borderRadius: BorderRadius.circular(8),
+                          splashFactory: NoSplash.splashFactory,
+                          splashColor: Colors.transparent,
+                          highlightColor: Colors.transparent,
+                          hoverColor: Colors.transparent,
+                          overlayColor:
+                              WidgetStateProperty.all(Colors.transparent),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            child: Text(
+                              'Cancel',
+                              style: theme.bodyMedium.override(
+                                fontFamily: _bodyFont,
+                                color: _inkMute,
+                                letterSpacing: 0.0,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 14,
                               ),
                             ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 36,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    color: _hairline.withOpacity(0.35),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(Icons.archive_outlined,
-                                      color: _inkMute, size: 20),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Archive this project',
-                                        style: theme.bodyMedium.override(
-                                          fontFamily: _bodyFont,
-                                          color: _ink,
-                                          letterSpacing: 0.0,
-                                          fontWeight: FontWeight.w900,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Hide it from Active Projects and keep your workspace clean.',
-                                        style: _helperStyle(theme),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Switch.adaptive(
-                                  value: _archived,
-                                  onChanged: _saving
-                                      ? null
-                                      : (v) => setState(() => _archived = v),
-                                  activeColor: accent,
-                                ),
-                              ],
-                            ),
                           ),
-
-                          const SizedBox(height: 18),
-
-                          // Actions
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _pillButton(
-                                  theme: theme,
-                                  accent: accent,
-                                  text: 'Save Changes',
-                                  icon: Icons.check_rounded,
-                                  onTap: _saveChanges,
-                                  isPrimary: true,
-                                ),
-                              ),
-                              const SizedBox(width: _gap),
-                              Expanded(
-                                child: _pillButton(
-                                  theme: theme,
-                                  accent: accent,
-                                  text: 'Cancel',
-                                  icon: Icons.close_rounded,
-                                  onTap: () {
-                                    final nav = Navigator.of(context);
-                                    if (nav.canPop()) nav.pop();
-                                  },
-                                  isPrimary: false,
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 10),
-                          Text(
-                            'Tip: This updates the selected project document and My Projects will refresh automatically (StreamBuilder).',
-                            style: _helperStyle(theme),
-                          ),
-                        ],
+                        ),
                       ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Tip: This updates the selected project document and My Projects will refresh automatically (StreamBuilder).',
+                      style: _helperStyle(theme),
                     ),
                   ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -30,22 +30,16 @@ class EditProfilePageView extends StatefulWidget {
 
 class _EditProfilePageViewState extends State<EditProfilePageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  // less-is-more system · ported from Clutch Putt · lime → yellow.
-  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
-  //
-  // Neutrals
   static const Color _ink = Color(0xFF16202E);
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
   static const Color _hairline = Color(0xFFEEF1F4);
   static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
-  // Brand accent — YELLOW. Always ink foreground, never white.
-  static const Color _spark = Color(0xFFAEE03F); // primary CTA / ranked accent
-  static const Color _sparkInk = Color(0xFF16202E);
+  // Brand accent — TEAL (field icons / focus). Primary action is ink.
+  static const Color _teal = Color(0xFF0D9488);
   // Status
-  static const Color _live =
-      Color(0xFFFF6A2B); // orange — live / open-now / warning
+  static const Color _live = Color(0xFFFF6A2B);
   static const Color _coral = Color(0xFFE0531C);
   // Type
   static const String _displayFont = 'Inter Tight';
@@ -64,44 +58,32 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
   bool _prefilled = false;
   bool _saving = false;
 
-  // Match ListingResults / Profile updated style
   static const double _hPad = 24;
-  static const double _vPad = 24;
+  static const double _vPad = 14;
   static const double _radius = 12;
 
   // =========================================================
-  // ✅ TYPOGRAPHY (match ListingResultsPageView)
+  // ✅ TYPOGRAPHY
   // =========================================================
-  TextStyle _titleStyle(FlutterFlowTheme t) => t.titleLarge.override(
-        fontFamily: _displayFont,
-        fontWeight: FontWeight.w900,
-        letterSpacing: 0.2,
-      );
-
   TextStyle _subtitleStyle(FlutterFlowTheme t) => t.bodySmall.override(
         fontFamily: _bodyFont,
         color: _inkMute,
       );
 
-  TextStyle _sectionTitleStyle(FlutterFlowTheme t) => t.titleMedium.override(
-        fontFamily: _displayFont,
-        fontWeight: FontWeight.w800,
-      );
-
-  TextStyle _labelStyle(FlutterFlowTheme t) => t.bodySmall.override(
+  TextStyle _uLabelStyle(FlutterFlowTheme t) => t.bodySmall.override(
         fontFamily: _bodyFont,
         color: _inkMute,
-        fontWeight: FontWeight.w600,
+        letterSpacing: 0.6,
+        fontWeight: FontWeight.w800,
         fontSize: 11,
       );
 
   TextStyle _fieldTextStyle(FlutterFlowTheme t) => t.bodyMedium.override(
         fontFamily: _bodyFont,
-      );
-
-  TextStyle _hintStyle(FlutterFlowTheme t) => t.bodyMedium.override(
-        fontFamily: _bodyFont,
-        color: _inkMute,
+        color: _ink,
+        fontWeight: FontWeight.w700,
+        fontSize: 16,
+        letterSpacing: 0.0,
       );
 
   TextStyle _snackTextStyle(FlutterFlowTheme t) => t.bodySmall.override(
@@ -110,145 +92,20 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
       );
   // =========================================================
 
-  // =========================================================
-  // ✅ ListingResults-style helpers
-  // =========================================================
-  Widget _circleIconShell(
-    FlutterFlowTheme t, {
-    required double size,
-    required IconData icon,
-    required Color iconColor,
-    VoidCallback? onTap,
-  }) {
-    final child = Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: _surface,
-        shape: BoxShape.circle,
-        border: Border.all(color: _hairline, width: 1),
-      ),
-      alignment: Alignment.center,
-      child: Icon(icon, size: size == 32 ? 16 : 18, color: iconColor),
-    );
-
-    if (onTap == null) return child;
-    return GestureDetector(onTap: onTap, child: child);
-  }
-
-  BoxDecoration _liftedCardDecoration(FlutterFlowTheme t) => BoxDecoration(
-        color: _paper,
-        borderRadius: BorderRadius.circular(_radius),
-        border: Border.all(color: _hairline, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      );
-
-  Widget _pillPrimaryButton(
-    FlutterFlowTheme t, {
-    required String label,
-    required VoidCallback onPressed,
-    IconData? icon,
-    bool loading = false,
-  }) {
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: ElevatedButton(
-        onPressed: loading ? null : onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _spark,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(999),
-          ),
+  Widget _circleBack(FlutterFlowTheme t) {
+    return GestureDetector(
+      onTap: () => context.safePop(),
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: _surface,
+          shape: BoxShape.circle,
+          border: Border.all(color: _hairline, width: 1),
         ),
-        child: loading
-            ? SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: const AlwaysStoppedAnimation<Color>(_sparkInk),
-                ),
-              )
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (icon != null) ...[
-                    Icon(icon, size: 18, color: _sparkInk),
-                    const SizedBox(width: 8),
-                  ],
-                  Text(
-                    label,
-                    style: t.labelLarge.override(
-                      fontFamily: _bodyFont,
-                      color: _sparkInk,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-      ),
-    );
-  }
-
-  Widget _pillOutlineButton(
-    FlutterFlowTheme t, {
-    required String label,
-    required VoidCallback onPressed,
-    IconData? icon,
-    Color? borderColor,
-    Color? textColor,
-    Color? iconColor,
-    bool loading = false,
-  }) {
-    final bc = borderColor ?? _hairline;
-    final tc = textColor ?? _ink;
-    final ic = iconColor ?? _inkMute;
-
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: OutlinedButton(
-        onPressed: loading ? null : onPressed,
-        style: OutlinedButton.styleFrom(
-          side: BorderSide(color: bc, width: 1),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(999),
-          ),
-        ),
-        child: loading
-            ? SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(_ink),
-                ),
-              )
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (icon != null) ...[
-                    Icon(icon, size: 18, color: ic),
-                    const SizedBox(width: 8),
-                  ],
-                  Text(
-                    label,
-                    style: t.labelLarge.override(
-                      fontFamily: _bodyFont,
-                      color: tc,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
+        alignment: Alignment.center,
+        child: const Icon(Icons.arrow_back_ios_new_rounded,
+            size: 15, color: _inkMute),
       ),
     );
   }
@@ -295,7 +152,119 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
         ),
       );
   }
+
   // =========================================================
+  // ✅ OPTION C — MINIMAL UNDERLINE FIELD
+  // =========================================================
+  Widget _uText({
+    required FlutterFlowTheme theme,
+    required String label,
+    required TextEditingController controller,
+    required FocusNode focusNode,
+    required IconData icon,
+    required String hint,
+    TextInputType? keyboardType,
+    TextInputAction textInputAction = TextInputAction.next,
+    ValueChanged<String>? onSubmitted,
+    String? Function(String?)? validator,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: _hairline, width: 1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label.toUpperCase(), style: _uLabelStyle(theme)),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(icon, size: 19, color: _teal),
+              const SizedBox(width: 10),
+              Expanded(
+                child: TextFormField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  keyboardType: keyboardType,
+                  textInputAction: textInputAction,
+                  onFieldSubmitted: onSubmitted,
+                  validator: validator,
+                  cursorColor: _teal,
+                  style: _fieldTextStyle(theme),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    errorBorder: InputBorder.none,
+                    focusedErrorBorder: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                    hintText: hint,
+                    hintStyle: theme.bodyMedium.override(
+                      fontFamily: _bodyFont,
+                      color: _inkMute.withOpacity(0.7),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      letterSpacing: 0.0,
+                    ),
+                    errorStyle: theme.bodySmall.override(
+                      fontFamily: _bodyFont,
+                      color: _coral,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.0,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _primarySave(FlutterFlowTheme theme) {
+    return GestureDetector(
+      onTap: _saving ? null : _saveProfile,
+      child: Opacity(
+        opacity: _saving ? 0.7 : 1,
+        child: Container(
+          width: double.infinity,
+          height: 54,
+          decoration: BoxDecoration(
+            color: _ink,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          alignment: Alignment.center,
+          child: _saving
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(_paper),
+                  ),
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.check_rounded, size: 18, color: _paper),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Save Profile',
+                      style: theme.labelLarge.override(
+                        fontFamily: _bodyFont,
+                        color: _paper,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -315,35 +284,6 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
     final a = parts.first.substring(0, 1).toUpperCase();
     final b = parts.last.substring(0, 1).toUpperCase();
     return '$a$b';
-  }
-
-  InputDecoration _inputDeco(
-    FlutterFlowTheme theme, {
-    required String hint,
-  }) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: _hintStyle(theme),
-      filled: true,
-      fillColor: _paper,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: _hairline, width: 1),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: _ink, width: 1.6),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: _coral, width: 1.2),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: _coral, width: 1.6),
-      ),
-    );
   }
 
   Future<void> _saveProfile() async {
@@ -382,179 +322,66 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
   }
 
   // =========================
-  // LOGGED OUT STATE (extracted)
+  // Minimal header + message scaffold (logged-out / error states)
   // =========================
-  Widget _buildLoggedOutState(
+  Widget _messageState(
     FlutterFlowTheme theme,
     double width,
-    double height,
-  ) {
+    double height, {
+    required IconData icon,
+    required String title,
+    required String body,
+  }) {
     return SizedBox(
       width: width,
       height: height,
       child: SafeArea(
         child: Container(
           color: _paper,
+          padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 8),
-                child: Row(
-                  children: [
-                    _circleIconShell(
-                      theme,
-                      size: 32,
-                      icon: Icons.arrow_back_ios_new_rounded,
-                      iconColor: _inkMute,
-                      onTap: () => context.safePop(),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Edit profile', style: _titleStyle(theme)),
-                          const SizedBox(height: 2),
-                          Text('Profile & account',
-                              style: _subtitleStyle(theme)),
-                        ],
-                      ),
-                    ),
-                  ],
+              Row(children: [_circleBack(theme), const Spacer()]),
+              const SizedBox(height: 20),
+              Text(
+                'Edit profile',
+                style: theme.titleLarge.override(
+                  fontFamily: _displayFont,
+                  color: _ink,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 30,
+                  lineHeight: 1.05,
                 ),
               ),
               const SizedBox(height: 8),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 24),
-                  child: Center(
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: _surface,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: _hairline),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.lock_outline, color: _inkMute, size: 34),
-                          const SizedBox(height: 10),
-                          Text(
-                            'You are not signed in.',
-                            style: theme.titleMedium.override(
-                              fontFamily: _displayFont,
-                              fontWeight: FontWeight.w800,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Please log in to edit your profile.',
-                            style: theme.bodySmall.override(
-                              fontFamily: _bodyFont,
-                              color: _inkMute,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // =========================
-  // SIGNED IN: graceful error card (prevents scary "failed" after logout timing)
-  // =========================
-  Widget _buildSignedInErrorState(
-    FlutterFlowTheme theme,
-    double width,
-    double height,
-  ) {
-    return SizedBox(
-      width: width,
-      height: height,
-      child: SafeArea(
-        child: Container(
-          color: _paper,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 8),
-                child: Row(
+              Text('Profile & account',
+                  style: _subtitleStyle(theme).copyWith(fontSize: 13)),
+              const SizedBox(height: 40),
+              Center(
+                child: Column(
                   children: [
-                    _circleIconShell(
-                      theme,
-                      size: 32,
-                      icon: Icons.arrow_back_ios_new_rounded,
-                      iconColor: _inkMute,
-                      onTap: () => context.safePop(),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Edit profile', style: _titleStyle(theme)),
-                          const SizedBox(height: 2),
-                          Text('Profile & account',
-                              style: _subtitleStyle(theme)),
-                        ],
+                    Icon(icon, color: _inkMute, size: 34),
+                    const SizedBox(height: 12),
+                    Text(
+                      title,
+                      style: theme.titleMedium.override(
+                        fontFamily: _displayFont,
+                        fontWeight: FontWeight.w900,
+                        color: _ink,
                       ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      body,
+                      style: theme.bodySmall.override(
+                        fontFamily: _bodyFont,
+                        color: _inkMute,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                   ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 24),
-                  child: Center(
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: _surface,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: _hairline),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.cloud_off_rounded,
-                              color: _inkMute, size: 34),
-                          const SizedBox(height: 10),
-                          Text(
-                            'Unable to load profile right now.',
-                            style: theme.titleMedium.override(
-                              fontFamily: _displayFont,
-                              fontWeight: FontWeight.w800,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Please try again in a moment.',
-                            style: theme.bodySmall.override(
-                              fontFamily: _bodyFont,
-                              color: _inkMute,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                 ),
               ),
             ],
@@ -580,33 +407,39 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
         builder: (context, authSnap) {
           final userRef = currentUserReference;
 
-          // While auth is resolving, show logged-out UI shell (no scary errors)
           if (authSnap.connectionState == ConnectionState.waiting) {
-            return _buildLoggedOutState(theme, width, height);
+            return _messageState(theme, width, height,
+                icon: Icons.lock_outline,
+                title: 'You are not signed in.',
+                body: 'Please log in to edit your profile.');
           }
 
-          // Logged out
           if (authSnap.data == null || userRef == null) {
-            // Reset local form flags so next login shows fresh state
             _prefilled = false;
             _saving = false;
-            return _buildLoggedOutState(theme, width, height);
+            return _messageState(theme, width, height,
+                icon: Icons.lock_outline,
+                title: 'You are not signed in.',
+                body: 'Please log in to edit your profile.');
           }
 
-          // Signed in — keep your existing UsersRecord stream
           return StreamBuilder<UsersRecord>(
             stream: UsersRecord.getDocument(userRef),
             builder: (context, snapshot) {
-              // ✅ IMPORTANT: on logout timing, Firestore streams can throw permission errors.
-              // If user is already logged out, do NOT show an error (this is the "logout failed" confusion).
               if (snapshot.hasError) {
                 final stillSignedIn = FirebaseAuth.instance.currentUser != null;
                 if (!stillSignedIn) {
                   _prefilled = false;
                   _saving = false;
-                  return _buildLoggedOutState(theme, width, height);
+                  return _messageState(theme, width, height,
+                      icon: Icons.lock_outline,
+                      title: 'You are not signed in.',
+                      body: 'Please log in to edit your profile.');
                 }
-                return _buildSignedInErrorState(theme, width, height);
+                return _messageState(theme, width, height,
+                    icon: Icons.cloud_off_rounded,
+                    title: 'Unable to load profile right now.',
+                    body: 'Please try again in a moment.');
               }
 
               final userDoc = snapshot.data;
@@ -622,245 +455,179 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
               final email = userDoc?.email ?? (currentUserEmail ?? '');
               final photoUrl = userDoc?.photoUrl ?? '';
 
+              // ---------------------------------------------------------
+              // ✅ OPTION C — MINIMAL UNDERLINE
+              // ---------------------------------------------------------
               return GestureDetector(
                 onTap: () => FocusScope.of(context).unfocus(),
                 child: SafeArea(
                   child: Container(
                     color: _paper,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // ---------- TOP BAR ----------
-                        Padding(
-                          padding:
-                              const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 8),
-                          child: Row(
+                    child: SingleChildScrollView(
+                      padding:
+                          const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // ===== TOP ROW: back =====
+                          Row(children: [_circleBack(theme), const Spacer()]),
+
+                          const SizedBox(height: 20),
+
+                          // ===== TITLE =====
+                          Text(
+                            'Edit profile',
+                            style: theme.titleLarge.override(
+                              fontFamily: _displayFont,
+                              color: _ink,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 30,
+                              lineHeight: 1.05,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text('Profile & account',
+                              style:
+                                  _subtitleStyle(theme).copyWith(fontSize: 13)),
+
+                          const SizedBox(height: 24),
+
+                          // ===== AVATAR + IDENTITY =====
+                          Row(
                             children: [
-                              _circleIconShell(
-                                theme,
-                                size: 32,
-                                icon: Icons.arrow_back_ios_new_rounded,
-                                iconColor: _inkMute,
-                                onTap: () => context.safePop(),
+                              Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  color: _ink,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: _teal, width: 2.2),
+                                ),
+                                child: ClipOval(
+                                  child: (photoUrl.isNotEmpty)
+                                      ? Image.network(
+                                          photoUrl,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) =>
+                                              _avatarInitials(
+                                                  theme, displayName),
+                                        )
+                                      : _avatarInitials(theme, displayName),
+                                ),
                               ),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: 14),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('Edit profile',
-                                        style: _titleStyle(theme)),
+                                    Text(
+                                      displayName.isEmpty
+                                          ? 'Your name'
+                                          : displayName,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.titleMedium.override(
+                                        fontFamily: _displayFont,
+                                        color: _ink,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
                                     const SizedBox(height: 2),
-                                    Text('Profile & account',
-                                        style: _subtitleStyle(theme)),
+                                    Text(
+                                      email,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.bodySmall.override(
+                                        fontFamily: _bodyFont,
+                                        color: _inkMute,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
-                              TextButton(
-                                onPressed: _saving ? null : _saveProfile,
-                                child: _saving
-                                    ? SizedBox(
-                                        width: 18,
-                                        height: 18,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                  _ink),
-                                        ),
-                                      )
-                                    : Text(
-                                        'Save',
-                                        style: theme.labelMedium.override(
-                                          fontFamily: _bodyFont,
-                                          color: _ink,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                              ),
                             ],
                           ),
-                        ),
 
-                        const SizedBox(height: 8),
+                          const SizedBox(height: 24),
 
-                        // ---------- CONTENT ----------
-                        Expanded(
-                          child: SingleChildScrollView(
-                            padding:
-                                const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 24),
+                          // ===== FORM =====
+                          Text('DETAILS', style: _uLabelStyle(theme)),
+                          const SizedBox(height: 2),
+                          Form(
+                            key: _formKey,
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  padding: const EdgeInsets.all(14),
-                                  decoration: _liftedCardDecoration(theme),
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        width: 44,
-                                        height: 44,
-                                        decoration: BoxDecoration(
-                                          color: _surface,
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        child: ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                          child: (photoUrl.isNotEmpty)
-                                              ? Image.network(
-                                                  photoUrl,
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder: (_, __, ___) =>
-                                                      Center(
-                                                    child: Text(
-                                                      _initials(displayName),
-                                                      style: theme.bodyMedium
-                                                          .override(
-                                                        fontFamily: theme
-                                                            .bodyMediumFamily,
-                                                        fontWeight:
-                                                            FontWeight.w900,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                )
-                                              : Center(
-                                                  child: Text(
-                                                    _initials(displayName),
-                                                    style: theme.bodyMedium
-                                                        .override(
-                                                      fontFamily: theme
-                                                          .bodyMediumFamily,
-                                                      fontWeight:
-                                                          FontWeight.w900,
-                                                    ),
-                                                  ),
-                                                ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              displayName.isEmpty
-                                                  ? 'Your name'
-                                                  : displayName,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: theme.bodyMedium.override(
-                                                fontFamily: _bodyFont,
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              email,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: theme.bodySmall.override(
-                                                fontFamily: _bodyFont,
-                                                color: _inkMute,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                _uText(
+                                  theme: theme,
+                                  label: 'Display name',
+                                  controller: _nameController,
+                                  focusNode: _nameFocus,
+                                  icon: Icons.person_outline_rounded,
+                                  hint: 'Your name',
+                                  onSubmitted: (_) => FocusScope.of(context)
+                                      .requestFocus(_phoneFocus),
+                                  validator: (v) {
+                                    final s = (v ?? '').trim();
+                                    if (s.isEmpty) {
+                                      return 'Please enter your name.';
+                                    }
+                                    if (s.length < 2) {
+                                      return 'Name is too short.';
+                                    }
+                                    return null;
+                                  },
                                 ),
-                                const SizedBox(height: 12),
-                                Container(
-                                  padding: const EdgeInsets.all(14),
-                                  decoration: _liftedCardDecoration(theme),
-                                  child: Form(
-                                    key: _formKey,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.stretch,
-                                      children: [
-                                        Text('Details',
-                                            style: _sectionTitleStyle(theme)),
-                                        const SizedBox(height: 12),
-                                        Text('Display name',
-                                            style: _labelStyle(theme)),
-                                        const SizedBox(height: 8),
-                                        TextFormField(
-                                          controller: _nameController,
-                                          focusNode: _nameFocus,
-                                          textInputAction: TextInputAction.next,
-                                          onFieldSubmitted: (_) =>
-                                              FocusScope.of(context)
-                                                  .requestFocus(_phoneFocus),
-                                          decoration: _inputDeco(theme,
-                                              hint: 'Your name'),
-                                          style: _fieldTextStyle(theme),
-                                          validator: (v) {
-                                            final s = (v ?? '').trim();
-                                            if (s.isEmpty) {
-                                              return 'Please enter your name.';
-                                            }
-                                            if (s.length < 2) {
-                                              return 'Name is too short.';
-                                            }
-                                            return null;
-                                          },
-                                        ),
-                                        const SizedBox(height: 14),
-                                        Text('Phone number',
-                                            style: _labelStyle(theme)),
-                                        const SizedBox(height: 8),
-                                        TextFormField(
-                                          controller: _phoneController,
-                                          focusNode: _phoneFocus,
-                                          textInputAction: TextInputAction.done,
-                                          keyboardType: TextInputType.phone,
-                                          decoration: _inputDeco(theme,
-                                              hint: 'e.g. 0813151789'),
-                                          style: _fieldTextStyle(theme),
-                                          validator: (v) {
-                                            final s = (v ?? '').trim();
-                                            if (s.isEmpty) {
-                                              return 'Please enter your phone number.';
-                                            }
-                                            if (s.length < 8) {
-                                              return 'Phone number looks too short.';
-                                            }
-                                            return null;
-                                          },
-                                          onFieldSubmitted: (_) =>
-                                              _saveProfile(),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                _pillPrimaryButton(
-                                  theme,
-                                  label: 'Save Profile',
-                                  icon: Icons.check_rounded,
-                                  loading: _saving,
-                                  onPressed: _saveProfile,
-                                ),
-                                const SizedBox(height: 10),
-                                _pillOutlineButton(
-                                  theme,
-                                  label: 'Cancel',
-                                  icon: Icons.close_rounded,
-                                  onPressed: () => context.safePop(),
+                                _uText(
+                                  theme: theme,
+                                  label: 'Phone number',
+                                  controller: _phoneController,
+                                  focusNode: _phoneFocus,
+                                  icon: Icons.phone_outlined,
+                                  hint: 'e.g. 0813151789',
+                                  keyboardType: TextInputType.phone,
+                                  textInputAction: TextInputAction.done,
+                                  onSubmitted: (_) => _saveProfile(),
+                                  validator: (v) {
+                                    final s = (v ?? '').trim();
+                                    if (s.isEmpty) {
+                                      return 'Please enter your phone number.';
+                                    }
+                                    if (s.length < 8) {
+                                      return 'Phone number looks too short.';
+                                    }
+                                    return null;
+                                  },
                                 ),
                               ],
                             ),
                           ),
-                        ),
-                      ],
+
+                          const SizedBox(height: 28),
+
+                          _primarySave(theme),
+
+                          const SizedBox(height: 16),
+                          Center(
+                            child: GestureDetector(
+                              onTap: _saving ? null : () => context.safePop(),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
+                                child: Text(
+                                  'Cancel',
+                                  style: theme.bodyMedium.override(
+                                    fontFamily: _bodyFont,
+                                    color: _inkMute,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -868,6 +635,20 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
             },
           );
         },
+      ),
+    );
+  }
+
+  Widget _avatarInitials(FlutterFlowTheme theme, String displayName) {
+    return Center(
+      child: Text(
+        _initials(displayName),
+        style: theme.bodyMedium.override(
+          fontFamily: _bodyFont,
+          color: _teal,
+          fontWeight: FontWeight.w900,
+          fontSize: 20,
+        ),
       ),
     );
   }
