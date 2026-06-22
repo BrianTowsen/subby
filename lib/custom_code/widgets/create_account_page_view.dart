@@ -32,22 +32,16 @@ class CreateAccountPageView extends StatefulWidget {
 
 class _CreateAccountPageViewState extends State<CreateAccountPageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  // less-is-more system · ported from Clutch Putt · lime → yellow.
-  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
-  //
-  // Neutrals
   static const Color _ink = Color(0xFF16202E);
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
   static const Color _hairline = Color(0xFFEEF1F4);
   static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
-  // Brand accent — YELLOW. Always ink foreground, never white.
-  static const Color _spark = Color(0xFFAEE03F); // primary CTA / ranked accent
-  static const Color _sparkInk = Color(0xFF16202E);
+  // Brand accent — TEAL (field icons / focus).
+  static const Color _teal = Color(0xFF0D9488);
   // Status
-  static const Color _live =
-      Color(0xFFFF6A2B); // orange — live / open-now / warning
+  static const Color _live = Color(0xFFFF6A2B);
   static const Color _coral = Color(0xFFE0531C);
   // Type
   static const String _displayFont = 'Inter Tight';
@@ -56,7 +50,7 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
   // ────────────────────────────────────────────────────────────────────
 
   static const double _hPad = 24;
-  static const double _vPad = 24;
+  static const double _vPad = 14;
   static const double _radius = 12;
 
   final _displayNameCtrl = TextEditingController();
@@ -75,33 +69,35 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
   String _status = '';
 
   // =========================================================
-  // ✅ TYPOGRAPHY (MATCH ListingResultsPageView)
+  // ✅ TYPOGRAPHY
   // =========================================================
-  TextStyle _titleStyle(FlutterFlowTheme t) => t.titleLarge.override(
-        fontFamily: _displayFont,
-        fontWeight: FontWeight.w900,
-        letterSpacing: 0.2,
-      );
-
   TextStyle _subtitleStyle(FlutterFlowTheme t) => t.bodySmall.override(
         fontFamily: _bodyFont,
         color: _inkMute,
       );
 
-  TextStyle _labelStyle(FlutterFlowTheme t) => t.bodySmall.override(
+  TextStyle _uLabelStyle(FlutterFlowTheme t) => t.bodySmall.override(
         fontFamily: _bodyFont,
         color: _inkMute,
-        fontWeight: FontWeight.w600,
+        letterSpacing: 0.6,
+        fontWeight: FontWeight.w800,
         fontSize: 11,
       );
 
   TextStyle _fieldTextStyle(FlutterFlowTheme t) => t.bodyMedium.override(
         fontFamily: _bodyFont,
+        color: _ink,
+        fontWeight: FontWeight.w700,
+        fontSize: 16,
+        letterSpacing: 0.0,
       );
 
   TextStyle _hintStyle(FlutterFlowTheme t) => t.bodyMedium.override(
         fontFamily: _bodyFont,
-        color: _inkMute,
+        color: _inkMute.withOpacity(0.7),
+        fontWeight: FontWeight.w600,
+        fontSize: 16,
+        letterSpacing: 0.0,
       );
 
   TextStyle _snackTextStyle(FlutterFlowTheme t) => t.bodySmall.override(
@@ -113,7 +109,7 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
       t.labelLarge.override(
         fontFamily: _bodyFont,
         color: color,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w900,
       );
   // =========================================================
 
@@ -184,67 +180,59 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
       );
   }
 
-  InputDecoration _inputDeco(
+  // =========================================================
+  // ✅ OPTION C — MINIMAL UNDERLINE FIELD
+  // =========================================================
+  Widget _uField(
     FlutterFlowTheme theme, {
+    required String label,
+    required TextEditingController controller,
+    required FocusNode focusNode,
+    required IconData icon,
     required String hint,
-    Widget? suffix,
+    TextInputType? keyboardType,
+    TextCapitalization textCapitalization = TextCapitalization.none,
+    bool obscureText = false,
+    Widget? trailing,
   }) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: _hintStyle(theme),
-      filled: true,
-      fillColor: _paper,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: _hairline, width: 1),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: _hairline, width: 1)),
       ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: _ink, width: 1.6),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: _coral, width: 1.2),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: _coral, width: 1.6),
-      ),
-      suffixIcon: suffix,
-    );
-  }
-
-  BoxDecoration _liftedCardDecoration(FlutterFlowTheme t) => BoxDecoration(
-        color: _paper,
-        borderRadius: BorderRadius.circular(_radius),
-        border: Border.all(color: _hairline, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label.toUpperCase(), style: _uLabelStyle(theme)),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(icon, size: 19, color: _teal),
+              const SizedBox(width: 10),
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  keyboardType: keyboardType,
+                  textCapitalization: textCapitalization,
+                  obscureText: obscureText,
+                  cursorColor: _teal,
+                  style: _fieldTextStyle(theme),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                    hintText: hint,
+                    hintStyle: _hintStyle(theme),
+                  ),
+                ),
+              ),
+              if (trailing != null) trailing,
+            ],
           ),
         ],
-      );
-
-  Widget _circleBack(FlutterFlowTheme t) {
-    return GestureDetector(
-      onTap: () => context.safePop(),
-      child: Container(
-        width: 32,
-        height: 32,
-        decoration: BoxDecoration(
-          color: _surface,
-          shape: BoxShape.circle,
-          border: Border.all(color: _hairline, width: 1),
-        ),
-        alignment: Alignment.center,
-        child: Icon(
-          Icons.arrow_back_ios_new_rounded,
-          size: 16,
-          color: _inkMute,
-        ),
       ),
     );
   }
@@ -255,7 +243,7 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(top: 14),
+      margin: const EdgeInsets.only(top: 16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: _coral.withOpacity(0.10),
@@ -317,14 +305,14 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
     return GestureDetector(
       onTap: disabled ? null : onPressed,
       child: AnimatedOpacity(
-        opacity: disabled ? 0.75 : 1.0,
+        opacity: disabled ? 0.7 : 1.0,
         duration: const Duration(milliseconds: 120),
         child: Container(
-          height: 52,
+          height: 54,
+          width: double.infinity,
           decoration: BoxDecoration(
-            color: _spark,
+            color: _ink,
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: _spark, width: 1),
           ),
           alignment: Alignment.center,
           child: loading
@@ -333,23 +321,41 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
                   height: 22,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(_sparkInk),
+                    valueColor: AlwaysStoppedAnimation<Color>(_paper),
                   ),
                 )
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (icon != null) ...[
-                      Icon(icon, size: 18, color: _sparkInk),
+                      Icon(icon, size: 18, color: _paper),
                       const SizedBox(width: 8),
                     ],
                     Text(
                       label,
-                      style: _buttonTextStyle(theme, color: _sparkInk),
+                      style: _buttonTextStyle(theme, color: _paper),
                     ),
                   ],
                 ),
         ),
+      ),
+    );
+  }
+
+  Widget _circleBack(FlutterFlowTheme t) {
+    return GestureDetector(
+      onTap: () => context.safePop(),
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: _surface,
+          shape: BoxShape.circle,
+          border: Border.all(color: _hairline, width: 1),
+        ),
+        alignment: Alignment.center,
+        child: const Icon(Icons.arrow_back_ios_new_rounded,
+            size: 15, color: _inkMute),
       ),
     );
   }
@@ -473,6 +479,9 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
     final double width = widget.width ?? MediaQuery.sizeOf(context).width;
     final double height = widget.height ?? MediaQuery.sizeOf(context).height;
 
+    // ---------------------------------------------------------
+    // ✅ OPTION C — MINIMAL UNDERLINE
+    // ---------------------------------------------------------
     return SizedBox(
       width: width,
       height: height,
@@ -486,92 +495,77 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Top Bar (ListingResults pattern)
-                  Row(
-                    children: [
-                      _circleBack(theme),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Create account', style: _titleStyle(theme)),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Set up your Subby account',
-                              style: _subtitleStyle(theme),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                  // ===== TOP ROW: back =====
+                  Row(children: [_circleBack(theme), const Spacer()]),
+
+                  const SizedBox(height: 20),
+
+                  // ===== TITLE =====
+                  Text(
+                    'Create account',
+                    style: theme.titleLarge.override(
+                      fontFamily: _displayFont,
+                      color: _ink,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 30,
+                      lineHeight: 1.05,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Set up your Subby account.',
+                    style: _subtitleStyle(theme).copyWith(fontSize: 13),
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 26),
 
-                  // Card (lifted like listing cards)
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: _liftedCardDecoration(theme),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Display name', style: _labelStyle(theme)),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: _displayNameCtrl,
-                          focusNode: _displayNameFocus,
-                          textCapitalization: TextCapitalization.words,
-                          style: _fieldTextStyle(theme),
-                          decoration: _inputDeco(
-                            theme,
-                            hint: 'e.g. Brian Towsen',
-                          ),
+                  // ===== FIELDS =====
+                  _uField(
+                    theme,
+                    label: 'Display name',
+                    controller: _displayNameCtrl,
+                    focusNode: _displayNameFocus,
+                    icon: Icons.person_outline_rounded,
+                    hint: 'e.g. Brian Towsen',
+                    textCapitalization: TextCapitalization.words,
+                  ),
+                  _uField(
+                    theme,
+                    label: 'Email',
+                    controller: _emailCtrl,
+                    focusNode: _emailFocus,
+                    icon: Icons.mail_outline_rounded,
+                    hint: 'you@example.com',
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  _uField(
+                    theme,
+                    label: 'Password',
+                    controller: _passwordCtrl,
+                    focusNode: _passwordFocus,
+                    icon: Icons.lock_outline_rounded,
+                    hint: 'Create a password',
+                    obscureText: _obscurePw,
+                    trailing: InkWell(
+                      onTap: () => setState(() => _obscurePw = !_obscurePw),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Icon(
+                          _obscurePw
+                              ? Icons.visibility_off_rounded
+                              : Icons.visibility_rounded,
+                          color: _inkMute,
+                          size: 20,
                         ),
-                        const SizedBox(height: 14),
-                        Text('Email', style: _labelStyle(theme)),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: _emailCtrl,
-                          focusNode: _emailFocus,
-                          keyboardType: TextInputType.emailAddress,
-                          style: _fieldTextStyle(theme),
-                          decoration: _inputDeco(
-                            theme,
-                            hint: 'you@example.com',
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        Text('Password', style: _labelStyle(theme)),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: _passwordCtrl,
-                          focusNode: _passwordFocus,
-                          obscureText: _obscurePw,
-                          style: _fieldTextStyle(theme),
-                          decoration: _inputDeco(
-                            theme,
-                            hint: 'Create a password',
-                            suffix: IconButton(
-                              onPressed: () =>
-                                  setState(() => _obscurePw = !_obscurePw),
-                              icon: Icon(
-                                _obscurePw
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
-                                color: _inkMute,
-                                size: 20,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
 
                   _errorBanner(theme),
                   _statusBanner(theme),
-                  const SizedBox(height: 16),
+
+                  const SizedBox(height: 28),
 
                   _primaryPillButton(
                     theme,
@@ -581,7 +575,7 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
                     onPressed: _saving ? null : _createAccount,
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
 
                   Center(
                     child: TextButton(
@@ -592,7 +586,8 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
                         'Already have an account? Log in',
                         style: theme.labelMedium.override(
                           fontFamily: _bodyFont,
-                          color: _ink,
+                          color: _inkMute,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),
