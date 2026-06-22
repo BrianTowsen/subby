@@ -10,7 +10,9 @@ import 'package:flutter/material.dart';
 
 // ======================= DashboardPageView (FULL FILE) =======================
 //
-// v4 — "Portfolio overview" home, big & minimal welcome.
+// v5 — "Focus" home: most-recent project as a HERO card with a large
+//       progress ring, the remaining projects as a condensed quick-list.
+//       (v4 = portfolio overview list; data/logic unchanged across both.)
 //
 // WHAT CHANGED FROM v3 (UI only — all logic preserved):
 //   • Welcome header is now big & minimal: an uppercase date eyebrow + a
@@ -53,6 +55,8 @@ class DashboardPageView extends StatefulWidget {
     this.directoryRouteName,
     this.projectsRouteName, // "View all" → MyProjectsHomePage
     this.profileRouteName,
+    this.loginRouteName, // signed-out empty state → Log in
+    this.createAccountRouteName, // signed-out empty state → Create account
     this.moreRouteName, // top-right menu → More hub
     this.projectDetailRouteName, // open a single project
     this.addProjectsRouteName, // create a new project
@@ -81,6 +85,8 @@ class DashboardPageView extends StatefulWidget {
   final String? directoryRouteName;
   final String? projectsRouteName;
   final String? profileRouteName;
+  final String? loginRouteName;
+  final String? createAccountRouteName;
   final String? moreRouteName;
   final String? projectDetailRouteName;
   final String? addProjectsRouteName;
@@ -148,6 +154,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
   // Route fallbacks
   static const String _fallbackProfileRoute = 'profilePage';
+  static const String _fallbackLoginRoute = 'login'; // LoginWidget.routeName
+  static const String _fallbackCreateAccountRoute =
+      'createAccountPage'; // CreateAccountPageWidget.routeName
   // ignore: unused_field
   static const String _fallbackMoreRoute = 'MorePageView';
   static const String _fallbackProjectsRoute = 'MyProjectsHomePage';
@@ -275,6 +284,23 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         color: _ink,
         fontFeatures: [FontFeature.tabularFigures()],
       );
+
+  // Focus layout — hero card
+  TextStyle get _heroEyebrowStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 10,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.8,
+        color: _yellow,
+      );
+
+  TextStyle get _heroTitleStyle => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 19,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.3,
+        color: _ink,
+      );
   // =========================================================
 
   @override
@@ -323,6 +349,17 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   void _goToProfile() => _safeNavigate(
         widget.profileRouteName,
         fallbackRoute: _fallbackProfileRoute,
+      );
+
+  // Signed-out empty state CTAs.
+  void _goToCreateAccount() => _safeNavigate(
+        widget.createAccountRouteName,
+        fallbackRoute: _fallbackCreateAccountRoute,
+      );
+
+  void _goToLogin() => _safeNavigate(
+        widget.loginRouteName,
+        fallbackRoute: _fallbackLoginRoute,
       );
 
   // Top-right menu button → the More hub (Manage · Support · Legal).
@@ -509,7 +546,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         children: [
           _accentMarker(_ink),
           const SizedBox(width: 10),
-          Expanded(child: Text('Home Projects', style: _stepHeadlineStyle)),
+          Expanded(
+              child: Text('Home Building Projects', style: _stepHeadlineStyle)),
         ],
       );
 
@@ -578,9 +616,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     final q = _activeProjectsQuery();
 
     if (q == null) {
+      // No authenticated user → the only actions are Create account / Log in.
       return Padding(
         padding: const EdgeInsets.fromLTRB(_hPad, 18, _hPad, 0),
-        child: _buildOnboarding(),
+        child: _buildSignedOut(),
       );
     }
 
@@ -616,6 +655,11 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         }
         final onTrack = active - needs;
 
+        // Focus layout: most-recent (the query is ordered updatedAt desc) is
+        // the hero; everything after it is a condensed quick-list row.
+        final feat = docs.first;
+        final rest = docs.skip(1).toList();
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -628,15 +672,18 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 0),
               child: _sectionHeader(),
             ),
+            const SizedBox(height: 14),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: _hPad),
+              child: _heroCard(feat),
+            ),
             const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: _hPad),
               child: Column(
                 children: [
-                  for (final d in docs) ...[
-                    _projectCard(d),
-                    const SizedBox(height: 10),
-                  ],
+                  for (final d in rest) _condensedRow(d),
+                  const SizedBox(height: 14),
                   _newProjectButton(),
                 ],
               ),
@@ -715,9 +762,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   }
 
   // -----------------------------
-  // Project card (progress ring)
+  // Focus layout — hero card (most recent project)
   // -----------------------------
-  Widget _projectCard(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+  Widget _heroCard(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data();
     final name = (data['name'] as String?)?.trim() ?? '';
     final city = (data['city'] as String?)?.trim() ?? '';
@@ -729,39 +776,112 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
     return InkWell(
       onTap: () => _goToProject(doc.reference),
-      borderRadius: BorderRadius.circular(_radius),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         decoration: BoxDecoration(
           color: _paper,
-          borderRadius: BorderRadius.circular(_radius),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: _hairline),
         ),
-        padding: const EdgeInsets.all(13),
+        padding: const EdgeInsets.all(18),
         child: Row(
           children: [
-            _progressRing(progress, attention),
-            const SizedBox(width: 13),
+            _heroRing(progress, attention),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          name.isEmpty ? 'Untitled project' : name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: _tileTitleStyle,
-                        ),
-                      ),
-                      if (status.isNotEmpty) ...[
-                        const SizedBox(width: 6),
-                        _miniPill(status, attention),
-                      ],
-                    ],
+                  Text('MOST RECENT', style: _heroEyebrowStyle),
+                  const SizedBox(height: 5),
+                  Text(
+                    name.isEmpty ? 'Untitled project' : name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _heroTitleStyle,
                   ),
                   const SizedBox(height: 3),
+                  Text(
+                    loc.isEmpty ? 'No location set' : loc,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _tileSubtitleStyle.copyWith(fontSize: 12),
+                  ),
+                  if (status.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    _miniPill(status, attention),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _heroRing(double progress, bool attention) {
+    final Color arc = attention ? _orange : _ink;
+    final Color track = attention ? _orangeTint : _ringTrack;
+    return SizedBox(
+      width: 76,
+      height: 76,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          SizedBox(
+            width: 76,
+            height: 76,
+            child: CircularProgressIndicator(
+              value: progress,
+              strokeWidth: 6,
+              strokeCap: StrokeCap.round,
+              backgroundColor: track,
+              valueColor: AlwaysStoppedAnimation<Color>(arc),
+            ),
+          ),
+          Text('${(progress * 100).round()}%',
+              style: _ringPctStyle.copyWith(fontSize: 17)),
+        ],
+      ),
+    );
+  }
+
+  // -----------------------------
+  // Focus layout — condensed quick-list row
+  // -----------------------------
+  Widget _condensedRow(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data();
+    final name = (data['name'] as String?)?.trim() ?? '';
+    final city = (data['city'] as String?)?.trim() ?? '';
+    final province = (data['province'] as String?)?.trim() ?? '';
+    final status = (data['status'] as String?)?.trim() ?? '';
+    final loc = [city, province].where((x) => x.isNotEmpty).join(', ');
+    final attention = _needsAttention(status);
+    final progress = _progress(data);
+
+    return InkWell(
+      onTap: () => _goToProject(doc.reference),
+      child: Container(
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: Color(0xFFF1F4F7))),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 11),
+        child: Row(
+          children: [
+            _miniRing(progress, attention),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name.isEmpty ? 'Untitled project' : name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _tileTitleStyle.copyWith(fontSize: 14),
+                  ),
+                  const SizedBox(height: 1),
                   Text(
                     loc.isEmpty ? 'No location set' : loc,
                     maxLines: 1,
@@ -772,6 +892,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               ),
             ),
             const SizedBox(width: 8),
+            Text('${(progress * 100).round()}%',
+                style: _ringPctStyle.copyWith(fontSize: 13)),
+            const SizedBox(width: 8),
             const Icon(Icons.chevron_right_rounded,
                 size: 20, color: Color(0xFFCDD6E2)),
           ],
@@ -780,28 +903,18 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     );
   }
 
-  Widget _progressRing(double progress, bool attention) {
+  Widget _miniRing(double progress, bool attention) {
     final Color arc = attention ? _orange : _ink;
     final Color track = attention ? _orangeTint : _ringTrack;
     return SizedBox(
-      width: 50,
-      height: 50,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          SizedBox(
-            width: 50,
-            height: 50,
-            child: CircularProgressIndicator(
-              value: progress,
-              strokeWidth: 5,
-              strokeCap: StrokeCap.round,
-              backgroundColor: track,
-              valueColor: AlwaysStoppedAnimation<Color>(arc),
-            ),
-          ),
-          Text('${(progress * 100).round()}%', style: _ringPctStyle),
-        ],
+      width: 36,
+      height: 36,
+      child: CircularProgressIndicator(
+        value: progress,
+        strokeWidth: 4,
+        strokeCap: StrokeCap.round,
+        backgroundColor: track,
+        valueColor: AlwaysStoppedAnimation<Color>(arc),
       ),
     );
   }
@@ -855,6 +968,90 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           ),
         ),
       );
+
+  // -----------------------------
+  // Signed-out (no account / not authenticated) empty state.
+  // The ONLY actions here are Create account (primary) and Log in
+  // (secondary). The create-project onboarding below is reserved for
+  // authenticated users who simply haven't added a project yet.
+  // -----------------------------
+  Widget _buildSignedOut() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Hero tile.
+        Container(
+          width: 64,
+          height: 64,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: _yellow,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: const Icon(Icons.lock_open_rounded, size: 32, color: _paper),
+        ),
+        const SizedBox(height: 20),
+
+        // Headline.
+        const Text(
+          'Sign in to manage your builds',
+          style: TextStyle(
+            fontFamily: _displayFont,
+            fontSize: 26,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.6,
+            height: 1.08,
+            color: _ink,
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Promise line.
+        const Text(
+          'Create an account or log in to track plans, budget, '
+          'programme, snags and quotes — all in one place.',
+          style: TextStyle(
+            fontFamily: _bodyFont,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            height: 1.5,
+            color: _inkMute,
+          ),
+        ),
+        const SizedBox(height: 22),
+
+        // Capability chips.
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: const [
+            _CapabilityChip('Plans'),
+            _CapabilityChip('Budget'),
+            _CapabilityChip('Programme'),
+            _CapabilityChip('Snags'),
+            _CapabilityChip('Quotes'),
+            _CapabilityChip('To-do list'),
+          ],
+        ),
+        const SizedBox(height: 28),
+
+        // Primary — create account.
+        _primaryButton(
+          label: 'Create account',
+          icon: Icons.person_add_alt_1_rounded,
+          onTap: _goToCreateAccount,
+        ),
+        const SizedBox(height: 10),
+
+        // Secondary — log in.
+        _secondaryButton(
+          label: 'Log in',
+          icon: Icons.login_rounded,
+          onTap: _goToLogin,
+        ),
+      ],
+    );
+  }
 
   // -----------------------------
   // Onboarding (empty state) — Option C: lean.
@@ -920,6 +1117,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             _CapabilityChip('Programme'),
             _CapabilityChip('Snags'),
             _CapabilityChip('Quotes'),
+            _CapabilityChip('To-do list'),
           ],
         ),
         const SizedBox(height: 28),
@@ -1017,38 +1215,68 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // Loading
   // -----------------------------
   Widget _loadingList() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _skeletonCard(),
-          const SizedBox(height: 10),
-          _skeletonCard(),
+          _heroSkeleton(),
+          const SizedBox(height: 14),
+          _rowSkeleton(),
+          _rowSkeleton(),
         ],
       );
 
-  Widget _skeletonCard() => Container(
+  Widget _heroSkeleton() => Container(
         decoration: BoxDecoration(
           color: _paper,
-          borderRadius: BorderRadius.circular(_radius),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: _hairline),
         ),
-        padding: const EdgeInsets.all(13),
+        padding: const EdgeInsets.all(18),
         child: Row(
           children: [
             Container(
-              width: 50,
-              height: 50,
-              decoration: const BoxDecoration(
-                color: _surface,
-                shape: BoxShape.circle,
-              ),
+              width: 76,
+              height: 76,
+              decoration:
+                  const BoxDecoration(color: _surface, shape: BoxShape.circle),
             ),
-            const SizedBox(width: 13),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(height: 12, width: 140, color: _surface),
+                  Container(height: 10, width: 80, color: _surface),
+                  const SizedBox(height: 10),
+                  Container(height: 16, width: 160, color: _surface),
                   const SizedBox(height: 8),
-                  Container(height: 10, width: 100, color: _surface),
+                  Container(height: 10, width: 110, color: _surface),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _rowSkeleton() => Container(
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: Color(0xFFF1F4F7))),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 11),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration:
+                  const BoxDecoration(color: _surface, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(height: 12, width: 130, color: _surface),
+                  const SizedBox(height: 7),
+                  Container(height: 9, width: 90, color: _surface),
                 ],
               ),
             ),
@@ -1168,9 +1396,9 @@ class _MoreSlidePanelState extends State<_MoreSlidePanel> {
   }
 }
 
-// Subby peak mark — bold, icon only (viewBox 0 0 64 64):
-//   peak  : polyline 12,40 → 32,18 → 52,40
-//   base  : line     14,50 → 50,50 (teal)
+// Subby homestead mark — bold, icon only (viewBox 0 0 64 64):
+//   roof    : filled gable 32,9 → 57,30 → 7,30 (eaves overhang the walls)
+//   courses : two rounded bars at y33 & y43, x19 w26 h7 — brick walls (teal)
 class _SubbyMarkPainter extends CustomPainter {
   final Color peak;
   final Color base;
@@ -1180,25 +1408,31 @@ class _SubbyMarkPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final double s = size.width / 64.0;
     Offset p(double x, double y) => Offset(x * s, y * s);
+    Rect r(double x, double y, double w, double h) =>
+        Rect.fromLTWH(x * s, y * s, w * s, h * s);
 
-    final peakPaint = Paint()
+    // Roof — filled gable, eaves overhanging the walls below.
+    final roofPaint = Paint()
       ..color = peak
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 11 * s
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-    final path = Path()
-      ..moveTo(p(12, 40).dx, p(12, 40).dy)
-      ..lineTo(p(32, 18).dx, p(32, 18).dy)
-      ..lineTo(p(52, 40).dx, p(52, 40).dy);
-    canvas.drawPath(path, peakPaint);
+      ..style = PaintingStyle.fill
+      ..isAntiAlias = true;
+    final roof = Path()
+      ..moveTo(p(32, 9).dx, p(32, 9).dy)
+      ..lineTo(p(57, 30).dx, p(57, 30).dy)
+      ..lineTo(p(7, 30).dx, p(7, 30).dy)
+      ..close();
+    canvas.drawPath(roof, roofPaint);
 
-    final basePaint = Paint()
+    // Two brick courses — the walls.
+    final coursePaint = Paint()
       ..color = base
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 11 * s
-      ..strokeCap = StrokeCap.round;
-    canvas.drawLine(p(14, 50), p(50, 50), basePaint);
+      ..style = PaintingStyle.fill
+      ..isAntiAlias = true;
+    final Radius rad = Radius.circular(1.5 * s);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(r(19, 33, 26, 7), rad), coursePaint);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(r(19, 43, 26, 7), rad), coursePaint);
   }
 
   @override
