@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -596,7 +598,7 @@ class _HomePageViewState extends State<HomePageView> {
               children: [
                 _backButton(),
                 const SizedBox(height: 20),
-                Text('Welcome', style: _titleStyle),
+                Text('Construction Directory', style: _titleStyle),
                 const SizedBox(height: 8),
                 Text('Find trades, pros & suppliers near you.',
                     style: _subtitleStyle),

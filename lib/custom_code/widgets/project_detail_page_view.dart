@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status bar over the dark hero)
@@ -27,6 +29,7 @@ class ProjectDetailPageView extends StatefulWidget {
     this.projectCostRouteName,
     this.getQuotesRouteName,
     this.snagListRouteName,
+    this.toDoListRouteName,
 
     /// ✅ NEW: Listing detail route (tap on added listing)
     this.listingDetailRouteName,
@@ -60,6 +63,7 @@ class ProjectDetailPageView extends StatefulWidget {
   final String? projectCostRouteName;
   final String? getQuotesRouteName;
   final String? snagListRouteName;
+  final String? toDoListRouteName;
 
   final String? listingDetailRouteName;
 
@@ -140,6 +144,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
   static const String _fallbackCostRoute = 'projectCostPage';
   static const String _fallbackQuotesRoute = 'quotesPage';
   static const String _fallbackSnagRoute = 'snagListPage';
+  static const String _fallbackToDoRoute = 'toDoListPage';
   static const String _fallbackListingDetailRoute = 'listingDetailPage';
 
   // ✅ NEW fallbacks for documents
@@ -1763,8 +1768,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                         title: 'To-Do List',
                         subtitle: 'Tasks & reminders',
                         onTap: () => _safeNavigate(
-                          widget.timelineRouteName,
-                          fallbackRoute: 'toDoListPage',
+                          widget.toDoListRouteName,
+                          fallbackRoute: _fallbackToDoRoute,
                         ),
                       ),
                     ],
