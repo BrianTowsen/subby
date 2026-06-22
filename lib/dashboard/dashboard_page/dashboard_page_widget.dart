@@ -62,6 +62,11 @@ class _DashboardPageWidgetState extends State<DashboardPageWidget> {
                 privacyRouteName: 'privacyPage',
                 addListingRouteName: 'addListingPage',
                 editListingRouteName: 'editListingPage',
+                projectDetailRouteName: 'ProjectDetailPage',
+                addProjectsRouteName: 'addProjectPage',
+                loginRouteName: 'login',
+                createAccountRouteName: 'createAccountPage',
+                moreRouteName: 'morePage',
               ),
             ),
             Align(

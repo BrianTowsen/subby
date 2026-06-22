@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -44,22 +46,16 @@ class LoginView extends StatefulWidget {
 
 class _LoginViewState extends State<LoginView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  // less-is-more system · ported from Clutch Putt · lime → yellow.
-  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
-  //
-  // Neutrals
   static const Color _ink = Color(0xFF16202E);
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
   static const Color _hairline = Color(0xFFEEF1F4);
   static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
-  // Brand accent — YELLOW. Always ink foreground, never white.
-  static const Color _spark = Color(0xFFAEE03F); // primary CTA / ranked accent
-  static const Color _sparkInk = Color(0xFF16202E);
+  // Brand accent — TEAL (field icons / focus). Primary action is ink.
+  static const Color _teal = Color(0xFF0D9488);
   // Status
-  static const Color _live =
-      Color(0xFFFF6A2B); // orange — live / open-now / warning
+  static const Color _live = Color(0xFFFF6A2B);
   static const Color _coral = Color(0xFFE0531C);
   // Type
   static const String _displayFont = 'Inter Tight';
@@ -67,9 +63,8 @@ class _LoginViewState extends State<LoginView> {
   static const String _monoFont = 'Inter';
   // ────────────────────────────────────────────────────────────────────
 
-  // Match Subby system spacing
   static const double _hPad = 24;
-  static const double _vPad = 24;
+  static const double _vPad = 14;
   static const double _radius = 12;
 
   static const String _prefsKeyLoginMethod = 'subby_login_method';
@@ -104,50 +99,49 @@ class _LoginViewState extends State<LoginView> {
   static const String _defaultAfterLoginRoute = 'homePage';
 
   // =========================================================
-  // ✅ TYPOGRAPHY (match ListingResultsPageView)
+  // ✅ TYPOGRAPHY
   // =========================================================
-  TextStyle _titleStyle(FlutterFlowTheme t) => t.titleLarge.override(
-        fontFamily: _displayFont,
-        fontWeight: FontWeight.w900,
-        letterSpacing: 0.2,
-      );
-
   TextStyle _subtitleStyle(FlutterFlowTheme t) => t.bodySmall.override(
         fontFamily: _bodyFont,
         color: _inkMute,
-      );
-
-  TextStyle _chipLabelStyle(FlutterFlowTheme t) => t.labelMedium.override(
-        fontFamily: _bodyFont,
       );
 
   TextStyle _toggleTextStyle(FlutterFlowTheme t, {required bool selected}) =>
       t.labelMedium.override(
         fontFamily: _bodyFont,
         color: selected ? _paper : _ink,
+        fontWeight: FontWeight.w800,
       );
 
-  TextStyle _labelStyle(FlutterFlowTheme t) => t.bodySmall.override(
+  TextStyle _uLabelStyle(FlutterFlowTheme t) => t.bodySmall.override(
         fontFamily: _bodyFont,
         color: _inkMute,
-        fontWeight: FontWeight.w600,
+        letterSpacing: 0.6,
+        fontWeight: FontWeight.w800,
         fontSize: 11,
       );
 
-  TextStyle _inputTextStyle(FlutterFlowTheme t) => t.bodyMedium.override(
+  TextStyle _fieldTextStyle(FlutterFlowTheme t) => t.bodyMedium.override(
         fontFamily: _bodyFont,
+        color: _ink,
+        fontWeight: FontWeight.w700,
+        fontSize: 16,
+        letterSpacing: 0.0,
       );
 
   TextStyle _hintStyle(FlutterFlowTheme t) => t.bodyMedium.override(
         fontFamily: _bodyFont,
-        color: _inkMute,
+        color: _inkMute.withOpacity(0.7),
+        fontWeight: FontWeight.w600,
+        fontSize: 16,
+        letterSpacing: 0.0,
       );
 
   TextStyle _buttonTextStyle(FlutterFlowTheme t, {required Color color}) =>
       t.labelLarge.override(
         fontFamily: _bodyFont,
         color: color,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w900,
       );
 
   TextStyle _snackTextStyle(FlutterFlowTheme t) => t.bodySmall.override(
@@ -157,8 +151,9 @@ class _LoginViewState extends State<LoginView> {
 
   TextStyle _otpDigitStyle(FlutterFlowTheme t) => t.bodyMedium.override(
         fontFamily: _bodyFont,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w800,
         fontSize: 18,
+        color: _ink,
       );
   // =========================================================
 
@@ -242,49 +237,20 @@ class _LoginViewState extends State<LoginView> {
     return '$cc$digits';
   }
 
-  InputDecoration _inputDeco(
-    FlutterFlowTheme theme,
-    String hint, {
-    Widget? suffix,
-  }) {
+  // Borderless field decoration (Option C underline style).
+  InputDecoration _bareDeco(FlutterFlowTheme theme, String hint) {
     return InputDecoration(
+      isDense: true,
+      border: InputBorder.none,
+      enabledBorder: InputBorder.none,
+      focusedBorder: InputBorder.none,
+      errorBorder: InputBorder.none,
+      focusedErrorBorder: InputBorder.none,
+      contentPadding: EdgeInsets.zero,
       hintText: hint,
       hintStyle: _hintStyle(theme),
-      filled: true,
-      fillColor: _paper,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: _hairline, width: 1),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: _ink, width: 1.6),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: _coral, width: 1.2),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: _coral, width: 1.6),
-      ),
-      suffixIcon: suffix,
     );
   }
-
-  BoxDecoration _liftedCardDecoration(FlutterFlowTheme t) => BoxDecoration(
-        color: _paper,
-        borderRadius: BorderRadius.circular(_radius),
-        border: Border.all(color: _hairline, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      );
 
   void _showSubbySnack(String message, {bool success = true}) {
     if (!mounted) return;
@@ -329,23 +295,20 @@ class _LoginViewState extends State<LoginView> {
       );
   }
 
-  Widget _circleIconButton(
-    FlutterFlowTheme t, {
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
+  Widget _circleBack(FlutterFlowTheme t) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () => context.safePop(),
       child: Container(
-        width: 32,
-        height: 32,
+        width: 36,
+        height: 36,
         decoration: BoxDecoration(
           color: _surface,
           shape: BoxShape.circle,
           border: Border.all(color: _hairline, width: 1),
         ),
         alignment: Alignment.center,
-        child: Icon(icon, size: 16, color: _inkMute),
+        child: const Icon(Icons.arrow_back_ios_new_rounded,
+            size: 15, color: _inkMute),
       ),
     );
   }
@@ -509,15 +472,15 @@ class _LoginViewState extends State<LoginView> {
   }
 
   // ---------------------------
-  // UI pieces (Subby ListingResults style)
+  // UI pieces (Option C — minimal underline)
   // ---------------------------
   Widget _slidingToggle(FlutterFlowTheme theme) {
     final isPhone = _method == LoginMethod.phone;
 
     return Container(
-      height: 38,
+      height: 40,
       decoration: BoxDecoration(
-        color: _paper,
+        color: _surface,
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: _hairline, width: 1),
       ),
@@ -589,58 +552,109 @@ class _LoginViewState extends State<LoginView> {
     );
   }
 
-  Widget _pressButton(
+  // Full-width ink primary button.
+  Widget _inkButton(
     FlutterFlowTheme theme, {
     required String label,
     required VoidCallback? onPressed,
     bool loading = false,
     IconData? icon,
-    bool outline = false,
   }) {
     final disabled = onPressed == null || loading;
-
-    final bg = outline ? _paper : _spark;
-    final fg = outline ? _ink : _sparkInk;
-    final border = outline ? _hairline : _spark;
-
-    final spinnerColor = outline ? _ink : _sparkInk;
-
     return GestureDetector(
       onTap: disabled ? null : onPressed,
       child: AnimatedOpacity(
         opacity: disabled ? 0.7 : 1.0,
         duration: const Duration(milliseconds: 120),
         child: Container(
-          height: 52,
+          width: double.infinity,
+          height: 54,
           decoration: BoxDecoration(
-            color: bg,
+            color: _ink,
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: border, width: 1),
           ),
           alignment: Alignment.center,
           child: loading
-              ? SizedBox(
+              ? const SizedBox(
                   width: 22,
                   height: 22,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(spinnerColor),
+                    valueColor: AlwaysStoppedAnimation<Color>(_paper),
                   ),
                 )
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (icon != null) ...[
-                      Icon(icon, size: 18, color: fg),
+                      Icon(icon, size: 18, color: _paper),
                       const SizedBox(width: 8),
                     ],
-                    Text(
-                      label,
-                      style: _buttonTextStyle(theme, color: fg),
-                    ),
+                    Text(label, style: _buttonTextStyle(theme, color: _paper)),
                   ],
                 ),
         ),
+      ),
+    );
+  }
+
+  // Full-width outline secondary button.
+  Widget _outlineButton(
+    FlutterFlowTheme theme, {
+    required String label,
+    required VoidCallback? onPressed,
+    IconData? icon,
+  }) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: double.infinity,
+        height: 52,
+        decoration: BoxDecoration(
+          color: _paper,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: _hairlineOnSurface, width: 1),
+        ),
+        alignment: Alignment.center,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 18, color: _inkMute),
+              const SizedBox(width: 8),
+            ],
+            Text(
+              label,
+              style: theme.labelLarge.override(
+                fontFamily: _bodyFont,
+                color: _ink,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Underline field wrapper.
+  Widget _uUnderline({
+    required FlutterFlowTheme theme,
+    required String label,
+    required Widget row,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: _hairline, width: 1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label.toUpperCase(), style: _uLabelStyle(theme)),
+          const SizedBox(height: 8),
+          row,
+        ],
       ),
     );
   }
@@ -651,7 +665,7 @@ class _LoginViewState extends State<LoginView> {
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(top: 14),
+      margin: const EdgeInsets.only(top: 16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: _coral.withOpacity(0.10),
@@ -690,18 +704,20 @@ class _LoginViewState extends State<LoginView> {
           ],
           textAlign: TextAlign.center,
           maxLength: 1,
+          cursorColor: _teal,
           style: _otpDigitStyle(theme),
           decoration: InputDecoration(
             counterText: '',
             filled: true,
-            fillColor: _paper,
+            fillColor: _surface,
+            contentPadding: const EdgeInsets.symmetric(vertical: 14),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: _hairline, width: 1),
+              borderSide: BorderSide(color: _hairlineOnSurface, width: 1),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: _ink, width: 1.6),
+              borderSide: const BorderSide(color: _teal, width: 1.7),
             ),
           ),
           onChanged: (v) {
@@ -740,123 +756,149 @@ class _LoginViewState extends State<LoginView> {
   }
 
   Widget _phoneForm(FlutterFlowTheme theme) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: _liftedCardDecoration(theme),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Phone number', style: _labelStyle(theme)),
-          const SizedBox(height: 8),
-          Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _uUnderline(
+          theme: theme,
+          label: 'Phone number',
+          row: Row(
             children: [
+              const Icon(Icons.phone_outlined, size: 19, color: _teal),
+              const SizedBox(width: 10),
               SizedBox(
-                width: 78,
+                width: 46,
                 child: TextField(
                   controller: _countryCtrl,
                   keyboardType: TextInputType.phone,
-                  decoration: _inputDeco(theme, '+27'),
-                  style: _inputTextStyle(theme),
+                  cursorColor: _teal,
+                  decoration: _bareDeco(theme, '+27'),
+                  style: _fieldTextStyle(theme),
                 ),
               ),
-              const SizedBox(width: 10),
+              Container(
+                width: 1,
+                height: 22,
+                margin: const EdgeInsets.symmetric(horizontal: 10),
+                color: _hairlineOnSurface,
+              ),
               Expanded(
                 child: TextField(
                   controller: _phoneCtrl,
                   keyboardType: TextInputType.phone,
-                  decoration: _inputDeco(theme, '081 234 5678'),
-                  style: _inputTextStyle(theme),
+                  cursorColor: _teal,
+                  decoration: _bareDeco(theme, '081 234 5678'),
+                  style: _fieldTextStyle(theme),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          _pressButton(
+        ),
+        const SizedBox(height: 20),
+        _inkButton(
+          theme,
+          label: _codeSent ? 'Resend code' : 'Send code',
+          icon: Icons.sms_outlined,
+          loading: _sendingCode,
+          onPressed: _sendingCode ? null : _sendOtp,
+        ),
+        if (_codeSent) ...[
+          const SizedBox(height: 22),
+          Text('OTP CODE', style: _uLabelStyle(theme)),
+          const SizedBox(height: 12),
+          _otpBoxes(theme),
+          const SizedBox(height: 20),
+          _inkButton(
             theme,
-            label: _codeSent ? 'Resend code' : 'Send code',
-            icon: Icons.sms_outlined,
-            loading: _sendingCode,
-            onPressed: _sendingCode ? null : _sendOtp,
+            label: 'Verify & continue',
+            icon: Icons.lock_open_outlined,
+            loading: _verifyingCode,
+            onPressed: _verifyingCode ? null : _verifyOtp,
           ),
-          if (_codeSent) ...[
-            const SizedBox(height: 14),
-            Text('OTP code', style: _labelStyle(theme)),
-            const SizedBox(height: 8),
-            _otpBoxes(theme),
-            const SizedBox(height: 14),
-            _pressButton(
-              theme,
-              label: 'Verify & continue',
-              icon: Icons.lock_open_outlined,
-              loading: _verifyingCode,
-              onPressed: _verifyingCode ? null : _verifyOtp,
-            ),
-          ],
         ],
-      ),
+      ],
     );
   }
 
   Widget _emailForm(FlutterFlowTheme theme) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: _liftedCardDecoration(theme),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Email', style: _labelStyle(theme)),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _emailCtrl,
-            keyboardType: TextInputType.emailAddress,
-            decoration: _inputDeco(theme, 'you@example.com'),
-            style: _inputTextStyle(theme),
-          ),
-          const SizedBox(height: 14),
-          Text('Password', style: _labelStyle(theme)),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _passwordCtrl,
-            obscureText: _obscurePw,
-            decoration: _inputDeco(
-              theme,
-              'Enter password',
-              suffix: IconButton(
-                onPressed: () => setState(() => _obscurePw = !_obscurePw),
-                icon: Icon(
-                  _obscurePw ? Icons.visibility_off : Icons.visibility,
-                  color: _inkMute,
-                  size: 20,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _uUnderline(
+          theme: theme,
+          label: 'Email',
+          row: Row(
+            children: [
+              const Icon(Icons.mail_outline_rounded, size: 19, color: _teal),
+              const SizedBox(width: 10),
+              Expanded(
+                child: TextField(
+                  controller: _emailCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                  cursorColor: _teal,
+                  decoration: _bareDeco(theme, 'you@example.com'),
+                  style: _fieldTextStyle(theme),
                 ),
               ),
-            ),
-            style: _inputTextStyle(theme),
+            ],
           ),
-          const SizedBox(height: 14),
-          _pressButton(
-            theme,
-            label: 'Log in',
-            icon: Icons.login,
-            loading: _emailLoading,
-            onPressed: _emailLoading ? null : _loginWithEmail,
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: _forgotPassword,
-              child: Text(
-                'Forgot password?',
-                style: theme.labelMedium.override(
-                  fontFamily: _bodyFont,
-                  color: _ink,
-                  fontWeight: FontWeight.w700,
+        ),
+        _uUnderline(
+          theme: theme,
+          label: 'Password',
+          row: Row(
+            children: [
+              const Icon(Icons.lock_outline_rounded, size: 19, color: _teal),
+              const SizedBox(width: 10),
+              Expanded(
+                child: TextField(
+                  controller: _passwordCtrl,
+                  obscureText: _obscurePw,
+                  cursorColor: _teal,
+                  decoration: _bareDeco(theme, 'Enter password'),
+                  style: _fieldTextStyle(theme),
                 ),
+              ),
+              InkWell(
+                onTap: () => setState(() => _obscurePw = !_obscurePw),
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(
+                    _obscurePw
+                        ? Icons.visibility_off_rounded
+                        : Icons.visibility_rounded,
+                    color: _inkMute,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: _forgotPassword,
+            child: Text(
+              'Forgot password?',
+              style: theme.labelMedium.override(
+                fontFamily: _bodyFont,
+                color: _inkMute,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 12),
+        _inkButton(
+          theme,
+          label: 'Log in',
+          icon: Icons.login,
+          loading: _emailLoading,
+          onPressed: _emailLoading ? null : _loginWithEmail,
+        ),
+      ],
     );
   }
 
@@ -867,89 +909,78 @@ class _LoginViewState extends State<LoginView> {
     final double width = widget.width ?? MediaQuery.sizeOf(context).width;
     final double height = widget.height ?? MediaQuery.sizeOf(context).height;
 
-    // Match ListingResults SafeArea usage (no manual insets)
+    // ---------------------------------------------------------
+    // ✅ OPTION C — MINIMAL UNDERLINE
+    // ---------------------------------------------------------
     return SizedBox(
       width: width,
       height: height,
       child: SafeArea(
         child: Container(
           color: _paper,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ---------- TOP BAR (match ListingResults pattern) ----------
-              Padding(
-                padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 8),
-                child: Row(
-                  children: [
-                    _circleIconButton(
-                      theme,
-                      icon: Icons.arrow_back_ios_new_rounded,
-                      onTap: () => context.safePop(),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Log in', style: _titleStyle(theme)),
-                          const SizedBox(height: 2),
-                          Text('Subby account access',
-                              style: _subtitleStyle(theme)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ===== TOP ROW: back =====
+                Row(children: [_circleBack(theme), const Spacer()]),
 
-              const SizedBox(height: 8),
+                const SizedBox(height: 20),
 
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Toggle
-                      _slidingToggle(theme),
-                      const SizedBox(height: 16),
-
-                      // Forms
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 220),
-                        switchInCurve: Curves.easeOut,
-                        switchOutCurve: Curves.easeIn,
-                        child: (_method == LoginMethod.phone)
-                            ? Container(
-                                key: const ValueKey('phone'),
-                                child: _phoneForm(theme),
-                              )
-                            : Container(
-                                key: const ValueKey('email'),
-                                child: _emailForm(theme),
-                              ),
-                      ),
-
-                      _errorBanner(theme),
-                      const SizedBox(height: 16),
-
-                      // Create account (outline pill)
-                      _pressButton(
-                        theme,
-                        label: 'Create account',
-                        icon: Icons.person_add_alt_1_outlined,
-                        outline: true,
-                        onPressed: () => context.pushNamed(
-                          widget.createAccountRouteName ??
-                              _defaultCreateAccountRoute,
-                        ),
-                      ),
-                    ],
+                // ===== TITLE =====
+                Text(
+                  'Log in',
+                  style: theme.titleLarge.override(
+                    fontFamily: _displayFont,
+                    color: _ink,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 30,
+                    lineHeight: 1.05,
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  'Subby account access.',
+                  style: _subtitleStyle(theme).copyWith(fontSize: 13),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Toggle
+                _slidingToggle(theme),
+                const SizedBox(height: 8),
+
+                // Forms
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  switchInCurve: Curves.easeOut,
+                  switchOutCurve: Curves.easeIn,
+                  child: (_method == LoginMethod.phone)
+                      ? Container(
+                          key: const ValueKey('phone'),
+                          child: _phoneForm(theme),
+                        )
+                      : Container(
+                          key: const ValueKey('email'),
+                          child: _emailForm(theme),
+                        ),
+                ),
+
+                _errorBanner(theme),
+                const SizedBox(height: 24),
+
+                // Create account (outline)
+                _outlineButton(
+                  theme,
+                  label: 'Create account',
+                  icon: Icons.person_add_alt_1_outlined,
+                  onPressed: () => context.pushNamed(
+                    widget.createAccountRouteName ?? _defaultCreateAccountRoute,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
