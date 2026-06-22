@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -16,14 +18,8 @@ class SnagListPageView extends StatefulWidget {
     super.key,
     this.width,
     this.height,
-
-    /// Optional: route name to open "Add Snag" page (no params by default)
     this.addSnagRouteName,
-
-    /// Optional: route name to open "Snag Detail" page (expects snagRef param)
     this.snagDetailRouteName,
-
-    /// Optional: where to go back to (fallback = pop)
     this.backRouteName,
   });
 
@@ -41,23 +37,24 @@ class SnagListPageView extends StatefulWidget {
 class _SnagListPageViewState extends State<SnagListPageView>
     with SingleTickerProviderStateMixin {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // Synced with DashboardPageView / AddProjectsPageView (flat teal system).
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF16202E);
+  static const Color _ink = Color(0xFF017374); // text, chrome, accent
   static const Color _inkMute = Color(0xFF5A6675);
+  static const Color _faint = Color(0xFF93A0B0);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _hairline = Color(0xFFEEF1F4);
-  static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
-  // Brand accent — YELLOW. Always ink foreground, never white.
-  static const Color _spark = Color(0xFFAEE03F); // primary CTA / ranked accent
-  static const Color _sparkInk = Color(0xFF16202E);
+  static const Color _hairline = Color(0xFFEEF1F2);
+  static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
+  // Brand accent — TEAL.
+  static const Color _teal = Color(0xFF017374);
+  static const Color _tealTint = Color(0xFFE3F4F2);
   // Status
   static const Color _live =
-      Color(0xFFFF6A2B); // orange — live / open-now / done / warning
-  static const Color _coral = Color(0xFFE0531C);
+      Color(0xFFE5771E); // orange — done / open / warning
+  static const Color _coral = Color(0xFFE5771E);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -65,19 +62,13 @@ class _SnagListPageViewState extends State<SnagListPageView>
   // ────────────────────────────────────────────────────────────────────
 
   static const double _hPad = 24;
-  static const double _vPad = 24;
+  static const double _vPad = 14;
   static const double _radius = 12;
-  static const double _gap = 12;
+  static const double _gap = 0;
 
-  // ✅ subtle sliver breathing room (no clipping)
-  static const double _sliverSidePad = 2;
-  static const double _sliverTopGap = 8;
-
-  // ✅ sticky header must be tall enough for a shadowed card
-  static const double _stickyTabsHeight = 92;
-
-  // ✅ content padding moved INSIDE containers so scrollbar can sit on the edge
-  static const double _contentHPad = _hPad + _sliverSidePad;
+  static const double _sliverTopGap = 4;
+  static const double _stickyTabsHeight = 58;
+  static const double _contentHPad = _hPad;
 
   static const String _kActiveProjectPath = 'subby_active_project_path';
 
@@ -98,9 +89,6 @@ class _SnagListPageViewState extends State<SnagListPageView>
     super.dispose();
   }
 
-  // -----------------------------
-  // Active project from SharedPrefs
-  // -----------------------------
   Future<void> _loadActiveProject() async {
     final prefs = await SharedPreferences.getInstance();
     final path = (prefs.getString(_kActiveProjectPath) ?? '').trim();
@@ -111,9 +99,6 @@ class _SnagListPageViewState extends State<SnagListPageView>
     }
   }
 
-  // -----------------------------
-  // Back navigation (safe)
-  // -----------------------------
   void _handleBack() {
     if ((widget.backRouteName ?? '').trim().isNotEmpty) {
       context.pushNamed(widget.backRouteName!.trim());
@@ -123,11 +108,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
     if (nav.canPop()) nav.pop();
   }
 
-  // -----------------------------
-  // ✅ Accent colour (SnagListColour theme token)
-  // -----------------------------
   Color _snagColor(FlutterFlowTheme theme) {
-    // FlutterFlow custom color name: SnagListColour -> getter typically snagListColour
     try {
       final c = (theme as dynamic).snagListColour as Color?;
       return c ?? _ink;
@@ -137,116 +118,101 @@ class _SnagListPageViewState extends State<SnagListPageView>
   }
 
   // =========================================================
-  // ✅ TYPOGRAPHY (CONSISTENT: token + explicit family)
+  // ✅ TYPOGRAPHY (flat teal system)
   // =========================================================
-  TextStyle _titleStyle(FlutterFlowTheme theme) {
-    return theme.titleLarge.override(
-      fontFamily: _displayFont,
-      fontWeight: FontWeight.w900,
-      letterSpacing: 0.2,
-    );
-  }
+  TextStyle _pageTitle(FlutterFlowTheme t) => t.titleLarge.override(
+        fontFamily: _displayFont,
+        color: _ink,
+        fontWeight: FontWeight.w900,
+        fontSize: 30,
+        lineHeight: 1.05,
+        letterSpacing: -0.5,
+      );
 
-  TextStyle _subtitleStyle(FlutterFlowTheme theme) {
-    return theme.bodySmall.override(
-      fontFamily: _bodyFont,
-      color: _inkMute,
-    );
-  }
+  TextStyle _pageSubtitle(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+        color: _faint,
+      );
 
-  TextStyle _sectionTitleStyle(FlutterFlowTheme theme) {
-    return theme.titleSmall.override(
-      fontFamily: _displayFont,
-      fontWeight: FontWeight.w800,
-      color: _ink,
-    );
-  }
+  TextStyle _rowTitleStyle(FlutterFlowTheme theme) => const TextStyle(
+        fontFamily: _displayFont,
+        fontSize: 15,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.1,
+        color: _ink,
+      );
 
-  TextStyle _rowTitleStyle(FlutterFlowTheme theme) {
-    return theme.bodyMedium.override(
-      fontFamily: _bodyFont,
-      fontWeight: FontWeight.w900,
-      color: _ink,
-    );
-  }
+  TextStyle _rowMetaStyle(FlutterFlowTheme theme) => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: _faint,
+      );
 
-  TextStyle _rowMetaStyle(FlutterFlowTheme theme) {
-    return theme.bodySmall.override(
-      fontFamily: _bodyFont,
-      color: _inkMute,
-    );
-  }
-
-  TextStyle _pillTextStyle(FlutterFlowTheme theme) {
-    return theme.labelSmall.override(
-      fontFamily: _bodyFont,
-      fontWeight: FontWeight.w800,
-      letterSpacing: 0.2,
-    );
-  }
-
-  // ---------------------------------------
-  // ✅ Subby card shell (baseline styling)
-  // ---------------------------------------
-  Widget _subbyCardShell({
-    required FlutterFlowTheme theme,
-    required Widget child,
-    EdgeInsets padding = const EdgeInsets.all(16),
-  }) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: _paper,
-        borderRadius: BorderRadius.circular(_radius),
-        border: Border.all(
-          color: _hairline.withOpacity(0.9),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 16,
-            offset: const Offset(0, 10),
-            color: Colors.black.withOpacity(0.08),
+  Widget _minBack() => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _handleBack,
+          borderRadius: BorderRadius.circular(999),
+          splashFactory: NoSplash.splashFactory,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          hoverColor: Colors.transparent,
+          overlayColor: WidgetStateProperty.all(Colors.transparent),
+          child: Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: _surface,
+              shape: BoxShape.circle,
+              border: Border.all(color: _hairline),
+            ),
+            child: const Icon(Icons.arrow_back_ios_new_rounded,
+                size: 15, color: _inkMute),
           ),
-        ],
-      ),
-      child: Padding(padding: padding, child: child),
-    );
-  }
+        ),
+      );
 
-  Widget _divider(FlutterFlowTheme theme) {
-    return Container(
-      width: double.infinity,
-      height: 1.5,
-      color: _hairline.withOpacity(0.75),
-    );
-  }
+  Widget _flatCard(Widget child,
+          {EdgeInsets padding = const EdgeInsets.all(14)}) =>
+      Container(
+        width: double.infinity,
+        padding: padding,
+        decoration: BoxDecoration(
+          color: _paper,
+          borderRadius: BorderRadius.circular(_radius),
+          border: Border.all(color: _hairline),
+        ),
+        child: child,
+      );
 
-  // ---------------------------------------
-  // Pills
-  // ---------------------------------------
-  Widget _pill(
-    FlutterFlowTheme theme, {
-    required String text,
-    required Color bg,
-    required Color fg,
-    IconData? icon,
-  }) {
+  // Soft-tint pill.
+  Widget _softPill(String text,
+      {required Color fg, required Color bg, IconData? icon}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: bg.withOpacity(0.9)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 14, color: fg),
+            Icon(icon, size: 13, color: fg),
             const SizedBox(width: 6),
           ],
-          Text(text, style: _pillTextStyle(theme).copyWith(color: fg)),
+          Text(
+            text,
+            style: const TextStyle(
+              fontFamily: _bodyFont,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ).copyWith(color: fg),
+          ),
         ],
       ),
     );
@@ -268,17 +234,29 @@ class _SnagListPageViewState extends State<SnagListPageView>
     }
   }
 
+  // In Progress = teal accent; Open / Closed = orange; neutral = faint.
   Color _statusColor(FlutterFlowTheme theme, Color accent, String status) {
     switch (status) {
-      case 'closed':
-        return _live;
       case 'in_progress':
-        return accent;
+        return _teal;
       case 'review':
-        return _inkMute;
+        return _faint;
+      case 'closed':
       case 'open':
+        return _live;
       default:
-        return _coral;
+        return _live;
+    }
+  }
+
+  Color _statusTint(String status) {
+    switch (status) {
+      case 'in_progress':
+        return _tealTint;
+      case 'review':
+        return _surface;
+      default:
+        return const Color(0x1FE5771E); // orange @ ~12%
     }
   }
 
@@ -296,17 +274,9 @@ class _SnagListPageViewState extends State<SnagListPageView>
     }
   }
 
-  Color _severityColor(FlutterFlowTheme theme, String sev) {
-    switch (sev) {
-      case 'critical':
-        return _coral;
-      case 'major':
-        return _inkMute;
-      case 'minor':
-      default:
-        return _inkMute;
-    }
-  }
+  Color _severityColor(String sev) => sev == 'critical' ? _live : _faint;
+  Color _severityTint(String sev) =>
+      sev == 'critical' ? const Color(0x1FE5771E) : _surface;
 
   String _severityLabel(String sev) {
     switch (sev) {
@@ -321,27 +291,16 @@ class _SnagListPageViewState extends State<SnagListPageView>
   }
 
   // ---------------------------------------
-  // Project card (wired)
+  // Project card (wired) — flat
   // ---------------------------------------
   Widget _buildProjectCard(FlutterFlowTheme theme, Color accent) {
     if (_projectRef == null) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: _contentHPad),
-        child: _subbyCardShell(
-          theme: theme,
-          padding: const EdgeInsets.all(14),
-          child: Row(
+        child: _flatCard(
+          Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: _hairline.withOpacity(0.35),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child:
-                    Icon(Icons.folder_off_rounded, color: _inkMute, size: 22),
-              ),
+              const Icon(Icons.folder_off_rounded, color: _faint, size: 22),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -349,10 +308,8 @@ class _SnagListPageViewState extends State<SnagListPageView>
                   children: [
                     Text('No project selected', style: _rowTitleStyle(theme)),
                     const SizedBox(height: 4),
-                    Text(
-                      'Select a project first to view snags.',
-                      style: _rowMetaStyle(theme),
-                    ),
+                    Text('Select a project first to view snags.',
+                        style: _rowMetaStyle(theme)),
                   ],
                 ),
               ),
@@ -369,28 +326,16 @@ class _SnagListPageViewState extends State<SnagListPageView>
         builder: (context, snap) {
           final raw = snap.data?.data();
           final data = raw is Map<String, dynamic> ? raw : <String, dynamic>{};
-
           final name = (data['name'] ??
                   data['projectName'] ??
                   data['title'] ??
                   'Project')
               .toString();
 
-          return _subbyCardShell(
-            theme: theme,
-            padding: const EdgeInsets.all(14),
-            child: Row(
+          return _flatCard(
+            Row(
               children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: accent.withOpacity(0.14),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child:
-                      Icon(Icons.fact_check_rounded, color: accent, size: 22),
-                ),
+                const Icon(Icons.fact_check_outlined, color: _teal, size: 22),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -412,63 +357,48 @@ class _SnagListPageViewState extends State<SnagListPageView>
   }
 
   // ---------------------------------------
-  // Sticky tabs
+  // Underline tabs
   // ---------------------------------------
   Widget _buildTabs(FlutterFlowTheme theme, Color accent) {
-    return Padding(
+    return Container(
+      color: _paper,
       padding: const EdgeInsets.symmetric(horizontal: _contentHPad),
-      child: _subbyCardShell(
-        theme: theme,
-        padding: const EdgeInsets.all(6),
-        child: TabBar(
-          controller: _tabController,
-          indicator: BoxDecoration(
-            color: accent,
-            borderRadius: BorderRadius.circular(999),
-          ),
-          labelColor: _paper,
-          unselectedLabelColor: _inkMute,
-          labelStyle: theme.bodyMedium.override(
-            fontFamily: _bodyFont,
-            fontWeight: FontWeight.w900,
-          ),
-          unselectedLabelStyle: theme.bodyMedium.override(
-            fontFamily: _bodyFont,
-            fontWeight: FontWeight.w800,
-          ),
-          tabs: const [
-            Tab(text: 'Open'),
-            Tab(text: 'In Progress'),
-            Tab(text: 'Closed'),
-          ],
+      alignment: Alignment.bottomLeft,
+      child: TabBar(
+        controller: _tabController,
+        isScrollable: true,
+        tabAlignment: TabAlignment.start,
+        labelPadding: const EdgeInsets.only(right: 24),
+        indicatorSize: TabBarIndicatorSize.label,
+        indicatorColor: _teal,
+        indicatorWeight: 2,
+        dividerColor: _hairlineOnSurface,
+        labelColor: _teal,
+        unselectedLabelColor: _faint,
+        labelStyle: theme.bodyMedium.override(
+          fontFamily: _bodyFont,
+          fontWeight: FontWeight.w800,
+          fontSize: 14,
         ),
+        unselectedLabelStyle: theme.bodyMedium.override(
+          fontFamily: _bodyFont,
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
+        ),
+        tabs: const [
+          Tab(text: 'Open'),
+          Tab(text: 'In Progress'),
+          Tab(text: 'Closed'),
+        ],
       ),
     );
   }
 
   // ---------------------------------------
-  // Snag counts row
+  // Snag counts row (soft pills)
   // ---------------------------------------
   Widget _buildCountsRow(FlutterFlowTheme theme, Color accent) {
-    if (_projectRef == null) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: _contentHPad),
-        child: _subbyCardShell(
-          theme: theme,
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Select a project to load counts.',
-                  style: _rowMetaStyle(theme),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
+    if (_projectRef == null) return const SizedBox.shrink();
 
     Widget countPill(String label, String statusKey, IconData icon) {
       return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -480,42 +410,29 @@ class _SnagListPageViewState extends State<SnagListPageView>
         builder: (context, snap) {
           final n = snap.data?.docs.length ?? 0;
           final c = _statusColor(theme, accent, statusKey);
-          return _pill(
-            theme,
-            text: '$label $n',
-            bg: c.withOpacity(0.14),
-            fg: c,
-            icon: icon,
-          );
+          return _softPill('$label $n',
+              fg: c, bg: _statusTint(statusKey), icon: icon);
         },
       );
     }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: _contentHPad),
-      child: _subbyCardShell(
-        theme: theme,
-        padding: const EdgeInsets.all(14),
-        child: Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: [
-            countPill('Open', 'open', Icons.circle_rounded),
-            countPill('In Progress', 'in_progress', Icons.play_arrow_rounded),
-            countPill('Closed', 'closed', Icons.check_circle_rounded),
-          ],
-        ),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          countPill('Open', 'open', Icons.circle),
+          countPill('In Progress', 'in_progress', Icons.play_arrow_rounded),
+          countPill('Closed', 'closed', Icons.check_circle),
+        ],
       ),
     );
   }
 
-  // ---------------------------------------
-  // Snag list stream for a tab
-  // ---------------------------------------
   Stream<QuerySnapshot<Map<String, dynamic>>>? _snagStreamForTab(int tabIndex) {
     if (_projectRef == null) return null;
     final statusKey = _tabStatusKey(tabIndex);
-
     return FirebaseFirestore.instance
         .collection('snags')
         .where('projectRef', isEqualTo: _projectRef)
@@ -525,7 +442,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
   }
 
   // ---------------------------------------
-  // Snag card
+  // Snag row (hairline-ruled, flat)
   // ---------------------------------------
   Widget _buildSnagCard(
     FlutterFlowTheme theme,
@@ -541,124 +458,114 @@ class _SnagListPageViewState extends State<SnagListPageView>
         (d['assignedToName'] ?? d['assignedTo'] ?? '').toString().trim();
     final photoUrl = (d['photoUrl'] ?? d['photo_url'] ?? '').toString().trim();
 
-    final sc = _statusColor(theme, accent, status);
-    final sevC = _severityColor(theme, severity);
+    final sub = assignedName.isNotEmpty ? '$area · $assignedName' : area;
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(_radius),
-      onTap: () {
-        final route = (widget.snagDetailRouteName ?? '').trim();
-        if (route.isEmpty) return;
-
-        context.pushNamed(
-          route,
-          queryParameters: {
-            'snagRef': serializeParam(snagRef, ParamType.DocumentReference),
-          }.withoutNulls,
-        );
-      },
-      child: _subbyCardShell(
-        theme: theme,
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: _surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _hairline.withOpacity(0.9)),
-                image: photoUrl.isNotEmpty
-                    ? DecorationImage(
-                        image: NetworkImage(photoUrl),
-                        fit: BoxFit.cover,
-                      )
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          final route = (widget.snagDetailRouteName ?? '').trim();
+          if (route.isEmpty) return;
+          context.pushNamed(
+            route,
+            queryParameters: {
+              'snagRef': serializeParam(snagRef, ParamType.DocumentReference),
+            }.withoutNulls,
+          );
+        },
+        splashFactory: NoSplash.splashFactory,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
+        child: Container(
+          decoration: const BoxDecoration(
+            border:
+                Border(bottom: BorderSide(color: _hairlineOnSurface, width: 1)),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: _surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: _hairlineOnSurface),
+                  image: photoUrl.isNotEmpty
+                      ? DecorationImage(
+                          image: NetworkImage(photoUrl), fit: BoxFit.cover)
+                      : null,
+                ),
+                child: photoUrl.isEmpty
+                    ? const Icon(Icons.photo_camera_outlined,
+                        color: _faint, size: 22)
                     : null,
               ),
-              child: photoUrl.isEmpty
-                  ? Icon(Icons.photo_camera_rounded, color: _inkMute, size: 22)
-                  : null,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: _rowTitleStyle(theme), maxLines: 2),
-                  const SizedBox(height: 4),
-                  Text(area, style: _rowMetaStyle(theme)),
-                  if (assignedName.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Text('Assigned: $assignedName',
-                        style: _rowMetaStyle(theme)),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: _rowTitleStyle(theme), maxLines: 2),
+                    const SizedBox(height: 3),
+                    Text(sub, style: _rowMetaStyle(theme)),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        _softPill(_statusLabel(status),
+                            fg: _statusColor(theme, accent, status),
+                            bg: _statusTint(status)),
+                        const SizedBox(width: 8),
+                        _softPill(_severityLabel(severity),
+                            fg: _severityColor(severity),
+                            bg: _severityTint(severity)),
+                      ],
+                    ),
                   ],
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      _pill(
-                        theme,
-                        text: _statusLabel(status),
-                        bg: sc.withOpacity(0.14),
-                        fg: sc,
-                      ),
-                      const SizedBox(width: 8),
-                      _pill(
-                        theme,
-                        text: _severityLabel(severity),
-                        bg: sevC.withOpacity(0.12),
-                        fg: sevC,
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
   // ---------------------------------------
-  // Empty state
+  // Empty state — flat
   // ---------------------------------------
   Widget _buildEmptyState(FlutterFlowTheme theme, String label) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: _contentHPad),
-      child: _subbyCardShell(
-        theme: theme,
+      child: _flatCard(
         padding: const EdgeInsets.all(18),
-        child: Column(
+        Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: _sectionTitleStyle(theme)),
+            Text(label, style: _rowTitleStyle(theme)),
             const SizedBox(height: 6),
-            Text(
-              'No items here yet.',
-              style: _rowMetaStyle(theme),
-            ),
+            Text('No items here yet.', style: _rowMetaStyle(theme)),
           ],
         ),
       ),
     );
   }
 
-  // ---------------------------------------
-  // Add snag
-  // ---------------------------------------
   void _handleAddSnag() {
     final route = (widget.addSnagRouteName ?? '').trim();
     if (route.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          backgroundColor: _ink,
           content: Text(
             'Add Snag page not linked yet.',
             style: FlutterFlowTheme.of(context).bodyMedium.override(
-                  fontFamily: FlutterFlowTheme.of(context).bodyMediumFamily,
+                  fontFamily: _bodyFont,
                   color: _paper,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w700,
                 ),
           ),
         ),
@@ -674,9 +581,6 @@ class _SnagListPageViewState extends State<SnagListPageView>
     );
   }
 
-  // -----------------------------
-  // Build page
-  // -----------------------------
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
@@ -692,69 +596,22 @@ class _SnagListPageViewState extends State<SnagListPageView>
         child: Stack(
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: _vPad),
+              padding: const EdgeInsets.only(top: _vPad),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header
+                  // Header — minimal back + big title
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: _hPad),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        InkWell(
-                          onTap: _handleBack,
-                          borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: _paper,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: _hairline.withOpacity(0.9),
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.arrow_back_rounded,
-                              size: 22,
-                              color: _ink,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: accent,
-                            borderRadius: BorderRadius.circular(_radius),
-                          ),
-                          child: const Icon(
-                            Icons.checklist_rounded,
-                            color: _paper,
-                            size: 22,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Snag List',
-                                style: _titleStyle(theme).copyWith(
-                                  color: _ink,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Capture defects and close them out',
-                                style: _subtitleStyle(theme),
-                              ),
-                            ],
-                          ),
-                        ),
+                        _minBack(),
+                        const SizedBox(height: 18),
+                        Text('Snag List', style: _pageTitle(theme)),
+                        const SizedBox(height: 8),
+                        Text('Capture defects and close them out',
+                            style: _pageSubtitle(theme)),
                       ],
                     ),
                   ),
@@ -771,13 +628,13 @@ class _SnagListPageViewState extends State<SnagListPageView>
                           ),
                           SliverToBoxAdapter(
                             child: Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.only(bottom: 14),
                               child: _buildProjectCard(theme, accent),
                             ),
                           ),
                           SliverToBoxAdapter(
                             child: Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.only(bottom: 16),
                               child: _buildCountsRow(theme, accent),
                             ),
                           ),
@@ -786,12 +643,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
                             delegate: _StickyHeaderDelegate(
                               minHeight: _stickyTabsHeight,
                               maxHeight: _stickyTabsHeight,
-                              child: Container(
-                                color: _paper,
-                                padding: const EdgeInsets.only(bottom: 12),
-                                alignment: Alignment.bottomCenter,
-                                child: _buildTabs(theme, accent),
-                              ),
+                              child: _buildTabs(theme, accent),
                             ),
                           ),
                         ];
@@ -826,26 +678,23 @@ class _SnagListPageViewState extends State<SnagListPageView>
                                     Padding(
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: _contentHPad),
-                                      child: _subbyCardShell(
-                                        theme: theme,
+                                      child: _flatCard(
                                         padding: const EdgeInsets.all(18),
-                                        child: Row(
+                                        Row(
                                           children: [
-                                            SizedBox(
+                                            const SizedBox(
                                               width: 18,
                                               height: 18,
                                               child: CircularProgressIndicator(
                                                 strokeWidth: 2,
                                                 valueColor:
                                                     AlwaysStoppedAnimation<
-                                                        Color>(accent),
+                                                        Color>(_teal),
                                               ),
                                             ),
                                             const SizedBox(width: 12),
-                                            Text(
-                                              'Loading snags…',
-                                              style: _rowMetaStyle(theme),
-                                            ),
+                                            Text('Loading snags…',
+                                                style: _rowMetaStyle(theme)),
                                           ],
                                         ),
                                       ),
@@ -863,30 +712,21 @@ class _SnagListPageViewState extends State<SnagListPageView>
                                 return ListView(
                                   padding:
                                       const EdgeInsets.fromLTRB(0, 12, 0, 110),
-                                  children: [
-                                    _buildEmptyState(theme, label),
-                                  ],
+                                  children: [_buildEmptyState(theme, label)],
                                 );
                               }
 
-                              return ListView.separated(
-                                padding:
-                                    const EdgeInsets.fromLTRB(0, 12, 0, 110),
+                              return ListView.builder(
+                                padding: const EdgeInsets.fromLTRB(
+                                    _contentHPad, 4, _contentHPad, 110),
                                 itemCount: docs.length,
-                                separatorBuilder: (_, __) =>
-                                    const SizedBox(height: _gap),
                                 itemBuilder: (context, i) {
                                   final doc = docs[i];
-                                  final d = doc.data();
-                                  return Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: _contentHPad),
-                                    child: _buildSnagCard(
-                                      theme,
-                                      accent,
-                                      snagRef: doc.reference,
-                                      d: d,
-                                    ),
+                                  return _buildSnagCard(
+                                    theme,
+                                    accent,
+                                    snagRef: doc.reference,
+                                    d: doc.data(),
                                   );
                                 },
                               );
@@ -900,45 +740,40 @@ class _SnagListPageViewState extends State<SnagListPageView>
               ),
             ),
 
-            // Floating Add button (Subby style)
+            // Floating Add button — flat teal
             Positioned(
               left: _hPad,
               right: _hPad,
               bottom: 18,
               child: SafeArea(
                 top: false,
-                child: InkWell(
-                  onTap: _handleAddSnag,
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: _spark,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          blurRadius: 18,
-                          offset: const Offset(0, 10),
-                          color: Colors.black.withOpacity(0.18),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.add_rounded,
-                            color: _sparkInk, size: 22),
-                        const SizedBox(width: 10),
-                        Text(
-                          'Add Snag',
-                          style: theme.bodyMedium.override(
-                            fontFamily: _bodyFont,
-                            color: _sparkInk,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.2,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: _handleAddSnag,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: _teal,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.add_rounded,
+                              color: _paper, size: 20),
+                          const SizedBox(width: 9),
+                          Text(
+                            'Add Snag',
+                            style: theme.bodyMedium.override(
+                              fontFamily: _bodyFont,
+                              color: _paper,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -974,7 +809,7 @@ class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return child;
+    return SizedBox.expand(child: child);
   }
 
   @override

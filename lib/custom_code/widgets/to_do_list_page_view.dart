@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -27,23 +29,23 @@ class ToDoListPageView extends StatefulWidget {
 
 class _ToDoListPageViewState extends State<ToDoListPageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  // less-is-more system · ported from Clutch Putt · lime → yellow.
+  // Synced with DashboardPageView / AddProjectsPageView (flat teal system).
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF16202E);
+  static const Color _ink = Color(0xFF017374); // text, chrome, accent
   static const Color _inkMute = Color(0xFF5A6675);
+  static const Color _faint = Color(0xFF93A0B0); // muted labels, chevrons
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _hairline = Color(0xFFEEF1F4);
-  static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
-  // Brand accent — YELLOW. Always ink foreground, never white.
-  static const Color _spark = Color(0xFFAEE03F); // primary CTA / ranked accent
-  static const Color _sparkInk = Color(0xFF16202E);
+  static const Color _hairline = Color(0xFFEEF1F2);
+  static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
+  // Brand accent — TEAL.
+  static const Color _teal = Color(0xFF017374);
+  static const Color _tealTint = Color(0xFFE3F4F2);
   // Status
-  static const Color _live =
-      Color(0xFFFF6A2B); // orange — live / open-now / done / warning
-  static const Color _coral = Color(0xFFE0531C);
+  static const Color _live = Color(0xFFE5771E); // orange — done / warning
+  static const Color _coral = Color(0xFFE5771E);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -51,7 +53,7 @@ class _ToDoListPageViewState extends State<ToDoListPageView> {
   // ────────────────────────────────────────────────────────────────────
 
   static const double _hPad = 24;
-  static const double _vPad = 24;
+  static const double _vPad = 14;
   static const double _radius = 12;
 
   static const String _kActiveProjectPath = 'subby_active_project_path';
@@ -79,40 +81,64 @@ class _ToDoListPageViewState extends State<ToDoListPageView> {
     if (nav.canPop()) nav.pop();
   }
 
-  TextStyle _titleStyle(FlutterFlowTheme theme) {
-    return theme.titleLarge.override(
-      fontFamily: _displayFont,
-      fontWeight: FontWeight.w900,
-      letterSpacing: 0.2,
-    );
-  }
+  // =========================================================
+  // ✅ TYPOGRAPHY (flat teal system)
+  // =========================================================
+  TextStyle _pageTitle(FlutterFlowTheme t) => t.titleLarge.override(
+        fontFamily: _displayFont,
+        color: _ink,
+        fontWeight: FontWeight.w900,
+        fontSize: 30,
+        lineHeight: 1.05,
+        letterSpacing: -0.5,
+      );
 
-  TextStyle _subtitleStyle(FlutterFlowTheme theme) {
-    return theme.bodySmall.override(
-      fontFamily: _bodyFont,
-      color: _inkMute,
-    );
-  }
+  TextStyle _pageSubtitle(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+        color: _faint,
+      );
 
-  Widget _cardShell(FlutterFlowTheme theme, Widget child) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _paper,
-        borderRadius: BorderRadius.circular(_radius),
-        border: Border.all(color: _hairline.withOpacity(0.9)),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 14,
-            offset: const Offset(0, 10),
-            color: Colors.black.withOpacity(0.06),
+  // Minimal circular back button (matches AddProjectsPageView).
+  Widget _minBack() => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _handleBack,
+          borderRadius: BorderRadius.circular(999),
+          splashFactory: NoSplash.splashFactory,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          hoverColor: Colors.transparent,
+          overlayColor: WidgetStateProperty.all(Colors.transparent),
+          child: Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: _surface,
+              shape: BoxShape.circle,
+              border: Border.all(color: _hairline),
+            ),
+            child: const Icon(Icons.arrow_back_ios_new_rounded,
+                size: 15, color: _inkMute),
           ),
-        ],
-      ),
-      child: child,
-    );
-  }
+        ),
+      );
+
+  // Flat hairline card (no shadow).
+  Widget _flatCard(Widget child,
+          {EdgeInsets padding = const EdgeInsets.all(16)}) =>
+      Container(
+        width: double.infinity,
+        padding: padding,
+        decoration: BoxDecoration(
+          color: _paper,
+          borderRadius: BorderRadius.circular(_radius),
+          border: Border.all(color: _hairline),
+        ),
+        child: child,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -124,61 +150,25 @@ class _ToDoListPageViewState extends State<ToDoListPageView> {
       color: _paper,
       child: SafeArea(
         child: Padding(
-          padding:
-              const EdgeInsets.symmetric(horizontal: _hPad, vertical: _vPad),
+          padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, _hPad),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
-              Row(
-                children: [
-                  InkWell(
-                    onTap: _handleBack,
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: _paper,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: _hairline.withOpacity(0.9),
-                        ),
-                      ),
-                      child: Icon(
-                        Icons.arrow_back_rounded,
-                        size: 22,
-                        color: _ink,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('To Do List',
-                            style: _titleStyle(theme).copyWith(color: _ink)),
-                        const SizedBox(height: 4),
-                        Text('Tasks and assignments',
-                            style: _subtitleStyle(theme)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
+              _minBack(),
+              const SizedBox(height: 18),
+              Text('To Do List', style: _pageTitle(theme)),
+              const SizedBox(height: 8),
+              Text('Tasks and assignments', style: _pageSubtitle(theme)),
+              const SizedBox(height: 24),
 
               // Project preview (proof it’s wired)
               if (_projectRef == null)
-                _cardShell(
-                  theme,
+                _flatCard(
                   Text(
                     'No project selected.',
                     style: theme.bodyMedium.override(
                       fontFamily: _bodyFont,
-                      color: _inkMute,
+                      color: _faint,
                     ),
                   ),
                 )
@@ -196,8 +186,7 @@ class _ToDoListPageViewState extends State<ToDoListPageView> {
                             'Project')
                         .toString();
 
-                    return _cardShell(
-                      theme,
+                    return _flatCard(
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -206,7 +195,8 @@ class _ToDoListPageViewState extends State<ToDoListPageView> {
                             style: theme.titleMedium.override(
                               fontFamily: _displayFont,
                               color: _ink,
-                              fontWeight: FontWeight.w900,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.3,
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -214,7 +204,7 @@ class _ToDoListPageViewState extends State<ToDoListPageView> {
                             'To Do content coming next.',
                             style: theme.bodySmall.override(
                               fontFamily: _bodyFont,
-                              color: _inkMute,
+                              color: _faint,
                             ),
                           ),
                         ],

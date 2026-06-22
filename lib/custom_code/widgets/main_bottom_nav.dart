@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/custom_code/widgets/index.dart'; // (kept if FF expects it)
 
 // Subby bottom nav — matches DashboardPageView v4 (Option C).
@@ -48,13 +50,17 @@ class MainBottomNav extends StatefulWidget {
 
 class _MainBottomNavState extends State<MainBottomNav> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _teal = Color(0xFF017374); // active
+  static const Color _teal = Color(0xFF017374); // active (default)
+  static const Color _orange = Color(0xFFE5771E); // active (Directory)
   static const Color _faint = Color(0xFF93A0B0); // inactive
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _hairline = Color(0xFFEEF1F2);
   // ────────────────────────────────────────────────────────────────────
 
   static const double _barHeight = 72;
+
+  // Active accent per tab — Directory (1) lights up orange, the rest teal.
+  Color _activeColorFor(int index) => index == 1 ? _orange : _teal;
 
   String? _routeFor(int index) {
     switch (index) {
@@ -95,7 +101,7 @@ class _MainBottomNavState extends State<MainBottomNav> {
     required String label,
   }) {
     final bool selected = index == widget.currentIndex;
-    final Color color = selected ? _teal : _faint;
+    final Color color = selected ? _activeColorFor(index) : _faint;
 
     return Expanded(
       child: Material(
