@@ -598,7 +598,7 @@ class _HomePageViewState extends State<HomePageView> {
               children: [
                 _backButton(),
                 const SizedBox(height: 20),
-                Text('Construction Directory', style: _titleStyle),
+                Text('Subby Directory', style: _titleStyle),
                 const SizedBox(height: 8),
                 Text('Find trades, pros & suppliers near you.',
                     style: _subtitleStyle),
