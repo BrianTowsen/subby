@@ -10,8 +10,11 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status bar over the dark hero)
 
 class ProjectDetailPageView extends StatefulWidget {
@@ -473,6 +476,60 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
     }
   }
 
+  // =========================================================
+  // ✅ Delete document (Firestore doc + Storage file)
+  // =========================================================
+  Future<void> _removeProjectDocument(
+    QueryDocumentSnapshot<Map<String, dynamic>> docSnap,
+  ) async {
+    final data = docSnap.data();
+    try {
+      // Best-effort: delete the underlying Storage object first.
+      final storagePath =
+          (data['storagePath'] ?? data['storage_path'])?.toString().trim();
+      if (storagePath != null && storagePath.isNotEmpty) {
+        try {
+          await FirebaseStorage.instance.ref().child(storagePath).delete();
+        } catch (e) {
+          debugPrint('⚠️ Storage delete skipped/failed for $storagePath: $e');
+        }
+      } else {
+        final url = (data['fileUrl'] ??
+                data['url'] ??
+                data['file_url'] ??
+                data['downloadUrl'] ??
+                data['download_url'])
+            ?.toString()
+            .trim();
+        if (url != null && url.isNotEmpty) {
+          try {
+            await FirebaseStorage.instance.refFromURL(url).delete();
+          } catch (e) {
+            debugPrint('⚠️ Storage delete skipped/failed for url: $e');
+          }
+        }
+      }
+
+      // Delete the Firestore record (this is what removes it from the list).
+      await docSnap.reference.delete();
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text('Document deleted.')),
+        );
+    } catch (e) {
+      debugPrint('🔥 Failed deleting project_documents doc: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text('Could not delete document.')),
+        );
+    }
+  }
+
   Widget _actionModuleRow({
     required FlutterFlowTheme theme,
     required IconData icon,
@@ -660,6 +717,112 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                       onTap: () async {
                         Navigator.pop(ctx);
                         await _removeProjectListingDoc(projectListingDocRef);
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    _actionModuleRow(
+                      theme: theme,
+                      icon: Icons.close_rounded,
+                      iconColor: _inkMute,
+                      title: 'Cancel',
+                      subtitle: 'Close this menu.',
+                      onTap: () => Navigator.pop(ctx),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showRemoveDocumentSheet({
+    required FlutterFlowTheme theme,
+    required Color accent,
+    required String documentTitle,
+    required QueryDocumentSnapshot<Map<String, dynamic>> docSnap,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: false,
+      builder: (ctx) {
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            child: Container(
+              decoration: BoxDecoration(
+                color: _paper,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _hairline.withOpacity(0.75)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.10),
+                    blurRadius: 18,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 44,
+                        height: 5,
+                        margin: const EdgeInsets.only(bottom: 10),
+                        decoration: BoxDecoration(
+                          color: _hairline.withOpacity(0.55),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            documentTitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.titleMedium.override(
+                              fontFamily: _displayFont,
+                              fontWeight: FontWeight.w900,
+                              color: _ink,
+                            ),
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () => Navigator.pop(ctx),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.all(6),
+                            child: Icon(
+                              Icons.close_rounded,
+                              color: _inkMute,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    _actionModuleRow(
+                      theme: theme,
+                      icon: Icons.delete_outline_rounded,
+                      iconColor: _coral,
+                      title: 'Delete document',
+                      subtitle:
+                          'Permanently removes this document and its file.',
+                      destructive: true,
+                      onTap: () async {
+                        Navigator.pop(ctx);
+                        await _removeProjectDocument(docSnap);
                       },
                     ),
                     const SizedBox(height: 10),
@@ -1349,6 +1512,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
     required String subtitle,
     required IconData icon,
     VoidCallback? onTap,
+    VoidCallback? onDelete,
   }) {
     return _tapCard(
       onTap: onTap,
@@ -1359,7 +1523,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
           border: Border.all(color: _hairline.withOpacity(0.9)),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.fromLTRB(14, 14, 10, 14),
           child: Row(
             children: [
               Container(
@@ -1404,6 +1568,21 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
               ),
               const SizedBox(width: 8),
               Icon(Icons.open_in_new_rounded, size: 18, color: _inkMute),
+              if (onDelete != null) ...[
+                const SizedBox(width: 2),
+                InkWell(
+                  onTap: onDelete,
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: Icon(
+                      Icons.delete_outline_rounded,
+                      size: 20,
+                      color: _inkMute,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -1883,6 +2062,16 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                             subtitle: '$type • Updated $when',
                             icon: Icons.picture_as_pdf_rounded,
                             onTap: () => _openDocumentRow(docSnap),
+                            onDelete: () {
+                              FocusScope.of(context).unfocus();
+                              _showRemoveDocumentSheet(
+                                theme: theme,
+                                accent: projectsAccent,
+                                documentTitle:
+                                    title.isEmpty ? 'Document' : title,
+                                docSnap: docSnap,
+                              );
+                            },
                           ),
                         );
                       }),
