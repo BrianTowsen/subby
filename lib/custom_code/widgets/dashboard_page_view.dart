@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 // ======================= DashboardPageView (FULL FILE) =======================
 //
 // v5 — "Focus" home: most-recent project as a HERO card with a large
@@ -511,7 +513,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         children: [
           _accentMarker(_ink),
           const SizedBox(width: 10),
-          Expanded(child: Text('Building Projects', style: _stepHeadlineStyle)),
+          Expanded(
+              child: Text('My Building Projects', style: _stepHeadlineStyle)),
         ],
       );
 
@@ -654,6 +657,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               ),
             ),
 
+            // Shared with me (added as a listing) — read-only projects.
+            _buildSharedSection(),
+
             // Archived Building Projects — collapsed list below the active set.
             _buildArchivedSection(),
           ],
@@ -694,6 +700,158 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           ],
         );
       },
+    );
+  }
+
+  // -----------------------------
+  // Shared Building Projects — projects this user was added to AS A LISTING.
+  // Resolves the user's subby_listing(s) → project_listings → projects.
+  // -----------------------------
+  Future<List<DocumentSnapshot<Map<String, dynamic>>>>
+      _loadSharedProjects() async {
+    final userRef = currentUserReference;
+    if (userRef == null) return [];
+    try {
+      final listingsSnap = await FirebaseFirestore.instance
+          .collection('subby_listings')
+          .where('ownerRef', isEqualTo: userRef)
+          .limit(10)
+          .get();
+      if (listingsSnap.docs.isEmpty) return [];
+
+      final listingRefs =
+          listingsSnap.docs.map((d) => d.reference).take(10).toList();
+
+      final plSnap = await FirebaseFirestore.instance
+          .collection('project_listings')
+          .where('listingRef', whereIn: listingRefs)
+          .get();
+
+      final seen = <String>{};
+      final futures = <Future<DocumentSnapshot<Map<String, dynamic>>>>[];
+      for (final d in plSnap.docs) {
+        final pr = d.data()['projectRef'];
+        if (pr is DocumentReference && seen.add(pr.path)) {
+          futures.add(
+            pr
+                .withConverter<Map<String, dynamic>>(
+                  fromFirestore: (s, _) => s.data() ?? <String, dynamic>{},
+                  toFirestore: (m, _) => m,
+                )
+                .get(),
+          );
+        }
+      }
+      final results = await Future.wait(futures);
+      return results.where((s) => s.exists).toList();
+    } catch (e) {
+      debugPrint('🔥 Failed to load shared projects: $e');
+      return [];
+    }
+  }
+
+  Widget _buildSharedSection() {
+    if (currentUserReference == null) return const SizedBox.shrink();
+    return FutureBuilder<List<DocumentSnapshot<Map<String, dynamic>>>>(
+      future: _loadSharedProjects(),
+      builder: (context, snap) {
+        final docs = snap.data ?? const [];
+        if (docs.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 30),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: _hPad),
+              child: _sharedSectionHeader(),
+            ),
+            const SizedBox(height: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: _hPad),
+              child: Text(
+                "Projects you've been added to as a listing.",
+                style: _tileSubtitleStyle.copyWith(fontSize: 12),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: _hPad),
+              child: Column(children: [for (final d in docs) _sharedRow(d)]),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _sharedSectionHeader() => Row(
+        children: [
+          _accentMarker(_ink),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text('Shared Building Projects', style: _stepHeadlineStyle),
+          ),
+        ],
+      );
+
+  Widget _sharedRow(DocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data() ?? <String, dynamic>{};
+    final name = (data['name'] as String?)?.trim() ?? '';
+    final city = (data['city'] as String?)?.trim() ?? '';
+    final province = (data['province'] as String?)?.trim() ?? '';
+    final owner = (data['ownerName'] as String?)?.trim() ?? '';
+    final loc = [city, province].where((x) => x.isNotEmpty).join(', ');
+    final sub = owner.isNotEmpty
+        ? 'Shared by $owner${loc.isNotEmpty ? ' • $loc' : ''}'
+        : (loc.isEmpty ? 'Shared with you' : 'Shared with you • $loc');
+
+    return InkWell(
+      onTap: () => _goToProject(doc.reference),
+      child: Container(
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: Color(0xFFF1F4F7))),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 11),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(
+                color: Color(0xFFE3F4F2),
+                shape: BoxShape.circle,
+              ),
+              child:
+                  const Icon(Icons.visibility_outlined, size: 18, color: _ink),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name.isEmpty ? 'Untitled project' : name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _tileTitleStyle.copyWith(fontSize: 14),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    sub,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _tileSubtitleStyle,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.chevron_right_rounded,
+                size: 20, color: Color(0xFFCDD6E2)),
+          ],
+        ),
+      ),
     );
   }
 
