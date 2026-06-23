@@ -67,6 +67,7 @@ class _ProjectDetailPageWidgetState extends State<ProjectDetailPageWidget> {
             listingDetailRouteName: 'listingDetailPage',
             listingParamName: '',
             documentUploadRouteName: 'documentUploadPage',
+            toDoListRouteName: 'toDoListPage',
           ),
         ),
       ),

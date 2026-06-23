@@ -55,7 +55,7 @@ class _EditProjectPageWidgetState extends State<EditProjectPageWidget> {
             width: double.infinity,
             height: double.infinity,
             afterSaveRouteName: 'ProjectDetailPage',
-            afterDeleteRouteName: 'MyProjectsHomePage',
+            afterDeleteRouteName: 'dashboardPage',
             projectRef: widget.projectRef,
           ),
         ),
