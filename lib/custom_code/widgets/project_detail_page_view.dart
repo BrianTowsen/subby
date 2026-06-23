@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -1254,12 +1256,200 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
   }
 
   // Full-width tinted module row (C3 · tinted).
+  // =========================================================
+  // ✅ Privacy / visibility wiring
+  //   • Modules  → projects.moduleVisibility { key: 'shared'|'private' }
+  //   • Documents→ project_documents.visibility 'shared'|'private'
+  //                project_documents.category   'drawing'|'document'
+  // =========================================================
+  static const Map<String, String> _defaultModuleVis = {
+    'timeline': 'shared',
+    'snagList': 'shared',
+    'toDo': 'shared',
+    'projectCost': 'private',
+    'getQuotes': 'private',
+  };
+
+  Map<String, String> _moduleVisMap() {
+    final out = Map<String, String>.from(_defaultModuleVis);
+    final raw = _projectData['moduleVisibility'];
+    if (raw is Map) {
+      raw.forEach((k, v) {
+        final val = v.toString();
+        if (val == 'shared' || val == 'private') out[k.toString()] = val;
+      });
+    }
+    return out;
+  }
+
+  String _moduleVisFor(String key) => _moduleVisMap()[key] ?? 'private';
+
+  Future<void> _toggleModuleVis(String key) async {
+    final ref = widget.projectRef;
+    if (ref == null) return;
+    final next = _moduleVisFor(key) == 'shared' ? 'private' : 'shared';
+
+    // Optimistic local update so the icon flips immediately.
+    final mv = _moduleVisMap()..[key] = next;
+    _projectData = Map<String, dynamic>.from(_projectData)
+      ..['moduleVisibility'] = mv;
+    if (mounted) setState(() {});
+
+    try {
+      await ref.set(
+        <String, dynamic>{
+          'moduleVisibility': <String, dynamic>{key: next},
+        },
+        SetOptions(merge: true),
+      );
+    } catch (e) {
+      debugPrint('🔥 Failed to update module visibility: $e');
+    }
+  }
+
+  String _docCategory(Map<String, dynamic> d) {
+    final c = (d['category'] ?? d['cat'] ?? '').toString().toLowerCase();
+    if (c.contains('draw') || c.contains('plan')) return 'drawing';
+    return 'document';
+  }
+
+  String _docVisibility(Map<String, dynamic> d) {
+    final v = (d['visibility'] ?? 'private').toString().toLowerCase();
+    return v == 'shared' ? 'shared' : 'private';
+  }
+
+  Future<void> _toggleDocVis(
+    DocumentReference<Map<String, dynamic>> ref,
+    String current,
+  ) async {
+    final next = current == 'shared' ? 'private' : 'shared';
+    try {
+      await ref.update(<String, dynamic>{
+        'visibility': next,
+        'updatedAt': Timestamp.now(),
+      });
+    } catch (e) {
+      debugPrint('🔥 Failed to update document visibility: $e');
+    }
+  }
+
+  IconData _docCategoryIcon(String category) => category == 'drawing'
+      ? Icons.architecture_rounded
+      : Icons.description_rounded;
+
+  // Small eye/lock toggle used on module + document rows.
+  Widget _visToggle({
+    required String visibility,
+    required VoidCallback onTap,
+  }) {
+    final shared = visibility == 'shared';
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Container(
+          width: 30,
+          height: 30,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: shared ? _tealTint : _surface,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            shared ? Icons.visibility_outlined : Icons.lock_outline_rounded,
+            size: 16,
+            color: shared ? _teal : _inkMute,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _docGroupLabel(FlutterFlowTheme theme, String text) => Padding(
+        padding: const EdgeInsets.only(top: 2, bottom: 10),
+        child: Text(
+          text,
+          style: theme.labelSmall.override(
+            fontFamily: _bodyFont,
+            color: _inkMute,
+            letterSpacing: 0.9,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      );
+
+  List<Widget> _docRowWidgets(
+    FlutterFlowTheme theme,
+    Color accent,
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> rows,
+  ) {
+    return List.generate(rows.length, (i) {
+      final docSnap = rows[i];
+      final d = docSnap.data();
+      final title = (d['title'] ?? d['name'] ?? 'Document').toString().trim();
+      final type = (d['type'] ?? d['fileType'] ?? 'File').toString().trim();
+      final updatedAt = d['updatedAt'] ?? d['createdAt'];
+      final when = (updatedAt is Timestamp)
+          ? dateTimeFormat('relative', updatedAt.toDate())
+          : 'recently';
+      final vis = _docVisibility(d);
+      final cat = _docCategory(d);
+      return Padding(
+        padding: EdgeInsets.only(bottom: i == rows.length - 1 ? 0 : _gap),
+        child: _documentRow(
+          theme: theme,
+          accent: accent,
+          title: title.isEmpty ? 'Document' : title,
+          subtitle: '$type • Updated $when',
+          icon: _docCategoryIcon(cat),
+          visibility: vis,
+          onToggleVisibility: () => _toggleDocVis(docSnap.reference, vis),
+          onTap: () => _openDocumentRow(docSnap),
+          onDelete: () {
+            FocusScope.of(context).unfocus();
+            _showRemoveDocumentSheet(
+              theme: theme,
+              accent: accent,
+              documentTitle: title.isEmpty ? 'Document' : title,
+              docSnap: docSnap,
+            );
+          },
+        ),
+      );
+    });
+  }
+
+  // Documents grouped into Drawings / Documents (+ Images).
+  Widget _docsByCategory(FlutterFlowTheme theme, Color accent) {
+    final drawings =
+        _docRows.where((s) => _docCategory(s.data()) == 'drawing').toList();
+    final documents =
+        _docRows.where((s) => _docCategory(s.data()) == 'document').toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (drawings.isNotEmpty) ...[
+          _docGroupLabel(theme, 'DRAWINGS'),
+          ..._docRowWidgets(theme, accent, drawings),
+          if (documents.isNotEmpty) const SizedBox(height: 16),
+        ],
+        if (documents.isNotEmpty) ...[
+          _docGroupLabel(theme, 'DOCUMENTS / IMAGES'),
+          ..._docRowWidgets(theme, accent, documents),
+        ],
+      ],
+    );
+  }
+
   Widget _moduleRow({
     required FlutterFlowTheme theme,
     required IconData icon,
     required String title,
     required String subtitle,
     required VoidCallback onTap,
+    String? visibility,
+    VoidCallback? onToggleVisibility,
   }) {
     return _tapCard(
       onTap: onTap,
@@ -1312,6 +1502,10 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                 ],
               ),
             ),
+            if (visibility != null && onToggleVisibility != null) ...[
+              _visToggle(visibility: visibility, onTap: onToggleVisibility),
+              const SizedBox(width: 8),
+            ],
             const Icon(Icons.chevron_right_rounded,
                 size: 22, color: Color(0xFFCDD6E2)),
           ],
@@ -1493,6 +1687,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
     required String title,
     required String subtitle,
     required IconData icon,
+    String? visibility,
+    VoidCallback? onToggleVisibility,
     VoidCallback? onTap,
     VoidCallback? onDelete,
   }) {
@@ -1548,7 +1744,11 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              if (visibility != null && onToggleVisibility != null) ...[
+                const SizedBox(width: 6),
+                _visToggle(visibility: visibility, onTap: onToggleVisibility),
+              ],
+              const SizedBox(width: 6),
               Icon(Icons.open_in_new_rounded, size: 18, color: _inkMute),
               if (onDelete != null) ...[
                 const SizedBox(width: 2),
@@ -1884,6 +2084,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                         icon: Icons.timeline_rounded,
                         title: 'Timeline',
                         subtitle: 'Programme & phases',
+                        visibility: _moduleVisFor('timeline'),
+                        onToggleVisibility: () => _toggleModuleVis('timeline'),
                         onTap: () => _safeNavigate(
                           widget.timelineRouteName,
                           fallbackRoute: _fallbackTimelineRoute,
@@ -1895,6 +2097,9 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                         icon: Icons.calculate_outlined,
                         title: 'Project Cost',
                         subtitle: 'Budget & estimates',
+                        visibility: _moduleVisFor('projectCost'),
+                        onToggleVisibility: () =>
+                            _toggleModuleVis('projectCost'),
                         onTap: () => _safeNavigate(
                           widget.projectCostRouteName,
                           fallbackRoute: _fallbackCostRoute,
@@ -1906,6 +2111,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                         icon: Icons.request_quote_outlined,
                         title: 'Get Quotes',
                         subtitle: 'Compare trades',
+                        visibility: _moduleVisFor('getQuotes'),
+                        onToggleVisibility: () => _toggleModuleVis('getQuotes'),
                         onTap: () => _safeNavigate(
                           widget.getQuotesRouteName,
                           fallbackRoute: _fallbackQuotesRoute,
@@ -1917,6 +2124,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                         icon: Icons.fact_check_outlined,
                         title: 'Snag List',
                         subtitle: 'Defects & fixes',
+                        visibility: _moduleVisFor('snagList'),
+                        onToggleVisibility: () => _toggleModuleVis('snagList'),
                         onTap: () => _safeNavigate(
                           widget.snagListRouteName,
                           fallbackRoute: _fallbackSnagRoute,
@@ -1928,6 +2137,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                         icon: Icons.checklist_rounded,
                         title: 'To-Do List',
                         subtitle: 'Tasks & reminders',
+                        visibility: _moduleVisFor('toDo'),
+                        onToggleVisibility: () => _toggleModuleVis('toDo'),
                         onTap: () => _safeNavigate(
                           widget.toDoListRouteName,
                           fallbackRoute: _fallbackToDoRoute,
@@ -2018,46 +2229,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                       ),
                     )
                   else
-                    Column(
-                      children: List.generate(_docRows.length, (i) {
-                        final docSnap = _docRows[i];
-                        final d = docSnap.data();
-                        final title = (d['title'] ?? d['name'] ?? 'Document')
-                            .toString()
-                            .trim();
-                        final type = (d['type'] ?? d['fileType'] ?? 'File')
-                            .toString()
-                            .trim();
-
-                        final updatedAt = d['updatedAt'] ?? d['createdAt'];
-                        final when = (updatedAt is Timestamp)
-                            ? dateTimeFormat('relative', updatedAt.toDate())
-                            : 'recently';
-
-                        return Padding(
-                          padding: EdgeInsets.only(
-                              bottom: i == _docRows.length - 1 ? 0 : _gap),
-                          child: _documentRow(
-                            theme: theme,
-                            accent: projectsAccent,
-                            title: title.isEmpty ? 'Document' : title,
-                            subtitle: '$type • Updated $when',
-                            icon: Icons.picture_as_pdf_rounded,
-                            onTap: () => _openDocumentRow(docSnap),
-                            onDelete: () {
-                              FocusScope.of(context).unfocus();
-                              _showRemoveDocumentSheet(
-                                theme: theme,
-                                accent: projectsAccent,
-                                documentTitle:
-                                    title.isEmpty ? 'Document' : title,
-                                docSnap: docSnap,
-                              );
-                            },
-                          ),
-                        );
-                      }),
-                    ),
+                    _docsByCategory(theme, projectsAccent),
 
                   const SizedBox(height: 22),
 

@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -84,6 +86,10 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _docsSub;
 
   bool _isUploading = false;
+
+  // ✅ New-upload selectors — written onto each uploaded document.
+  String _newCat = 'drawing'; // 'drawing' | 'document'
+  String _newVis = 'private'; // 'shared'  | 'private'
 
   String get _projectParamName =>
       (widget.projectParamName ?? 'projectRef').trim().isEmpty
@@ -244,12 +250,158 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
   }
 
   // Hairline-divided document row.
+  // Category of a document row (drawing vs document/image).
+  String _docCategory(Map<String, dynamic> d) {
+    final c = (d['category'] ?? d['cat'] ?? '').toString().toLowerCase();
+    if (c.contains('draw') || c.contains('plan')) return 'drawing';
+    return 'document';
+  }
+
+  Future<void> _toggleDocVis(
+    DocumentReference<Map<String, dynamic>> ref,
+    String current,
+  ) async {
+    final next = current == 'shared' ? 'private' : 'shared';
+    try {
+      await ref.update(<String, dynamic>{
+        'visibility': next,
+        'updatedAt': Timestamp.now(),
+      });
+    } catch (e) {
+      debugPrint('🔥 Failed to update document visibility: $e');
+    }
+  }
+
+  // Segmented pill used by the new-upload selectors.
+  Widget _segPill(
+    FlutterFlowTheme theme, {
+    required IconData icon,
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: selected ? _ink : Colors.transparent,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 15, color: selected ? _paper : _inkMute),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: theme.labelSmall.override(
+                fontFamily: _bodyFont,
+                color: selected ? _paper : _inkMute,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _selectorRow(
+      FlutterFlowTheme theme, String label, List<Widget> pills) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: theme.bodySmall.override(
+                fontFamily: _bodyFont,
+                color: _inkMute,
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+              ),
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: _surface,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            padding: const EdgeInsets.all(3),
+            child: Row(mainAxisSize: MainAxisSize.min, children: pills),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // The document list, grouped Drawings / Documents (+ Images).
+  Widget _uDocsByCategory(FlutterFlowTheme theme, Color accent) {
+    final drawings =
+        _docRows.where((s) => _docCategory(s.data()) == 'drawing').toList();
+    final documents =
+        _docRows.where((s) => _docCategory(s.data()) == 'document').toList();
+
+    Widget rowFor(QueryDocumentSnapshot<Map<String, dynamic>> snap) {
+      final d = snap.data();
+      final title = (d['title'] ?? 'Document').toString();
+      final type = (d['type'] ?? 'File').toString();
+      final updatedAt = d['updatedAt'];
+      final when = (updatedAt is Timestamp)
+          ? dateTimeFormat('relative', updatedAt.toDate())
+          : 'recently';
+      final url = (d['fileUrl'] ?? '').toString();
+      final vis =
+          (d['visibility'] ?? 'private').toString().toLowerCase() == 'shared'
+              ? 'shared'
+              : 'private';
+      return _uDocRow(
+        theme: theme,
+        accent: accent,
+        title: title,
+        subtitle: '$type • Updated $when',
+        icon: _iconForType(type),
+        visibility: vis,
+        onToggleVisibility: () => _toggleDocVis(snap.reference, vis),
+        onTap: () async {
+          if (url.trim().isEmpty) return;
+          await launchURL(url);
+        },
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (drawings.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.only(top: 8, bottom: 2),
+            child: Text('DRAWINGS', style: _uLabelStyle(theme)),
+          ),
+          ...drawings.map(rowFor),
+        ],
+        if (documents.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.only(top: 14, bottom: 2),
+            child: Text('DOCUMENTS / IMAGES', style: _uLabelStyle(theme)),
+          ),
+          ...documents.map(rowFor),
+        ],
+      ],
+    );
+  }
+
   Widget _uDocRow({
     required FlutterFlowTheme theme,
     required Color accent,
     required String title,
     required String subtitle,
     required IconData icon,
+    String? visibility,
+    VoidCallback? onToggleVisibility,
     VoidCallback? onTap,
   }) {
     return _tapCard(
@@ -293,7 +445,45 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
                 ],
               ),
             ),
-            const SizedBox(width: 10),
+            if (visibility != null && onToggleVisibility != null) ...[
+              InkWell(
+                onTap: onToggleVisibility,
+                borderRadius: BorderRadius.circular(999),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: visibility == 'shared'
+                        ? const Color(0xFFE3F4F2)
+                        : _surface,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        visibility == 'shared'
+                            ? Icons.visibility_outlined
+                            : Icons.lock_outline_rounded,
+                        size: 14,
+                        color: visibility == 'shared' ? _teal : _inkMute,
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        visibility == 'shared' ? 'Shared' : 'Private',
+                        style: theme.labelSmall.override(
+                          fontFamily: _bodyFont,
+                          color: visibility == 'shared' ? _teal : _inkMute,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+            ] else
+              const SizedBox(width: 10),
             const Icon(Icons.open_in_new_rounded,
                 size: 18, color: _hairlineOnSurface),
           ],
@@ -437,6 +627,9 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
         'projectRef': projectRef,
         'title': fileName,
         'type': typeLabel,
+        // ✅ categorisation + visibility chosen in the selectors above.
+        'category': _newCat,
+        'visibility': _newVis,
         'fileUrl': url,
         'storagePath': storagePath,
         'sizeBytes': bytes.length,
@@ -581,11 +774,47 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
 
               const SizedBox(height: 24),
 
+              // ===== NEW-UPLOAD SELECTORS =====
+              _selectorRow(theme, 'New file type', [
+                _segPill(
+                  theme,
+                  icon: Icons.architecture_rounded,
+                  label: 'Drawings',
+                  selected: _newCat == 'drawing',
+                  onTap: () => setState(() => _newCat = 'drawing'),
+                ),
+                _segPill(
+                  theme,
+                  icon: Icons.description_rounded,
+                  label: 'Docs / Images',
+                  selected: _newCat == 'document',
+                  onTap: () => setState(() => _newCat = 'document'),
+                ),
+              ]),
+              _selectorRow(theme, 'New upload visibility', [
+                _segPill(
+                  theme,
+                  icon: Icons.visibility_outlined,
+                  label: 'Shared',
+                  selected: _newVis == 'shared',
+                  onTap: () => setState(() => _newVis = 'shared'),
+                ),
+                _segPill(
+                  theme,
+                  icon: Icons.lock_outline_rounded,
+                  label: 'Private',
+                  selected: _newVis == 'private',
+                  onTap: () => setState(() => _newVis = 'private'),
+                ),
+              ]),
+
               // ===== UPLOAD =====
               _uploadButton(theme),
               const SizedBox(height: 10),
               Text(
-                'PDF, images, or other files supported by your app.',
+                _newVis == 'shared'
+                    ? 'New files will be visible to listings on this project.'
+                    : 'New files stay private until you choose to share them.',
                 style: _helperStyle(theme),
               ),
 
@@ -616,32 +845,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
                   'Upload PDFs, images, and files linked to this project.',
                 )
               else
-                Column(
-                  children: List.generate(_docRows.length, (i) {
-                    final d = _docRows[i].data();
-
-                    final title = (d['title'] ?? 'Document').toString();
-                    final type = (d['type'] ?? 'File').toString();
-                    final updatedAt = d['updatedAt'];
-                    final when = (updatedAt is Timestamp)
-                        ? dateTimeFormat('relative', updatedAt.toDate())
-                        : 'recently';
-
-                    final url = (d['fileUrl'] ?? '').toString();
-
-                    return _uDocRow(
-                      theme: theme,
-                      accent: accent,
-                      title: title,
-                      subtitle: '$type • Updated $when',
-                      icon: _iconForType(type),
-                      onTap: () async {
-                        if (url.trim().isEmpty) return;
-                        await launchURL(url);
-                      },
-                    );
-                  }),
-                ),
+                _uDocsByCategory(theme, accent),
             ],
           ),
         ),
