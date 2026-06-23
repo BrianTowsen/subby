@@ -327,16 +327,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     final target = r.isNotEmpty ? r : fb;
     if (target.isEmpty) return;
 
-    context.pushNamed(
-      target,
-      extra: <String, dynamic>{
-        kTransitionInfoKey: const TransitionInfo(
-          hasTransition: true,
-          transitionType: PageTransitionType.rightToLeft,
-          duration: Duration(milliseconds: 260),
-        ),
-      },
-    );
+    context.pushNamed(target);
   }
 
   void _goToAddProject() => _safeNavigate(
@@ -413,11 +404,6 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       }.withoutNulls,
       extra: <String, dynamic>{
         paramName: projectRef,
-        kTransitionInfoKey: const TransitionInfo(
-          hasTransition: true,
-          transitionType: PageTransitionType.rightToLeft,
-          duration: Duration(milliseconds: 260),
-        ),
       },
     );
   }
@@ -540,7 +526,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     final now = DateTime.now();
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(_hPad, topInset + 16, _hPad, 6),
+      padding: EdgeInsets.fromLTRB(_hPad, topInset + 14, _hPad, 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -578,6 +564,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         child: Container(
           width: 42,
           height: 42,
+          margin: const EdgeInsets.only(right: 4),
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: _surface,
