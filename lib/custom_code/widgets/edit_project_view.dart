@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 
@@ -678,16 +680,7 @@ class _EditProjectViewState extends State<EditProjectView> {
 
       final target = (widget.afterSaveRouteName ?? '').trim();
       if (target.isNotEmpty) {
-        context.pushReplacementNamed(
-          target,
-          extra: {
-            kTransitionInfoKey: const TransitionInfo(
-              hasTransition: true,
-              transitionType: PageTransitionType.leftToRight,
-              duration: Duration(milliseconds: 260),
-            ),
-          },
-        );
+        context.pushReplacementNamed(target);
       } else {
         context.safePop();
       }
@@ -744,16 +737,7 @@ class _EditProjectViewState extends State<EditProjectView> {
 
       final target = (widget.afterDeleteRouteName ?? '').trim();
       if (target.isNotEmpty) {
-        context.pushReplacementNamed(
-          target,
-          extra: {
-            kTransitionInfoKey: const TransitionInfo(
-              hasTransition: true,
-              transitionType: PageTransitionType.leftToRight,
-              duration: Duration(milliseconds: 260),
-            ),
-          },
-        );
+        context.pushReplacementNamed(target);
       } else {
         context.safePop();
       }

@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 // ======================= DashboardPageView (FULL FILE) =======================
 //
 // v5 — "Focus" home: most-recent project as a HERO card with a large
@@ -367,53 +369,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       );
 
   // Top-right menu button → the More hub (Manage · Support · Legal).
-  // Presented as a right-anchored slide-over panel: it slides in from the
-  // right, can be swept right (or flung) to dismiss, and also closes on a
-  // back gesture / barrier tap. Rendering MorePageView directly removes the
-  // dependency on a named FF route (the old push silently no-op'd when the
-  // route name didn't match).
-  void _goToMore() => _openMorePanel();
+  // Pushed as a standard page so it uses the same platform transition as
+  // every other in-page link — matching ProfilePageView's _openMore().
+  void _goToMore() => _openMore();
 
-  void _openMorePanel() {
-    final Size size = MediaQuery.sizeOf(context);
-
-    Navigator.of(context, rootNavigator: true).push(
-      PageRouteBuilder(
-        opaque: false,
-        fullscreenDialog: true,
-        barrierColor: Colors.black.withOpacity(0.28),
-        barrierDismissible: true,
-        barrierLabel: 'More',
-        transitionDuration: const Duration(milliseconds: 260),
-        reverseTransitionDuration: const Duration(milliseconds: 220),
-        pageBuilder: (ctx, _, __) => Align(
-          alignment: Alignment.centerRight,
-          child: _MoreSlidePanel(
-            child: Material(
-              type: MaterialType.transparency,
-              child: SizedBox(
-                width: size.width,
-                height: size.height,
-                child: const MorePageView(),
-              ),
-            ),
-          ),
-        ),
-        transitionsBuilder: (ctx, anim, _, child) {
-          final curved = CurvedAnimation(
-            parent: anim,
-            curve: Curves.easeOutCubic,
-            reverseCurve: Curves.easeInCubic,
-          );
-          return SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(1, 0),
-              end: Offset.zero,
-            ).animate(curved),
-            child: child,
-          );
-        },
-      ),
+  void _openMore() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const MorePageView()),
     );
   }
 
@@ -1468,56 +1430,6 @@ class _CapabilityChip extends StatelessWidget {
           fontWeight: FontWeight.w600,
           color: _tealText,
         ),
-      ),
-    );
-  }
-}
-
-// =====================================================================
-// More slide-over: follows the finger on a rightward drag and pops when
-// dragged past ~30% of the screen width (or flung right). Self-contained —
-// no shared statics with the state class above (file-scope class scoping).
-// Vertical scrolling inside the child is unaffected; only horizontal drags
-// are claimed here.
-// =====================================================================
-class _MoreSlidePanel extends StatefulWidget {
-  const _MoreSlidePanel({required this.child});
-
-  final Widget child;
-
-  @override
-  State<_MoreSlidePanel> createState() => _MoreSlidePanelState();
-}
-
-class _MoreSlidePanelState extends State<_MoreSlidePanel> {
-  double _dragX = 0; // rightward offset, >= 0
-
-  void _onUpdate(DragUpdateDetails d) {
-    setState(() {
-      _dragX = (_dragX + d.delta.dx).clamp(0.0, double.infinity);
-    });
-  }
-
-  void _onEnd(DragEndDetails d) {
-    final double width = MediaQuery.sizeOf(context).width;
-    final double v = d.primaryVelocity ?? 0;
-    final bool close = _dragX > width * 0.30 || v > 700;
-    if (close) {
-      Navigator.of(context).maybePop();
-    } else {
-      setState(() => _dragX = 0);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.deferToChild,
-      onHorizontalDragUpdate: _onUpdate,
-      onHorizontalDragEnd: _onEnd,
-      child: Transform.translate(
-        offset: Offset(_dragX, 0),
-        child: widget.child,
       ),
     );
   }
