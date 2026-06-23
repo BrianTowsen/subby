@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 class MorePageView extends StatefulWidget {
   const MorePageView({
     Key? key,
@@ -203,124 +205,132 @@ class _MorePageViewState extends State<MorePageView> {
     return SizedBox(
       width: width,
       height: height,
-      child: Container(
+      // ✅ FIX: wrap in Material so every Text has a Material ancestor.
+      // Without this, the title / subtitle / section labels (which aren't
+      // inside an InkWell+Material like the rows are) render with the
+      // yellow debug double-underline when this view is shown without a
+      // Scaffold/Material parent (e.g. as a slide-over panel).
+      child: Material(
         color: _paper,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Top row: teal mark + close
-            Padding(
-              padding: EdgeInsets.fromLTRB(_hPad, topInset + _vPad, _hPad, 0),
-              child: Row(
-                children: [
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: _teal,
-                      borderRadius: BorderRadius.circular(_radius),
+        child: Container(
+          color: _paper,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top row: teal mark + close
+              Padding(
+                padding: EdgeInsets.fromLTRB(_hPad, topInset + _vPad, _hPad, 0),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: _teal,
+                        borderRadius: BorderRadius.circular(_radius),
+                      ),
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.grid_view_rounded,
+                        size: 22,
+                        color: _paper,
+                      ),
                     ),
-                    alignment: Alignment.center,
-                    child: const Icon(
-                      Icons.grid_view_rounded,
-                      size: 22,
-                      color: _paper,
-                    ),
-                  ),
-                  const Spacer(),
-                  _closeButton(),
-                ],
+                    const Spacer(),
+                    _closeButton(),
+                  ],
+                ),
               ),
-            ),
 
-            // Big title + subtitle (no section band)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(_hPad, 20, _hPad, 4),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('More', style: _pageTitle(theme)),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Jump anywhere, or read the legal bits.',
-                    style: _pageSubtitle(theme),
-                  ),
-                ],
-              ),
-            ),
-
-            Expanded(
-              child: SingleChildScrollView(
-                padding:
-                    EdgeInsets.fromLTRB(_hPad, 18, _hPad, bottomInset + 24),
+              // Big title + subtitle (no section band)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(_hPad, 20, _hPad, 4),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _sectionLabelRow('Quick access'),
-                    _row(
-                      icon: Icons.home_outlined,
-                      title: 'Home',
-                      subtitle: 'Browse categories & locations',
-                      onTap: () => context.goNamed(_homeRouteName),
-                    ),
-                    _row(
-                      icon: Icons.search_outlined,
-                      title: 'Explore',
-                      subtitle: 'Search and filter listings',
-                      onTap: () => context.goNamed(_exploreRouteName),
-                    ),
-                    _row(
-                      icon: Icons.bookmark_border_rounded,
-                      title: 'Saved',
-                      subtitle: 'Your bookmarked listings',
-                      onTap: () => context.goNamed(_savedRouteName),
-                    ),
-                    _row(
-                      icon: Icons.person_outline,
-                      title: 'Profile',
-                      subtitle: 'Your account details',
-                      onTap: () => context.goNamed(_profileRouteName),
-                    ),
-                    const SizedBox(height: 26),
-                    _sectionLabelRow('Legal'),
-                    _row(
-                      icon: Icons.description_outlined,
-                      title: 'Terms of Service',
-                      onTap: () => context.pushNamed(_termsRouteName),
-                    ),
-                    _row(
-                      icon: Icons.privacy_tip_outlined,
-                      title: 'Privacy Policy',
-                      onTap: () => context.pushNamed(_privacyRouteName),
-                    ),
-                    const SizedBox(height: 26),
-                    _sectionLabelRow('Support'),
-                    _row(
-                      icon: Icons.help_outline_rounded,
-                      title: 'Help & Support',
-                      subtitle: 'FAQs and contact options',
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text(
-                              'Add a support page later.',
-                              style: TextStyle(
-                                fontFamily: _bodyFont,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: _paper,
-                              ),
-                            ),
-                            backgroundColor: _ink,
-                          ),
-                        );
-                      },
+                    Text('More', style: _pageTitle(theme)),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Jump anywhere, or read the legal bits.',
+                      style: _pageSubtitle(theme),
                     ),
                   ],
                 ),
               ),
-            ),
-          ],
+
+              Expanded(
+                child: SingleChildScrollView(
+                  padding:
+                      EdgeInsets.fromLTRB(_hPad, 18, _hPad, bottomInset + 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _sectionLabelRow('Quick access'),
+                      _row(
+                        icon: Icons.home_outlined,
+                        title: 'Home',
+                        subtitle: 'Browse categories & locations',
+                        onTap: () => context.goNamed(_homeRouteName),
+                      ),
+                      _row(
+                        icon: Icons.search_outlined,
+                        title: 'Explore',
+                        subtitle: 'Search and filter listings',
+                        onTap: () => context.goNamed(_exploreRouteName),
+                      ),
+                      _row(
+                        icon: Icons.bookmark_border_rounded,
+                        title: 'Saved',
+                        subtitle: 'Your bookmarked listings',
+                        onTap: () => context.goNamed(_savedRouteName),
+                      ),
+                      _row(
+                        icon: Icons.person_outline,
+                        title: 'Profile',
+                        subtitle: 'Your account details',
+                        onTap: () => context.goNamed(_profileRouteName),
+                      ),
+                      const SizedBox(height: 26),
+                      _sectionLabelRow('Legal'),
+                      _row(
+                        icon: Icons.description_outlined,
+                        title: 'Terms of Service',
+                        onTap: () => context.pushNamed(_termsRouteName),
+                      ),
+                      _row(
+                        icon: Icons.privacy_tip_outlined,
+                        title: 'Privacy Policy',
+                        onTap: () => context.pushNamed(_privacyRouteName),
+                      ),
+                      const SizedBox(height: 26),
+                      _sectionLabelRow('Support'),
+                      _row(
+                        icon: Icons.help_outline_rounded,
+                        title: 'Help & Support',
+                        subtitle: 'FAQs and contact options',
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text(
+                                'Add a support page later.',
+                                style: TextStyle(
+                                  fontFamily: _bodyFont,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: _paper,
+                                ),
+                              ),
+                              backgroundColor: _ink,
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
