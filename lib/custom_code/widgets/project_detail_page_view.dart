@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -297,11 +299,6 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
             }.withoutNulls,
       extra: <String, dynamic>{
         if (projectRef != null) _projectParamName: projectRef,
-        kTransitionInfoKey: const TransitionInfo(
-          hasTransition: true,
-          transitionType: PageTransitionType.rightToLeft,
-          duration: Duration(milliseconds: 260),
-        ),
       },
     ).whenComplete(() {
       _isNavigating = false;
@@ -328,11 +325,6 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
       }.withoutNulls,
       extra: <String, dynamic>{
         _listingParamName: listingRef,
-        kTransitionInfoKey: const TransitionInfo(
-          hasTransition: true,
-          transitionType: PageTransitionType.rightToLeft,
-          duration: Duration(milliseconds: 260),
-        ),
       },
     ).whenComplete(() {
       _isNavigating = false;
@@ -363,11 +355,6 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
       }.withoutNulls,
       extra: <String, dynamic>{
         _projectParamName: projectRef,
-        kTransitionInfoKey: const TransitionInfo(
-          hasTransition: true,
-          transitionType: PageTransitionType.rightToLeft,
-          duration: Duration(milliseconds: 260),
-        ),
       },
     ).whenComplete(() {
       _isNavigating = false;
@@ -416,11 +403,6 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
       }.withoutNulls,
       extra: <String, dynamic>{
         _documentParamName: ref,
-        kTransitionInfoKey: const TransitionInfo(
-          hasTransition: true,
-          transitionType: PageTransitionType.rightToLeft,
-          duration: Duration(milliseconds: 260),
-        ),
       },
     ).whenComplete(() {
       _isNavigating = false;
