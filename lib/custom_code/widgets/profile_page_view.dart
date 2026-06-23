@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/custom_code/widgets/index.dart'; // (kept if FF expects it)
 
 // ✅ provides currentUserReference, currentUserEmail, etc.
@@ -597,15 +599,39 @@ class _ProfilePageViewState extends State<ProfilePageView> {
                   // ---------- HEADER ----------
                   Padding(
                     padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 0),
-                    child: Text(
-                      'Profile',
-                      style: theme.titleLarge.override(
-                        fontFamily: _displayFont,
-                        color: _ink,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 30,
-                        lineHeight: 1.05,
-                      ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Profile',
+                          style: theme.titleLarge.override(
+                            fontFamily: _displayFont,
+                            color: _ink,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 30,
+                            lineHeight: 1.05,
+                          ),
+                        ),
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: _openMore,
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              width: 42,
+                              height: 42,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEEF1F4),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(Icons.menu_rounded,
+                                  size: 22, color: _ink),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
 
@@ -737,6 +763,188 @@ class _ProfilePageViewState extends State<ProfilePageView> {
               );
             },
           ),
+        ),
+      ),
+    );
+  }
+
+  void _openMore() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _MoreSheet(),
+    );
+  }
+}
+
+// ─── More menu — bottom sheet (matches Directory) ──────────────────────
+class _MoreSheet extends StatelessWidget {
+  const _MoreSheet();
+
+  static const Color _ink = Color(0xFF017374);
+  static const Color _faint = Color(0xFF93A0B0);
+  static const Color _label = Color(0xFF5A6675);
+  static const Color _rule = Color(0xFFE2E7EE);
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.86,
+        ),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 18, 24, 4),
+              child: Row(
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: _ink,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.grid_view_rounded,
+                        color: Colors.white),
+                  ),
+                  const Spacer(),
+                  InkWell(
+                    onTap: () => Navigator.of(context).pop(),
+                    customBorder: const CircleBorder(),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEEF1F4),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFFEEF1F2)),
+                      ),
+                      child: const Icon(Icons.close_rounded,
+                          size: 18, color: _label),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(24, 12, 24, 0),
+              child: Text(
+                'More',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 30,
+                  height: 1.05,
+                  letterSpacing: -0.5,
+                  color: _ink,
+                ),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(24, 8, 24, 0),
+              child: Text(
+                'Jump anywhere, or read the legal bits.',
+                style: TextStyle(
+                    fontWeight: FontWeight.w500, fontSize: 13, color: _faint),
+              ),
+            ),
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                padding: const EdgeInsets.fromLTRB(24, 18, 24, 24),
+                children: [
+                  _sectionLabel('QUICK ACCESS'),
+                  _row(context, Icons.home_rounded, 'Home',
+                      'Browse categories & locations'),
+                  _row(context, Icons.search_rounded, 'Explore',
+                      'Search and filter listings'),
+                  _row(context, Icons.bookmark_rounded, 'Saved',
+                      'Your bookmarked listings'),
+                  _row(context, Icons.person_rounded, 'Profile',
+                      'Your account details'),
+                  const SizedBox(height: 26),
+                  _sectionLabel('LEGAL'),
+                  _row(context, Icons.description_rounded, 'Terms of Service',
+                      null),
+                  _row(context, Icons.privacy_tip_rounded, 'Privacy Policy',
+                      null),
+                  const SizedBox(height: 26),
+                  _sectionLabel('SUPPORT'),
+                  _row(context, Icons.help_rounded, 'Help & Support',
+                      'FAQs and contact options'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionLabel(String text) => Padding(
+        padding: const EdgeInsets.only(bottom: 2),
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 11,
+            letterSpacing: 0.6,
+            color: _label,
+          ),
+        ),
+      );
+
+  Widget _row(
+      BuildContext context, IconData icon, String title, String? subtitle) {
+    return InkWell(
+      onTap: () => Navigator.of(context).pop(),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: const BoxDecoration(
+            border: Border(bottom: BorderSide(color: _rule))),
+        child: Row(
+          children: [
+            Icon(icon, size: 21, color: _ink),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      letterSpacing: -0.1,
+                      color: _ink,
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 1),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 13,
+                          color: _faint),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, size: 22, color: _faint),
+          ],
         ),
       ),
     );
