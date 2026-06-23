@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 // ======================= DashboardPageView (FULL FILE) =======================
 //
 // v5 — "Focus" home: most-recent project as a HERO card with a large
@@ -1521,9 +1523,9 @@ class _MoreSlidePanelState extends State<_MoreSlidePanel> {
   }
 }
 
-// Subby homestead mark — bold, icon only (viewBox 0 0 64 64):
-//   house : single filled silhouette — pitched roof peak (32,11), eaves at
-//           y30, solid walls down to baseline y50. No door.
+// Subby mark — bold, icon only (viewBox 0 0 64 64):
+//   roof  : filled triangle, peak (32,11), base from (12.8,28.4)-(51.2,28.4).
+//   bars  : two full-width rounded bars beneath, matching the roof base width.
 class _SubbyMarkPainter extends CustomPainter {
   final Color peak;
   final Color base;
@@ -1534,19 +1536,36 @@ class _SubbyMarkPainter extends CustomPainter {
     final double s = size.width / 64.0;
     Offset p(double x, double y) => Offset(x * s, y * s);
 
-    // House silhouette — pitched roof over solid walls (single filled shape).
-    final housePaint = Paint()
+    // New Subby mark — roof triangle above two full-width bars.
+    final markPaint = Paint()
       ..color = peak
       ..style = PaintingStyle.fill
       ..isAntiAlias = true;
-    final house = Path()
-      ..moveTo(p(32, 11).dx, p(32, 11).dy) // roof peak
-      ..lineTo(p(54, 30).dx, p(54, 30).dy) // right eave
-      ..lineTo(p(54, 50).dx, p(54, 50).dy) // right wall down
-      ..lineTo(p(10, 50).dx, p(10, 50).dy) // baseline
-      ..lineTo(p(10, 30).dx, p(10, 30).dy) // left wall up
+
+    // Roof — filled triangle (base spans the same width as the bars).
+    final roof = Path()
+      ..moveTo(p(32, 11).dx, p(32, 11).dy) // peak
+      ..lineTo(p(51.2, 28.4).dx, p(51.2, 28.4).dy) // right base
+      ..lineTo(p(12.8, 28.4).dx, p(12.8, 28.4).dy) // left base
       ..close();
-    canvas.drawPath(house, housePaint);
+    canvas.drawPath(roof, markPaint);
+
+    // Two full-width rounded bars.
+    final r = Radius.circular(2.6 * s);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(p(12.8, 33.5).dx, p(12.8, 33.5).dy, 38.4 * s, 8.3 * s),
+        r,
+      ),
+      markPaint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(p(12.8, 44.4).dx, p(12.8, 44.4).dy, 38.4 * s, 8.3 * s),
+        r,
+      ),
+      markPaint,
+    );
   }
 
   @override
