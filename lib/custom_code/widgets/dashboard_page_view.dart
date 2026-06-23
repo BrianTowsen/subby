@@ -1522,8 +1522,8 @@ class _MoreSlidePanelState extends State<_MoreSlidePanel> {
 }
 
 // Subby homestead mark — bold, icon only (viewBox 0 0 64 64):
-//   roof    : filled gable 32,9 → 57,30 → 7,30 (eaves overhang the walls)
-//   courses : two rounded bars at y33 & y43, x19 w26 h7 — brick walls (teal)
+//   house : single filled silhouette — pitched roof peak (32,11), eaves at
+//           y30, solid walls down to baseline y50. No door.
 class _SubbyMarkPainter extends CustomPainter {
   final Color peak;
   final Color base;
@@ -1533,31 +1533,20 @@ class _SubbyMarkPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final double s = size.width / 64.0;
     Offset p(double x, double y) => Offset(x * s, y * s);
-    Rect r(double x, double y, double w, double h) =>
-        Rect.fromLTWH(x * s, y * s, w * s, h * s);
 
-    // Roof — filled gable, eaves overhanging the walls below.
-    final roofPaint = Paint()
+    // House silhouette — pitched roof over solid walls (single filled shape).
+    final housePaint = Paint()
       ..color = peak
       ..style = PaintingStyle.fill
       ..isAntiAlias = true;
-    final roof = Path()
-      ..moveTo(p(32, 9).dx, p(32, 9).dy)
-      ..lineTo(p(57, 30).dx, p(57, 30).dy)
-      ..lineTo(p(7, 30).dx, p(7, 30).dy)
+    final house = Path()
+      ..moveTo(p(32, 11).dx, p(32, 11).dy) // roof peak
+      ..lineTo(p(54, 30).dx, p(54, 30).dy) // right eave
+      ..lineTo(p(54, 50).dx, p(54, 50).dy) // right wall down
+      ..lineTo(p(10, 50).dx, p(10, 50).dy) // baseline
+      ..lineTo(p(10, 30).dx, p(10, 30).dy) // left wall up
       ..close();
-    canvas.drawPath(roof, roofPaint);
-
-    // Two brick courses — the walls.
-    final coursePaint = Paint()
-      ..color = base
-      ..style = PaintingStyle.fill
-      ..isAntiAlias = true;
-    final Radius rad = Radius.circular(1.5 * s);
-    canvas.drawRRect(
-        RRect.fromRectAndRadius(r(19, 33, 26, 7), rad), coursePaint);
-    canvas.drawRRect(
-        RRect.fromRectAndRadius(r(19, 43, 26, 7), rad), coursePaint);
+    canvas.drawPath(house, housePaint);
   }
 
   @override
