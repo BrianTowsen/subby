@@ -88,38 +88,97 @@ class _ProfilePageViewState extends State<ProfilePageView> {
   static const double _hPad = 24;
   static const double _vPad = 14;
 
-  // Packages (low → high). "Plus" is a placeholder — rename to taste.
-  static const List<String> _tiers = ['Free', 'Basic', 'Plus', 'Professional'];
-
-  // Listing is free on every plan; paid plans add perks.
-  static const Map<String, List<String>> _perks = {
-    'Free': [
-      'Listed free in the Directory',
-      '1 listing photo',
-      'Standard search placement',
-    ],
+  // ── PROJECT MANAGEMENT packages ──
+  static const List<String> _mgmtTiers = ['Basic', 'Professional'];
+  static const Map<String, List<String>> _mgmtPerks = {
     'Basic': [
-      'Everything in Free',
-      'Up to 5 listing photos',
-      'Direct "Contact" button on your listing',
-      'Collect customer reviews',
-    ],
-    'Plus': [
-      'Everything in Basic',
-      'Priority placement in search',
-      'Up to 15 photos',
-      'Monthly enquiry & views insights',
+      'Manage a single project',
     ],
     'Professional': [
-      'Everything in Plus',
-      'Top of search results',
-      'Unlimited photos + intro video',
-      'Featured badge & instant lead alerts',
+      'Manage multiple projects',
     ],
   };
 
-  String _selectedTier = 'Basic';
+  // ── DIRECTORY packages ── (inclusions TBD)
+  static const List<String> _dirTiers = ['Basic Listing', 'Plus Listing'];
+  static const Map<String, List<String>> _dirPerks = {
+    'Basic Listing': [
+      'Inclusions to be defined',
+    ],
+    'Plus Listing': [
+      'Inclusions to be defined',
+    ],
+  };
+
+  String _mgmtTier = 'Basic';
+  String _dirTier = 'Basic Listing';
   bool _tierPrefilled = false;
+
+  // ─── Listing presence ───────────────────────────────────
+  // Listings live in their own collection (written by AddListingPageView) with
+  // an `ownerRef` DocumentReference back to the user — NOT a field on the user
+  // doc. So we detect an existing listing by querying that collection, exactly
+  // like EditListingPageView._findMyListingRef().
+  static const String _listingCollection = 'subby_listings';
+  static const String _listingOwnerRefField = 'ownerRef';
+  static const String _listingOwnerIdField = 'ownerId'; // fallback (string uid)
+
+  bool _listingChecked = false;
+  bool _hasListingDoc = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkListing();
+  }
+
+  Future<void> _checkListing() async {
+    final userRef = currentUserReference;
+    final uid = currentUserUid;
+
+    if (userRef == null && (uid.isEmpty)) {
+      if (mounted) {
+        setState(() {
+          _hasListingDoc = false;
+          _listingChecked = true;
+        });
+      }
+      return;
+    }
+
+    try {
+      final colRef = FirebaseFirestore.instance.collection(_listingCollection);
+      bool found = false;
+
+      // Primary: ownerRef == user reference.
+      if (userRef != null) {
+        final snap = await colRef
+            .where(_listingOwnerRefField, isEqualTo: userRef)
+            .limit(1)
+            .get();
+        found = snap.docs.isNotEmpty;
+      }
+
+      // Fallback: ownerId == uid string (in case some docs store the uid).
+      if (!found && uid.isNotEmpty) {
+        final snap = await colRef
+            .where(_listingOwnerIdField, isEqualTo: uid)
+            .limit(1)
+            .get();
+        found = snap.docs.isNotEmpty;
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _hasListingDoc = found;
+        _listingChecked = true;
+      });
+    } catch (e) {
+      debugPrint('⚠️ listing check failed: $e');
+      if (!mounted) return;
+      setState(() => _listingChecked = true);
+    }
+  }
 
   // =========================================================
   // ✅ TYPOGRAPHY
@@ -368,13 +427,13 @@ class _ProfilePageViewState extends State<ProfilePageView> {
   }
 
   // ─── Plan tier pill ─────────────────────────────────────
-  Widget _tierPill(String t) {
-    final selected = t == _selectedTier;
+  Widget _tierPill(String t,
+      {required bool selected, required VoidCallback onTap}) {
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 3.5),
         child: GestureDetector(
-          onTap: () => setState(() => _selectedTier = t),
+          onTap: onTap,
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 10),
             alignment: Alignment.center,
@@ -657,13 +716,15 @@ class _ProfilePageViewState extends State<ProfilePageView> {
               // Package + listing presence (adjust field names to your schema).
               final pkg = (data['package'] ?? 'Basic').toString();
               if (!_tierPrefilled) {
-                _selectedTier = _tiers.contains(pkg) ? pkg : 'Basic';
+                _mgmtTier = _mgmtTiers.contains(pkg) ? pkg : 'Basic';
                 _tierPrefilled = true;
               }
-              final hasListing =
-                  data['listing_ref'] != null || data['has_listing'] == true;
+              // Listing presence is resolved asynchronously in _checkListing()
+              // by querying the subby_listings collection (ownerRef == user).
+              final hasListing = _hasListingDoc;
 
-              final perks = _perks[_selectedTier] ?? const <String>[];
+              final mgmtPerks = _mgmtPerks[_mgmtTier] ?? const <String>[];
+              final dirPerks = _dirPerks[_dirTier] ?? const <String>[];
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -716,13 +777,18 @@ class _ProfilePageViewState extends State<ProfilePageView> {
 
                           const SizedBox(height: 30),
 
-                          // ===== PLAN =====
-                          _sectionLabel(theme, 'Plan'),
+                          // ===== PROJECT MANAGEMENT =====
+                          _sectionLabel(theme, 'Project management'),
                           const SizedBox(height: 10),
-                          Row(children: _tiers.map(_tierPill).toList()),
+                          Row(
+                            children: _mgmtTiers
+                                .map((t) => _tierPill(t,
+                                    selected: t == _mgmtTier,
+                                    onTap: () => setState(() => _mgmtTier = t)))
+                                .toList(),
+                          ),
                           const SizedBox(height: 16),
-                          Text(
-                              'YOUR ${_selectedTier.toUpperCase()} PLAN INCLUDES',
+                          Text('YOUR ${_mgmtTier.toUpperCase()} PLAN INCLUDES',
                               style: const TextStyle(
                                   fontFamily: _bodyFont,
                                   fontSize: 11,
@@ -730,57 +796,53 @@ class _ProfilePageViewState extends State<ProfilePageView> {
                                   letterSpacing: 0.4,
                                   color: _ink)),
                           const SizedBox(height: 8),
-                          ...perks.map(_perkRow),
+                          ...mgmtPerks.map(_perkRow),
 
                           const SizedBox(height: 26),
 
-                          // ===== YOUR LISTING =====
-                          _sectionLabel(theme, 'Your listing'),
-                          if (hasListing) ...[
-                            _uActionRow(
-                              theme,
-                              icon: Icons.storefront_outlined,
-                              label: 'Edit listing',
-                              subtitle: _liveSubtitle(theme),
-                              onTap: () => _pushOrToast(_editListingRouteName,
-                                  'Set _editListingRouteName.'),
-                            ),
-                            _uActionRow(
-                              theme,
-                              icon: Icons.open_in_new_rounded,
-                              label: 'View in Directory',
-                              showDivider: false,
-                              onTap: () => _pushOrToast(_directoryRouteName,
-                                  'Set _directoryRouteName.'),
-                            ),
-                          ] else ...[
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(0, 10, 0, 16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text("You're not listed yet",
-                                      style: _rowTitle(theme)),
-                                  const SizedBox(height: 4),
-                                  const Text(
-                                    'Add a free listing to get found by clients browsing the Directory.',
-                                    style: TextStyle(
-                                        fontFamily: _bodyFont,
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w500,
-                                        height: 1.45,
-                                        color: _faint),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            _primaryButton(
-                              label: 'Add listing',
-                              icon: Icons.add_rounded,
-                              onTap: () => _pushOrToast(_addListingRouteName,
-                                  'Set _addListingRouteName.'),
-                            ),
-                          ],
+                          // ===== DIRECTORY =====
+                          _sectionLabel(theme, 'Directory'),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: _dirTiers
+                                .map((t) => _tierPill(t,
+                                    selected: t == _dirTier,
+                                    onTap: () => setState(() => _dirTier = t)))
+                                .toList(),
+                          ),
+                          const SizedBox(height: 16),
+                          Text('YOUR ${_dirTier.toUpperCase()} INCLUDES',
+                              style: const TextStyle(
+                                  fontFamily: _bodyFont,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.4,
+                                  color: _ink)),
+                          const SizedBox(height: 8),
+                          ...dirPerks.map(_perkRow),
+                          const SizedBox(height: 16),
+                          _primaryButton(
+                            label: !_listingChecked
+                                ? 'Checking listing…'
+                                : (hasListing
+                                    ? 'Edit Listing'
+                                    : 'Create Listing'),
+                            icon: !_listingChecked
+                                ? Icons.hourglass_top_rounded
+                                : (hasListing
+                                    ? Icons.edit_outlined
+                                    : Icons.add_rounded),
+                            onTap: () {
+                              if (!_listingChecked) return;
+                              if (hasListing) {
+                                _pushOrToast(_editListingRouteName,
+                                    'Set _editListingRouteName.');
+                              } else {
+                                _pushOrToast(_addListingRouteName,
+                                    'Set _addListingRouteName.');
+                              }
+                            },
+                          ),
 
                           const SizedBox(height: 26),
 

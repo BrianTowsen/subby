@@ -23,12 +23,8 @@ export '/account/edit_profile_page/edit_profile_page_widget.dart'
 export '/dashboard/dashboard_page/dashboard_page_widget.dart'
     show DashboardPageWidget;
 export '/account/support_page/support_page_widget.dart' show SupportPageWidget;
-export '/projects/my_projects_home_page/my_projects_home_page_widget.dart'
-    show MyProjectsHomePageWidget;
 export '/projects/project_detail_page/project_detail_page_widget.dart'
     show ProjectDetailPageWidget;
-export '/timeline/timeline_home_page/timeline_home_page_widget.dart'
-    show TimelineHomePageWidget;
 export '/directory/add_listing_page/add_listing_page_widget.dart'
     show AddListingPageWidget;
 export '/directory/edit_listing_page/edit_listing_page_widget.dart'
@@ -39,20 +35,12 @@ export '/projects/edit_project_page/edit_project_page_widget.dart'
     show EditProjectPageWidget;
 export '/timeline/project_timeline_page/project_timeline_page_widget.dart'
     show ProjectTimelinePageWidget;
-export '/project_cost/project_cost_home_page/project_cost_home_page_widget.dart'
-    show ProjectCostHomePageWidget;
 export '/project_cost/project_cost_page/project_cost_page_widget.dart'
     show ProjectCostPageWidget;
-export '/snag_list/snag_list_home_page/snag_list_home_page_widget.dart'
-    show SnagListHomePageWidget;
 export '/snag_list/snag_list_page/snag_list_page_widget.dart'
     show SnagListPageWidget;
-export '/get_quotes/get_quotes_home_page/get_quotes_home_page_widget.dart'
-    show GetQuotesHomePageWidget;
 export '/get_quotes/get_quotes_page/get_quotes_page_widget.dart'
     show GetQuotesPageWidget;
-export '/to_do_list_home_page/to_do_list_home_page_widget.dart'
-    show ToDoListHomePageWidget;
 export '/to_do_list_page/to_do_list_page_widget.dart' show ToDoListPageWidget;
 export '/projects/document_upload_page/document_upload_page_widget.dart'
     show DocumentUploadPageWidget;

@@ -253,11 +253,6 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           builder: (context, params) => SupportPageWidget(),
         ),
         FFRoute(
-          name: MyProjectsHomePageWidget.routeName,
-          path: MyProjectsHomePageWidget.routePath,
-          builder: (context, params) => MyProjectsHomePageWidget(),
-        ),
-        FFRoute(
           name: ProjectDetailPageWidget.routeName,
           path: ProjectDetailPageWidget.routePath,
           builder: (context, params) => ProjectDetailPageWidget(
@@ -272,18 +267,6 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
               ParamType.DocumentReference,
               isList: false,
               collectionNamePath: ['subby_listings'],
-            ),
-          ),
-        ),
-        FFRoute(
-          name: TimelineHomePageWidget.routeName,
-          path: TimelineHomePageWidget.routePath,
-          builder: (context, params) => TimelineHomePageWidget(
-            projectRef: params.getParam(
-              'projectRef',
-              ParamType.DocumentReference,
-              isList: false,
-              collectionNamePath: ['projects'],
             ),
           ),
         ),
@@ -327,33 +310,9 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           builder: (context, params) => ProjectTimelinePageWidget(),
         ),
         FFRoute(
-          name: ProjectCostHomePageWidget.routeName,
-          path: ProjectCostHomePageWidget.routePath,
-          builder: (context, params) => ProjectCostHomePageWidget(
-            projectRef: params.getParam(
-              'projectRef',
-              ParamType.DocumentReference,
-              isList: false,
-              collectionNamePath: ['projects'],
-            ),
-          ),
-        ),
-        FFRoute(
           name: ProjectCostPageWidget.routeName,
           path: ProjectCostPageWidget.routePath,
           builder: (context, params) => ProjectCostPageWidget(),
-        ),
-        FFRoute(
-          name: SnagListHomePageWidget.routeName,
-          path: SnagListHomePageWidget.routePath,
-          builder: (context, params) => SnagListHomePageWidget(
-            projectRef: params.getParam(
-              'projectRef',
-              ParamType.DocumentReference,
-              isList: false,
-              collectionNamePath: ['projects'],
-            ),
-          ),
         ),
         FFRoute(
           name: SnagListPageWidget.routeName,
@@ -361,33 +320,9 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           builder: (context, params) => SnagListPageWidget(),
         ),
         FFRoute(
-          name: GetQuotesHomePageWidget.routeName,
-          path: GetQuotesHomePageWidget.routePath,
-          builder: (context, params) => GetQuotesHomePageWidget(
-            projectRef: params.getParam(
-              'projectRef',
-              ParamType.DocumentReference,
-              isList: false,
-              collectionNamePath: ['projects'],
-            ),
-          ),
-        ),
-        FFRoute(
           name: GetQuotesPageWidget.routeName,
           path: GetQuotesPageWidget.routePath,
           builder: (context, params) => GetQuotesPageWidget(),
-        ),
-        FFRoute(
-          name: ToDoListHomePageWidget.routeName,
-          path: ToDoListHomePageWidget.routePath,
-          builder: (context, params) => ToDoListHomePageWidget(
-            projectRef: params.getParam(
-              'projectRef',
-              ParamType.DocumentReference,
-              isList: false,
-              collectionNamePath: ['projects'],
-            ),
-          ),
         ),
         FFRoute(
           name: ToDoListPageWidget.routeName,
