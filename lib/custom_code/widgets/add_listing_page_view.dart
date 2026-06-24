@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'dart:typed_data';
@@ -66,6 +68,9 @@ class _AddListingPageViewState extends State<AddListingPageView> {
   final TextEditingController _emailCtrl = TextEditingController();
   final TextEditingController _whatsCtrl = TextEditingController();
   final TextEditingController _suburbCtrl = TextEditingController();
+  final TextEditingController _servicesCtrl = TextEditingController();
+  final TextEditingController _associationsCtrl = TextEditingController();
+  final TextEditingController _hoursCtrl = TextEditingController();
 
   String _listingType = 'Professionals';
   String _selectedProvince = 'Select province';
@@ -271,6 +276,12 @@ class _AddListingPageViewState extends State<AddListingPageView> {
   }
 
   // ---------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------
+  List<String> _parseList(String raw) =>
+      raw.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+
+  // ---------------------------------------------------------
   // Firestore wiring
   // ---------------------------------------------------------
   DocumentReference? _currentUserRefOrNull() {
@@ -391,6 +402,10 @@ class _AddListingPageViewState extends State<AddListingPageView> {
       final specialitySlug = functions.slugify(speciality);
       final provinceSlug = functions.slugify(province);
 
+      final services = _parseList(_servicesCtrl.text);
+      final associations = _parseList(_associationsCtrl.text);
+      final openingHours = _hoursCtrl.text.trim();
+
       final doc = FirebaseFirestore.instance.collection('subby_listings').doc();
 
       String heroUrl = '';
@@ -428,6 +443,9 @@ class _AddListingPageViewState extends State<AddListingPageView> {
         if (phone.isNotEmpty) 'phoneNumber': phone,
         if (whatsapp.isNotEmpty) 'whatsappNumber': whatsapp,
         if (email.isNotEmpty) 'email': email,
+        if (services.isNotEmpty) 'services': services,
+        if (associations.isNotEmpty) 'associations': associations,
+        if (openingHours.isNotEmpty) 'openingHours': openingHours,
         if (heroUrl.isNotEmpty) 'heroPhotoUrl': heroUrl,
         if (photoUrls.isNotEmpty) 'photoUrls': photoUrls,
         'ownerRef': userRef,
@@ -461,6 +479,9 @@ class _AddListingPageViewState extends State<AddListingPageView> {
     _emailCtrl.dispose();
     _whatsCtrl.dispose();
     _suburbCtrl.dispose();
+    _servicesCtrl.dispose();
+    _associationsCtrl.dispose();
+    _hoursCtrl.dispose();
     super.dispose();
   }
 
@@ -521,6 +542,19 @@ class _AddListingPageViewState extends State<AddListingPageView> {
                     maxLines: 4,
                   ),
                   _uText(
+                    label: 'Services',
+                    controller: _servicesCtrl,
+                    icon: Icons.checklist_rounded,
+                    hint: 'New installations, Geyser repairs, COC…',
+                    maxLines: 2,
+                  ),
+                  _uText(
+                    label: 'Associations',
+                    controller: _associationsCtrl,
+                    icon: Icons.verified_outlined,
+                    hint: 'Master Builders Association, ECA…',
+                  ),
+                  _uText(
                     label: 'Phone number',
                     controller: _phoneCtrl,
                     icon: Icons.call_outlined,
@@ -540,6 +574,12 @@ class _AddListingPageViewState extends State<AddListingPageView> {
                     icon: Icons.mail_outlined,
                     hint: 'e.g. hello@company.co.za',
                     keyboardType: TextInputType.emailAddress,
+                  ),
+                  _uText(
+                    label: 'Opening hours',
+                    controller: _hoursCtrl,
+                    icon: Icons.schedule_rounded,
+                    hint: 'e.g. 07:00 – 18:00',
                   ),
                   _uSelect(
                     label: 'Province *',
