@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -599,8 +601,6 @@ class _HomePageViewState extends State<HomePageView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _topBar(),
-                const SizedBox(height: 20),
-                Text('Subby Directory', style: _titleStyle),
                 const SizedBox(height: 8),
                 Text('Find trades, pros & suppliers near you.',
                     style: _subtitleStyle),
@@ -767,26 +767,10 @@ class _HomePageViewState extends State<HomePageView> {
   Widget _topBar() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: _goBackToDashboard,
-            customBorder: const CircleBorder(),
-            child: Container(
-              width: 36,
-              height: 36,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: _surface,
-                shape: BoxShape.circle,
-                border: Border.all(color: _hairline),
-              ),
-              child: const Icon(Icons.arrow_back_ios_new_rounded,
-                  size: 15, color: _inkMute),
-            ),
-          ),
-        ),
+        Expanded(child: Text('Subby Directory', style: _titleStyle)),
+        const SizedBox(width: 12),
         Material(
           color: Colors.transparent,
           child: InkWell(
