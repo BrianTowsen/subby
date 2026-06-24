@@ -18,10 +18,13 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status bar over the dark hero)
+import '/auth/firebase_auth/auth_util.dart'; // currentUserReference (owner vs shared detection)
 
 class ProjectDetailPageView extends StatefulWidget {
   const ProjectDetailPageView({
@@ -898,6 +901,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
     required String status,
     required String address,
     required String dates,
+    bool readOnly = false,
   }) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       // White status-bar icons (time, signal, battery) over the dark ink hero.
@@ -927,42 +931,67 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                   ),
                 ),
                 const Spacer(),
-                _tapCard(
-                  onTap: () => _safeNavigate(
-                    widget.editProjectRouteName,
-                    fallbackRoute: _fallbackEditRoute,
-                  ),
-                  radius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: Color(0xFFE5771E),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.edit_outlined,
-                            size: 18, color: _paper),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Edit',
-                          style: theme.bodySmall.override(
-                            fontFamily: _bodyFont,
-                            color: _paper,
-                            fontWeight: FontWeight.w900,
+                readOnly
+                    ? Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.visibility_outlined,
+                                size: 17, color: _paper),
+                            const SizedBox(width: 8),
+                            Text(
+                              'View only',
+                              style: theme.bodySmall.override(
+                                fontFamily: _bodyFont,
+                                color: _paper,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : _tapCard(
+                        onTap: () => _safeNavigate(
+                          widget.editProjectRouteName,
+                          fallbackRoute: _fallbackEditRoute,
+                        ),
+                        radius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE5771E),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.edit_outlined,
+                                  size: 18, color: _paper),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Edit',
+                                style: theme.bodySmall.override(
+                                  fontFamily: _bodyFont,
+                                  color: _paper,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
+                      ),
               ],
             ),
             const SizedBox(height: 18),
             Text(
-              'PROJECT',
+              readOnly ? 'SHARED PROJECT' : 'PROJECT',
               style: theme.labelSmall.override(
                 fontFamily: _bodyFont,
                 color: _tealBright,
@@ -1423,8 +1452,9 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
   List<Widget> _docRowWidgets(
     FlutterFlowTheme theme,
     Color accent,
-    List<QueryDocumentSnapshot<Map<String, dynamic>>> rows,
-  ) {
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> rows, {
+    bool readOnly = false,
+  }) {
     return List.generate(rows.length, (i) {
       final docSnap = rows[i];
       final d = docSnap.data();
@@ -1444,40 +1474,62 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
           title: title.isEmpty ? 'Document' : title,
           subtitle: when,
           icon: _docCategoryIcon(cat),
-          visibility: vis,
-          onToggleVisibility: () => _toggleDocVis(docSnap.reference, vis),
+          visibility: readOnly ? null : vis,
+          onToggleVisibility:
+              readOnly ? null : () => _toggleDocVis(docSnap.reference, vis),
           onTap: () => _openDocumentRow(docSnap),
-          onDelete: () {
-            FocusScope.of(context).unfocus();
-            _showRemoveDocumentSheet(
-              theme: theme,
-              accent: accent,
-              documentTitle: title.isEmpty ? 'Document' : title,
-              docSnap: docSnap,
-            );
-          },
+          onDelete: readOnly
+              ? null
+              : () {
+                  FocusScope.of(context).unfocus();
+                  _showRemoveDocumentSheet(
+                    theme: theme,
+                    accent: accent,
+                    documentTitle: title.isEmpty ? 'Document' : title,
+                    docSnap: docSnap,
+                  );
+                },
+          onDownload: readOnly ? () => _openDocumentRow(docSnap) : null,
         ),
       );
     });
   }
 
   // Documents grouped into Drawings / Documents (+ Images).
-  Widget _docsByCategory(FlutterFlowTheme theme, Color accent) {
+  Widget _docsByCategory(FlutterFlowTheme theme, Color accent,
+      {bool readOnly = false}) {
+    final all = readOnly
+        ? _docRows.where((s) => _docVisibility(s.data()) == 'shared').toList()
+        : _docRows;
     final drawings =
-        _docRows.where((s) => _docCategory(s.data()) == 'drawing').toList();
+        all.where((s) => _docCategory(s.data()) == 'drawing').toList();
     final documents =
-        _docRows.where((s) => _docCategory(s.data()) == 'document').toList();
+        all.where((s) => _docCategory(s.data()) == 'document').toList();
+    if (drawings.isEmpty && documents.isEmpty) {
+      return _cardShell(
+        theme: theme,
+        colorOverride: _surface,
+        child: Text(
+          'No documents shared with you yet.',
+          style: theme.bodyMedium.override(
+            fontFamily: _bodyFont,
+            color: _inkMute,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (drawings.isNotEmpty) ...[
           _docGroupLabel(theme, 'DRAWINGS'),
-          ..._docRowWidgets(theme, accent, drawings),
+          ..._docRowWidgets(theme, accent, drawings, readOnly: readOnly),
           if (documents.isNotEmpty) const SizedBox(height: 16),
         ],
         if (documents.isNotEmpty) ...[
           _docGroupLabel(theme, 'DOCUMENTS / IMAGES'),
-          ..._docRowWidgets(theme, accent, documents),
+          ..._docRowWidgets(theme, accent, documents, readOnly: readOnly),
         ],
       ],
     );
@@ -1732,6 +1784,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
     VoidCallback? onToggleVisibility,
     VoidCallback? onTap,
     VoidCallback? onDelete,
+    VoidCallback? onDownload,
   }) {
     return _tapCard(
       onTap: onTap,
@@ -1816,6 +1869,17 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                   ),
                 ),
               ],
+              if (onDownload != null) ...[
+                const SizedBox(width: 6),
+                InkWell(
+                  onTap: onDownload,
+                  borderRadius: BorderRadius.circular(8),
+                  child: const Padding(
+                    padding: EdgeInsets.all(6),
+                    child: Icon(Icons.download_rounded, size: 20, color: _ink),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -1831,7 +1895,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
     required String subtitle,
     required String ratingText,
     required VoidCallback onTap,
-    required VoidCallback onDelete,
+    VoidCallback? onDelete,
+    bool readOnly = false,
   }) {
     return _tapCard(
       onTap: onTap,
@@ -1904,18 +1969,19 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                   ],
                 ),
               ),
-              InkWell(
-                onTap: onDelete,
-                borderRadius: BorderRadius.circular(8),
-                child: Padding(
-                  padding: const EdgeInsets.all(6),
-                  child: Icon(
-                    Icons.delete_outline_rounded,
-                    size: 20,
-                    color: _inkMute,
+              if (!readOnly && onDelete != null)
+                InkWell(
+                  onTap: onDelete,
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: Icon(
+                      Icons.delete_outline_rounded,
+                      size: 20,
+                      color: _inkMute,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
@@ -1949,6 +2015,288 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
           ],
         ),
       ),
+    );
+  }
+
+  // =========================================================
+  // SHARED / READ-ONLY (provider) VIEW HELPERS
+  // =========================================================
+  Widget _sharedByCard(FlutterFlowTheme theme, DocumentReference ownerRef) {
+    return StreamBuilder<DocumentSnapshot>(
+      stream: ownerRef.snapshots(),
+      builder: (context, snap) {
+        final d = (snap.data?.data() as Map<String, dynamic>?) ??
+            const <String, dynamic>{};
+        final name = (d['display_name'] ?? '').toString().trim();
+        final photo = (d['photo_url'] ?? '').toString().trim();
+        final phone = (d['phone_number'] ?? '').toString().trim();
+        final display = name.isEmpty ? 'Project manager' : name;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                'SHARED WITH YOU BY',
+                style: theme.labelSmall.override(
+                  fontFamily: _bodyFont,
+                  color: _inkMute,
+                  letterSpacing: 0.9,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            Container(
+              decoration: BoxDecoration(
+                color: _tealSurface,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: _tealSurfaceBorder),
+              ),
+              padding: const EdgeInsets.all(15),
+              child: Row(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    alignment: Alignment.center,
+                    clipBehavior: Clip.antiAlias,
+                    decoration: const BoxDecoration(
+                      color: _ink,
+                      shape: BoxShape.circle,
+                    ),
+                    child: photo.isNotEmpty
+                        ? Image.network(
+                            photo,
+                            width: 52,
+                            height: 52,
+                            fit: BoxFit.cover,
+                            errorBuilder: (c, e, s) => _avatarInitials(display),
+                          )
+                        : _avatarInitials(display),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          display,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.titleMedium.override(
+                            fontFamily: _displayFont,
+                            color: _ink,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          'Project Manager',
+                          style: theme.bodySmall.override(
+                            fontFamily: _bodyFont,
+                            color: _inkMute,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (phone.isNotEmpty) ...[
+                    _roundAction(Icons.call_rounded, _ink,
+                        () => launchURL('tel:$phone')),
+                    const SizedBox(width: 8),
+                    _roundAction(Icons.chat_bubble_rounded, _coral,
+                        () => launchURL('sms:$phone')),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _avatarInitials(String name) => Text(
+        _initialsOf(name),
+        style: const TextStyle(
+          fontFamily: _displayFont,
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+          color: _paper,
+        ),
+      );
+
+  Widget _roundAction(IconData icon, Color bg, VoidCallback onTap) => InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Container(
+          width: 40,
+          height: 40,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
+          child: Icon(icon, size: 18, color: _paper),
+        ),
+      );
+
+  String _initialsOf(String name) {
+    final n = name.trim();
+    if (n.isEmpty) return '–';
+    final parts = n.split(RegExp(r'\s+'));
+    if (parts.length == 1) {
+      final p = parts.first;
+      return (p.length >= 2 ? p.substring(0, 2) : p).toUpperCase();
+    }
+    return (parts.first[0] + parts.last[0]).toUpperCase();
+  }
+
+  Widget _statStripShared({
+    required FlutterFlowTheme theme,
+    required String days,
+    required String snags,
+    required String files,
+  }) {
+    return Row(
+      children: [
+        Expanded(
+          child: _statTile(
+            theme: theme,
+            value: days,
+            label: 'Days left',
+            valueColor: _tealText,
+            bg: _tealSurface,
+            border: _tealSurfaceBorder,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _statTile(
+            theme: theme,
+            value: snags,
+            label: 'Open snags',
+            valueColor: _coral,
+            bg: _surface,
+            border: _hairline,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _statTile(
+            theme: theme,
+            value: files,
+            label: 'Shared files',
+            valueColor: _ink,
+            bg: _surface,
+            border: _hairline,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _sharedManage(FlutterFlowTheme theme) {
+    final mods = <Map<String, dynamic>>[
+      {
+        'key': 'timeline',
+        'icon': Icons.timeline_rounded,
+        'title': 'Timeline',
+        'sub': 'Programme & phases',
+        'route': widget.timelineRouteName,
+        'fb': _fallbackTimelineRoute,
+      },
+      {
+        'key': 'projectCost',
+        'icon': Icons.calculate_outlined,
+        'title': 'Project Cost',
+        'sub': 'Budget & estimates',
+        'route': widget.projectCostRouteName,
+        'fb': _fallbackCostRoute,
+      },
+      {
+        'key': 'getQuotes',
+        'icon': Icons.request_quote_outlined,
+        'title': 'Get Quotes',
+        'sub': 'Compare trades',
+        'route': widget.getQuotesRouteName,
+        'fb': _fallbackQuotesRoute,
+      },
+      {
+        'key': 'snagList',
+        'icon': Icons.fact_check_outlined,
+        'title': 'Snag List',
+        'sub': 'Defects & fixes',
+        'route': widget.snagListRouteName,
+        'fb': _fallbackSnagRoute,
+      },
+      {
+        'key': 'toDo',
+        'icon': Icons.checklist_rounded,
+        'title': 'To-Do List',
+        'sub': 'Tasks & reminders',
+        'route': widget.toDoListRouteName,
+        'fb': _fallbackToDoRoute,
+      },
+    ];
+    final shared = mods
+        .where((m) => _moduleVisFor(m['key'] as String) == 'shared')
+        .toList();
+    final hidden = mods
+        .where((m) => _moduleVisFor(m['key'] as String) != 'shared')
+        .toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionTitle(theme, 'Shared with you'),
+        const SizedBox(height: 6),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child: Text(
+            "The project manager chose what to share. Private modules aren't shown.",
+            style: theme.bodySmall.override(
+              fontFamily: _bodyFont,
+              color: _inkMute,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        for (final m in shared) ...[
+          _moduleRow(
+            theme: theme,
+            icon: m['icon'] as IconData,
+            title: m['title'] as String,
+            subtitle: m['sub'] as String,
+            onTap: () => _safeNavigate(m['route'] as String?,
+                fallbackRoute: m['fb'] as String),
+          ),
+          const SizedBox(height: 12),
+        ],
+        if (hidden.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF7F8FA),
+              borderRadius: BorderRadius.circular(_radius),
+              border: Border.all(color: _hairlineOnSurface),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.lock_outline_rounded,
+                    size: 18, color: Color(0xFF93A0B0)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '${hidden.map((m) => m['title']).join(' & ')} ${hidden.length == 1 ? 'is' : 'are'} private to the project manager.',
+                    style: theme.labelSmall.override(
+                      fontFamily: _bodyFont,
+                      color: const Color(0xFF93A0B0),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 
@@ -2038,6 +2386,18 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
 
     final projData = _projectData;
 
+    // Owner sees the full editable page; anyone else (a provider whose listing
+    // was added to this project) gets the read-only shared view.
+    final bool isOwner = (projData['ownerRef'] is DocumentReference) &&
+        currentUserReference != null &&
+        (projData['ownerRef'] as DocumentReference).path ==
+            currentUserReference!.path;
+    final bool readOnly = !isOwner;
+    final DocumentReference? ownerProfileRef =
+        projData['ownerRef'] is DocumentReference
+            ? projData['ownerRef'] as DocumentReference
+            : null;
+
     final projectName = (projData['name'] ?? 'Project').toString();
     final projectStatus = (projData['status'] ?? 'Active').toString();
 
@@ -2101,6 +2461,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
             status: projectStatus,
             address: projectAddress,
             dates: projectDates,
+            readOnly: readOnly,
           ),
           // ===== SCROLLING CONTENT =====
           Expanded(
@@ -2112,92 +2473,114 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // ============================================================
+                  // 0) SHARED-BY CARD (read-only / provider view)
+                  // ============================================================
+                  if (readOnly && ownerProfileRef != null) ...[
+                    _sharedByCard(theme, ownerProfileRef),
+                    const SizedBox(height: 22),
+                  ],
+
+                  // ============================================================
                   // 1) STAT STRIP
                   // ============================================================
-                  _statStrip(
-                    theme: theme,
-                    days: daysLeftLabel,
-                    budget: budgetLabel,
-                    snags: snagLabel,
-                  ),
+                  if (readOnly)
+                    _statStripShared(
+                      theme: theme,
+                      days: daysLeftLabel,
+                      snags: snagLabel,
+                      files:
+                          '${_docRows.where((s) => _docVisibility(s.data()) == 'shared').length}',
+                    )
+                  else
+                    _statStrip(
+                      theme: theme,
+                      days: daysLeftLabel,
+                      budget: budgetLabel,
+                      snags: snagLabel,
+                    ),
 
                   const SizedBox(height: 22),
 
                   // ============================================================
                   // 2) PROJECT MODULE LINKS
                   // ============================================================
-                  _sectionTitle(theme, 'Manage'),
-                  const SizedBox(height: 10),
-                  _visLegend(theme),
-                  Column(
-                    children: [
-                      _moduleRow(
-                        theme: theme,
-                        icon: Icons.timeline_rounded,
-                        title: 'Timeline',
-                        subtitle: 'Programme & phases',
-                        visibility: _moduleVisFor('timeline'),
-                        onToggleVisibility: () => _toggleModuleVis('timeline'),
-                        onTap: () => _safeNavigate(
-                          widget.timelineRouteName,
-                          fallbackRoute: _fallbackTimelineRoute,
+                  if (readOnly) _sharedManage(theme),
+                  if (!readOnly) _sectionTitle(theme, 'Manage'),
+                  if (!readOnly) const SizedBox(height: 10),
+                  if (!readOnly) _visLegend(theme),
+                  if (!readOnly)
+                    Column(
+                      children: [
+                        _moduleRow(
+                          theme: theme,
+                          icon: Icons.timeline_rounded,
+                          title: 'Timeline',
+                          subtitle: 'Programme & phases',
+                          visibility: _moduleVisFor('timeline'),
+                          onToggleVisibility: () =>
+                              _toggleModuleVis('timeline'),
+                          onTap: () => _safeNavigate(
+                            widget.timelineRouteName,
+                            fallbackRoute: _fallbackTimelineRoute,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      _moduleRow(
-                        theme: theme,
-                        icon: Icons.calculate_outlined,
-                        title: 'Project Cost',
-                        subtitle: 'Budget & estimates',
-                        visibility: _moduleVisFor('projectCost'),
-                        onToggleVisibility: () =>
-                            _toggleModuleVis('projectCost'),
-                        onTap: () => _safeNavigate(
-                          widget.projectCostRouteName,
-                          fallbackRoute: _fallbackCostRoute,
+                        const SizedBox(height: 12),
+                        _moduleRow(
+                          theme: theme,
+                          icon: Icons.calculate_outlined,
+                          title: 'Project Cost',
+                          subtitle: 'Budget & estimates',
+                          visibility: _moduleVisFor('projectCost'),
+                          onToggleVisibility: () =>
+                              _toggleModuleVis('projectCost'),
+                          onTap: () => _safeNavigate(
+                            widget.projectCostRouteName,
+                            fallbackRoute: _fallbackCostRoute,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      _moduleRow(
-                        theme: theme,
-                        icon: Icons.request_quote_outlined,
-                        title: 'Get Quotes',
-                        subtitle: 'Compare trades',
-                        visibility: _moduleVisFor('getQuotes'),
-                        onToggleVisibility: () => _toggleModuleVis('getQuotes'),
-                        onTap: () => _safeNavigate(
-                          widget.getQuotesRouteName,
-                          fallbackRoute: _fallbackQuotesRoute,
+                        const SizedBox(height: 12),
+                        _moduleRow(
+                          theme: theme,
+                          icon: Icons.request_quote_outlined,
+                          title: 'Get Quotes',
+                          subtitle: 'Compare trades',
+                          visibility: _moduleVisFor('getQuotes'),
+                          onToggleVisibility: () =>
+                              _toggleModuleVis('getQuotes'),
+                          onTap: () => _safeNavigate(
+                            widget.getQuotesRouteName,
+                            fallbackRoute: _fallbackQuotesRoute,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      _moduleRow(
-                        theme: theme,
-                        icon: Icons.fact_check_outlined,
-                        title: 'Snag List',
-                        subtitle: 'Defects & fixes',
-                        visibility: _moduleVisFor('snagList'),
-                        onToggleVisibility: () => _toggleModuleVis('snagList'),
-                        onTap: () => _safeNavigate(
-                          widget.snagListRouteName,
-                          fallbackRoute: _fallbackSnagRoute,
+                        const SizedBox(height: 12),
+                        _moduleRow(
+                          theme: theme,
+                          icon: Icons.fact_check_outlined,
+                          title: 'Snag List',
+                          subtitle: 'Defects & fixes',
+                          visibility: _moduleVisFor('snagList'),
+                          onToggleVisibility: () =>
+                              _toggleModuleVis('snagList'),
+                          onTap: () => _safeNavigate(
+                            widget.snagListRouteName,
+                            fallbackRoute: _fallbackSnagRoute,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      _moduleRow(
-                        theme: theme,
-                        icon: Icons.checklist_rounded,
-                        title: 'To-Do List',
-                        subtitle: 'Tasks & reminders',
-                        visibility: _moduleVisFor('toDo'),
-                        onToggleVisibility: () => _toggleModuleVis('toDo'),
-                        onTap: () => _safeNavigate(
-                          widget.toDoListRouteName,
-                          fallbackRoute: _fallbackToDoRoute,
+                        const SizedBox(height: 12),
+                        _moduleRow(
+                          theme: theme,
+                          icon: Icons.checklist_rounded,
+                          title: 'To-Do List',
+                          subtitle: 'Tasks & reminders',
+                          visibility: _moduleVisFor('toDo'),
+                          onToggleVisibility: () => _toggleModuleVis('toDo'),
+                          onTap: () => _safeNavigate(
+                            widget.toDoListRouteName,
+                            fallbackRoute: _fallbackToDoRoute,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
 
                   const SizedBox(height: 22),
 
@@ -2207,11 +2590,11 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                   Row(
                     children: [
                       Expanded(child: _sectionTitle(theme, 'Documents')),
-                      _uploadDocButton(theme, projectsAccent),
+                      if (!readOnly) _uploadDocButton(theme, projectsAccent),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  _visLegend(theme),
+                  if (!readOnly) _visLegend(theme),
 
                   if (_docsErr != null)
                     _errorCard(
@@ -2263,26 +2646,27 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                               ],
                             ),
                           ),
-                          const SizedBox(width: 10),
-                          _tapCard(
-                            onTap: _navigateToUploadDocument,
-                            radius: BorderRadius.circular(12),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: projectsAccent,
-                                borderRadius: BorderRadius.circular(12),
+                          if (!readOnly) const SizedBox(width: 10),
+                          if (!readOnly)
+                            _tapCard(
+                              onTap: _navigateToUploadDocument,
+                              radius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: projectsAccent,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(Icons.add_rounded,
+                                    color: _paper, size: 18),
                               ),
-                              child: const Icon(Icons.add_rounded,
-                                  color: _paper, size: 18),
                             ),
-                          ),
                         ],
                       ),
                     )
                   else
-                    _docsByCategory(theme, projectsAccent),
+                    _docsByCategory(theme, projectsAccent, readOnly: readOnly),
 
                   const SizedBox(height: 22),
 
@@ -2352,6 +2736,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                           child: _listingRow(
                             theme: theme,
                             accent: projectsAccent,
+                            readOnly: readOnly,
                             title: title,
                             subtitle:
                                 subtitle.trim().isNotEmpty ? subtitle : '—',

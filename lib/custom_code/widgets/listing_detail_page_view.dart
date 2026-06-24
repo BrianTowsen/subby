@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -653,7 +655,10 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
           final String listingWhatsapp = readString('whatsappNumber');
           final String listingEmail = readString('email');
 
-          final DocumentReference? providerRef = readDocRef('providerRef');
+          // Consolidated onto ownerRef (the field the app actually writes &
+          // queries). providerRef/claimedAt are retired; backfill ownerRef
+          // from providerRef before deleting those fields in Firestore.
+          final DocumentReference? ownerRef = readDocRef('ownerRef');
           final bool isVerified = raw['isVerified'] == true;
 
           final List<String> listingPhotos = readStringList('photoUrls');
@@ -919,10 +924,10 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                     photoUrl: ownerPhotoUrl,
                                   ),
                                   const SizedBox(height: 18),
-                                ] else if (providerRef != null) ...[
+                                ] else if (ownerRef != null) ...[
                                   Text('SERVICE PROVIDER', style: _uLabelStyle),
                                   _buildProviderSection(
-                                    providerRef: providerRef,
+                                    providerRef: ownerRef,
                                     fallbackName:
                                         '$_fallbackProviderName $_fallbackProviderSurname',
                                     fallbackPhotoUrl: _fallbackProviderPhoto,
