@@ -399,7 +399,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
       final type = (d['type'] ?? 'File').toString();
       final updatedAt = d['updatedAt'];
       final when = (updatedAt is Timestamp)
-          ? dateTimeFormat('relative', updatedAt.toDate())
+          ? dateTimeFormat('d MMM y · HH:mm', updatedAt.toDate())
           : 'recently';
       final url = (d['fileUrl'] ?? '').toString();
       final vis =
@@ -410,7 +410,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
         theme: theme,
         accent: accent,
         title: title,
-        subtitle: 'Updated $when',
+        subtitle: when,
         icon: _iconForType(type),
         visibility: vis,
         onToggleVisibility: () => _toggleDocVis(snap.reference, vis),
@@ -480,7 +480,18 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
                       fontSize: 15,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
+                  Text(
+                    'UPDATED',
+                    style: theme.labelSmall.override(
+                      fontFamily: _bodyFont,
+                      color: const Color(0xFF93A0B0),
+                      letterSpacing: 0.5,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 10,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
                   Text(
                     subtitle,
                     maxLines: 1,
@@ -489,7 +500,8 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
                       fontFamily: _bodyFont,
                       color: _inkMute,
                       letterSpacing: 0.0,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
                     ),
                   ),
                 ],
