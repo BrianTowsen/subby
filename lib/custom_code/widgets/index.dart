@@ -29,3 +29,5 @@ export 'document_upload_page_view.dart' show DocumentUploadPageView;
 export 'main_bottom_nav.dart' show MainBottomNav;
 export 'add_snag_page_view.dart' show AddSnagPageView;
 export 'detail_snag_page_view.dart' show DetailSnagPageView;
+export 'add_task_page_view.dart' show AddTaskPageView;
+export 'detail_task_page_view.dart' show DetailTaskPageView;
