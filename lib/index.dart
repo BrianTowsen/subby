@@ -44,3 +44,7 @@ export '/get_quotes/get_quotes_page/get_quotes_page_widget.dart'
 export '/to_do_list_page/to_do_list_page_widget.dart' show ToDoListPageWidget;
 export '/projects/document_upload_page/document_upload_page_widget.dart'
     show DocumentUploadPageWidget;
+export '/snag_list/add_snag_page/add_snag_page_widget.dart'
+    show AddSnagPageWidget;
+export '/snag_list/detail_snag_page/detail_snag_page_widget.dart'
+    show DetailSnagPageWidget;

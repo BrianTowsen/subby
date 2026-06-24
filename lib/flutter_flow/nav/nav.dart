@@ -340,6 +340,16 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
               collectionNamePath: ['projects'],
             ),
           ),
+        ),
+        FFRoute(
+          name: AddSnagPageWidget.routeName,
+          path: AddSnagPageWidget.routePath,
+          builder: (context, params) => AddSnagPageWidget(),
+        ),
+        FFRoute(
+          name: DetailSnagPageWidget.routeName,
+          path: DetailSnagPageWidget.routePath,
+          builder: (context, params) => DetailSnagPageWidget(),
         )
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );
