@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 // ======================= DashboardPageView (FULL FILE) =======================
 //
 // v5 — "Focus" home: most-recent project as a HERO card with a large
@@ -707,8 +709,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // Shared Building Projects — projects this user was added to AS A LISTING.
   // Resolves the user's subby_listing(s) → project_listings → projects.
   // -----------------------------
-  Future<List<DocumentSnapshot<Map<String, dynamic>>>>
-      _loadSharedProjects() async {
+  Future<List<_SharedProject>> _loadSharedProjects() async {
     final userRef = currentUserReference;
     if (userRef == null) return [];
     try {
@@ -743,19 +744,50 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         }
       }
       final results = await Future.wait(futures);
-      return results.where((s) => s.exists).toList();
+
+      // Enrich each shared project with the project manager (project owner)
+      // profile so the row can show who shared it.
+      final out = <_SharedProject>[];
+      for (final s in results.where((s) => s.exists)) {
+        final data = s.data() ?? <String, dynamic>{};
+        String pmName = (data['ownerName'] as String?)?.trim() ?? '';
+        String pmPhoto = (data['ownerPhotoUrl'] as String?)?.trim() ?? '';
+        final ownerRef = data['ownerRef'];
+        if ((pmName.isEmpty || pmPhoto.isEmpty) &&
+            ownerRef is DocumentReference) {
+          try {
+            final u = await ownerRef.get();
+            final ud = u.data() as Map<String, dynamic>?;
+            if (ud != null) {
+              if (pmName.isEmpty) {
+                pmName = (ud['display_name'] as String?)?.trim() ?? '';
+              }
+              if (pmPhoto.isEmpty) {
+                pmPhoto = (ud['photo_url'] as String?)?.trim() ?? '';
+              }
+            }
+          } catch (_) {}
+        }
+        out.add(_SharedProject(
+          ref: s.reference,
+          data: data,
+          pmName: pmName,
+          pmPhotoUrl: pmPhoto,
+        ));
+      }
+      return out;
     } catch (e) {
       debugPrint('🔥 Failed to load shared projects: $e');
-      return [];
+      return <_SharedProject>[];
     }
   }
 
   Widget _buildSharedSection() {
     if (currentUserReference == null) return const SizedBox.shrink();
-    return FutureBuilder<List<DocumentSnapshot<Map<String, dynamic>>>>(
+    return FutureBuilder<List<_SharedProject>>(
       future: _loadSharedProjects(),
       builder: (context, snap) {
-        final docs = snap.data ?? const [];
+        final docs = snap.data ?? const <_SharedProject>[];
         if (docs.isEmpty) return const SizedBox.shrink();
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -776,7 +808,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             const SizedBox(height: 10),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: _hPad),
-              child: Column(children: [for (final d in docs) _sharedRow(d)]),
+              child: Column(children: [for (final sp in docs) _sharedRow(sp)]),
             ),
           ],
         );
@@ -794,19 +826,19 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         ],
       );
 
-  Widget _sharedRow(DocumentSnapshot<Map<String, dynamic>> doc) {
-    final data = doc.data() ?? <String, dynamic>{};
+  Widget _sharedRow(_SharedProject sp) {
+    final data = sp.data;
     final name = (data['name'] as String?)?.trim() ?? '';
     final city = (data['city'] as String?)?.trim() ?? '';
     final province = (data['province'] as String?)?.trim() ?? '';
-    final owner = (data['ownerName'] as String?)?.trim() ?? '';
     final loc = [city, province].where((x) => x.isNotEmpty).join(', ');
-    final sub = owner.isNotEmpty
-        ? 'Shared by $owner${loc.isNotEmpty ? ' • $loc' : ''}'
+    final pm = sp.pmName.trim();
+    final sub = pm.isNotEmpty
+        ? 'Shared by $pm${loc.isNotEmpty ? ' • $loc' : ''}'
         : (loc.isEmpty ? 'Shared with you' : 'Shared with you • $loc');
 
     return InkWell(
-      onTap: () => _goToProject(doc.reference),
+      onTap: () => _goToProject(sp.ref),
       child: Container(
         decoration: const BoxDecoration(
           border: Border(bottom: BorderSide(color: Color(0xFFF1F4F7))),
@@ -815,15 +847,23 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         child: Row(
           children: [
             Container(
-              width: 36,
-              height: 36,
+              width: 38,
+              height: 38,
               alignment: Alignment.center,
+              clipBehavior: Clip.antiAlias,
               decoration: const BoxDecoration(
                 color: Color(0xFFE3F4F2),
                 shape: BoxShape.circle,
               ),
-              child:
-                  const Icon(Icons.visibility_outlined, size: 18, color: _ink),
+              child: sp.pmPhotoUrl.isNotEmpty
+                  ? Image.network(
+                      sp.pmPhotoUrl,
+                      width: 38,
+                      height: 38,
+                      fit: BoxFit.cover,
+                      errorBuilder: (c, e, s) => _sharedAvatarFallback(pm),
+                    )
+                  : _sharedAvatarFallback(pm),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -836,12 +876,21 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                     overflow: TextOverflow.ellipsis,
                     style: _tileTitleStyle.copyWith(fontSize: 14),
                   ),
-                  const SizedBox(height: 1),
-                  Text(
-                    sub,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: _tileSubtitleStyle,
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      const Icon(Icons.ios_share_rounded,
+                          size: 13, color: _faint),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          sub,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: _tileSubtitleStyle,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -854,6 +903,16 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       ),
     );
   }
+
+  Widget _sharedAvatarFallback(String pm) => Text(
+        pm.isNotEmpty ? _initials(pm) : '–',
+        style: const TextStyle(
+          fontFamily: _displayFont,
+          fontSize: 13,
+          fontWeight: FontWeight.w800,
+          color: _ink,
+        ),
+      );
 
   Widget _archivedSectionHeader() => Row(
         children: [
@@ -1628,4 +1687,19 @@ class _SubbyMarkPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _SubbyMarkPainter old) =>
       old.peak != peak || old.base != base;
+}
+
+// A shared project plus the project-manager (project owner) profile that
+// shared it — used by the Dashboard's "Shared Building Projects" rows.
+class _SharedProject {
+  final DocumentReference<Map<String, dynamic>> ref;
+  final Map<String, dynamic> data;
+  final String pmName;
+  final String pmPhotoUrl;
+  const _SharedProject({
+    required this.ref,
+    required this.data,
+    required this.pmName,
+    required this.pmPhotoUrl,
+  });
 }
