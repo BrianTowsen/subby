@@ -27,3 +27,5 @@ export 'get_quotes_page_view.dart' show GetQuotesPageView;
 export 'to_do_list_page_view.dart' show ToDoListPageView;
 export 'document_upload_page_view.dart' show DocumentUploadPageView;
 export 'main_bottom_nav.dart' show MainBottomNav;
+export 'add_snag_page_view.dart' show AddSnagPageView;
+export 'detail_snag_page_view.dart' show DetailSnagPageView;
