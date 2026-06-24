@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -623,12 +625,15 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
           final String categorySlug = readString('categorySlug').isNotEmpty
               ? readString('categorySlug')
               : functions.slugify(category);
+          final String speciality = readString('speciality');
+          final String suburb = readString('suburb');
           final String province = readString('province');
           final String city = readString('city');
           final String provinceSlug = readString('provinceSlug').isNotEmpty
               ? readString('provinceSlug')
               : functions.slugify(province);
           final String area = [
+            if (suburb.isNotEmpty) suburb,
             if (city.isNotEmpty) city,
             if (province.isNotEmpty) province,
           ].join(', ');
@@ -876,6 +881,45 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                 ),
                                 const SizedBox(height: 12),
                                 Text(name, style: _titleStyle),
+                                if (speciality.isNotEmpty ||
+                                    category.isNotEmpty) ...[
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.handyman_outlined,
+                                          size: 16, color: _amber),
+                                      const SizedBox(width: 8),
+                                      if (speciality.isNotEmpty)
+                                        Flexible(
+                                          child: Text(
+                                            speciality,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              fontFamily: _bodyFont,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w700,
+                                              color: _amber,
+                                            ),
+                                          ),
+                                        ),
+                                      if (speciality.isNotEmpty &&
+                                          category.isNotEmpty &&
+                                          category != speciality) ...[
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          width: 3,
+                                          height: 3,
+                                          decoration: const BoxDecoration(
+                                              color: _faint,
+                                              shape: BoxShape.circle),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(category, style: _metaStyle),
+                                      ],
+                                    ],
+                                  ),
+                                ],
                                 const SizedBox(height: 8),
                                 Row(
                                   children: [

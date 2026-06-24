@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'dart:typed_data';
@@ -72,6 +74,9 @@ class _EditListingPageViewState extends State<EditListingPageView> {
   final TextEditingController _emailCtrl = TextEditingController();
   final TextEditingController _whatsCtrl = TextEditingController();
   final TextEditingController _suburbCtrl = TextEditingController();
+  final TextEditingController _servicesCtrl = TextEditingController();
+  final TextEditingController _associationsCtrl = TextEditingController();
+  final TextEditingController _hoursCtrl = TextEditingController();
 
   String _listingType = 'Professionals';
   String _selectedProvince = 'Select province';
@@ -279,6 +284,9 @@ class _EditListingPageViewState extends State<EditListingPageView> {
   // ---------------------------------------------------------
   // Firestore helpers
   // ---------------------------------------------------------
+  List<String> _parseList(String raw) =>
+      raw.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+
   void _toast(String message, {bool error = false}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
@@ -356,6 +364,13 @@ class _EditListingPageViewState extends State<EditListingPageView> {
     _emailCtrl.text = s(data['email']);
     _suburbCtrl.text = s(data['suburb']);
     _existingHeroUrl = s(data['heroPhotoUrl']);
+
+    List<String> sList(dynamic v) => (v is List)
+        ? v.map((e) => e.toString().trim()).where((e) => e.isNotEmpty).toList()
+        : <String>[];
+    _servicesCtrl.text = sList(data['services']).join(', ');
+    _associationsCtrl.text = sList(data['associations']).join(', ');
+    _hoursCtrl.text = s(data['openingHours']);
 
     final prov = s(data['province']);
     final city = s(data['city']);
@@ -457,6 +472,10 @@ class _EditListingPageViewState extends State<EditListingPageView> {
       final specialitySlug = functions.slugify(speciality);
       final provinceSlug = functions.slugify(province);
 
+      final services = _parseList(_servicesCtrl.text);
+      final associations = _parseList(_associationsCtrl.text);
+      final openingHours = _hoursCtrl.text.trim();
+
       String? newHeroUrl;
       if (_heroBytes != null && _heroBytes!.isNotEmpty) {
         final ts = DateTime.now().millisecondsSinceEpoch;
@@ -499,6 +518,13 @@ class _EditListingPageViewState extends State<EditListingPageView> {
         else
           'whatsappNumber': FieldValue.delete(),
         if (email.isNotEmpty) 'email': email else 'email': FieldValue.delete(),
+        'services': services.isNotEmpty ? services : FieldValue.delete(),
+        'associations':
+            associations.isNotEmpty ? associations : FieldValue.delete(),
+        if (openingHours.isNotEmpty)
+          'openingHours': openingHours
+        else
+          'openingHours': FieldValue.delete(),
         if (newHeroUrl != null) 'heroPhotoUrl': newHeroUrl,
         if (newHeroUrl != null) 'photoUrls': <String>[newHeroUrl],
         if (newHeroUrl == null && _removeHero)
@@ -625,6 +651,9 @@ class _EditListingPageViewState extends State<EditListingPageView> {
     _emailCtrl.dispose();
     _whatsCtrl.dispose();
     _suburbCtrl.dispose();
+    _servicesCtrl.dispose();
+    _associationsCtrl.dispose();
+    _hoursCtrl.dispose();
     super.dispose();
   }
 
@@ -703,6 +732,19 @@ class _EditListingPageViewState extends State<EditListingPageView> {
                         maxLines: 4,
                       ),
                       _uText(
+                        label: 'Services',
+                        controller: _servicesCtrl,
+                        icon: Icons.checklist_rounded,
+                        hint: 'New installations, Geyser repairs, COC…',
+                        maxLines: 2,
+                      ),
+                      _uText(
+                        label: 'Associations',
+                        controller: _associationsCtrl,
+                        icon: Icons.verified_outlined,
+                        hint: 'Master Builders Association, ECA…',
+                      ),
+                      _uText(
                         label: 'Phone number',
                         controller: _phoneCtrl,
                         icon: Icons.call_outlined,
@@ -722,6 +764,12 @@ class _EditListingPageViewState extends State<EditListingPageView> {
                         icon: Icons.mail_outlined,
                         hint: 'e.g. hello@company.co.za',
                         keyboardType: TextInputType.emailAddress,
+                      ),
+                      _uText(
+                        label: 'Opening hours',
+                        controller: _hoursCtrl,
+                        icon: Icons.schedule_rounded,
+                        hint: 'e.g. 07:00 – 18:00',
                       ),
                       _uSelect(
                         label: 'Province *',
