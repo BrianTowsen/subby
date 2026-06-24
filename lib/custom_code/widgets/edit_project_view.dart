@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 
@@ -680,7 +682,20 @@ class _EditProjectViewState extends State<EditProjectView> {
 
       final target = (widget.afterSaveRouteName ?? '').trim();
       if (target.isNotEmpty) {
-        context.pushReplacementNamed(target);
+        // ✅ Forward the edited project's ref so the destination
+        // (e.g. ProjectDetailPageView) knows which project to show.
+        context.pushReplacementNamed(
+          target,
+          queryParameters: <String, dynamic>{
+            'projectRef': serializeParam(
+              ref,
+              ParamType.DocumentReference,
+            ),
+          }.withoutNulls,
+          extra: <String, dynamic>{
+            'projectRef': ref,
+          },
+        );
       } else {
         context.safePop();
       }

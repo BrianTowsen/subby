@@ -1381,6 +1381,45 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
         ),
       );
 
+  // Shared / Private legend shown under the Manage + Documents headers.
+  Widget _visLegend(FlutterFlowTheme theme) {
+    Widget item(IconData icon, Color iconColor, Color bg, String label) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 20,
+            height: 20,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
+            child: Icon(icon, size: 13, color: iconColor),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: theme.labelSmall.override(
+              fontFamily: _bodyFont,
+              color: _inkMute,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(
+        children: [
+          item(Icons.visibility_outlined, _teal, const Color(0xFFE3F4F2),
+              'Shared with providers'),
+          const SizedBox(width: 18),
+          item(Icons.lock_outline_rounded, _inkMute, _surface, 'Private'),
+        ],
+      ),
+    );
+  }
+
   List<Widget> _docRowWidgets(
     FlutterFlowTheme theme,
     Color accent,
@@ -1393,7 +1432,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
       final type = (d['type'] ?? d['fileType'] ?? 'File').toString().trim();
       final updatedAt = d['updatedAt'] ?? d['createdAt'];
       final when = (updatedAt is Timestamp)
-          ? dateTimeFormat('relative', updatedAt.toDate())
+          ? dateTimeFormat('d MMM y · HH:mm', updatedAt.toDate())
           : 'recently';
       final vis = _docVisibility(d);
       final cat = _docCategory(d);
@@ -1403,7 +1442,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
           theme: theme,
           accent: accent,
           title: title.isEmpty ? 'Document' : title,
-          subtitle: 'Updated $when',
+          subtitle: when,
           icon: _docCategoryIcon(cat),
           visibility: vis,
           onToggleVisibility: () => _toggleDocVis(docSnap.reference, vis),
@@ -1731,7 +1770,18 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
+                    Text(
+                      'UPDATED',
+                      style: theme.labelSmall.override(
+                        fontFamily: _bodyFont,
+                        color: const Color(0xFF93A0B0),
+                        letterSpacing: 0.5,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 10,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
                     Text(
                       subtitle,
                       maxLines: 1,
@@ -1740,7 +1790,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                         fontFamily: _bodyFont,
                         color: _inkMute,
                         letterSpacing: 0.0,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
                       ),
                     ),
                   ],
@@ -2076,7 +2127,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                   // 2) PROJECT MODULE LINKS
                   // ============================================================
                   _sectionTitle(theme, 'Manage'),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
+                  _visLegend(theme),
                   Column(
                     children: [
                       _moduleRow(
@@ -2159,6 +2211,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                     ],
                   ),
                   const SizedBox(height: 12),
+                  _visLegend(theme),
 
                   if (_docsErr != null)
                     _errorCard(
@@ -2236,7 +2289,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                   // ============================================================
                   // 4) LISTINGS
                   // ============================================================
-                  _sectionTitle(theme, 'Listings Added to Project'),
+                  _sectionTitle(theme, 'Project Team'),
                   const SizedBox(height: 12),
 
                   if (_listingsErr != null)
@@ -2267,7 +2320,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              'No listings added yet.',
+                              'No providers added yet.',
                               style: theme.bodyMedium.override(
                                 fontFamily: _bodyFont,
                                 color: _ink,
