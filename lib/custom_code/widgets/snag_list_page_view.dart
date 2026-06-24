@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -77,18 +79,58 @@ class _SnagListPageViewState extends State<SnagListPageView>
   late TabController _tabController;
 
   DocumentReference? _projectRef;
+  bool _resolved = false; // resolve projectRef once
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _loadActiveProject();
+    // NOTE: route reading must happen in didChangeDependencies (needs context).
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_resolved) return;
+    _resolved = true;
+
+    // 1) projectRef from the route (ProjectDetailPageView passes this), else prefs.
+    final fromRoute = _readRefFromRoute('projectRef', 'projects');
+    if (fromRoute != null) {
+      _projectRef = fromRoute;
+      // Persist so Add Snag / Detail Snag inherit it (and survive cold start).
+      SharedPreferences.getInstance()
+          .then((p) => p.setString(_kActiveProjectPath, fromRoute.path));
+      if (mounted) setState(() {});
+    } else {
+      _loadActiveProject();
+    }
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  // Reads a serialized DocumentReference query param (same logic as
+  // AddSnagPageView / DetailSnagPageView) and turns it into a DocumentReference.
+  DocumentReference? _readRefFromRoute(String key, String fallbackCollection) {
+    try {
+      final qp = GoRouterState.of(context).uri.queryParameters;
+      var s = (qp[key] ?? '').trim();
+      if (s.isEmpty) return null;
+      s = s.replaceAll('"', '');
+      if (s.startsWith('{')) {
+        final m = RegExp(r'([A-Za-z0-9_]+/[A-Za-z0-9_]+(?:/[A-Za-z0-9_]+)*)')
+            .firstMatch(s);
+        if (m != null) s = m.group(1)!;
+      }
+      if (s.contains('/')) return FirebaseFirestore.instance.doc(s);
+      return FirebaseFirestore.instance.collection(fallbackCollection).doc(s);
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> _loadActiveProject() async {

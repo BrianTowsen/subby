@@ -51,7 +51,7 @@ class _ToDoListPageWidgetState extends State<ToDoListPageWidget> {
             height: double.infinity,
             addTaskRouteName: 'AddTaskPage',
             taskDetailRouteName: 'DetailTaskPage',
-            backRouteName: 'toDoListPage',
+            backRouteName: '',
           ),
         ),
       ),
