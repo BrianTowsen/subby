@@ -350,6 +350,16 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           name: DetailSnagPageWidget.routeName,
           path: DetailSnagPageWidget.routePath,
           builder: (context, params) => DetailSnagPageWidget(),
+        ),
+        FFRoute(
+          name: AddTaskPageWidget.routeName,
+          path: AddTaskPageWidget.routePath,
+          builder: (context, params) => AddTaskPageWidget(),
+        ),
+        FFRoute(
+          name: DetailTaskPageWidget.routeName,
+          path: DetailTaskPageWidget.routePath,
+          builder: (context, params) => DetailTaskPageWidget(),
         )
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );

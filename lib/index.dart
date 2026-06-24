@@ -48,3 +48,6 @@ export '/snag_list/add_snag_page/add_snag_page_widget.dart'
     show AddSnagPageWidget;
 export '/snag_list/detail_snag_page/detail_snag_page_widget.dart'
     show DetailSnagPageWidget;
+export '/add_task_page/add_task_page_widget.dart' show AddTaskPageWidget;
+export '/detail_task_page/detail_task_page_widget.dart'
+    show DetailTaskPageWidget;
