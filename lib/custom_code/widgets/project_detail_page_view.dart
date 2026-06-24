@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -1401,7 +1403,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
           theme: theme,
           accent: accent,
           title: title.isEmpty ? 'Document' : title,
-          subtitle: '$type • Updated $when',
+          subtitle: 'Updated $when',
           icon: _docCategoryIcon(cat),
           visibility: vis,
           onToggleVisibility: () => _toggleDocVis(docSnap.reference, vis),
@@ -1748,10 +1750,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                 const SizedBox(width: 6),
                 _visToggle(visibility: visibility, onTap: onToggleVisibility),
               ],
-              const SizedBox(width: 6),
-              Icon(Icons.open_in_new_rounded, size: 18, color: _inkMute),
               if (onDelete != null) ...[
-                const SizedBox(width: 2),
+                const SizedBox(width: 18),
                 InkWell(
                   onTap: onDelete,
                   borderRadius: BorderRadius.circular(8),

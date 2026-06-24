@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -272,6 +274,52 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
     }
   }
 
+  // ✅ Delete document (Firestore record + Storage file)
+  Future<void> _deleteDoc(
+    QueryDocumentSnapshot<Map<String, dynamic>> snap,
+  ) async {
+    final data = snap.data();
+    try {
+      // Best-effort: delete the underlying Storage object first.
+      final storagePath =
+          (data['storagePath'] ?? data['storage_path'])?.toString().trim();
+      if (storagePath != null && storagePath.isNotEmpty) {
+        try {
+          await FirebaseStorage.instance.ref().child(storagePath).delete();
+        } catch (e) {
+          debugPrint('⚠️ Storage delete skipped/failed for $storagePath: $e');
+        }
+      } else {
+        final url = (data['fileUrl'] ?? data['url'])?.toString().trim();
+        if (url != null && url.isNotEmpty) {
+          try {
+            await FirebaseStorage.instance.refFromURL(url).delete();
+          } catch (e) {
+            debugPrint('⚠️ Storage delete skipped/failed for url: $e');
+          }
+        }
+      }
+
+      // Delete the Firestore record (this is what removes it from the list).
+      await snap.reference.delete();
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text('Document deleted.')),
+        );
+    } catch (e) {
+      debugPrint('🔥 Failed deleting project_documents doc: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text('Could not delete document.')),
+        );
+    }
+  }
+
   // Segmented pill used by the new-upload selectors.
   Widget _segPill(
     FlutterFlowTheme theme, {
@@ -362,7 +410,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
         theme: theme,
         accent: accent,
         title: title,
-        subtitle: '$type • Updated $when',
+        subtitle: 'Updated $when',
         icon: _iconForType(type),
         visibility: vis,
         onToggleVisibility: () => _toggleDocVis(snap.reference, vis),
@@ -370,6 +418,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
           if (url.trim().isEmpty) return;
           await launchURL(url);
         },
+        onDelete: () => _deleteDoc(snap),
       );
     }
 
@@ -403,6 +452,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
     String? visibility,
     VoidCallback? onToggleVisibility,
     VoidCallback? onTap,
+    VoidCallback? onDelete,
   }) {
     return _tapCard(
       onTap: onTap,
@@ -481,11 +531,22 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 14),
             ] else
-              const SizedBox(width: 10),
-            const Icon(Icons.open_in_new_rounded,
-                size: 18, color: _hairlineOnSurface),
+              const SizedBox(width: 14),
+            if (onDelete != null)
+              InkWell(
+                onTap: onDelete,
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Icon(
+                    Icons.delete_outline_rounded,
+                    size: 20,
+                    color: _inkMute,
+                  ),
+                ),
+              ),
           ],
         ),
       ),
