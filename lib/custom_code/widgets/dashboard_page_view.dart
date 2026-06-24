@@ -801,7 +801,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: _hPad),
               child: Text(
-                "Projects you've been added to as a listing.",
+                "Added to the Project Team.",
                 style: _tileSubtitleStyle.copyWith(fontSize: 12),
               ),
             ),

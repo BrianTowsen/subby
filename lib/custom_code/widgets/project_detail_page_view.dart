@@ -1441,7 +1441,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
       child: Row(
         children: [
           item(Icons.visibility_outlined, _teal, const Color(0xFFE3F4F2),
-              'Shared with providers'),
+              'Shared'),
           const SizedBox(width: 18),
           item(Icons.lock_outline_rounded, _inkMute, _surface, 'Private'),
         ],
