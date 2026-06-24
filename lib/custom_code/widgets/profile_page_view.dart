@@ -10,17 +10,25 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import '/custom_code/widgets/index.dart'; // (kept if FF expects it)
-
 // ✅ provides currentUserReference, currentUserEmail, etc.
 import '/auth/firebase_auth/auth_util.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
+// =============================================================================
+// ProfilePageView  →  now the ACCOUNT hub
+//
+// Same class / route / params as before (drop-in replacement) but restructured:
+//   • PLAN     — current package + the perks that plan includes
+//   • LISTING  — entry points to Edit Listing / Add Listing (previously
+//                unreachable from the Directory). Empty state → "Add listing".
+//   • SETTINGS — Personal details + Notifications.
+//                (Help & Support moved to MorePageView.)
+//   • Logout / Delete (real Firebase logic preserved)
+//
+// Host inside a page that places MainBottomNav(currentIndex: 2).
+// =============================================================================
 
 class ProfilePageView extends StatefulWidget {
   const ProfilePageView({
@@ -34,12 +42,11 @@ class ProfilePageView extends StatefulWidget {
   final double? width;
   final double? height;
 
-  /// FlutterFlow route name to a page/sheet where YOU run:
-  /// Select Media -> Upload -> Update users.photo_url
+  /// FF route to a page/sheet where you Select Media → Upload → update photo_url.
+  /// Tapping the avatar opens it. If unset, shows a toast.
   final String? editPhotoRouteName;
 
-  /// Optional FF route to a notifications / alerts settings page.
-  /// If unset, the Alerts tile shows a "coming soon" toast.
+  /// Optional FF route to notifications settings. If unset → "coming soon" toast.
   final String? notificationsRouteName;
 
   @override
@@ -57,38 +64,89 @@ class _ProfilePageViewState extends State<ProfilePageView> {
   static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
   // Brand accent — TEAL.
   static const Color _teal = Color(0xFF017374);
-  static const Color _spark = Color(
-      0xFFFEB518); // sunshine — avatar ring + initials over the deep-teal circle
-  static const Color _sparkInk = Color(0xFFFFFFFF);
+  // Sunshine — avatar ring + initials.
+  static const Color _spark = Color(0xFFFEB518);
   // Status
   static const Color _live = Color(0xFFE5771E);
   static const Color _coral = Color(0xFFE5771E);
+  static const Color _ok = Color(0xFF1FA463); // "live in Directory" dot
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
-  static const String _monoFont = 'Inter';
   // ────────────────────────────────────────────────────────────────────
 
-  // ✅ Use your actual FF route names
+  // ✅ Route names — adjust to your FlutterFlow page names.
   static const String _loginRouteName = 'loginPage';
   static const String _createAccountRouteName = 'createAccountPage';
   static const String _editProfileRouteName = 'editProfilePage';
+  static const String _editListingRouteName = 'editListingPage';
+  static const String _addListingRouteName = 'addListingPage';
+  static const String _directoryRouteName =
+      'explorePage'; // "View in Directory"
+  static const String _managePackageRouteName = ''; // optional → toast if empty
 
   static const double _hPad = 24;
   static const double _vPad = 14;
-  static const double _radius = 12;
+
+  // Packages (low → high). "Plus" is a placeholder — rename to taste.
+  static const List<String> _tiers = ['Free', 'Basic', 'Plus', 'Professional'];
+
+  // Listing is free on every plan; paid plans add perks.
+  static const Map<String, List<String>> _perks = {
+    'Free': [
+      'Listed free in the Directory',
+      '1 listing photo',
+      'Standard search placement',
+    ],
+    'Basic': [
+      'Everything in Free',
+      'Up to 5 listing photos',
+      'Direct "Contact" button on your listing',
+      'Collect customer reviews',
+    ],
+    'Plus': [
+      'Everything in Basic',
+      'Priority placement in search',
+      'Up to 15 photos',
+      'Monthly enquiry & views insights',
+    ],
+    'Professional': [
+      'Everything in Plus',
+      'Top of search results',
+      'Unlimited photos + intro video',
+      'Featured badge & instant lead alerts',
+    ],
+  };
+
+  String _selectedTier = 'Basic';
+  bool _tierPrefilled = false;
 
   // =========================================================
   // ✅ TYPOGRAPHY
   // =========================================================
-  TextStyle _heroNameStyle(FlutterFlowTheme t) => t.titleLarge.override(
+  TextStyle _pageTitle(FlutterFlowTheme t) => t.titleLarge.override(
+        fontFamily: _displayFont,
+        color: _ink,
+        fontWeight: FontWeight.w900,
+        fontSize: 30,
+        lineHeight: 1.05,
+      );
+
+  TextStyle _pageSubtitle(FlutterFlowTheme t) => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 13,
+        fontWeight: FontWeight.w400,
+        color: _inkMute,
+      );
+
+  TextStyle _heroName(FlutterFlowTheme t) => t.titleLarge.override(
         fontFamily: _displayFont,
         fontWeight: FontWeight.w900,
         fontSize: 21,
         color: _ink,
       );
 
-  TextStyle _uLabelStyle(FlutterFlowTheme t) => t.bodySmall.override(
+  TextStyle _uLabel(FlutterFlowTheme t) => const TextStyle(
         fontFamily: _bodyFont,
         color: _inkMute,
         letterSpacing: 0.6,
@@ -96,116 +154,23 @@ class _ProfilePageViewState extends State<ProfilePageView> {
         fontSize: 11,
       );
 
-  TextStyle _valueStyle(FlutterFlowTheme t) => t.bodyMedium.override(
+  TextStyle _rowTitle(FlutterFlowTheme t) => const TextStyle(
         fontFamily: _bodyFont,
         fontWeight: FontWeight.w700,
         fontSize: 15,
         color: _ink,
       );
 
-  TextStyle _mutedBodyStyle(FlutterFlowTheme t) => t.bodyMedium.override(
+  TextStyle _muted13(FlutterFlowTheme t) => const TextStyle(
         fontFamily: _bodyFont,
-        color: _inkMute,
+        fontWeight: FontWeight.w500,
+        fontSize: 13,
+        color: _faint,
       );
 
-  TextStyle _snackTextStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: _bodyFont,
-        color: _ink,
-      );
-  // =========================================================
-
-  // Primary pill (ink, white content)
-  Widget _pillPrimaryButton(
-    FlutterFlowTheme t, {
-    required String label,
-    required VoidCallback onPressed,
-    IconData? icon,
-  }) {
-    return SizedBox(
-      width: double.infinity,
-      height: 54,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _ink,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(999),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, size: 18, color: _paper),
-              const SizedBox(width: 8),
-            ],
-            Text(
-              label,
-              style: t.labelLarge.override(
-                fontFamily: _bodyFont,
-                color: _paper,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Outline pill
-  Widget _pillOutlineButton(
-    FlutterFlowTheme t, {
-    required String label,
-    required VoidCallback onPressed,
-    IconData? icon,
-    Color? borderColor,
-    Color? textColor,
-    Color? iconColor,
-  }) {
-    final bc = borderColor ?? _hairlineOnSurface;
-    final tc = textColor ?? _ink;
-    final ic = iconColor ?? _inkMute;
-
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          backgroundColor: _paper,
-          side: BorderSide(color: bc, width: 1),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(999),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, size: 18, color: ic),
-              const SizedBox(width: 8),
-            ],
-            Text(
-              label,
-              style: t.labelLarge.override(
-                fontFamily: _bodyFont,
-                color: tc,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Subby-style snackbar
+  // Subby-style snackbar.
   void _showToast(String message) {
     if (!mounted) return;
-    final theme = FlutterFlowTheme.of(context);
-
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
@@ -217,7 +182,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
           backgroundColor: _surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: _hairline, width: 1),
+            side: const BorderSide(color: _hairline, width: 1),
           ),
           duration: const Duration(milliseconds: 1700),
           content: Row(
@@ -233,13 +198,25 @@ class _ProfilePageViewState extends State<ProfilePageView> {
                     size: 16, color: _ink),
               ),
               const SizedBox(width: 10),
-              Expanded(child: Text(message, style: _snackTextStyle(theme))),
+              Expanded(
+                child: Text(message,
+                    style: const TextStyle(
+                        fontFamily: _bodyFont, fontSize: 13, color: _ink)),
+              ),
             ],
           ),
         ),
       );
   }
-  // =========================================================
+
+  void _pushOrToast(String route, String fallbackMessage) {
+    final r = route.trim();
+    if (r.isEmpty) {
+      _showToast(fallbackMessage);
+      return;
+    }
+    context.pushNamed(r);
+  }
 
   String _initialsFromName(String? name) {
     final n = (name ?? '').trim();
@@ -254,16 +231,13 @@ class _ProfilePageViewState extends State<ProfilePageView> {
   String _bestEmail(String emailFromDoc) {
     final fromDoc = emailFromDoc.trim();
     if (fromDoc.isNotEmpty) return fromDoc;
-
-    final fromAuthUtil = (currentUserEmail ?? '').toString().trim();
-    return fromAuthUtil;
+    return (currentUserEmail ?? '').toString().trim();
   }
 
   void _goEditPhoto() {
     final route = (widget.editPhotoRouteName ?? '').trim();
     if (route.isEmpty) {
-      _showToast(
-          'Set editPhotoRouteName on the widget (to open your photo picker page).');
+      _showToast('Set editPhotoRouteName to open your photo picker page.');
       return;
     }
     context.pushNamed(route);
@@ -297,37 +271,31 @@ class _ProfilePageViewState extends State<ProfilePageView> {
             backgroundColor: _paper,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: _hairline, width: 1),
+              side: const BorderSide(color: _hairline, width: 1),
             ),
-            title: Text(
-              'Delete profile?',
-              style: theme.titleMedium.override(
-                  fontFamily: _displayFont, fontWeight: FontWeight.w900),
-            ),
+            title: Text('Delete profile?',
+                style: theme.titleMedium.override(
+                    fontFamily: _displayFont, fontWeight: FontWeight.w900)),
             content: Text(
               'This will permanently delete your account and profile data. '
               'This cannot be undone.',
-              style: _mutedBodyStyle(theme),
+              style: const TextStyle(
+                  fontFamily: _bodyFont, color: _inkMute, fontSize: 14),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: Text(
-                  'Cancel',
-                  style: theme.bodyMedium.override(
-                      fontFamily: _bodyFont, fontWeight: FontWeight.w700),
-                ),
+                child: Text('Cancel',
+                    style: theme.bodyMedium.override(
+                        fontFamily: _bodyFont, fontWeight: FontWeight.w700)),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(ctx, true),
-                child: Text(
-                  'Delete',
-                  style: theme.bodyMedium.override(
-                    fontFamily: _bodyFont,
-                    color: _coral,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
+                child: Text('Delete',
+                    style: theme.bodyMedium.override(
+                        fontFamily: _bodyFont,
+                        color: _coral,
+                        fontWeight: FontWeight.w900)),
               ),
             ],
           ),
@@ -348,12 +316,8 @@ class _ProfilePageViewState extends State<ProfilePageView> {
     }
 
     try {
-      // 1) Delete Firestore profile doc first
       await userRef.delete();
-
-      // 2) Delete auth user (may require recent login)
       await user.delete();
-
       if (!mounted) return;
       context.goNamed(_loginRouteName);
     } on FirebaseAuthException catch (e) {
@@ -366,77 +330,93 @@ class _ProfilePageViewState extends State<ProfilePageView> {
     }
   }
 
-  // Big teal-ringed avatar.
+  // ─── Avatar ─────────────────────────────────────────────
   Widget _avatar(FlutterFlowTheme theme, String photoUrl, String displayName) {
     final initials = Center(
       child: Text(
         _initialsFromName(displayName),
-        style: theme.titleMedium.override(
+        style: const TextStyle(
           fontFamily: _bodyFont,
           fontWeight: FontWeight.w900,
-          fontSize: 26,
+          fontSize: 24,
           color: _spark,
         ),
       ),
     );
 
-    return Container(
-      width: 80,
-      height: 80,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: _ink,
-        border: Border.all(color: _spark, width: 2.5),
-      ),
-      child: ClipOval(
-        child: photoUrl.isNotEmpty
-            ? Image.network(
-                photoUrl,
-                width: 80,
-                height: 80,
-                fit: BoxFit.cover,
-                errorBuilder: (context, _, __) => initials,
-              )
-            : initials,
+    return GestureDetector(
+      onTap: _goEditPhoto,
+      child: Container(
+        width: 72,
+        height: 72,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: _ink,
+          border: Border.all(color: _spark, width: 2.5),
+        ),
+        child: ClipOval(
+          child: photoUrl.isNotEmpty
+              ? Image.network(photoUrl,
+                  width: 72,
+                  height: 72,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => initials)
+              : initials,
+        ),
       ),
     );
   }
 
-  // Read-only underline info row.
-  Widget _uInfoRow(
-    FlutterFlowTheme theme, {
-    required IconData icon,
-    required String label,
-    required String value,
-    bool showDivider = true,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: showDivider
-              ? const BorderSide(color: _hairline, width: 1)
-              : BorderSide.none,
+  // ─── Plan tier pill ─────────────────────────────────────
+  Widget _tierPill(String t) {
+    final selected = t == _selectedTier;
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 3.5),
+        child: GestureDetector(
+          onTap: () => setState(() => _selectedTier = t),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: selected ? _teal : _surface,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              t,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: _bodyFont,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: selected ? _paper : _inkMute,
+              ),
+            ),
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _perkRow(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 19, color: _teal),
-          const SizedBox(width: 14),
+          const Icon(Icons.check_circle_rounded, size: 17, color: _teal),
+          const SizedBox(width: 9),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label.toUpperCase(), style: _uLabelStyle(theme)),
-                const SizedBox(height: 4),
-                Text(
-                  value.isEmpty ? '—' : value,
-                  style: _valueStyle(theme),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontFamily: _bodyFont,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                height: 1.4,
+                color: _inkMute,
+              ),
             ),
           ),
         ],
@@ -444,47 +424,193 @@ class _ProfilePageViewState extends State<ProfilePageView> {
     );
   }
 
-  // Tappable underline action row (chevron).
+  // ─── Underline action row ───────────────────────────────
   Widget _uActionRow(
     FlutterFlowTheme theme, {
     required IconData icon,
     required String label,
+    Widget? subtitle,
     required VoidCallback onTap,
     bool showDivider = true,
   }) {
-    return InkWell(
-      onTap: onTap,
-      splashFactory: NoSplash.splashFactory,
-      splashColor: Colors.transparent,
-      highlightColor: Colors.transparent,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: showDivider
-                ? const BorderSide(color: _hairline, width: 1)
-                : BorderSide.none,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        splashFactory: NoSplash.splashFactory,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: showDivider
+                  ? const BorderSide(color: _hairline, width: 1)
+                  : BorderSide.none,
+            ),
           ),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 20, color: _teal),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                label,
-                style: theme.bodyMedium.override(
-                  fontFamily: _bodyFont,
-                  color: _ink,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 15,
+          child: Row(
+            children: [
+              Icon(icon, size: 20, color: _teal),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label, style: _rowTitle(theme)),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 3),
+                      subtitle,
+                    ],
+                  ],
                 ),
               ),
+              const Icon(Icons.chevron_right_rounded,
+                  size: 22, color: _hairlineOnSurface),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _liveSubtitle(FlutterFlowTheme theme) => Row(
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: const BoxDecoration(color: _ok, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text('Live in Directory', style: _muted13(theme)),
+        ],
+      );
+
+  // ─── Buttons ────────────────────────────────────────────
+  Widget _primaryButton({
+    required String label,
+    IconData? icon,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        height: 52,
+        decoration: BoxDecoration(
+          color: _ink,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 19, color: _paper),
+              const SizedBox(width: 8),
+            ],
+            Text(
+              label,
+              style: const TextStyle(
+                fontFamily: _bodyFont,
+                fontSize: 15,
+                fontWeight: FontWeight.w900,
+                color: _paper,
+              ),
             ),
-            const Icon(Icons.chevron_right_rounded,
-                size: 22, color: _hairlineOnSurface),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _outlineButton({
+    required String label,
+    required IconData icon,
+    required VoidCallback onTap,
+    Color borderColor = _hairlineOnSurface,
+    Color textColor = _ink,
+    Color iconColor = _inkMute,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 50,
+        decoration: BoxDecoration(
+          color: _paper,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: borderColor, width: 1),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 18, color: iconColor),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: _bodyFont,
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: textColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionLabel(FlutterFlowTheme theme, String text) => Padding(
+        padding: const EdgeInsets.only(bottom: 2),
+        child: Text(text.toUpperCase(), style: _uLabel(theme)),
+      );
+
+  // ─── Logged-out state ───────────────────────────────────
+  Widget _loggedOut(FlutterFlowTheme theme, double width, double height) {
+    return SizedBox(
+      width: width,
+      height: height,
+      child: SafeArea(
+        child: Container(
+          color: _paper,
+          padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, _vPad),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: _surface,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: _hairlineOnSurface),
+                  ),
+                  child:
+                      const Icon(Icons.lock_outline, color: _inkMute, size: 24),
+                ),
+                const SizedBox(height: 16),
+                Text('You are logged out',
+                    textAlign: TextAlign.center,
+                    style: theme.titleMedium.override(
+                        fontFamily: _displayFont,
+                        fontWeight: FontWeight.w900,
+                        color: _ink)),
+                const SizedBox(height: 6),
+                Text('Log in or create an account to continue.',
+                    textAlign: TextAlign.center, style: _pageSubtitle(theme)),
+                const SizedBox(height: 22),
+                _primaryButton(
+                    label: 'Log in',
+                    onTap: () => context.pushNamed(_loginRouteName)),
+                const SizedBox(height: 10),
+                _outlineButton(
+                    label: 'Create account',
+                    icon: Icons.person_add_alt_1_outlined,
+                    onTap: () => context.pushNamed(_createAccountRouteName)),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -498,69 +624,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
     final double height = widget.height ?? MediaQuery.sizeOf(context).height;
 
     final userRef = currentUserReference;
-
-    // ✅ Logged-out state
-    if (userRef == null) {
-      return SizedBox(
-        width: width,
-        height: height,
-        child: SafeArea(
-          child: Container(
-            color: _paper,
-            padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, _vPad),
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: _surface,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: _hairlineOnSurface),
-                    ),
-                    child: const Icon(Icons.lock_outline,
-                        color: _inkMute, size: 24),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'You are logged out',
-                    style: theme.titleMedium.override(
-                      fontFamily: _displayFont,
-                      fontWeight: FontWeight.w900,
-                      color: _ink,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Log in or create an account to continue.',
-                    style: theme.bodySmall.override(
-                      fontFamily: _bodyFont,
-                      color: _inkMute,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 22),
-                  _pillPrimaryButton(
-                    theme,
-                    label: 'Log in',
-                    onPressed: () => context.pushNamed(_loginRouteName),
-                  ),
-                  const SizedBox(height: 10),
-                  _pillOutlineButton(
-                    theme,
-                    label: 'Create account',
-                    onPressed: () => context.pushNamed(_createAccountRouteName),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-    }
+    if (userRef == null) return _loggedOut(theme, width, height);
 
     return SizedBox(
       width: width,
@@ -585,180 +649,183 @@ class _ProfilePageViewState extends State<ProfilePageView> {
               }
 
               final data = (snap.data!.data() as Map<String, dynamic>?) ?? {};
-
               final displayName =
                   (data['display_name'] ?? '').toString().trim();
-              final phone = (data['phone_number'] ?? '').toString().trim();
               final photoUrl = (data['photo_url'] ?? '').toString().trim();
-              final emailDoc = (data['email'] ?? '').toString();
+              final email = _bestEmail((data['email'] ?? '').toString());
 
-              final email = _bestEmail(emailDoc);
+              // Package + listing presence (adjust field names to your schema).
+              final pkg = (data['package'] ?? 'Basic').toString();
+              if (!_tierPrefilled) {
+                _selectedTier = _tiers.contains(pkg) ? pkg : 'Basic';
+                _tierPrefilled = true;
+              }
+              final hasListing =
+                  data['listing_ref'] != null || data['has_listing'] == true;
 
-              // ---------------------------------------------------------
-              // ✅ OPTION C — MINIMAL UNDERLINE
-              // ---------------------------------------------------------
+              final perks = _perks[_selectedTier] ?? const <String>[];
+
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ---------- HEADER ----------
+                  // ===== HEADER =====
                   Padding(
                     padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Profile',
-                          style: theme.titleLarge.override(
-                            fontFamily: _displayFont,
-                            color: _ink,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 30,
-                            lineHeight: 1.05,
-                          ),
-                        ),
-                        Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: _openMore,
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              width: 42,
-                              height: 42,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFEEF1F4),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(Icons.menu_rounded,
-                                  size: 22, color: _ink),
-                            ),
-                          ),
-                        ),
+                        Text('Account', style: _pageTitle(theme)),
+                        const SizedBox(height: 8),
+                        Text('Manage your profile, listing and plan.',
+                            style: _pageSubtitle(theme)),
                       ],
                     ),
                   ),
 
-                  // ---------- CONTENT ----------
+                  // ===== CONTENT =====
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(_hPad, 20, _hPad, 98),
+                      padding: const EdgeInsets.fromLTRB(_hPad, 20, _hPad, 24),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Avatar hero (centered)
+                          // Avatar hero
                           Center(
                             child: Column(
                               children: [
                                 _avatar(theme, photoUrl, displayName),
                                 const SizedBox(height: 14),
                                 Text(
-                                  displayName.isEmpty
-                                      ? 'Your name'
-                                      : displayName,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: _heroNameStyle(theme),
-                                ),
+                                    displayName.isEmpty
+                                        ? 'Your name'
+                                        : displayName,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: _heroName(theme)),
                                 const SizedBox(height: 3),
-                                Text(
-                                  email.isEmpty ? '—' : email,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.bodySmall.override(
-                                    fontFamily: _bodyFont,
-                                    color: _faint,
-                                    fontSize: 13,
-                                  ),
-                                ),
+                                Text(email.isEmpty ? '—' : email,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                        fontFamily: _bodyFont,
+                                        fontSize: 13,
+                                        color: _faint)),
                               ],
                             ),
                           ),
 
-                          const SizedBox(height: 28),
+                          const SizedBox(height: 30),
 
-                          // Details (read-only underline rows)
-                          Text('ACCOUNT', style: _uLabelStyle(theme)),
-                          const SizedBox(height: 2),
-                          _uInfoRow(
-                            theme,
-                            icon: Icons.person_outline,
-                            label: 'Display name',
-                            value: displayName,
-                          ),
-                          _uInfoRow(
-                            theme,
-                            icon: Icons.phone_outlined,
-                            label: 'Phone number',
-                            value: phone,
-                          ),
-                          _uInfoRow(
-                            theme,
-                            icon: Icons.email_outlined,
-                            label: 'Email',
-                            value: email,
-                            showDivider: false,
-                          ),
+                          // ===== PLAN =====
+                          _sectionLabel(theme, 'Plan'),
+                          const SizedBox(height: 10),
+                          Row(children: _tiers.map(_tierPill).toList()),
+                          const SizedBox(height: 16),
+                          Text(
+                              'YOUR ${_selectedTier.toUpperCase()} PLAN INCLUDES',
+                              style: const TextStyle(
+                                  fontFamily: _bodyFont,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.4,
+                                  color: _ink)),
+                          const SizedBox(height: 8),
+                          ...perks.map(_perkRow),
 
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 26),
 
-                          // Edit profile (primary)
-                          _pillPrimaryButton(
-                            theme,
-                            label: 'Edit profile',
-                            icon: Icons.edit_outlined,
-                            onPressed: () =>
-                                context.pushNamed(_editProfileRouteName),
-                          ),
+                          // ===== YOUR LISTING =====
+                          _sectionLabel(theme, 'Your listing'),
+                          if (hasListing) ...[
+                            _uActionRow(
+                              theme,
+                              icon: Icons.storefront_outlined,
+                              label: 'Edit listing',
+                              subtitle: _liveSubtitle(theme),
+                              onTap: () => _pushOrToast(_editListingRouteName,
+                                  'Set _editListingRouteName.'),
+                            ),
+                            _uActionRow(
+                              theme,
+                              icon: Icons.open_in_new_rounded,
+                              label: 'View in Directory',
+                              showDivider: false,
+                              onTap: () => _pushOrToast(_directoryRouteName,
+                                  'Set _directoryRouteName.'),
+                            ),
+                          ] else ...[
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(0, 10, 0, 16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text("You're not listed yet",
+                                      style: _rowTitle(theme)),
+                                  const SizedBox(height: 4),
+                                  const Text(
+                                    'Add a free listing to get found by clients browsing the Directory.',
+                                    style: TextStyle(
+                                        fontFamily: _bodyFont,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        height: 1.45,
+                                        color: _faint),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            _primaryButton(
+                              label: 'Add listing',
+                              icon: Icons.add_rounded,
+                              onTap: () => _pushOrToast(_addListingRouteName,
+                                  'Set _addListingRouteName.'),
+                            ),
+                          ],
 
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 26),
 
-                          // Manage rows
-                          Text('MANAGE', style: _uLabelStyle(theme)),
-                          const SizedBox(height: 2),
+                          // ===== SETTINGS =====
+                          _sectionLabel(theme, 'Settings'),
                           _uActionRow(
                             theme,
-                            icon: Icons.camera_alt_outlined,
-                            label: 'Change photo',
-                            onTap: _goEditPhoto,
+                            icon: Icons.person_outline,
+                            label: 'Personal details',
+                            onTap: () =>
+                                context.pushNamed(_editProfileRouteName),
                           ),
                           _uActionRow(
                             theme,
                             icon: Icons.notifications_none_rounded,
                             label: 'Notifications',
-                            onTap: _goNotifications,
                             showDivider: false,
+                            onTap: _goNotifications,
                           ),
 
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 28),
 
-                          // Account actions (Logout / Delete)
+                          // ===== Logout / Delete =====
                           Row(
                             children: [
                               Expanded(
-                                child: _pillOutlineButton(
-                                  theme,
+                                child: _outlineButton(
                                   label: 'Logout',
                                   icon: Icons.logout,
-                                  onPressed: _logout,
+                                  onTap: _logout,
                                 ),
                               ),
                               const SizedBox(width: 10),
                               Expanded(
-                                child: _pillOutlineButton(
-                                  theme,
+                                child: _outlineButton(
                                   label: 'Delete',
                                   icon: Icons.delete_outline,
                                   borderColor: _coral.withOpacity(0.6),
                                   textColor: _coral,
                                   iconColor: _coral,
-                                  onPressed: _confirmAndDeleteProfile,
+                                  onTap: _confirmAndDeleteProfile,
                                 ),
                               ),
                             ],
                           ),
-
-                          const SizedBox(height: 12),
                         ],
                       ),
                     ),
@@ -769,15 +836,6 @@ class _ProfilePageViewState extends State<ProfilePageView> {
           ),
         ),
       ),
-    );
-  }
-
-  // More hub — pushed as a standard page so it uses the same platform
-  // transition as every other in-page link (Directory browse, profile
-  // actions, …). Only MainBottomNav uses a fade.
-  void _openMore() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const MorePageView()),
     );
   }
 }
