@@ -49,6 +49,9 @@ class _ToDoListPageWidgetState extends State<ToDoListPageWidget> {
           child: custom_widgets.ToDoListPageView(
             width: double.infinity,
             height: double.infinity,
+            addTaskRouteName: 'AddTaskPage',
+            taskDetailRouteName: 'DetailTaskPage',
+            backRouteName: 'toDoListPage',
           ),
         ),
       ),

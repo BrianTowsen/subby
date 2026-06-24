@@ -18,10 +18,17 @@ class ToDoListPageView extends StatefulWidget {
     super.key,
     this.width,
     this.height,
+    this.addTaskRouteName,
+    this.taskDetailRouteName,
+    this.backRouteName,
   });
 
   final double? width;
   final double? height;
+
+  final String? addTaskRouteName;
+  final String? taskDetailRouteName;
+  final String? backRouteName;
 
   @override
   State<ToDoListPageView> createState() => _ToDoListPageViewState();
@@ -44,12 +51,6 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
   // ────────────────────────────────────────────────────────────────────
-
-  // ── Route wiring (edit these if your FlutterFlow page names differ) ──
-  static const String _addTaskRoute = 'addTaskPage';
-  static const String _detailTaskRoute = 'detailTaskPage';
-  static const String _backRoute = 'projectDetailPage';
-  // ─────────────────────────────────────────────────────────────────────
 
   static const double _hPad = 24;
   static const double _radius = 12;
@@ -82,8 +83,8 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
   }
 
   void _handleBack() {
-    if (_backRoute.trim().isNotEmpty) {
-      context.pushNamed(_backRoute.trim());
+    if ((widget.backRouteName ?? '').trim().isNotEmpty) {
+      context.pushNamed(widget.backRouteName!.trim());
       return;
     }
     final nav = Navigator.of(context);
@@ -150,9 +151,10 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
   // Add / navigation
   // =========================================================
   void _handleAdd() {
-    if (_addTaskRoute.trim().isEmpty) return;
+    final route = (widget.addTaskRouteName ?? '').trim();
+    if (route.isEmpty) return;
     context.pushNamed(
-      _addTaskRoute.trim(),
+      route,
       queryParameters: {
         'projectRef': serializeParam(_projectRef, ParamType.DocumentReference),
       }.withoutNulls,
@@ -160,9 +162,10 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
   }
 
   void _openTask(DocumentReference ref) {
-    if (_detailTaskRoute.trim().isEmpty) return;
+    final route = (widget.taskDetailRouteName ?? '').trim();
+    if (route.isEmpty) return;
     context.pushNamed(
-      _detailTaskRoute.trim(),
+      route,
       queryParameters: {
         'taskRef': serializeParam(ref, ParamType.DocumentReference),
       }.withoutNulls,

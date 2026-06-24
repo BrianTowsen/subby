@@ -49,6 +49,9 @@ class _SnagListPageWidgetState extends State<SnagListPageWidget> {
           child: custom_widgets.SnagListPageView(
             width: double.infinity,
             height: double.infinity,
+            addSnagRouteName: 'AddSnagPage',
+            snagDetailRouteName: 'DetailSnagPage',
+            backRouteName: 'SnagListPage',
           ),
         ),
       ),
