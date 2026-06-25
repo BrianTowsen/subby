@@ -51,8 +51,8 @@ class EditListingPageView extends StatefulWidget {
 
 class _EditListingPageViewState extends State<EditListingPageView> {
   // ─── SUBBY PALETTE — DIRECTORY (amber / sunshine) ──────────────────
-  static const Color _amber = Color(0xFFE5771E); // accent
-  static const Color _sunshine = Color(0xFFFDB617); // secondary highlight
+  static const Color _amber = Color(0xFF323F4D); // accent
+  static const Color _sunshine = Color(0xFFC7E87A); // secondary highlight
   static const Color _inkMute = Color(0xFF5A6675); // labels
   static const Color _faint = Color(0xFF93A0B0); // subtitles / helpers
   static const Color _coral = Color(0xFFC24A1A); // destructive

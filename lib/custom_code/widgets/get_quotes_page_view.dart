@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -33,7 +35,7 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF017374); // text, chrome, accent
+  static const Color _ink = Color(0xFF323F4D); // text, chrome, accent
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _faint = Color(0xFF93A0B0);
   static const Color _paper = Color(0xFFFFFFFF);
@@ -41,11 +43,11 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
   static const Color _hairline = Color(0xFFEEF1F2);
   static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
   // Brand accent — TEAL.
-  static const Color _teal = Color(0xFF017374);
-  static const Color _tealTint = Color(0xFFE3F4F2);
+  static const Color _teal = Color(0xFF323F4D);
+  static const Color _tealTint = Color(0xFFEEF7D6);
   // Status
-  static const Color _live = Color(0xFFE5771E); // orange
-  static const Color _coral = Color(0xFFE5771E);
+  static const Color _live = Color(0xFFC7E87A); // orange
+  static const Color _coral = Color(0xFFC7E87A);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';

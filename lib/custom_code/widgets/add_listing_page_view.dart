@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'dart:typed_data';
@@ -44,8 +46,8 @@ class _AddListingPageViewState extends State<AddListingPageView> {
   // Directory section colours. Teal is reserved for Projects. The minimal
   // underline layout is ported from AddProjectsPageView (Option C).
   static const Color _amber =
-      Color(0xFFE5771E); // accent: title, icon, value, CTA
-  static const Color _sunshine = Color(0xFFFDB617); // secondary highlight
+      Color(0xFF323F4D); // accent: title, icon, value, CTA
+  static const Color _sunshine = Color(0xFFC7E87A); // secondary highlight
   static const Color _inkMute = Color(0xFF5A6675); // uppercase micro-labels
   static const Color _faint = Color(0xFF93A0B0); // subtitles / helpers
   static const Color _paper = Color(0xFFFFFFFF);

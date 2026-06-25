@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 
@@ -32,7 +34,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
   // Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF017374);
+  static const Color _ink = Color(0xFF323F4D);
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _faint = Color(0xFF93A0B0);
   static const Color _paper = Color(0xFFFFFFFF);
@@ -41,10 +43,10 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
   static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
   // Brand accent — TEAL. Used as the accent (focus ring, active switch); the
   // primary CTA stays ink to match the dashboard's "Create project".
-  static const Color _teal = Color(0xFF017374);
+  static const Color _teal = Color(0xFF323F4D);
   // Status
-  static const Color _live = Color(0xFFE5771E); // orange — live / warning
-  static const Color _coral = Color(0xFFE5771E);
+  static const Color _live = Color(0xFFC7E87A); // orange — live / warning
+  static const Color _coral = Color(0xFFC7E87A);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
