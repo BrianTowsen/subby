@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 class LocationSelectPageView extends StatefulWidget {
@@ -37,8 +39,8 @@ class LocationSelectPageView extends StatefulWidget {
 
 class _LocationSelectPageViewState extends State<LocationSelectPageView> {
   // ─── SUBBY PALETTE — DIRECTORY (amber / sunshine) ──────────────────
-  static const Color _amber = Color(0xFFE5771E); // accent
-  static const Color _sunshine = Color(0xFFFDB617); // secondary highlight
+  static const Color _amber = Color(0xFF323F4D); // accent
+  static const Color _sunshine = Color(0xFFC7E87A); // secondary highlight
   static const Color _inkMute = Color(0xFF5A6675); // labels
   static const Color _faint = Color(0xFF93A0B0); // subtitles / unselected
   static const Color _paper = Color(0xFFFFFFFF);

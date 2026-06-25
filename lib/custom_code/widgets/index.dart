@@ -22,7 +22,6 @@ export 'edit_project_view.dart' show EditProjectView;
 export 'project_timeline_page_view.dart' show ProjectTimelinePageView;
 export 'project_cost_view.dart' show ProjectCostView;
 export 'snag_list_page_view.dart' show SnagListPageView;
-export 'get_quotes_home_page_view.dart' show GetQuotesHomePageView;
 export 'get_quotes_page_view.dart' show GetQuotesPageView;
 export 'to_do_list_page_view.dart' show ToDoListPageView;
 export 'document_upload_page_view.dart' show DocumentUploadPageView;

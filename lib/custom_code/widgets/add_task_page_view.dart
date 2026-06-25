@@ -12,8 +12,6 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -50,7 +48,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
   static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
   static const Color _teal = Color(0xFF2A6FDB);
   static const Color _tealTint = Color(0xFFE7EFFB);
-  static const Color _live = Color(0xFFE5771E);
+  static const Color _live = Color(0xFFC7E87A);
   static const Color _coral = Color(0xFFCA2E55);
   static const Color _navy = Color(0xFF1D2834);
   static const String _displayFont = 'Inter Tight';
@@ -337,7 +335,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
       final sel = _priority == key;
       final isHigh = key == 'high';
       final selFg = isHigh ? _live : _teal;
-      final selBg = isHigh ? const Color(0x1FE5771E) : _tealTint;
+      final selBg = isHigh ? const Color(0x33C7E87A) : _tealTint;
       return GestureDetector(
         onTap: () => setState(() => _priority = key),
         child: Container(

@@ -12,8 +12,6 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/auth/firebase_auth/auth_util.dart';
@@ -43,7 +41,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
   static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
   static const Color _teal = Color(0xFF2A6FDB);
   static const Color _tealTint = Color(0xFFE7EFFB);
-  static const Color _live = Color(0xFFE5771E);
+  static const Color _live = Color(0xFFC7E87A);
   static const Color _coral = Color(0xFFCA2E55);
   static const Color _navy = Color(0xFF1D2834);
   static const String _displayFont = 'Inter Tight';
@@ -206,7 +204,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
   Color _priorityColor(String s) =>
       s == 'high' ? _live : (s == 'low' ? _faint : _teal);
   Color _priorityTint(String s) => s == 'high'
-      ? const Color(0x1FE5771E)
+      ? const Color(0x33C7E87A)
       : (s == 'low' ? _surface : _tealTint);
 
   Widget _softPill(String text,

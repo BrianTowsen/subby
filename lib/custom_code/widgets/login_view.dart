@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -46,17 +48,17 @@ class LoginView extends StatefulWidget {
 
 class _LoginViewState extends State<LoginView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _ink = Color(0xFF017374);
+  static const Color _ink = Color(0xFF323F4D);
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
   static const Color _hairline = Color(0xFFEEF1F4);
   static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
   // Brand accent — TEAL (field icons / focus). Primary action is ink.
-  static const Color _teal = Color(0xFF017374);
+  static const Color _teal = Color(0xFF323F4D);
   // Status
-  static const Color _live = Color(0xFFE5771E);
-  static const Color _coral = Color(0xFFE5771E);
+  static const Color _live = Color(0xFFC7E87A);
+  static const Color _coral = Color(0xFFC7E87A);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';

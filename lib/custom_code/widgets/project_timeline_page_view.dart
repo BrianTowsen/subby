@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
@@ -35,7 +37,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF017374); // text, chrome, accent
+  static const Color _ink = Color(0xFF323F4D); // text, chrome, accent
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _faint = Color(0xFF93A0B0);
   static const Color _paper = Color(0xFFFFFFFF);
@@ -43,10 +45,10 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   static const Color _hairline = Color(0xFFEEF1F2);
   static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
   // Brand accent — TEAL.
-  static const Color _teal = Color(0xFF017374);
-  static const Color _tealTint = Color(0xFFE3F4F2);
+  static const Color _teal = Color(0xFF323F4D);
+  static const Color _tealTint = Color(0xFFEEF7D6);
   // Status
-  static const Color _live = Color(0xFFE5771E); // orange — completed
+  static const Color _live = Color(0xFFC7E87A); // orange — completed
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -450,7 +452,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   Color _statusTint(_PhaseStatus s) {
     switch (s) {
       case _PhaseStatus.completed:
-        return const Color(0x1FE5771E); // orange @ ~12%
+        return const Color(0x33C7E87A); // orange @ ~12%
       case _PhaseStatus.inProgress:
         return _tealTint;
       case _PhaseStatus.upcoming:

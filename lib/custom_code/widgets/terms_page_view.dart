@@ -34,7 +34,7 @@ class _TermsPageViewState extends State<TermsPageView> {
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF017374); // text, chrome
+  static const Color _ink = Color(0xFF323F4D); // text, chrome
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _faint = Color(0xFF93A0B0); // muted labels, chevrons
   static const Color _paper = Color(0xFFFFFFFF);
@@ -42,10 +42,10 @@ class _TermsPageViewState extends State<TermsPageView> {
   static const Color _hairline = Color(0xFFEEF1F2);
   static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
   // Brand accent — TEAL.
-  static const Color _teal = Color(0xFF017374);
+  static const Color _teal = Color(0xFF323F4D);
   // Status
-  static const Color _live = Color(0xFFE5771E); // orange — live / warning
-  static const Color _coral = Color(0xFFE5771E);
+  static const Color _live = Color(0xFFC7E87A); // orange — live / warning
+  static const Color _coral = Color(0xFFC7E87A);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';

@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 // ✅ provides currentUserReference, currentUserEmail, etc.
 import '/auth/firebase_auth/auth_util.dart';
 
@@ -55,7 +57,7 @@ class ProfilePageView extends StatefulWidget {
 
 class _ProfilePageViewState extends State<ProfilePageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _ink = Color(0xFF017374);
+  static const Color _ink = Color(0xFF323F4D);
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _faint = Color(0xFF93A0B0);
   static const Color _paper = Color(0xFFFFFFFF);
@@ -63,12 +65,12 @@ class _ProfilePageViewState extends State<ProfilePageView> {
   static const Color _hairline = Color(0xFFEEF1F4);
   static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
   // Brand accent — TEAL.
-  static const Color _teal = Color(0xFF017374);
+  static const Color _teal = Color(0xFF323F4D);
   // Sunshine — avatar ring + initials.
-  static const Color _spark = Color(0xFFFEB518);
+  static const Color _spark = Color(0xFFC7E87A);
   // Status
-  static const Color _live = Color(0xFFE5771E);
-  static const Color _coral = Color(0xFFE5771E);
+  static const Color _live = Color(0xFFC7E87A);
+  static const Color _coral = Color(0xFFC7E87A);
   static const Color _ok = Color(0xFF1FA463); // "live in Directory" dot
   // Type
   static const String _displayFont = 'Inter Tight';
