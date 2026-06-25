@@ -1012,20 +1012,15 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     bool dark = false,
     bool attention = false,
   }) {
-    final Color bg = dark ? _ink : _paper;
-    final Color numColor = dark ? _paper : (attention ? _orange : _ink);
-    final Color labelColor = dark
-        ? Colors.white.withOpacity(0.7)
-        : (attention ? _orangeText : _faint);
+    final Color bg = dark ? _ink : _yellow;
+    final Color numColor = dark ? _paper : _ink;
+    final Color labelColor = dark ? Colors.white.withOpacity(0.7) : _ink;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(13, 13, 13, 12),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(11),
-        border: dark
-            ? null
-            : Border.all(color: attention ? _orangeBorder : _hairline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1058,48 +1053,87 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     final province = (data['province'] as String?)?.trim() ?? '';
     final status = (data['status'] as String?)?.trim() ?? '';
     final loc = [city, province].where((x) => x.isNotEmpty).join(', ');
-    final attention = _needsAttention(status);
     final progress = _progress(data);
+    final pct = (progress * 100).round();
 
     return InkWell(
       onTap: () => _goToProject(doc.reference),
       borderRadius: BorderRadius.circular(16),
       child: Container(
         decoration: BoxDecoration(
-          color: _paper,
+          color: _yellow,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _hairline),
         ),
         padding: const EdgeInsets.all(18),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _heroRing(progress, attention),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('MOST RECENT', style: _heroEyebrowStyle),
-                  const SizedBox(height: 5),
-                  Text(
-                    name.isEmpty ? 'Untitled project' : name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: _heroTitleStyle,
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    loc.isEmpty ? 'No location set' : loc,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: _tileSubtitleStyle.copyWith(fontSize: 12),
-                  ),
-                  if (status.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    _miniPill(status, attention),
-                  ],
-                ],
+            const Text('MOST RECENT',
+                style: TextStyle(
+                  fontFamily: _bodyFont,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.8,
+                  color: _ink,
+                )),
+            const SizedBox(height: 6),
+            Text(
+              name.isEmpty ? 'Untitled project' : name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: _heroTitleStyle,
+            ),
+            const SizedBox(height: 3),
+            Text(
+              loc.isEmpty ? 'No location set' : loc,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontFamily: _bodyFont,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: _inkMute,
               ),
+            ),
+            if (status.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: _ink,
+                  borderRadius: BorderRadius.circular(_rSmall),
+                ),
+                child: Text(
+                  _capitalize(status),
+                  style: const TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    color: _paper,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(999),
+                    child: Container(
+                      height: 8,
+                      color: _paper,
+                      child: FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: progress,
+                        child: Container(color: _ink),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text('$pct%', style: _ringPctStyle.copyWith(fontSize: 13)),
+              ],
             ),
           ],
         ),
@@ -1107,6 +1141,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     );
   }
 
+  // ignore: unused_element
   Widget _heroRing(double progress, bool attention) {
     final Color arc = attention ? _orange : _ink;
     final Color track = attention ? _orangeTint : _ringTrack;
@@ -1142,54 +1177,81 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     final name = (data['name'] as String?)?.trim() ?? '';
     final city = (data['city'] as String?)?.trim() ?? '';
     final province = (data['province'] as String?)?.trim() ?? '';
-    final status = (data['status'] as String?)?.trim() ?? '';
     final loc = [city, province].where((x) => x.isNotEmpty).join(', ');
-    final attention = _needsAttention(status);
     final progress = _progress(data);
+    final pct = (progress * 100).round();
 
-    return InkWell(
-      onTap: () => _goToProject(doc.reference),
-      child: Container(
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: Color(0xFFF1F4F7))),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 11),
-        child: Row(
-          children: [
-            _miniRing(progress, attention),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: InkWell(
+        onTap: () => _goToProject(doc.reference),
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          decoration: BoxDecoration(
+            color: _surface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: _hairline),
+          ),
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  Text(
-                    name.isEmpty ? 'Untitled project' : name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: _tileTitleStyle.copyWith(fontSize: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name.isEmpty ? 'Untitled project' : name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: _tileTitleStyle.copyWith(fontSize: 14),
+                        ),
+                        const SizedBox(height: 1),
+                        Text(
+                          loc.isEmpty ? 'No location set' : loc,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: _tileSubtitleStyle,
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 1),
-                  Text(
-                    loc.isEmpty ? 'No location set' : loc,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: _tileSubtitleStyle,
-                  ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.chevron_right_rounded,
+                      size: 20, color: Color(0xFFCDD6E2)),
                 ],
               ),
-            ),
-            const SizedBox(width: 8),
-            Text('${(progress * 100).round()}%',
-                style: _ringPctStyle.copyWith(fontSize: 13)),
-            const SizedBox(width: 8),
-            const Icon(Icons.chevron_right_rounded,
-                size: 20, color: Color(0xFFCDD6E2)),
-          ],
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(999),
+                      child: Container(
+                        height: 7,
+                        color: _paper,
+                        child: FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: progress,
+                          child: Container(color: _ink),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text('$pct%', style: _ringPctStyle.copyWith(fontSize: 12)),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
+  // ignore: unused_element
   Widget _miniRing(double progress, bool attention) {
     final Color arc = attention ? _orange : _ink;
     final Color track = attention ? _orangeTint : _ringTrack;
