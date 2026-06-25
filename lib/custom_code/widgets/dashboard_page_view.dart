@@ -121,7 +121,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   //
   // Neutrals
   static const Color _ink =
-      Color(0xFF323F4D); // text, chrome, dark surfaces (slate)
+      Color(0xFF28333E); // text, chrome, dark surfaces (slate)
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _faint = Color(0xFF93A0B0); // muted labels, chevrons
   static const Color _paper = Color(0xFFFFFFFF);
@@ -129,12 +129,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   static const Color _hairline = Color(0xFFEEF1F2);
 
   // Accents
-  static const Color _yellow = Color(0xFFC7E87A); // lime — "on site" / on track
+  static const Color _yellow = Color(0xFFB1C984); // sage — "on site" / on track
+  static const Color _teal = Color(0xFF319DA3); // info / shared accent
   static const Color _ringTrack = Color(0xFFEEF2F7);
-  static const Color _orange = Color(0xFFC7E87A); // attention / snagging (lime)
-  static const Color _orangeTint = Color(0xFFEEF7D6);
-  static const Color _orangeBorder = Color(0xFFC7E87A);
-  static const Color _orangeText = Color(0xFF323F4D);
+  static const Color _orange = Color(0xFFAB6455); // attention / snagging (clay)
+  static const Color _orangeTint = Color(0xFFF3E7E2);
+  static const Color _orangeBorder = Color(0xFFE8CFC7);
+  static const Color _orangeText = Color(0xFFAB6455);
   static const Color _projTint = Color(0xFFEEF1F4); // add / empty card fill
 
   // Geometry
@@ -812,7 +813,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
   Widget _sharedSectionHeader() => Row(
         children: [
-          _accentMarker(_ink),
+          _accentMarker(_teal),
           const SizedBox(width: 10),
           Expanded(
             child: Text('Shared Building Projects', style: _stepHeadlineStyle),
@@ -834,10 +835,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     return InkWell(
       onTap: () => _goToProject(sp.ref),
       child: Container(
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: Color(0xFFF1F4F7))),
+        margin: const EdgeInsets.only(bottom: 10),
+        decoration: BoxDecoration(
+          color: _paper,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFE2E7EE)),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 11),
+        padding: const EdgeInsets.all(12),
         child: Row(
           children: [
             Container(
@@ -846,7 +850,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               alignment: Alignment.center,
               clipBehavior: Clip.antiAlias,
               decoration: const BoxDecoration(
-                color: Color(0xFFEEF7D6),
+                color: _surface,
                 shape: BoxShape.circle,
               ),
               child: sp.pmPhotoUrl.isNotEmpty
@@ -874,7 +878,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                   Row(
                     children: [
                       const Icon(Icons.ios_share_rounded,
-                          size: 13, color: _faint),
+                          size: 13, color: _teal),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
@@ -1012,15 +1016,17 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     bool dark = false,
     bool attention = false,
   }) {
-    final Color bg = dark ? _ink : _yellow;
-    final Color numColor = dark ? _paper : _ink;
-    final Color labelColor = dark ? Colors.white.withOpacity(0.7) : _ink;
+    final Color bg = dark ? _ink : (attention ? _surface : _yellow);
+    final Color numColor = dark ? _paper : (attention ? _orange : _ink);
+    final Color labelColor =
+        dark ? Colors.white.withOpacity(0.7) : (attention ? _inkMute : _ink);
 
     return Container(
       padding: const EdgeInsets.fromLTRB(13, 13, 13, 12),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(11),
+        border: attention ? Border.all(color: const Color(0xFFE2E7EE)) : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1671,8 +1677,8 @@ class _CapabilityChip extends StatelessWidget {
 
   final String label;
 
-  static const Color _tealTint = Color(0xFFEEF7D6);
-  static const Color _tealText = Color(0xFF323F4D);
+  static const Color _tealTint = Color(0xFFEDF2DE);
+  static const Color _tealText = Color(0xFF28333E);
 
   @override
   Widget build(BuildContext context) {
