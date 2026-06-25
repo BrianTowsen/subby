@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/custom_code/widgets/index.dart'; // (kept if FF expects it)
 
 // Subby bottom nav — matches DashboardPageView v4 (Option C).
@@ -50,8 +52,8 @@ class MainBottomNav extends StatefulWidget {
 
 class _MainBottomNavState extends State<MainBottomNav> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _teal = Color(0xFF017374); // active (default)
-  static const Color _orange = Color(0xFFE5771E); // active (Directory)
+  static const Color _teal = Color(0xFFC7E87A); // active (default) — lime
+  static const Color _orange = Color(0xFFC7E87A); // active (Directory) — lime
   static const Color _faint = Color(0xFF93A0B0); // inactive
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _hairline = Color(0xFFEEF1F2);

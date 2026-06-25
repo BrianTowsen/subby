@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -62,8 +64,9 @@ class HomePageView extends StatefulWidget {
 
 class _HomePageViewState extends State<HomePageView> {
   // ─── SUBBY PALETTE — DIRECTORY (amber / sunshine) ──────────────────
-  static const Color _amber = Color(0xFFE5771E); // accent
-  static const Color _sunshine = Color(0xFFFDB617); // secondary highlight
+  static const Color _amber = Color(0xFF323F4D); // accent (slate)
+  static const Color _sunshine =
+      Color(0xFFC7E87A); // secondary highlight (lime)
   static const Color _inkMute = Color(0xFF5A6675); // labels
   static const Color _faint = Color(0xFF93A0B0); // subtitles / inactive
   static const Color _paper = Color(0xFFFFFFFF);
