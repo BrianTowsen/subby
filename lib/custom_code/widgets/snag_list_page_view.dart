@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -45,20 +47,20 @@ class _SnagListPageViewState extends State<SnagListPageView>
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF017374); // text, chrome, accent
+  static const Color _ink = Color(0xFFD9543B); // snag identity — Persimmon
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _faint = Color(0xFF93A0B0);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
   static const Color _hairline = Color(0xFFEEF1F2);
   static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
-  // Brand accent — TEAL.
-  static const Color _teal = Color(0xFF017374);
-  static const Color _tealTint = Color(0xFFE3F4F2);
+  // Brand accent — PERSIMMON (snags own this; Projects keep teal).
+  static const Color _teal = Color(0xFFD9543B);
+  static const Color _tealTint = Color(0xFFFBEAE5);
   // Status
   static const Color _live =
-      Color(0xFFE5771E); // orange — done / open / warning
-  static const Color _coral = Color(0xFFE5771E);
+      Color(0xFFD9543B); // persimmon — open / in-progress accent
+  static const Color _coral = Color(0xFFCA2E55); // destructive / error red
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -282,25 +284,25 @@ class _SnagListPageViewState extends State<SnagListPageView>
   Color _statusColor(FlutterFlowTheme theme, Color accent, String status) {
     switch (status) {
       case 'in_progress':
-        return _teal;
-      case 'review':
-        return _faint;
+        return _paper; // white on solid persimmon
       case 'closed':
+      case 'review':
+        return _faint; // done — neutral
       case 'open':
-        return _live;
       default:
-        return _live;
+        return _ink; // persimmon
     }
   }
 
   Color _statusTint(String status) {
     switch (status) {
       case 'in_progress':
-        return _tealTint;
+        return _ink; // solid persimmon fill
+      case 'closed':
       case 'review':
         return _surface;
       default:
-        return const Color(0x1FE5771E); // orange @ ~12%
+        return _tealTint; // persimmon @ light
     }
   }
 
@@ -318,9 +320,8 @@ class _SnagListPageViewState extends State<SnagListPageView>
     }
   }
 
-  Color _severityColor(String sev) => sev == 'critical' ? _live : _faint;
-  Color _severityTint(String sev) =>
-      sev == 'critical' ? const Color(0x1FE5771E) : _surface;
+  Color _severityColor(String sev) => sev == 'minor' ? _faint : _ink;
+  Color _severityTint(String sev) => sev == 'minor' ? _surface : _tealTint;
 
   String _severityLabel(String sev) {
     switch (sev) {
@@ -477,12 +478,28 @@ class _SnagListPageViewState extends State<SnagListPageView>
   Stream<QuerySnapshot<Map<String, dynamic>>>? _snagStreamForTab(int tabIndex) {
     if (_projectRef == null) return null;
     final statusKey = _tabStatusKey(tabIndex);
+    // NOTE: no .orderBy here — two equality filters auto-index, so this needs
+    // no composite index. We sort by createdAt (desc) client-side below.
     return FirebaseFirestore.instance
         .collection('snags')
         .where('projectRef', isEqualTo: _projectRef)
         .where('status', isEqualTo: statusKey)
-        .orderBy('createdAt', descending: true)
         .snapshots();
+  }
+
+  // Newest-first sort done in Dart so the list query needs no composite index.
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> _sortedByCreatedDesc(
+      List<QueryDocumentSnapshot<Map<String, dynamic>>> docs) {
+    final list = [...docs];
+    int millis(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+      final v = doc.data()['createdAt'];
+      if (v is Timestamp) return v.millisecondsSinceEpoch;
+      if (v is DateTime) return v.millisecondsSinceEpoch;
+      return 0;
+    }
+
+    list.sort((a, b) => millis(b).compareTo(millis(a)));
+    return list;
   }
 
   // ---------------------------------------
@@ -710,7 +727,23 @@ class _SnagListPageViewState extends State<SnagListPageView>
                               QuerySnapshot<Map<String, dynamic>>>(
                             stream: stream,
                             builder: (context, snap) {
-                              final docs = snap.data?.docs ?? const [];
+                              // Surface query errors instead of silently
+                              // showing an empty list (e.g. a missing index).
+                              if (snap.hasError) {
+                                debugPrint('🔥 Snag list query error: '
+                                    '${snap.error}');
+                                return ListView(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(0, 12, 0, 110),
+                                  children: [
+                                    _buildEmptyState(
+                                        theme, 'Could not load snags'),
+                                  ],
+                                );
+                              }
+
+                              final docs = _sortedByCreatedDesc(
+                                  snap.data?.docs ?? const []);
 
                               if (snap.connectionState ==
                                       ConnectionState.waiting &&

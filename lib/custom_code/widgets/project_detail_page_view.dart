@@ -20,6 +20,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -111,6 +113,14 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
   static const Color _tealText = Color(0xFF017374); // pill text
   static const Color _tealSurface = Color(0xFFF0FAF8); // tinted module card
   static const Color _tealSurfaceBorder = Color(0xFFD3ECE8);
+  // Snag identity — Persimmon (snags own this inside a teal project)
+  static const Color _persimmon = Color(0xFFD9543B);
+  static const Color _persimmonSurface = Color(0xFFFDF1ED);
+  static const Color _persimmonSurfaceBorder = Color(0xFFF2D8CE);
+  // To-Do identity — Cobalt
+  static const Color _cobalt = Color(0xFF2A6FDB);
+  static const Color _cobaltSurface = Color(0xFFEEF4FC);
+  static const Color _cobaltSurfaceBorder = Color(0xFFD5E2F6);
   // Status
   static const Color _live =
       Color(0xFFE5771E); // orange — live / open-now / warning
@@ -1118,7 +1128,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
             theme: theme,
             value: snags,
             label: 'Open snags',
-            valueColor: _coral,
+            valueColor: _persimmon,
             bg: _surface,
             border: _hairline,
           ),
@@ -1543,14 +1553,22 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
     required VoidCallback onTap,
     String? visibility,
     VoidCallback? onToggleVisibility,
+    Color? accentChip,
+    Color? accentSurface,
+    Color? accentBorder,
+    Color? accentText,
   }) {
+    final chip = accentChip ?? _teal;
+    final surface = accentSurface ?? _tealSurface;
+    final border = accentBorder ?? _tealSurfaceBorder;
+    final titleColor = accentText ?? _ink;
     return _tapCard(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: _tealSurface,
+          color: surface,
           borderRadius: BorderRadius.circular(_radius),
-          border: Border.all(color: _tealSurfaceBorder),
+          border: Border.all(color: border),
         ),
         padding: const EdgeInsets.all(13),
         child: Row(
@@ -1559,7 +1577,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: _teal,
+                color: chip,
                 borderRadius: BorderRadius.circular(_radius),
               ),
               child: Icon(icon, size: 22, color: _paper),
@@ -1575,7 +1593,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                     overflow: TextOverflow.ellipsis,
                     style: theme.bodyMedium.override(
                       fontFamily: _bodyFont,
-                      color: _ink,
+                      color: titleColor,
                       letterSpacing: 0.0,
                       fontWeight: FontWeight.w800,
                     ),
@@ -2174,7 +2192,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
             theme: theme,
             value: snags,
             label: 'Open snags',
-            valueColor: _coral,
+            valueColor: _persimmon,
             bg: _surface,
             border: _hairline,
           ),
@@ -2267,6 +2285,18 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
             subtitle: m['sub'] as String,
             onTap: () => _safeNavigate(m['route'] as String?,
                 fallbackRoute: m['fb'] as String),
+            accentChip: m['key'] == 'snagList'
+                ? _persimmon
+                : (m['key'] == 'toDo' ? _cobalt : null),
+            accentSurface: m['key'] == 'snagList'
+                ? _persimmonSurface
+                : (m['key'] == 'toDo' ? _cobaltSurface : null),
+            accentBorder: m['key'] == 'snagList'
+                ? _persimmonSurfaceBorder
+                : (m['key'] == 'toDo' ? _cobaltSurfaceBorder : null),
+            accentText: m['key'] == 'snagList'
+                ? _persimmon
+                : (m['key'] == 'toDo' ? _cobalt : null),
           ),
           const SizedBox(height: 12),
         ],
@@ -2561,6 +2591,10 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                           visibility: _moduleVisFor('snagList'),
                           onToggleVisibility: () =>
                               _toggleModuleVis('snagList'),
+                          accentChip: _persimmon,
+                          accentSurface: _persimmonSurface,
+                          accentBorder: _persimmonSurfaceBorder,
+                          accentText: _persimmon,
                           onTap: () => _safeNavigate(
                             widget.snagListRouteName,
                             fallbackRoute: _fallbackSnagRoute,
@@ -2574,6 +2608,10 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                           subtitle: 'Tasks & reminders',
                           visibility: _moduleVisFor('toDo'),
                           onToggleVisibility: () => _toggleModuleVis('toDo'),
+                          accentChip: _cobalt,
+                          accentSurface: _cobaltSurface,
+                          accentBorder: _cobaltSurfaceBorder,
+                          accentText: _cobalt,
                           onTap: () => _safeNavigate(
                             widget.toDoListRouteName,
                             fallbackRoute: _fallbackToDoRoute,

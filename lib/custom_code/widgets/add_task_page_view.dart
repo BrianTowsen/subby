@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -39,17 +41,17 @@ class AddTaskPageView extends StatefulWidget {
 
 class _AddTaskPageViewState extends State<AddTaskPageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _ink = Color(0xFF017374);
+  static const Color _ink = Color(0xFF2A6FDB);
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _faint = Color(0xFF93A0B0);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
   static const Color _hairline = Color(0xFFEEF1F2);
   static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
-  static const Color _teal = Color(0xFF017374);
-  static const Color _tealTint = Color(0xFFE3F4F2);
+  static const Color _teal = Color(0xFF2A6FDB);
+  static const Color _tealTint = Color(0xFFE7EFFB);
   static const Color _live = Color(0xFFE5771E);
-  static const Color _coral = Color(0xFFE5771E);
+  static const Color _coral = Color(0xFFCA2E55);
   static const Color _navy = Color(0xFF1D2834);
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -972,8 +974,6 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
         'attachments': _attachments,
         'assignedListingRef': _listingRef,
         'assignedListingName': _listingName,
-        'assignedUserRef': _userRef,
-        'assignedUserName': _userName,
         'readByListingAt': null,
         'createdBy': currentUserReference,
         'createdByName': currentUserDisplayName,
@@ -1068,14 +1068,6 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                       name: _listingName,
                       subtitle: _listingSubtitle,
                       onTap: () => _pickAssignee(isPerson: false),
-                    ),
-                    _assignRow(
-                      label: 'Assign to person',
-                      isPerson: true,
-                      has: _userRef != null,
-                      name: _userName,
-                      subtitle: _userSubtitle,
-                      onTap: () => _pickAssignee(isPerson: true),
                     ),
                     _checklistField(),
                     _attachmentsField(),
