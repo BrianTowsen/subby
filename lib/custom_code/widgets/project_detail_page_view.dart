@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -88,36 +90,36 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF323F4D);
+  static const Color _ink = Color(0xFF28333E);
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
   static const Color _hairline = Color(0xFFEEF1F4);
   static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
   // Brand accent — TEAL.
-  static const Color _spark = Color(0xFF323F4D); // primary CTA / ranked accent
+  static const Color _spark = Color(0xFF28333E); // primary CTA / ranked accent
   static const Color _sparkInk = Color(0xFFFFFFFF);
-  static const Color _teal = Color(0xFF323F4D);
+  static const Color _teal = Color(0xFF28333E);
   static const Color _tealBright =
-      Color(0xFFC7E87A); // icon on ink chips (lime)
+      Color(0xFFB1C984); // icon on ink chips (sage)
   static const Color _tealTint =
-      Color(0xFFEEF7D6); // pill / chip fill (lime tint)
-  static const Color _tealText = Color(0xFF323F4D); // pill text
+      Color(0xFFEDF2DE); // pill / chip fill (sage tint)
+  static const Color _tealText = Color(0xFF28333E); // pill text
   static const Color _tealSurface =
-      Color(0xFFF3FAE6); // tinted module card (lime)
+      Color(0xFFEDF2DE); // tinted module card (sage)
   static const Color _tealSurfaceBorder = Color(0xFFDCE9B0);
   // Snag identity — Persimmon (snags own this inside a teal project)
-  static const Color _persimmon = Color(0xFFD9543B);
-  static const Color _persimmonSurface = Color(0xFFFDF1ED);
-  static const Color _persimmonSurfaceBorder = Color(0xFFF2D8CE);
+  static const Color _persimmon = Color(0xFFAB6455);
+  static const Color _persimmonSurface = Color(0xFFF3E7E2);
+  static const Color _persimmonSurfaceBorder = Color(0xFFE8CFC7);
   // To-Do identity — Cobalt
   static const Color _cobalt = Color(0xFF2A6FDB);
   static const Color _cobaltSurface = Color(0xFFEEF4FC);
   static const Color _cobaltSurfaceBorder = Color(0xFFD5E2F6);
   // Status
   static const Color _live =
-      Color(0xFFC7E87A); // lime — live / open-now / warning
-  static const Color _coral = Color(0xFFC7E87A);
+      Color(0xFFAB6455); // clay — live / open-now / warning
+  static const Color _coral = Color(0xFFAB6455);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -969,7 +971,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 10),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFC7E87A),
+                            color: const Color(0xFFB1C984),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
@@ -1443,7 +1445,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
       padding: const EdgeInsets.only(bottom: 14),
       child: Row(
         children: [
-          item(Icons.visibility_outlined, _teal, const Color(0xFFEEF7D6),
+          item(Icons.visibility_outlined, _teal, const Color(0xFFEDF2DE),
               'Shared'),
           const SizedBox(width: 18),
           item(Icons.lock_outline_rounded, _inkMute, _surface, 'Private'),
@@ -2584,10 +2586,6 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                           visibility: _moduleVisFor('snagList'),
                           onToggleVisibility: () =>
                               _toggleModuleVis('snagList'),
-                          accentChip: _persimmon,
-                          accentSurface: _persimmonSurface,
-                          accentBorder: _persimmonSurfaceBorder,
-                          accentText: _persimmon,
                           onTap: () => _safeNavigate(
                             widget.snagListRouteName,
                             fallbackRoute: _fallbackSnagRoute,
@@ -2601,10 +2599,6 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView> {
                           subtitle: 'Tasks & reminders',
                           visibility: _moduleVisFor('toDo'),
                           onToggleVisibility: () => _toggleModuleVis('toDo'),
-                          accentChip: _cobalt,
-                          accentSurface: _cobaltSurface,
-                          accentBorder: _cobaltSurfaceBorder,
-                          accentText: _cobalt,
                           onTap: () => _safeNavigate(
                             widget.toDoListRouteName,
                             fallbackRoute: _fallbackToDoRoute,
