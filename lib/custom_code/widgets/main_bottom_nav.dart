@@ -103,7 +103,8 @@ class _MainBottomNavState extends State<MainBottomNav> {
     required String label,
   }) {
     final bool selected = index == widget.currentIndex;
-    final Color color = selected ? _activeColorFor(index) : _faint;
+    const Color _slate = Color(0xFF323F4D);
+    final Color color = selected ? _slate : _faint;
 
     return Expanded(
       child: Material(
@@ -118,8 +119,19 @@ class _MainBottomNavState extends State<MainBottomNav> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(selected ? activeIcon : inactiveIcon,
-                  size: 23, color: color),
+              Container(
+                padding: selected
+                    ? const EdgeInsets.symmetric(horizontal: 18, vertical: 3)
+                    : EdgeInsets.zero,
+                decoration: selected
+                    ? BoxDecoration(
+                        color: _activeColorFor(index),
+                        borderRadius: BorderRadius.circular(999),
+                      )
+                    : null,
+                child: Icon(selected ? activeIcon : inactiveIcon,
+                    size: selected ? 22 : 23, color: color),
+              ),
               const SizedBox(height: 5),
               Text(
                 label,

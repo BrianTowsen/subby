@@ -43,16 +43,16 @@ class AddSnagPageView extends StatefulWidget {
 
 class _AddSnagPageViewState extends State<AddSnagPageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _ink = Color(0xFFD9543B);
+  static const Color _ink = Color(0xFF323F4D);
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _faint = Color(0xFF93A0B0);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
   static const Color _hairline = Color(0xFFEEF1F2);
   static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
-  static const Color _teal = Color(0xFFD9543B);
-  static const Color _tealTint = Color(0xFFFBEAE5);
-  static const Color _live = Color(0xFFD9543B);
+  static const Color _teal = Color(0xFF323F4D);
+  static const Color _tealTint = Color(0xFFF3FAE6);
+  static const Color _live = Color(0xFF323F4D);
   static const Color _coral = Color(0xFFCA2E55);
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -420,7 +420,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
           decoration: BoxDecoration(
-            color: sel ? const Color(0x1FD9543B) : _surface,
+            color: sel ? const Color(0x33C7E87A) : _surface,
             borderRadius: BorderRadius.circular(999),
             border: sel ? Border.all(color: _live, width: 1.5) : null,
           ),
@@ -540,7 +540,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                                     fontFamily: _displayFont,
                                     fontSize: 15,
                                     fontWeight: FontWeight.w700,
-                                    color: Color(0xFF1D2834))),
+                                    color: Color(0xFF323F4D))),
                             const SizedBox(height: 2),
                             Text(
                                 _assignedListingSubtitle.isEmpty
@@ -721,7 +721,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                                                 fontFamily: _displayFont,
                                                 fontSize: 15,
                                                 fontWeight: FontWeight.w700,
-                                                color: Color(0xFF1D2834))),
+                                                color: Color(0xFF323F4D))),
                                         const SizedBox(height: 2),
                                         Text(subtitle,
                                             maxLines: 1,

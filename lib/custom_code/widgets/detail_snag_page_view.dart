@@ -12,10 +12,6 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -43,18 +39,18 @@ class DetailSnagPageView extends StatefulWidget {
 
 class _DetailSnagPageViewState extends State<DetailSnagPageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _ink = Color(0xFFD9543B);
+  static const Color _ink = Color(0xFF323F4D);
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _faint = Color(0xFF93A0B0);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
   static const Color _hairline = Color(0xFFEEF1F2);
   static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
-  static const Color _teal = Color(0xFFD9543B);
-  static const Color _tealTint = Color(0xFFFBEAE5);
-  static const Color _live = Color(0xFFD9543B);
+  static const Color _teal = Color(0xFF323F4D);
+  static const Color _tealTint = Color(0xFFF3FAE6);
+  static const Color _live = Color(0xFF323F4D);
   static const Color _coral = Color(0xFFCA2E55);
-  static const Color _navy = Color(0xFF1D2834);
+  static const Color _navy = Color(0xFF323F4D);
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
   // ────────────────────────────────────────────────────────────────────

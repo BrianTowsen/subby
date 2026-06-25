@@ -12,6 +12,12 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
+import 'index.dart'; // Imports other custom widgets
+
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -43,7 +49,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFFD9543B); // snag identity — Persimmon
+  static const Color _ink = Color(0xFF323F4D); // snag identity — Persimmon
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _faint = Color(0xFF93A0B0);
   static const Color _paper = Color(0xFFFFFFFF);
@@ -51,11 +57,11 @@ class _SnagListPageViewState extends State<SnagListPageView>
   static const Color _hairline = Color(0xFFEEF1F2);
   static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
   // Brand accent — PERSIMMON (snags own this; Projects keep teal).
-  static const Color _teal = Color(0xFFD9543B);
-  static const Color _tealTint = Color(0xFFFBEAE5);
+  static const Color _teal = Color(0xFF323F4D);
+  static const Color _tealTint = Color(0xFFF3FAE6);
   // Status
   static const Color _live =
-      Color(0xFFD9543B); // persimmon — open / in-progress accent
+      Color(0xFF323F4D); // persimmon — open / in-progress accent
   static const Color _coral = Color(0xFFCA2E55); // destructive / error red
   // Type
   static const String _displayFont = 'Inter Tight';
