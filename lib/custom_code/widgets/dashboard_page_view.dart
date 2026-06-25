@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 // ======================= DashboardPageView (FULL FILE) =======================
 //
 // v5 — "Focus" home: most-recent project as a HERO card with a large
@@ -126,7 +128,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF017374); // text, chrome, dark surfaces
+  static const Color _ink =
+      Color(0xFF323F4D); // text, chrome, dark surfaces (slate)
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _faint = Color(0xFF93A0B0); // muted labels, chevrons
   static const Color _paper = Color(0xFFFFFFFF);
@@ -134,13 +137,12 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   static const Color _hairline = Color(0xFFEEF1F2);
 
   // Accents
-  static const Color _yellow =
-      Color(0xFF017374); // deep teal — "on site" / on track
+  static const Color _yellow = Color(0xFFC7E87A); // lime — "on site" / on track
   static const Color _ringTrack = Color(0xFFEEF2F7);
-  static const Color _orange = Color(0xFFE5771E); // attention / snagging
-  static const Color _orangeTint = Color(0xFFFBE3CC);
-  static const Color _orangeBorder = Color(0xFFE5771E);
-  static const Color _orangeText = Color(0xFFE5771E);
+  static const Color _orange = Color(0xFFC7E87A); // attention / snagging (lime)
+  static const Color _orangeTint = Color(0xFFEEF7D6);
+  static const Color _orangeBorder = Color(0xFFC7E87A);
+  static const Color _orangeText = Color(0xFF323F4D);
   static const Color _projTint = Color(0xFFEEF1F4); // add / empty card fill
 
   // Geometry
@@ -852,7 +854,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               alignment: Alignment.center,
               clipBehavior: Clip.antiAlias,
               decoration: const BoxDecoration(
-                color: Color(0xFFE3F4F2),
+                color: Color(0xFFEEF7D6),
                 shape: BoxShape.circle,
               ),
               child: sp.pmPhotoUrl.isNotEmpty
@@ -1615,8 +1617,8 @@ class _CapabilityChip extends StatelessWidget {
 
   final String label;
 
-  static const Color _tealTint = Color(0xFFE3F4F2);
-  static const Color _tealText = Color(0xFF017374);
+  static const Color _tealTint = Color(0xFFEEF7D6);
+  static const Color _tealText = Color(0xFF323F4D);
 
   @override
   Widget build(BuildContext context) {
