@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/auth/firebase_auth/auth_util.dart';
@@ -32,17 +34,17 @@ class DetailTaskPageView extends StatefulWidget {
 
 class _DetailTaskPageViewState extends State<DetailTaskPageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _ink = Color(0xFF017374);
+  static const Color _ink = Color(0xFF2A6FDB);
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _faint = Color(0xFF93A0B0);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
   static const Color _hairline = Color(0xFFEEF1F2);
   static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
-  static const Color _teal = Color(0xFF017374);
-  static const Color _tealTint = Color(0xFFE3F4F2);
+  static const Color _teal = Color(0xFF2A6FDB);
+  static const Color _tealTint = Color(0xFFE7EFFB);
   static const Color _live = Color(0xFFE5771E);
-  static const Color _coral = Color(0xFFE5771E);
+  static const Color _coral = Color(0xFFCA2E55);
   static const Color _navy = Color(0xFF1D2834);
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -165,11 +167,29 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
     }
   }
 
-  Color _statusColor(String s) =>
-      s == 'done' ? _faint : (s == 'in_progress' ? _teal : _live);
-  Color _statusTint(String s) => s == 'done'
-      ? _surface
-      : (s == 'in_progress' ? _tealTint : const Color(0x1FE5771E));
+  Color _statusColor(String s) {
+    switch (s) {
+      case 'in_progress':
+        return _paper; // white on solid cobalt
+      case 'done':
+        return _faint;
+      case 'todo':
+      default:
+        return _ink; // cobalt
+    }
+  }
+
+  Color _statusTint(String s) {
+    switch (s) {
+      case 'in_progress':
+        return _ink; // solid cobalt fill
+      case 'done':
+        return _surface;
+      case 'todo':
+      default:
+        return _tealTint; // cobalt @ light
+    }
+  }
 
   String _priorityLabel(String s) {
     switch (s) {
@@ -471,7 +491,6 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
     final status = (d['status'] ?? 'todo').toString();
     final priority = (d['priority'] ?? 'med').toString();
     final listingName = (d['assignedListingName'] ?? '').toString();
-    final userName = (d['assignedUserName'] ?? '').toString();
 
     final checklist = <Map<String, dynamic>>[];
     final rawCl = d['checklist'];
@@ -558,8 +577,6 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
               // Listing + read receipt
               if (listingName.trim().isNotEmpty)
                 _assignedListingRow(listingName, readAt),
-              // Person
-              if (userName.trim().isNotEmpty) _personRow(userName),
               // Checklist
               if (checklist.isNotEmpty) ...[
                 const SizedBox(height: 16),

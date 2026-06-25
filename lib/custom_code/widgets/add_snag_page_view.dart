@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -39,17 +41,17 @@ class AddSnagPageView extends StatefulWidget {
 
 class _AddSnagPageViewState extends State<AddSnagPageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _ink = Color(0xFF017374);
+  static const Color _ink = Color(0xFFD9543B);
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _faint = Color(0xFF93A0B0);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
   static const Color _hairline = Color(0xFFEEF1F2);
   static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
-  static const Color _teal = Color(0xFF017374);
-  static const Color _tealTint = Color(0xFFE3F4F2);
-  static const Color _live = Color(0xFFE5771E);
-  static const Color _coral = Color(0xFFE5771E);
+  static const Color _teal = Color(0xFFD9543B);
+  static const Color _tealTint = Color(0xFFFBEAE5);
+  static const Color _live = Color(0xFFD9543B);
+  static const Color _coral = Color(0xFFCA2E55);
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
   // ────────────────────────────────────────────────────────────────────
@@ -416,7 +418,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
           decoration: BoxDecoration(
-            color: sel ? const Color(0x1FE5771E) : _surface,
+            color: sel ? const Color(0x1FD9543B) : _surface,
             borderRadius: BorderRadius.circular(999),
             border: sel ? Border.all(color: _live, width: 1.5) : null,
           ),
