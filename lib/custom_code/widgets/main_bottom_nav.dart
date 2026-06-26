@@ -12,8 +12,6 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
 import '/custom_code/widgets/index.dart'; // (kept if FF expects it)
 
 // Subby bottom nav — matches DashboardPageView v4 (Option C).
@@ -54,8 +52,8 @@ class MainBottomNav extends StatefulWidget {
 
 class _MainBottomNavState extends State<MainBottomNav> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _teal = Color(0xFFB1C984); // active (default) — sage
-  static const Color _orange = Color(0xFF319DA3); // active (Directory) — teal
+  static const Color _teal = Color(0xFFC3D69C); // active (default) — green
+  static const Color _orange = Color(0xFFC3D69C); // active (Directory) — green
   static const Color _faint = Color(0xFF93A0B0); // inactive
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _hairline = Color(0xFFEEF1F2);
@@ -105,10 +103,9 @@ class _MainBottomNavState extends State<MainBottomNav> {
     required String label,
   }) {
     final bool selected = index == widget.currentIndex;
-    const Color _slate = Color(0xFF28333E);
-    final bool isDirectory = index == 1;
+    const Color _slate = Color(0xFF1E2730);
     final Color color = selected ? _slate : _faint;
-    final Color iconColor = selected ? (isDirectory ? _paper : _slate) : _faint;
+    final Color iconColor = selected ? _slate : _faint;
 
     return Expanded(
       child: Material(
