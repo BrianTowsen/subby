@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -1545,8 +1547,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       padding: const EdgeInsets.only(bottom: 14),
       child: Row(
         children: [
-          item(Icons.visibility_outlined, _teal, const Color(0xFFEDF2DE),
-              'Shared'),
+          // Shared icon now uses the SAME neutral colours as Private.
+          item(Icons.visibility_outlined, _inkMute, _surface, 'Shared'),
           const SizedBox(width: 18),
           item(Icons.lock_outline_rounded, _inkMute, _surface, 'Private'),
         ],
@@ -2629,8 +2631,20 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     );
   }
 
+  // Count of activity entries logged TODAY (drives the feed count chip).
+  int _todayActivityCount() {
+    final now = DateTime.now();
+    return _activityRows.where((doc) {
+      final ts = doc.data()['createdAt'];
+      if (ts is! Timestamp) return false;
+      final d = ts.toDate();
+      return d.year == now.year && d.month == now.month && d.day == now.day;
+    }).length;
+  }
+
   // The collapsible Project Feed section (timeline rail, newest first).
   Widget _buildProjectFeed(FlutterFlowTheme theme) {
+    final todayCount = _todayActivityCount();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2644,23 +2658,23 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                 () => setState(() => _feedOpen = !_feedOpen),
               ),
             ),
+            // Daily activity count (replaces the old "Read-only" pill).
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: _surface,
+                color: const Color(0xFFE4F1F1),
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.history_rounded,
-                      size: 14, color: Color(0xFF93A0B0)),
+                  const Icon(Icons.bolt, size: 14, color: _infoTeal),
                   const SizedBox(width: 5),
-                  Text('Read-only',
+                  Text('$todayCount today',
                       style: theme.labelSmall.override(
                         fontFamily: _bodyFont,
-                        color: _inkMute,
-                        fontWeight: FontWeight.w700,
+                        color: _infoTeal,
+                        fontWeight: FontWeight.w800,
                       )),
                 ],
               ),

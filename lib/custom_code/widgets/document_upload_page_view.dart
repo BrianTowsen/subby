@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -477,21 +479,16 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
   }
 
   Widget _selectorRow(FlutterFlowTheme theme, String label, Widget control) {
+    // Stacked layout: uppercase micro-label above a full-width control. Gives
+    // the segmented sliders room on narrow devices (e.g. iPhone 12 mini).
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: theme.bodySmall.override(
-              fontFamily: _bodyFont,
-              color: _inkMute,
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(child: control),
+          Text(label.toUpperCase(), style: _uLabelStyle(theme)),
+          const SizedBox(height: 8),
+          SizedBox(width: double.infinity, child: control),
         ],
       ),
     );
@@ -993,7 +990,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
                 ),
                 _selectorRow(
                   theme,
-                  'New upload visibility',
+                  'Visibility',
                   _animatedSegmented(
                     theme: theme,
                     iconA: Icons.visibility_outlined,

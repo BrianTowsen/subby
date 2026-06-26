@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
 import 'index.dart'; // Imports other custom widgets
+
+import 'index.dart'; // Imports other custom widgets
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 import 'index.dart'; // Imports other custom widgets
@@ -1486,7 +1488,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       borderRadius: BorderRadius.circular(16),
       child: Container(
         decoration: BoxDecoration(
-          color: _yellow,
+          // MOST RECENT card — sage-TINT to match the ProjectDetail "Manage"
+          // module tiles (was solid _yellow).
+          color: const Color(0xFFEDF2DE),
+          border: Border.all(color: const Color(0xFFDCE9B0)),
           borderRadius: BorderRadius.circular(16),
         ),
         padding: const EdgeInsets.all(18),

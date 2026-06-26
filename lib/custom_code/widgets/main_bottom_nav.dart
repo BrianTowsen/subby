@@ -9,6 +9,9 @@ import 'package:flutter/material.dart';
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
 import 'index.dart'; // Imports other custom widgets
+import 'package:flutter/services.dart'; // HapticFeedback (medium impact on tab tap)
+
+import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
@@ -78,19 +81,22 @@ class _MainBottomNavState extends State<MainBottomNav> {
   }
 
   void _handleTap(int index) {
+    // Medium haptic on every tab tap.
+    HapticFeedback.mediumImpact();
+
     if (index == widget.currentIndex) return;
 
     final route = (_routeFor(index) ?? '').trim();
     if (route.isEmpty) return;
 
-    // Fade between tabs — no slide. 180ms matches the app's nav convention.
+    // Fade between tabs — no slide. Slowed to 320ms so the cross-fade reads.
     context.goNamed(
       route,
       extra: <String, dynamic>{
         kTransitionInfoKey: const TransitionInfo(
           hasTransition: true,
           transitionType: PageTransitionType.fade,
-          duration: Duration(milliseconds: 180),
+          duration: Duration(milliseconds: 320),
         ),
       },
     );
@@ -163,7 +169,9 @@ class _MainBottomNavState extends State<MainBottomNav> {
         border: Border(top: BorderSide(color: _hairline, width: 1)),
       ),
       // Three roomy tabs — a little extra horizontal inset keeps them centred.
-      padding: EdgeInsets.only(bottom: bottomInset, left: 24, right: 24),
+      // top:12 gives the pill + icons more breathing room from the top edge.
+      padding:
+          EdgeInsets.only(top: 12, bottom: bottomInset, left: 24, right: 24),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
