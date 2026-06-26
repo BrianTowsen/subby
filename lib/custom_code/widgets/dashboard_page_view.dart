@@ -12,37 +12,49 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 // ======================= DashboardPageView (FULL FILE) =======================
 //
-// v5 — "Focus" home: most-recent project as a HERO card with a large
-//       progress ring, the remaining projects as a condensed quick-list.
-//       (v4 = portfolio overview list; data/logic unchanged across both.)
+// v6 — "Focus" home, now ROLE-AGNOSTIC.
 //
-// WHAT CHANGED FROM v3 (UI only — all logic preserved):
-//   • Welcome header is now big & minimal: an uppercase date eyebrow + a
-//     teal-ringed initials avatar (notification dot), then a large two-line
-//     time-of-day greeting. The header logo is now the bold peak MARK only
-//     (no wordmark).
-//   • Empty state is a lean ONBOARDING panel (Option C): a teal hero tile, a
-//     one-line headline, a single promise sentence and a row of capability
-//     chips (Plans · Budget · Programme · Snags · Quotes) — no dense
-//     checklist. Then Create project (primary) and Create user profile
-//     (secondary — hidden once a profile exists). The persistent bottom nav
-//     (MainBottomNav, overlaid by the scaffold) stays put underneath.
-//   • New at-a-glance STAT STRIP derived live from the projects stream:
-//     Active builds · On track · Needs you.
-//   • Projects are a vertical LIST with circular PROGRESS RINGS (was a rail).
-//   • The Directory section is GONE from this screen — it now lives in the new
-//     bottom nav. Its navigation logic is RETAINED in _goToListing() (+ the
-//     listing-check) so it can be wired up from the nav without rebuilding it.
+// WHAT CHANGED FROM v5 (agreed in design review):
+//   • "Needs you" stat number is now TEAL (was clay/orange).
+//   • "Active builds" counts OWNED + SHARED builds. "On track" / "Needs you"
+//     are unchanged (still derived from the owner's own active projects).
+//   • Copy: "Building Projects" → "Home Builds" everywhere (My / Shared /
+//     Archived), "New project" → "New home build", signed-out headline →
+//     "Sign in to manage your home builds".
+//   • PROJECT FEED signals on the cards: the hero shows a one-line "last
+//     activity" (bolt + summary · relative time); each condensed row shows a
+//     teal unread dot + the same summary when the build has recent activity.
+//     Reads two OPTIONAL project-doc fields written by the Project Feed:
+//        lastActivity   : String     — e.g. "Snag added", "Timeline updated"
+//        lastActivityAt : Timestamp  — drives the relative time ("2h ago")
+//     Missing ⇒ no activity line (safe).
+//   • ROLE-AGNOSTIC empty handling. The screen no longer assumes the viewer is
+//     an owner:
+//        - Owned builds exist            → owner layout (My Home Builds) as before.
+//        - No owned builds, shared exist → SHARED-PRIMARY layout: the builds
+//          they were added to (e.g. an electrician) become the main list.
+//        - No owned, no shared           → ONE unified empty state ("Your home
+//          builds live here") with a primary "Start a home build" AND a
+//          Directory card. The Directory card is listing-aware:
+//             • no listing  → "Create a listing in the Directory…" (→ add listing)
+//             • has listing → "You're listed in the Directory…"   (→ edit listing)
+//     Role is implicit (owner of builds you create, collaborator on builds you
+//     were added to) — no stored user role / signup question required.
 //
 // PRESERVED: every constructor param (used + legacy), _safeNavigate /
-// _goToProject / _goToAddProject, the active-projects query, the listing-exists
-// check, route fallbacks, and date formatting.
+// _goToProject / _goToAddProject, the active-projects query, the archived
+// query, the shared-projects resolver, the listing-exists check, route
+// fallbacks, and date formatting.
 //
 // PROJECT DOC FIELDS READ (all optional, safe fallbacks):
-//   name, city, province, status, updatedAt  (as before)
-//   progress : num — 0..1 OR 0..100, drives the ring. Missing ⇒ 0%.
+//   name, city, province, status, updatedAt        (as before)
+//   progress       : num — 0..1 OR 0..100, drives the bar. Missing ⇒ 0%.
+//   lastActivity   : String     — feed summary (NEW).
+//   lastActivityAt : Timestamp  — feed time    (NEW).
 
 import '/custom_code/widgets/index.dart';
 import 'dart:ui';
@@ -66,7 +78,7 @@ class DashboardPageView extends StatefulWidget {
     this.addProjectsRouteName, // create a new project
     this.projectParamName, // param name for the project ref (default "projectRef")
 
-    /// Listing management routes — RETAINED (Directory now lives in the nav)
+    /// Listing management routes — USED by the Directory card in the empty state
     this.addListingRouteName,
     this.editListingRouteName,
 
@@ -96,7 +108,7 @@ class DashboardPageView extends StatefulWidget {
   final String? addProjectsRouteName;
   final String? projectParamName;
 
-  // RETAINED for the Directory (now in the bottom nav)
+  // USED for the Directory listing card (empty state)
   final String? addListingRouteName;
   final String? editListingRouteName;
 
@@ -130,7 +142,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
   // Accents
   static const Color _yellow = Color(0xFFB1C984); // sage — "on site" / on track
-  static const Color _teal = Color(0xFF319DA3); // info / shared accent
+  static const Color _teal = Color(0xFF319DA3); // info / shared / "needs you"
   static const Color _ringTrack = Color(0xFFEEF2F7);
   static const Color _orange = Color(0xFFAB6455); // attention / snagging (clay)
   static const Color _orangeTint = Color(0xFFF3E7E2);
@@ -170,11 +182,14 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   static const String _fallbackAddListingRoute = 'addListingPage';
   static const String _fallbackEditListingRoute = 'editListingPage';
 
-  // Listing exists (RETAINED — drives Add / Edit for the Directory in the nav)
-  // ignore: unused_field
+  // Listing exists (drives the Directory card in the empty state, + Directory nav)
   bool _hasListing = false;
   bool _listingCheckInFlight = false;
   int _lastListingCheckMs = 0;
+
+  // Shared-build count — keeps the "Active builds" stat (owned + shared) in
+  // sync once the async shared loader resolves.
+  int _sharedCount = 0;
 
   // Date formatting (SA: DD MMM YYYY)
   static const List<String> _months = [
@@ -228,6 +243,32 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       return (p.length >= 2 ? p.substring(0, 2) : p).toUpperCase();
     }
     return (parts.first[0] + parts.last[0]).toUpperCase();
+  }
+
+  // "2h ago" / "3d ago" — for the Project Feed activity lines.
+  String _relativeTime(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inMinutes < 1) return 'just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    final w = (diff.inDays / 7).floor();
+    return '${w}w ago';
+  }
+
+  // Builds the feed activity line for a project, or null when there's nothing
+  // recent. Reads lastActivity (summary) + lastActivityAt (time).
+  String? _activityFor(Map<String, dynamic> data) {
+    final s = (data['lastActivity'] as String?)?.trim() ?? '';
+    if (s.isEmpty) return null;
+    final ts = data['lastActivityAt'];
+    DateTime? dt;
+    if (ts is Timestamp) {
+      dt = ts.toDate();
+    } else if (ts is DateTime) {
+      dt = ts;
+    }
+    return dt != null ? '$s · ${_relativeTime(dt)}' : s;
   }
 
   // =========================================================
@@ -306,6 +347,21 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         letterSpacing: -0.3,
         color: _ink,
       );
+
+  // Activity line — on the sage hero (ink) vs on a condensed row (teal).
+  TextStyle get _heroActivityStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        color: _ink,
+      );
+
+  TextStyle get _rowActivityStyle => const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        color: _teal,
+      );
   // =========================================================
 
   @override
@@ -359,8 +415,6 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       );
 
   // Top-right menu button → the More hub (Manage · Support · Legal).
-  // Pushed as a standard page so it uses the same platform transition as
-  // every other in-page link — matching ProfilePageView's _openMore().
   void _goToMore() => _openMore();
 
   void _openMore() {
@@ -369,8 +423,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     );
   }
 
-  // RETAINED: the Directory's add-vs-edit decision, ready for the bottom nav.
-  // ignore: unused_element
+  // The Directory card's add-vs-edit decision (empty state). A user must create
+  // a listing before a project manager can add them to a build.
   void _goToListing() {
     if (_hasListing) {
       _safeNavigate(
@@ -421,8 +475,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         .limit(20);
   }
 
-  // Archived projects (archived == true). Mirrors MyProjectsHomePageView's
-  // archived query so the two screens stay in sync.
+  // Archived projects (archived == true).
   Query<Map<String, dynamic>>? _archivedProjectsQuery() {
     final userRef = currentUserReference;
     if (userRef == null) return null;
@@ -435,8 +488,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   }
 
   // -----------------------------
-  // Listing exists for current user (RETAINED for the Directory in the nav)
-  // Debounced + only setState on change.
+  // Listing exists for current user (debounced + only setState on change).
   // -----------------------------
   Future<void> _refreshHasListing({bool force = false}) async {
     if (_listingCheckInFlight) return;
@@ -510,8 +562,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         children: [
           _accentMarker(_ink),
           const SizedBox(width: 10),
-          Expanded(
-              child: Text('My Building Projects', style: _stepHeadlineStyle)),
+          Expanded(child: Text('My Home Builds', style: _stepHeadlineStyle)),
         ],
       );
 
@@ -575,13 +626,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       );
 
   // =====================================================================
-  // BODY — stat strip + projects (single stream)
+  // BODY — owner layout · shared-primary · or unified empty (role-agnostic)
   // =====================================================================
   Widget _buildBody() {
     final q = _activeProjectsQuery();
 
     if (q == null) {
-      // No authenticated user → the only actions are Create account / Log in.
+      // No authenticated user → Create account / Log in.
       return Padding(
         padding: const EdgeInsets.fromLTRB(_hPad, 18, _hPad, 0),
         child: _buildSignedOut(),
@@ -592,10 +643,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       stream: q.snapshots(),
       builder: (context, snap) {
         if (snap.hasError) {
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(_hPad, 18, _hPad, 0),
-            child: _buildOnboarding(),
-          );
+          // Can't read owned projects → fall through to the role-agnostic path.
+          return _buildNoOwnedProjects();
         }
 
         if (snap.connectionState == ConnectionState.waiting && !snap.hasData) {
@@ -604,24 +653,25 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
         final docs = snap.data?.docs ?? const [];
 
+        // No owned builds → decide between shared-primary and the empty state.
         if (docs.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(_hPad, 18, _hPad, 0),
-            child: _buildOnboarding(),
-          );
+          return _buildNoOwnedProjects();
         }
 
-        // Derive stats from the same snapshot.
-        final active = docs.length;
+        // ── OWNER layout ───────────────────────────────────────────────
+        // Stats: "Active builds" = owned + shared; "On track" / "Needs you"
+        // stay derived from the owner's own active projects (unchanged).
+        final ownedActive = docs.length;
         int needs = 0;
         for (final d in docs) {
           final s = (d.data()['status'] as String?)?.trim() ?? '';
           if (_needsAttention(s)) needs++;
         }
-        final onTrack = active - needs;
+        final onTrack = ownedActive - needs;
+        final displayedActive = ownedActive + _sharedCount;
 
-        // Focus layout: most-recent (the query is ordered updatedAt desc) is
-        // the hero; everything after it is a condensed quick-list row.
+        // Focus layout: most-recent (updatedAt desc) is the hero; the rest are
+        // condensed quick-list rows.
         final feat = docs.first;
         final rest = docs.skip(1).toList();
 
@@ -630,7 +680,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(_hPad, 18, _hPad, 0),
-              child: _statStrip(active, onTrack, needs),
+              child: _statStrip(displayedActive, onTrack, needs),
             ),
             const SizedBox(height: 22),
             Padding(
@@ -654,14 +704,374 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               ),
             ),
 
-            // Shared with me (added as a listing) — read-only projects.
+            // Shared with me — read-only projects (also keeps _sharedCount fresh).
             _buildSharedSection(),
 
-            // Archived Building Projects — collapsed list below the active set.
+            // Archived Building Projects.
             _buildArchivedSection(),
           ],
         );
       },
+    );
+  }
+
+  // No owned builds: show the shared builds as the primary list if any exist,
+  // otherwise the unified (role-agnostic) empty state.
+  Widget _buildNoOwnedProjects() {
+    if (currentUserReference == null) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(_hPad, 18, _hPad, 0),
+        child: _buildSignedOut(),
+      );
+    }
+    return FutureBuilder<List<_SharedProject>>(
+      future: _loadSharedProjects(),
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting && !snap.hasData) {
+          return _bodyShell(child: _loadingList());
+        }
+        final shared = (snap.data ?? const <_SharedProject>[]).toList();
+
+        // keep the count in sync (used elsewhere if owned arrives later)
+        if (_sharedCount != shared.length) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) setState(() => _sharedCount = shared.length);
+          });
+        }
+
+        if (shared.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(_hPad, 18, _hPad, 0),
+            child: _buildEmptyState(),
+          );
+        }
+        return _buildSharedPrimary(shared);
+      },
+    );
+  }
+
+  // -----------------------------
+  // SHARED-PRIMARY layout — for users (e.g. a tradesperson) whose builds are
+  // all builds they were ADDED to. The shared list becomes the main content.
+  // -----------------------------
+  Widget _buildSharedPrimary(List<_SharedProject> shared) {
+    // Most-recent first.
+    shared.sort((a, b) {
+      final ad = _updatedAt(a.data);
+      final bd = _updatedAt(b.data);
+      if (ad == null && bd == null) return 0;
+      if (ad == null) return 1;
+      if (bd == null) return -1;
+      return bd.compareTo(ad);
+    });
+
+    final active = shared.length;
+    int needs = 0;
+    for (final sp in shared) {
+      final s = (sp.data['status'] as String?)?.trim() ?? '';
+      if (_needsAttention(s)) needs++;
+    }
+    final onTrack = active - needs;
+
+    final feat = shared.first;
+    final rest = shared.skip(1).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(_hPad, 18, _hPad, 0),
+          child: _statStrip(active, onTrack, needs, activeLabel: 'On builds'),
+        ),
+        const SizedBox(height: 22),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: _hPad),
+          child: _sharedSectionHeader(),
+        ),
+        const SizedBox(height: 4),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: _hPad),
+          child: Text(
+            "Builds you've been added to.",
+            style: _tileSubtitleStyle.copyWith(fontSize: 12),
+          ),
+        ),
+        const SizedBox(height: 14),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: _hPad),
+          child: _sharedHeroCard(feat),
+        ),
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: _hPad),
+          child: Column(
+            children: [
+              for (final sp in rest) _sharedPrimaryRow(sp),
+              const SizedBox(height: 16),
+              const Center(
+                child: Text(
+                  'Building your own home?',
+                  style: TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: _faint,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              _secondaryButton(
+                label: 'Start your own build',
+                icon: Icons.add_rounded,
+                onTap: _goToAddProject,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  DateTime? _updatedAt(Map<String, dynamic> data) {
+    final v = data['updatedAt'];
+    if (v is Timestamp) return v.toDate();
+    if (v is DateTime) return v;
+    return null;
+  }
+
+  Widget _sharedHeroCard(_SharedProject sp) {
+    final data = sp.data;
+    final name = (data['name'] as String?)?.trim() ?? '';
+    final city = (data['city'] as String?)?.trim() ?? '';
+    final province = (data['province'] as String?)?.trim() ?? '';
+    final status = (data['status'] as String?)?.trim() ?? '';
+    final loc = [city, province].where((x) => x.isNotEmpty).join(', ');
+    final pm = sp.pmName.trim();
+    final progress = _progress(data);
+    final pct = (progress * 100).round();
+    final act = _activityFor(data);
+
+    return InkWell(
+      onTap: () => _goToProject(sp.ref),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: _yellow,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('SHARED WITH YOU',
+                style: TextStyle(
+                  fontFamily: _bodyFont,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.8,
+                  color: _ink,
+                )),
+            const SizedBox(height: 6),
+            Text(
+              name.isEmpty ? 'Untitled project' : name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: _heroTitleStyle,
+            ),
+            const SizedBox(height: 3),
+            Text(
+              loc.isEmpty ? 'No location set' : loc,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontFamily: _bodyFont,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: _inkMute,
+              ),
+            ),
+            if (pm.isNotEmpty) ...[
+              const SizedBox(height: 7),
+              Row(
+                children: [
+                  const Icon(Icons.ios_share_rounded, size: 13, color: _teal),
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: Text(
+                      'Shared by $pm',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: _inkMute,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            if (status.isNotEmpty) ...[
+              const SizedBox(height: 11),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: _ink,
+                  borderRadius: BorderRadius.circular(_rSmall),
+                ),
+                child: Text(
+                  _capitalize(status),
+                  style: const TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    color: _paper,
+                  ),
+                ),
+              ),
+            ],
+            if (act != null) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const Icon(Icons.bolt, size: 15, color: _ink),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(act,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: _heroActivityStyle),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(999),
+                    child: Container(
+                      height: 8,
+                      color: _paper,
+                      child: FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: progress,
+                        child: Container(color: _ink),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text('$pct%', style: _ringPctStyle.copyWith(fontSize: 13)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sharedPrimaryRow(_SharedProject sp) {
+    final data = sp.data;
+    final name = (data['name'] as String?)?.trim() ?? '';
+    final city = (data['city'] as String?)?.trim() ?? '';
+    final province = (data['province'] as String?)?.trim() ?? '';
+    final pm = sp.pmName.trim();
+    final loc = [city, province].where((x) => x.isNotEmpty).join(', ');
+    final sub = [loc, pm].where((x) => x.isNotEmpty).join(' · ');
+    final progress = _progress(data);
+    final pct = (progress * 100).round();
+    final act = _activityFor(data);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: InkWell(
+        onTap: () => _goToProject(sp.ref),
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          decoration: BoxDecoration(
+            color: _surface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: _hairline),
+          ),
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name.isEmpty ? 'Untitled project' : name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: _tileTitleStyle.copyWith(fontSize: 14),
+                        ),
+                        const SizedBox(height: 1),
+                        Text(
+                          sub.isEmpty ? 'Shared with you' : sub,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: _tileSubtitleStyle,
+                        ),
+                        if (act != null) ...[
+                          const SizedBox(height: 5),
+                          Row(
+                            children: [
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: const BoxDecoration(
+                                    color: _teal, shape: BoxShape.circle),
+                              ),
+                              const SizedBox(width: 5),
+                              Expanded(
+                                child: Text(act,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: _rowActivityStyle),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.chevron_right_rounded,
+                      size: 20, color: Color(0xFFCDD6E2)),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(999),
+                      child: Container(
+                        height: 7,
+                        color: _paper,
+                        child: FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: progress,
+                          child: Container(color: _ink),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text('$pct%', style: _ringPctStyle.copyWith(fontSize: 12)),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -676,7 +1086,6 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       stream: q.snapshots(),
       builder: (context, snap) {
         final docs = snap.data?.docs ?? const [];
-        // Hide the whole section when there's nothing archived.
         if (docs.isEmpty) return const SizedBox.shrink();
 
         return Column(
@@ -702,7 +1111,6 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
   // -----------------------------
   // Shared Building Projects — projects this user was added to AS A LISTING.
-  // Resolves the user's subby_listing(s) → project_listings → projects.
   // -----------------------------
   Future<List<_SharedProject>> _loadSharedProjects() async {
     final userRef = currentUserReference;
@@ -740,8 +1148,6 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       }
       final results = await Future.wait(futures);
 
-      // Enrich each shared project with the project manager (project owner)
-      // profile so the row can show who shared it.
       final out = <_SharedProject>[];
       for (final s in results.where((s) => s.exists)) {
         final data = s.data() ?? <String, dynamic>{};
@@ -783,6 +1189,14 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       future: _loadSharedProjects(),
       builder: (context, snap) {
         final docs = snap.data ?? const <_SharedProject>[];
+
+        // Keep the "Active builds" stat (owned + shared) in sync.
+        if (_sharedCount != docs.length) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) setState(() => _sharedCount = docs.length);
+          });
+        }
+
         if (docs.isEmpty) return const SizedBox.shrink();
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -816,7 +1230,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           _accentMarker(_teal),
           const SizedBox(width: 10),
           Expanded(
-            child: Text('Shared Building Projects', style: _stepHeadlineStyle),
+            child: Text('Shared Home Builds', style: _stepHeadlineStyle),
           ),
         ],
       );
@@ -918,15 +1332,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Archived Building Projects',
+              'Archived Home Builds',
               style: _stepHeadlineStyle.copyWith(color: _inkMute),
             ),
           ),
         ],
       );
 
-  // A muted row: archive glyph, name, location, chevron — taps through to the
-  // same project detail page as an active project.
   Widget _archivedRow(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data();
     final name = (data['name'] as String?)?.trim() ?? '';
@@ -1000,9 +1412,11 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // -----------------------------
   // Stat strip
   // -----------------------------
-  Widget _statStrip(int active, int onTrack, int needs) => Row(
+  Widget _statStrip(int active, int onTrack, int needs,
+          {String activeLabel = 'Active builds'}) =>
+      Row(
         children: [
-          Expanded(child: _statTile('$active', 'Active builds', dark: true)),
+          Expanded(child: _statTile('$active', activeLabel, dark: true)),
           const SizedBox(width: 10),
           Expanded(child: _statTile('$onTrack', 'On track')),
           const SizedBox(width: 10),
@@ -1017,7 +1431,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     bool attention = false,
   }) {
     final Color bg = dark ? _ink : (attention ? _surface : _yellow);
-    final Color numColor = dark ? _paper : (attention ? _orange : _ink);
+    // "Needs you" number is TEAL (was clay/orange).
+    final Color numColor = dark ? _paper : (attention ? _teal : _ink);
     final Color labelColor =
         dark ? Colors.white.withOpacity(0.7) : (attention ? _inkMute : _ink);
 
@@ -1050,7 +1465,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   }
 
   // -----------------------------
-  // Focus layout — hero card (most recent project)
+  // Focus layout — hero card (most recent owned project)
   // -----------------------------
   Widget _heroCard(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data();
@@ -1061,6 +1476,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     final loc = [city, province].where((x) => x.isNotEmpty).join(', ');
     final progress = _progress(data);
     final pct = (progress * 100).round();
+    final act = _activityFor(data);
 
     return InkWell(
       onTap: () => _goToProject(doc.reference),
@@ -1120,6 +1536,21 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                 ),
               ),
             ],
+            if (act != null) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const Icon(Icons.bolt, size: 15, color: _ink),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(act,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: _heroActivityStyle),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 16),
             Row(
               children: [
@@ -1176,7 +1607,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   }
 
   // -----------------------------
-  // Focus layout — condensed quick-list row
+  // Focus layout — condensed quick-list row (owned)
   // -----------------------------
   Widget _condensedRow(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data();
@@ -1186,6 +1617,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     final loc = [city, province].where((x) => x.isNotEmpty).join(', ');
     final progress = _progress(data);
     final pct = (progress * 100).round();
+    final act = _activityFor(data);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -1221,6 +1653,26 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                           overflow: TextOverflow.ellipsis,
                           style: _tileSubtitleStyle,
                         ),
+                        if (act != null) ...[
+                          const SizedBox(height: 5),
+                          Row(
+                            children: [
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: const BoxDecoration(
+                                    color: _teal, shape: BoxShape.circle),
+                              ),
+                              const SizedBox(width: 5),
+                              Expanded(
+                                child: Text(act,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: _rowActivityStyle),
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -1292,7 +1744,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       );
 
   // -----------------------------
-  // New project button
+  // New build button
   // -----------------------------
   Widget _newProjectButton() => InkWell(
         onTap: _goToAddProject,
@@ -1311,7 +1763,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               Icon(Icons.add_rounded, size: 18, color: Color(0xFF4B555D)),
               SizedBox(width: 8),
               Text(
-                'New project',
+                'New home build',
                 style: TextStyle(
                   fontFamily: _bodyFont,
                   fontSize: 13,
@@ -1325,16 +1777,12 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       );
 
   // -----------------------------
-  // Signed-out (no account / not authenticated) empty state.
-  // The ONLY actions here are Create account (primary) and Log in
-  // (secondary). The create-project onboarding below is reserved for
-  // authenticated users who simply haven't added a project yet.
+  // Signed-out (not authenticated) empty state.
   // -----------------------------
   Widget _buildSignedOut() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Hero tile.
         Container(
           width: 64,
           height: 64,
@@ -1346,10 +1794,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           child: const Icon(Icons.lock_open_rounded, size: 32, color: _paper),
         ),
         const SizedBox(height: 20),
-
-        // Headline.
         const Text(
-          'Sign in to manage your builds',
+          'Sign in to manage your home builds',
           style: TextStyle(
             fontFamily: _displayFont,
             fontSize: 26,
@@ -1360,8 +1806,6 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           ),
         ),
         const SizedBox(height: 12),
-
-        // Promise line.
         const Text(
           'Create an account or log in to track plans, budget, '
           'programme, snags and quotes — all in one place.',
@@ -1374,8 +1818,6 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           ),
         ),
         const SizedBox(height: 22),
-
-        // Capability chips.
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -1389,16 +1831,12 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           ],
         ),
         const SizedBox(height: 28),
-
-        // Primary — create account.
         _primaryButton(
           label: 'Create account',
           icon: Icons.person_add_alt_1_rounded,
           onTap: _goToCreateAccount,
         ),
         const SizedBox(height: 10),
-
-        // Secondary — log in.
         _secondaryButton(
           label: 'Log in',
           icon: Icons.login_rounded,
@@ -1409,19 +1847,16 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   }
 
   // -----------------------------
-  // Onboarding (empty state) — Option C: lean.
-  // A teal hero tile, a one-line headline, a single promise sentence and a
-  // row of capability chips — then Create project (primary) and Create user
-  // profile (secondary, hidden once a profile exists). The persistent bottom
-  // nav stays overlaid underneath (the build reserves space for it).
+  // Unified, ROLE-AGNOSTIC empty state (no owned builds, no shared builds).
+  // Serves both a would-be owner and a tradesperson waiting to be added:
+  //   • Primary "Start a home build" (owner path).
+  //   • Directory card (listing-aware): a tradesperson must list themselves in
+  //     the Directory before a PM can add them to a build.
   // -----------------------------
-  Widget _buildOnboarding() {
-    final hasProfile = currentUserDisplayName.trim().isNotEmpty;
-
+  Widget _buildEmptyState() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Hero tile.
         Container(
           width: 64,
           height: 64,
@@ -1430,13 +1865,11 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             color: _yellow,
             borderRadius: BorderRadius.circular(18),
           ),
-          child: const Icon(Icons.add_rounded, size: 34, color: _paper),
+          child: const Icon(Icons.construction, size: 32, color: _paper),
         ),
         const SizedBox(height: 20),
-
-        // Headline.
         const Text(
-          'Start your first building project',
+          'Your home builds live here',
           style: TextStyle(
             fontFamily: _displayFont,
             fontSize: 26,
@@ -1447,11 +1880,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           ),
         ),
         const SizedBox(height: 12),
-
-        // Single promise line.
         const Text(
-          'Plans, budget, programme, snags and quotes — managed '
-          'end to end, in one place.',
+          "Start your own home build below — or join a build you're "
+          'working on for someone else.',
           style: TextStyle(
             fontFamily: _bodyFont,
             fontSize: 14,
@@ -1461,8 +1892,6 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           ),
         ),
         const SizedBox(height: 22),
-
-        // Capability chips.
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -1476,24 +1905,108 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           ],
         ),
         const SizedBox(height: 28),
-
-        // Primary — create project.
         _primaryButton(
-          label: 'Create project',
+          label: 'Start a home build',
           icon: Icons.add_rounded,
           onTap: _goToAddProject,
         ),
-
-        // Secondary — create profile (hidden once a profile exists).
-        if (!hasProfile) ...[
-          const SizedBox(height: 10),
-          _secondaryButton(
-            label: 'Create user profile',
-            icon: Icons.person_rounded,
-            onTap: _goToProfile,
-          ),
-        ],
+        const SizedBox(height: 14),
+        _orDivider(),
+        const SizedBox(height: 14),
+        _directoryListingCard(),
       ],
+    );
+  }
+
+  Widget _orDivider() => Row(
+        children: [
+          const Expanded(child: Divider(color: _hairline, height: 1)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Text(
+              'OR',
+              style: TextStyle(
+                fontFamily: _bodyFont,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: _faint,
+              ),
+            ),
+          ),
+          const Expanded(child: Divider(color: _hairline, height: 1)),
+        ],
+      );
+
+  // Listing-aware Directory card. A tradesperson lists themselves so PMs can
+  // find and add them; once listed, this reassures instead of re-prompting.
+  Widget _directoryListingCard() {
+    final IconData icon = _hasListing ? Icons.verified : Icons.storefront;
+    final String title = _hasListing
+        ? "You're listed in the Directory"
+        : 'Working on builds for others?';
+    final String body = _hasListing
+        ? "Project managers can find and add you. Builds you're added to "
+            'appear here automatically.'
+        : 'Create a listing in the Directory so project managers can find and '
+            'add you to their builds.';
+
+    return InkWell(
+      onTap: _goToListing,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: _surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE2E7EE)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: _paper,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, size: 20, color: _teal),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: _ink,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    body,
+                    style: const TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      height: 1.4,
+                      color: _inkMute,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.chevron_right_rounded,
+                size: 20, color: Color(0xFFCDD6E2)),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1659,8 +2172,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             _buildWelcomeHeader(),
             _buildBody(),
             // Clear the overlaid MainBottomNav (72) + breathing room (28)
-            // + system gesture inset, so the last card scrolls up above the bar
-            // instead of resting underneath it.
+            // + system gesture inset.
             SizedBox(height: 72 + 28 + MediaQuery.of(context).padding.bottom),
           ],
         ),
@@ -1670,7 +2182,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 }
 
 // =====================================================================
-// Capability chip — the soft teal pills in the empty state (Plans, Budget…).
+// Capability chip — the soft pills in the empty states (Plans, Budget…).
 // =====================================================================
 class _CapabilityChip extends StatelessWidget {
   const _CapabilityChip(this.label);
@@ -1714,17 +2226,16 @@ class _SubbyMarkPainter extends CustomPainter {
     final double s = size.width / 64.0;
     Offset p(double x, double y) => Offset(x * s, y * s);
 
-    // New Subby mark — roof triangle above two full-width bars.
     final markPaint = Paint()
       ..color = peak
       ..style = PaintingStyle.fill
       ..isAntiAlias = true;
 
-    // Roof — filled triangle (base spans the same width as the bars).
+    // Roof — filled triangle.
     final roof = Path()
-      ..moveTo(p(32, 11).dx, p(32, 11).dy) // peak
-      ..lineTo(p(51.2, 28.4).dx, p(51.2, 28.4).dy) // right base
-      ..lineTo(p(12.8, 28.4).dx, p(12.8, 28.4).dy) // left base
+      ..moveTo(p(32, 11).dx, p(32, 11).dy)
+      ..lineTo(p(51.2, 28.4).dx, p(51.2, 28.4).dy)
+      ..lineTo(p(12.8, 28.4).dx, p(12.8, 28.4).dy)
       ..close();
     canvas.drawPath(roof, markPaint);
 
@@ -1752,7 +2263,7 @@ class _SubbyMarkPainter extends CustomPainter {
 }
 
 // A shared project plus the project-manager (project owner) profile that
-// shared it — used by the Dashboard's "Shared Building Projects" rows.
+// shared it — used by the Dashboard's "Shared Home Builds" rows.
 class _SharedProject {
   final DocumentReference<Map<String, dynamic>> ref;
   final Map<String, dynamic> data;
