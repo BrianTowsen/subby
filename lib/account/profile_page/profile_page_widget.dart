@@ -57,10 +57,10 @@ class _ProfilePageWidgetState extends State<ProfilePageWidget> {
               alignment: AlignmentDirectional(0.0, 1.0),
               child: Container(
                 width: MediaQuery.sizeOf(context).width * 1.0,
-                height: 74.0,
+                height: 84.0,
                 child: custom_widgets.MainBottomNav(
                   width: MediaQuery.sizeOf(context).width * 1.0,
-                  height: 74.0,
+                  height: 84.0,
                   currentIndex: 2,
                   projectsRouteName: 'dashboardPage',
                   directoryRouteName: 'homePage',
