@@ -12,8 +12,6 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -24,6 +22,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
+import 'package:flutter/services.dart'; // SystemChrome / SystemUiOverlayStyle (dark status bar over white screen)
 
 class DocumentUploadPageView extends StatefulWidget {
   const DocumentUploadPageView({
@@ -53,7 +52,8 @@ class DocumentUploadPageView extends StatefulWidget {
   State<DocumentUploadPageView> createState() => _DocumentUploadPageViewState();
 }
 
-class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
+class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
+    with SingleTickerProviderStateMixin {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
   // less-is-more system · ported from Clutch Putt · lime → yellow.
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
@@ -91,6 +91,61 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
 
   bool _isUploading = false;
 
+  // ─── Swipe-right-to-go-back (follow the thumb, snap back or pop) ──────
+  double _dragX = 0;
+  late final AnimationController _snapCtrl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 220),
+  );
+  Animation<double>? _snapAnim;
+
+  void _onDragUpdate(DragUpdateDetails d) {
+    if (_snapCtrl.isAnimating) _snapCtrl.stop();
+    setState(() {
+      _dragX = (_dragX + d.delta.dx).clamp(0.0, double.infinity);
+    });
+  }
+
+  void _onDragEnd(DragEndDetails d) {
+    final double width = MediaQuery.sizeOf(context).width;
+    final double v = d.primaryVelocity ?? 0;
+    final bool shouldClose = _dragX > width * 0.30 || v > 700;
+    if (shouldClose) {
+      _animateDragTo(width, then: () {
+        final nav = Navigator.of(context);
+        if (nav.canPop()) nav.pop();
+      });
+    } else {
+      _animateDragTo(0);
+    }
+  }
+
+  void _animateDragTo(double target, {VoidCallback? then}) {
+    _snapAnim = Tween<double>(begin: _dragX, end: target).animate(
+      CurvedAnimation(parent: _snapCtrl, curve: Curves.easeOutCubic),
+    )..addListener(() {
+        setState(() => _dragX = _snapAnim!.value);
+      });
+    _snapCtrl
+      ..reset()
+      ..forward().whenComplete(() {
+        if (then != null) then();
+      });
+  }
+
+  // Wraps a page in the right-to-go-back swipe gesture.
+  Widget _swipeBack(Widget child) {
+    return GestureDetector(
+      behavior: HitTestBehavior.deferToChild,
+      onHorizontalDragUpdate: _onDragUpdate,
+      onHorizontalDragEnd: _onDragEnd,
+      child: Transform.translate(
+        offset: Offset(_dragX, 0),
+        child: child,
+      ),
+    );
+  }
+
   // ✅ New-upload selectors — written onto each uploaded document.
   String _newCat = 'drawing'; // 'drawing' | 'document'
   String _newVis = 'private'; // 'shared'  | 'private'
@@ -121,6 +176,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
   @override
   void dispose() {
     _stopDocsSub();
+    _snapCtrl.dispose();
     super.dispose();
   }
 
@@ -213,7 +269,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
         opacity: _isUploading ? 0.7 : 1,
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 19),
           decoration: BoxDecoration(
             color: _ink,
             borderRadius: BorderRadius.circular(999),
@@ -309,7 +365,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(content: Text('Document deleted.')),
+          _inkSnack('Document deleted.'),
         );
     } catch (e) {
       debugPrint('🔥 Failed deleting project_documents doc: $e');
@@ -317,72 +373,125 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(content: Text('Could not delete document.')),
+          _inkSnack('Could not delete document.'),
         );
     }
   }
 
-  // Segmented pill used by the new-upload selectors.
-  Widget _segPill(
-    FlutterFlowTheme theme, {
-    required IconData icon,
-    required String label,
-    required bool selected,
-    required VoidCallback onTap,
+  // Animated segmented control — one ink indicator that SLIDES between the
+  // two options (240ms easeOutCubic); the icon + label colours cross-fade in
+  // sync as it passes.
+  Widget _animatedSegmented({
+    required FlutterFlowTheme theme,
+    required IconData iconA,
+    required String labelA,
+    required VoidCallback onA,
+    required IconData iconB,
+    required String labelB,
+    required VoidCallback onB,
+    required bool firstSelected,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(999),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: selected ? _ink : Colors.transparent,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 15, color: selected ? _paper : _inkMute),
-            const SizedBox(width: 5),
-            Text(
-              label,
-              style: theme.labelSmall.override(
-                fontFamily: _bodyFont,
-                color: selected ? _paper : _inkMute,
-                fontWeight: FontWeight.w800,
+    return Container(
+      height: 40,
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      padding: const EdgeInsets.all(3),
+      child: Stack(
+        children: [
+          // Sliding ink indicator (half the track, snaps to the active side).
+          AnimatedAlign(
+            duration: const Duration(milliseconds: 240),
+            curve: Curves.easeOutCubic,
+            alignment:
+                firstSelected ? Alignment.centerLeft : Alignment.centerRight,
+            child: FractionallySizedBox(
+              widthFactor: 0.5,
+              heightFactor: 1,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: _ink,
+                  borderRadius: BorderRadius.circular(999),
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+          Row(
+            children: [
+              Expanded(
+                  child: _segLabel(theme, iconA, labelA, firstSelected, onA)),
+              Expanded(
+                  child: _segLabel(theme, iconB, labelB, !firstSelected, onB)),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Widget _selectorRow(
-      FlutterFlowTheme theme, String label, List<Widget> pills) {
+  Widget _segLabel(
+    FlutterFlowTheme theme,
+    IconData icon,
+    String label,
+    bool selected,
+    VoidCallback onTap,
+  ) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      splashFactory: NoSplash.splashFactory,
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      hoverColor: Colors.transparent,
+      overlayColor: WidgetStateProperty.all(Colors.transparent),
+      child: TweenAnimationBuilder<double>(
+        tween: Tween<double>(begin: 0, end: selected ? 1 : 0),
+        duration: const Duration(milliseconds: 240),
+        curve: Curves.easeOutCubic,
+        builder: (context, t, _) {
+          final color = Color.lerp(_inkMute, _paper, t)!;
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 15, color: color),
+              const SizedBox(width: 5),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.labelSmall.override(
+                    fontFamily: _bodyFont,
+                    color: color,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _selectorRow(FlutterFlowTheme theme, String label, Widget control) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 18),
       child: Row(
         children: [
-          Expanded(
-            child: Text(
-              label,
-              style: theme.bodySmall.override(
-                fontFamily: _bodyFont,
-                color: _inkMute,
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
-              ),
+          Text(
+            label,
+            style: theme.bodySmall.override(
+              fontFamily: _bodyFont,
+              color: _inkMute,
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
             ),
           ),
-          Container(
-            decoration: BoxDecoration(
-              color: _surface,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            padding: const EdgeInsets.all(3),
-            child: Row(mainAxisSize: MainAxisSize.min, children: pills),
-          ),
+          const SizedBox(width: 12),
+          Expanded(child: control),
         ],
       ),
     );
@@ -460,7 +569,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
       onTap: onTap,
       radius: BorderRadius.zero,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 19),
         decoration: _uRule,
         child: Row(
           children: [
@@ -617,6 +726,20 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
     );
   }
 
+  // Standard app snackbar — ink background, white text.
+  SnackBar _inkSnack(String message) => SnackBar(
+        backgroundColor: _ink,
+        content: Text(
+          message,
+          style: const TextStyle(
+            color: _paper,
+            fontFamily: _bodyFont,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0,
+          ),
+        ),
+      );
+
   IconData _iconForType(String type) {
     final t = type.toLowerCase();
     if (t.contains('pdf')) return Icons.picture_as_pdf_rounded;
@@ -665,8 +788,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
           ..showSnackBar(
-            const SnackBar(
-                content: Text('Could not read that file. Try again.')),
+            _inkSnack('Could not read that file. Try again.'),
           );
         return;
       }
@@ -718,7 +840,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(content: Text('Document uploaded.')),
+          _inkSnack('Document uploaded.'),
         );
     } catch (e) {
       debugPrint('🔥 Document upload failed: $e');
@@ -726,7 +848,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(content: Text('Upload failed. Please try again.')),
+          _inkSnack('Upload failed. Please try again.'),
         );
     } finally {
       if (mounted) setState(() => _isUploading = false);
@@ -768,6 +890,10 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
     final theme = FlutterFlowTheme.of(context);
     final accent = _projectsColor(theme);
 
+    // White-background screen: keep dark (black) status-bar icons. Reasserts
+    // dark after arriving from the ink ProjectDetail hero (which forces light).
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
+
     if (widget.projectRef == null) {
       return Container(
         width: widget.width ?? double.infinity,
@@ -792,136 +918,134 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView> {
     // ---------------------------------------------------------
     // ✅ OPTION C — MINIMAL UNDERLINE
     // ---------------------------------------------------------
-    return Container(
-      width: widget.width ?? double.infinity,
-      height: widget.height ?? double.infinity,
-      color: _paper,
-      child: SafeArea(
-        top: true,
-        bottom: true,
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, _vPad),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ===== TOP ROW: back =====
-              Row(
-                children: [
-                  _tapCard(
-                    onTap: _goBack,
-                    radius: BorderRadius.circular(999),
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: _surface,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: _hairline.withOpacity(0.9)),
+    return _swipeBack(
+      Container(
+        width: widget.width ?? double.infinity,
+        height: widget.height ?? double.infinity,
+        color: _paper,
+        child: SafeArea(
+          top: true,
+          bottom: true,
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, _vPad),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ===== TOP ROW: back =====
+                Row(
+                  children: [
+                    _tapCard(
+                      onTap: _goBack,
+                      radius: BorderRadius.circular(999),
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: _surface,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: _hairline.withOpacity(0.9)),
+                        ),
+                        child: const Icon(Icons.arrow_back_ios_new_rounded,
+                            size: 15, color: _inkMute),
                       ),
-                      child: const Icon(Icons.arrow_back_ios_new_rounded,
-                          size: 15, color: _inkMute),
                     ),
+                    const Spacer(),
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                // ===== TITLE =====
+                Text(
+                  'Documents',
+                  style: theme.titleLarge.override(
+                    fontFamily: _displayFont,
+                    color: _ink,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 30,
+                    lineHeight: 1.05,
                   ),
-                  const Spacer(),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              // ===== TITLE =====
-              Text(
-                'Documents',
-                style: theme.titleLarge.override(
-                  fontFamily: _displayFont,
-                  color: _ink,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 30,
-                  lineHeight: 1.05,
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Upload and manage project files.',
-                style: _appSubtitleStyle(theme).copyWith(fontSize: 13),
-              ),
-
-              const SizedBox(height: 24),
-
-              // ===== NEW-UPLOAD SELECTORS =====
-              _selectorRow(theme, 'New file type', [
-                _segPill(
-                  theme,
-                  icon: Icons.architecture_rounded,
-                  label: 'Drawings',
-                  selected: _newCat == 'drawing',
-                  onTap: () => setState(() => _newCat = 'drawing'),
+                const SizedBox(height: 8),
+                Text(
+                  'Upload and manage project files.',
+                  style: _appSubtitleStyle(theme).copyWith(fontSize: 13),
                 ),
-                _segPill(
+
+                const SizedBox(height: 30),
+
+                // ===== NEW-UPLOAD SELECTORS =====
+                _selectorRow(
                   theme,
-                  icon: Icons.description_rounded,
-                  label: 'Docs / Images',
-                  selected: _newCat == 'document',
-                  onTap: () => setState(() => _newCat = 'document'),
+                  'New file type',
+                  _animatedSegmented(
+                    theme: theme,
+                    iconA: Icons.architecture_rounded,
+                    labelA: 'Drawings',
+                    onA: () => setState(() => _newCat = 'drawing'),
+                    iconB: Icons.description_rounded,
+                    labelB: 'Docs / Images',
+                    onB: () => setState(() => _newCat = 'document'),
+                    firstSelected: _newCat == 'drawing',
+                  ),
                 ),
-              ]),
-              _selectorRow(theme, 'New upload visibility', [
-                _segPill(
+                _selectorRow(
                   theme,
-                  icon: Icons.visibility_outlined,
-                  label: 'Shared',
-                  selected: _newVis == 'shared',
-                  onTap: () => setState(() => _newVis = 'shared'),
+                  'New upload visibility',
+                  _animatedSegmented(
+                    theme: theme,
+                    iconA: Icons.visibility_outlined,
+                    labelA: 'Shared',
+                    onA: () => setState(() => _newVis = 'shared'),
+                    iconB: Icons.lock_outline_rounded,
+                    labelB: 'Private',
+                    onB: () => setState(() => _newVis = 'private'),
+                    firstSelected: _newVis == 'shared',
+                  ),
                 ),
-                _segPill(
-                  theme,
-                  icon: Icons.lock_outline_rounded,
-                  label: 'Private',
-                  selected: _newVis == 'private',
-                  onTap: () => setState(() => _newVis = 'private'),
+
+                // ===== UPLOAD =====
+                _uploadButton(theme),
+                const SizedBox(height: 10),
+                Text(
+                  _newVis == 'shared'
+                      ? 'New files will be visible to listings on this project.'
+                      : 'New files stay private until you choose to share them.',
+                  style: _helperStyle(theme),
                 ),
-              ]),
 
-              // ===== UPLOAD =====
-              _uploadButton(theme),
-              const SizedBox(height: 10),
-              Text(
-                _newVis == 'shared'
-                    ? 'New files will be visible to listings on this project.'
-                    : 'New files stay private until you choose to share them.',
-                style: _helperStyle(theme),
-              ),
+                const SizedBox(height: 34),
 
-              const SizedBox(height: 28),
+                // ===== DOCUMENT LIST =====
+                Text('PROJECT DOCUMENTS', style: _uLabelStyle(theme)),
+                const SizedBox(height: 4),
 
-              // ===== DOCUMENT LIST =====
-              Text('PROJECT DOCUMENTS', style: _uLabelStyle(theme)),
-              const SizedBox(height: 4),
-
-              if (_docsErr != null)
-                _stateRow(
-                  theme,
-                  _coral,
-                  Icons.error_outline,
-                  'Couldn’t load documents',
-                  'This is usually a missing Firestore index or rules issue.',
-                )
-              else if (!_docsLoadedOnce)
-                _stateRow(theme, accent, Icons.hourglass_empty_rounded,
-                    'Loading documents…', null,
-                    spinner: true)
-              else if (_docRows.isEmpty)
-                _stateRow(
-                  theme,
-                  accent,
-                  Icons.folder_open_rounded,
-                  'No documents yet.',
-                  'Upload PDFs, images, and files linked to this project.',
-                )
-              else
-                _uDocsByCategory(theme, accent),
-            ],
+                if (_docsErr != null)
+                  _stateRow(
+                    theme,
+                    _coral,
+                    Icons.error_outline,
+                    'Couldn’t load documents',
+                    'This is usually a missing Firestore index or rules issue.',
+                  )
+                else if (!_docsLoadedOnce)
+                  _stateRow(theme, accent, Icons.hourglass_empty_rounded,
+                      'Loading documents…', null,
+                      spinner: true)
+                else if (_docRows.isEmpty)
+                  _stateRow(
+                    theme,
+                    accent,
+                    Icons.folder_open_rounded,
+                    'No documents yet.',
+                    'Upload PDFs, images, and files linked to this project.',
+                  )
+                else
+                  _uDocsByCategory(theme, accent),
+              ],
+            ),
           ),
         ),
       ),

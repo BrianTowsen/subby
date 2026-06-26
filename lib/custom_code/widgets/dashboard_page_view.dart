@@ -9,6 +9,9 @@ import 'package:flutter/material.dart';
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
 import 'index.dart'; // Imports other custom widgets
+import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
+
+import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
@@ -682,7 +685,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               padding: const EdgeInsets.fromLTRB(_hPad, 18, _hPad, 0),
               child: _statStrip(displayedActive, onTrack, needs),
             ),
-            const SizedBox(height: 22),
+            const SizedBox(height: 28),
             Padding(
               padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 0),
               child: _sectionHeader(),
@@ -783,7 +786,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           padding: const EdgeInsets.fromLTRB(_hPad, 18, _hPad, 0),
           child: _statStrip(active, onTrack, needs, activeLabel: 'On builds'),
         ),
-        const SizedBox(height: 22),
+        const SizedBox(height: 28),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: _hPad),
           child: _sharedSectionHeader(),
@@ -1817,7 +1820,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             color: _inkMute,
           ),
         ),
-        const SizedBox(height: 22),
+        const SizedBox(height: 28),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -1891,7 +1894,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             color: _inkMute,
           ),
         ),
-        const SizedBox(height: 22),
+        const SizedBox(height: 28),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -2162,19 +2165,25 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       _refreshHasListing(); // keep listing state fresh on return
     });
 
-    return Container(
-      width: widget.width ?? double.infinity,
-      height: widget.height ?? double.infinity,
-      color: _paper,
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildWelcomeHeader(),
-            _buildBody(),
-            // Clear the overlaid MainBottomNav (72) + breathing room (28)
-            // + system gesture inset.
-            SizedBox(height: 72 + 28 + MediaQuery.of(context).padding.bottom),
-          ],
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      // Dark (black) status-bar icons over the white dashboard. Because the
+      // visible route's AnnotatedRegion wins, this reasserts dark icons the
+      // moment ProjectDetailPageView (which forces light) is popped.
+      value: SystemUiOverlayStyle.dark,
+      child: Container(
+        width: widget.width ?? double.infinity,
+        height: widget.height ?? double.infinity,
+        color: _paper,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              _buildWelcomeHeader(),
+              _buildBody(),
+              // Clear the overlaid MainBottomNav (72) + breathing room (28)
+              // + system gesture inset.
+              SizedBox(height: 72 + 28 + MediaQuery.of(context).padding.bottom),
+            ],
+          ),
         ),
       ),
     );

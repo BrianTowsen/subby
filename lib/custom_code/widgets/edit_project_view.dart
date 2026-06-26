@@ -14,8 +14,11 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
+import 'package:flutter/services.dart'; // SystemChrome / SystemUiOverlayStyle (dark status bar over white form)
 
 class EditProjectView extends StatefulWidget {
   const EditProjectView({
@@ -43,7 +46,8 @@ class EditProjectView extends StatefulWidget {
   State<EditProjectView> createState() => _EditProjectViewState();
 }
 
-class _EditProjectViewState extends State<EditProjectView> {
+class _EditProjectViewState extends State<EditProjectView>
+    with SingleTickerProviderStateMixin {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
   // less-is-more system · ported from Clutch Putt · lime → yellow.
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
@@ -90,6 +94,61 @@ class _EditProjectViewState extends State<EditProjectView> {
 
   bool _loading = true;
   bool _saving = false;
+
+  // ─── Swipe-right-to-go-back (follow the thumb, snap back or pop) ──────
+  double _dragX = 0;
+  late final AnimationController _snapCtrl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 220),
+  );
+  Animation<double>? _snapAnim;
+
+  void _onDragUpdate(DragUpdateDetails d) {
+    if (_snapCtrl.isAnimating) _snapCtrl.stop();
+    setState(() {
+      _dragX = (_dragX + d.delta.dx).clamp(0.0, double.infinity);
+    });
+  }
+
+  void _onDragEnd(DragEndDetails d) {
+    final double width = MediaQuery.sizeOf(context).width;
+    final double v = d.primaryVelocity ?? 0;
+    final bool shouldClose = _dragX > width * 0.30 || v > 700;
+    if (shouldClose) {
+      _animateDragTo(width, then: () {
+        final nav = Navigator.of(context);
+        if (nav.canPop()) nav.pop();
+      });
+    } else {
+      _animateDragTo(0);
+    }
+  }
+
+  void _animateDragTo(double target, {VoidCallback? then}) {
+    _snapAnim = Tween<double>(begin: _dragX, end: target).animate(
+      CurvedAnimation(parent: _snapCtrl, curve: Curves.easeOutCubic),
+    )..addListener(() {
+        setState(() => _dragX = _snapAnim!.value);
+      });
+    _snapCtrl
+      ..reset()
+      ..forward().whenComplete(() {
+        if (then != null) then();
+      });
+  }
+
+  // Wraps a page in the right-to-go-back swipe gesture.
+  Widget _swipeBack(Widget child) {
+    return GestureDetector(
+      behavior: HitTestBehavior.deferToChild,
+      onHorizontalDragUpdate: _onDragUpdate,
+      onHorizontalDragEnd: _onDragEnd,
+      child: Transform.translate(
+        offset: Offset(_dragX, 0),
+        child: child,
+      ),
+    );
+  }
 
   // ---------------------------------------------------------
   // ✅ TYPOGRAPHY (token + explicit family, minimal overrides)
@@ -172,7 +231,7 @@ class _EditProjectViewState extends State<EditProjectView> {
   }) {
     final multiline = maxLines > 1;
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: 19),
       decoration: _uRule,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -240,7 +299,7 @@ class _EditProjectViewState extends State<EditProjectView> {
   }) {
     final safeValue = items.contains(value) ? value : items.first;
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: 19),
       decoration: _uRule,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -307,7 +366,7 @@ class _EditProjectViewState extends State<EditProjectView> {
         hoverColor: Colors.transparent,
         overlayColor: WidgetStateProperty.all(Colors.transparent),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 19),
           decoration: _uRule,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -391,7 +450,7 @@ class _EditProjectViewState extends State<EditProjectView> {
           opacity: _saving ? 0.7 : 1,
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 16),
+            padding: const EdgeInsets.symmetric(vertical: 19),
             decoration: BoxDecoration(
               color: _ink,
               borderRadius: BorderRadius.circular(999),
@@ -456,7 +515,10 @@ class _EditProjectViewState extends State<EditProjectView> {
               backgroundColor: _paper,
               headerBackgroundColor: _teal,
               headerForegroundColor: _paper,
-              todayForegroundColor: const WidgetStatePropertyAll(_ink),
+              todayForegroundColor: WidgetStateProperty.resolveWith(
+                (states) =>
+                    states.contains(WidgetState.selected) ? _paper : _ink,
+              ),
               todayBorder: const BorderSide(color: _teal, width: 1.4),
               dayStyle: const TextStyle(
                 fontFamily: _bodyFont,
@@ -559,6 +621,7 @@ class _EditProjectViewState extends State<EditProjectView> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
+              backgroundColor: _ink,
               content: Text(
                 'You do not have permission to edit this project.',
                 style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -601,6 +664,7 @@ class _EditProjectViewState extends State<EditProjectView> {
       setState(() => _loading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          backgroundColor: _ink,
           content: Text(
             'Could not load project. Please try again.',
             style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -643,6 +707,7 @@ class _EditProjectViewState extends State<EditProjectView> {
     if (ref == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          backgroundColor: _ink,
           content: Text(
             'Missing project reference.',
             style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -669,6 +734,7 @@ class _EditProjectViewState extends State<EditProjectView> {
       // ✅ show feedback BEFORE navigation so it always appears
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          backgroundColor: _ink,
           content: Text(
             'Project updated.',
             style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -705,6 +771,7 @@ class _EditProjectViewState extends State<EditProjectView> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          backgroundColor: _ink,
           content: Text(
             'Update failed. Please try again.',
             style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -739,6 +806,7 @@ class _EditProjectViewState extends State<EditProjectView> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          backgroundColor: _ink,
           content: Text(
             'Project deleted.',
             style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -762,6 +830,7 @@ class _EditProjectViewState extends State<EditProjectView> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          backgroundColor: _ink,
           content: Text(
             'Delete failed. Please try again.',
             style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -778,58 +847,207 @@ class _EditProjectViewState extends State<EditProjectView> {
     }
   }
 
-  Future<void> _confirmDelete(FlutterFlowTheme theme, Color accent) async {
-    await showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          backgroundColor: _paper,
-          shape: RoundedRectangleBorder(
+  // Action-sheet row — matches the Project Detail remove sheets so every
+  // confirm / warning popup shares one style (ink header card + module rows).
+  Widget _actionModuleRow({
+    required FlutterFlowTheme theme,
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+    bool destructive = false,
+  }) {
+    final borderColor =
+        destructive ? _coral.withOpacity(0.25) : _hairline.withOpacity(0.75);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        splashFactory: NoSplash.splashFactory,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: _paper,
             borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: _hairline.withOpacity(0.9), width: 1),
+            border: Border.all(color: borderColor, width: 1),
           ),
-          title: Text(
-            'Delete project?',
-            style: theme.titleMedium.override(
-              fontFamily: _displayFont,
-              color: _ink,
-              letterSpacing: 0.0,
-              fontWeight: FontWeight.w900,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+            decoration: BoxDecoration(
+              color: _surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: destructive
+                    ? _coral.withOpacity(0.18)
+                    : _hairline.withOpacity(0.35),
+                width: 1,
+              ),
             ),
-          ),
-          content: Text(
-            'This will archive and mark the project as deleted. You can restore it later if needed.',
-            style: _helperStyle(theme),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(
-                'Cancel',
-                style: theme.bodyMedium.override(
-                  fontFamily: _bodyFont,
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: iconColor.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: iconColor.withOpacity(0.22),
+                      width: 1,
+                    ),
+                  ),
+                  child: Icon(icon, color: iconColor, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.bodyMedium.override(
+                          fontFamily: _bodyFont,
+                          color: destructive ? _coral : _ink,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.0,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.bodySmall.override(
+                          fontFamily: _bodyFont,
+                          color: _inkMute,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.0,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Icon(
+                  Icons.chevron_right_rounded,
                   color: _inkMute,
-                  letterSpacing: 0.0,
-                  fontWeight: FontWeight.w800,
+                  size: 22,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmDelete(FlutterFlowTheme theme, Color accent) async {
+    // Bottom action sheet — identical pattern to ProjectDetail's remove sheets.
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: false,
+      builder: (ctx) {
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            child: Container(
+              decoration: BoxDecoration(
+                color: _paper,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _hairline.withOpacity(0.75)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.10),
+                    blurRadius: 18,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 44,
+                        height: 5,
+                        margin: const EdgeInsets.only(bottom: 10),
+                        decoration: BoxDecoration(
+                          color: _hairline.withOpacity(0.55),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Delete project?',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.titleMedium.override(
+                              fontFamily: _displayFont,
+                              fontWeight: FontWeight.w900,
+                              color: _ink,
+                            ),
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () => Navigator.pop(ctx),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.all(6),
+                            child: Icon(
+                              Icons.close_rounded,
+                              color: _inkMute,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    _actionModuleRow(
+                      theme: theme,
+                      icon: Icons.delete_outline_rounded,
+                      iconColor: accent,
+                      title: 'Delete project',
+                      subtitle:
+                          'Archives and marks it as deleted. You can restore it later.',
+                      destructive: true,
+                      onTap: () async {
+                        Navigator.pop(ctx);
+                        await _deleteProject();
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    _actionModuleRow(
+                      theme: theme,
+                      icon: Icons.close_rounded,
+                      iconColor: _inkMute,
+                      title: 'Cancel',
+                      subtitle: 'Keep this project.',
+                      onTap: () => Navigator.pop(ctx),
+                    ),
+                  ],
                 ),
               ),
             ),
-            TextButton(
-              onPressed: () async {
-                Navigator.of(ctx).pop();
-                await _deleteProject();
-              },
-              child: Text(
-                'Delete',
-                style: theme.bodyMedium.override(
-                  fontFamily: _bodyFont,
-                  color: accent,
-                  letterSpacing: 0.0,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
-          ],
+          ),
         );
       },
     );
@@ -847,6 +1065,7 @@ class _EditProjectViewState extends State<EditProjectView> {
     _cityCtrl.dispose();
     _addressCtrl.dispose();
     _notesCtrl.dispose();
+    _snapCtrl.dispose();
     super.dispose();
   }
 
@@ -854,6 +1073,10 @@ class _EditProjectViewState extends State<EditProjectView> {
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
     final accent = _projectsColor(theme);
+
+    // White-background screen: keep dark (black) status-bar icons. Reasserts
+    // dark after arriving from the ink ProjectDetail hero (which forces light).
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
 
     // ---------------------------------------------------------
     // ✅ Loading state
@@ -901,213 +1124,213 @@ class _EditProjectViewState extends State<EditProjectView> {
     // ---------------------------------------------------------
     // ✅ OPTION C — MINIMAL UNDERLINE
     // ---------------------------------------------------------
-    return Container(
-      width: widget.width ?? double.infinity,
-      height: widget.height ?? double.infinity,
-      color: _paper,
-      child: SafeArea(
-        top: true,
-        bottom: true,
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(_hPad, 14, _hPad, _vPad),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ===== TOP ROW: back + delete =====
-              Row(
-                children: [
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () {
-                        final nav = Navigator.of(context);
-                        if (nav.canPop()) nav.pop();
-                      },
-                      borderRadius: BorderRadius.circular(999),
-                      splashFactory: NoSplash.splashFactory,
-                      splashColor: Colors.transparent,
-                      highlightColor: Colors.transparent,
-                      hoverColor: Colors.transparent,
-                      overlayColor: WidgetStateProperty.all(Colors.transparent),
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        alignment: Alignment.center,
-                        decoration: const BoxDecoration(
-                          color: _surface,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.arrow_back_ios_new_rounded,
-                            size: 15, color: _inkMute),
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap:
-                          _saving ? null : () => _confirmDelete(theme, _coral),
-                      borderRadius: BorderRadius.circular(999),
-                      splashFactory: NoSplash.splashFactory,
-                      splashColor: Colors.transparent,
-                      highlightColor: Colors.transparent,
-                      hoverColor: Colors.transparent,
-                      overlayColor: WidgetStateProperty.all(Colors.transparent),
-                      child: Opacity(
-                        opacity: _saving ? 0.7 : 1,
-                        child: const Padding(
-                          padding: EdgeInsets.all(6),
-                          child: Icon(Icons.delete_outline_rounded,
-                              size: 22, color: _coral),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              // ===== TITLE =====
-              Text(
-                'Edit Project',
-                style: theme.titleLarge.override(
-                  fontFamily: _displayFont,
-                  color: _ink,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 30,
-                  lineHeight: 1.05,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Update details, dates and notes.',
-                style: _appSubtitleStyle(theme).copyWith(fontSize: 13),
-              ),
-
-              const SizedBox(height: 26),
-
-              // ===== FORM =====
-              Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    return _swipeBack(
+      Container(
+        width: widget.width ?? double.infinity,
+        height: widget.height ?? double.infinity,
+        color: _paper,
+        child: SafeArea(
+          top: true,
+          bottom: true,
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(_hPad, 14, _hPad, _vPad),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ===== TOP ROW: back + delete =====
+                Row(
                   children: [
-                    _uText(
-                      theme: theme,
-                      label: 'Project name',
-                      controller: _nameCtrl,
-                      icon: Icons.home_work_outlined,
-                      hint: 'e.g. Winston Ridge Renovation',
-                      validator: (v) {
-                        if ((v ?? '').trim().isEmpty) {
-                          return 'Project name is required';
-                        }
-                        return null;
-                      },
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          final nav = Navigator.of(context);
+                          if (nav.canPop()) nav.pop();
+                        },
+                        borderRadius: BorderRadius.circular(999),
+                        splashFactory: NoSplash.splashFactory,
+                        splashColor: Colors.transparent,
+                        highlightColor: Colors.transparent,
+                        hoverColor: Colors.transparent,
+                        overlayColor:
+                            WidgetStateProperty.all(Colors.transparent),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          alignment: Alignment.center,
+                          decoration: const BoxDecoration(
+                            color: _surface,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.arrow_back_ios_new_rounded,
+                              size: 15, color: _inkMute),
+                        ),
+                      ),
                     ),
-                    _uSelect(
-                      theme: theme,
-                      label: 'Status',
-                      icon: Icons.flag_outlined,
-                      value: _status,
-                      items: _statusOptions,
-                      onChanged: (v) => setState(() => _status = v),
+                    const Spacer(),
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _saving
+                            ? null
+                            : () => _confirmDelete(theme, _coral),
+                        borderRadius: BorderRadius.circular(999),
+                        splashFactory: NoSplash.splashFactory,
+                        splashColor: Colors.transparent,
+                        highlightColor: Colors.transparent,
+                        hoverColor: Colors.transparent,
+                        overlayColor:
+                            WidgetStateProperty.all(Colors.transparent),
+                        child: Opacity(
+                          opacity: _saving ? 0.7 : 1,
+                          child: const Padding(
+                            padding: EdgeInsets.all(6),
+                            child: Icon(Icons.delete_outline_rounded,
+                                size: 22, color: _coral),
+                          ),
+                        ),
+                      ),
                     ),
-                    _uSelect(
-                      theme: theme,
-                      label: 'Province',
-                      icon: Icons.map_outlined,
-                      value: _province,
-                      items: _provinceOptions,
-                      onChanged: (v) => setState(() => _province = v),
-                    ),
-                    _uText(
-                      theme: theme,
-                      label: 'City / Area',
-                      controller: _cityCtrl,
-                      icon: Icons.location_city_outlined,
-                      hint: 'e.g. Durbanville',
-                    ),
-                    _uText(
-                      theme: theme,
-                      label: 'Address',
-                      controller: _addressCtrl,
-                      icon: Icons.place_outlined,
-                      hint: 'Street address (optional)',
-                    ),
-                    _uDate(
-                      theme: theme,
-                      label: 'Start date',
-                      icon: Icons.calendar_month_outlined,
-                      value: _dateLabel(_startDate),
-                      onTap: () => _pickDate(isStart: true),
-                    ),
-                    _uDate(
-                      theme: theme,
-                      label: 'End date',
-                      icon: Icons.event_outlined,
-                      value: _dateLabel(_endDate),
-                      onTap: () => _pickDate(isStart: false),
-                    ),
-                    _uText(
-                      theme: theme,
-                      label: 'Notes',
-                      controller: _notesCtrl,
-                      icon: Icons.notes_outlined,
-                      hint:
-                          'Anything important (budget notes, build phases, key contacts)…',
-                      maxLines: 4,
-                    ),
-                    _uArchiveRow(theme, accent),
-                    const SizedBox(height: 28),
-                    _primarySave(theme),
-                    const SizedBox(height: 16),
-                    Center(
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: _saving
-                              ? null
-                              : () {
-                                  final nav = Navigator.of(context);
-                                  if (nav.canPop()) nav.pop();
-                                },
-                          borderRadius: BorderRadius.circular(8),
-                          splashFactory: NoSplash.splashFactory,
-                          splashColor: Colors.transparent,
-                          highlightColor: Colors.transparent,
-                          hoverColor: Colors.transparent,
-                          overlayColor:
-                              WidgetStateProperty.all(Colors.transparent),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            child: Text(
-                              'Cancel',
-                              style: theme.bodyMedium.override(
-                                fontFamily: _bodyFont,
-                                color: _inkMute,
-                                letterSpacing: 0.0,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 14,
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                // ===== TITLE =====
+                Text(
+                  'Edit Project',
+                  style: theme.titleLarge.override(
+                    fontFamily: _displayFont,
+                    color: _ink,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 30,
+                    lineHeight: 1.05,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Update details, dates and notes.',
+                  style: _appSubtitleStyle(theme).copyWith(fontSize: 13),
+                ),
+
+                const SizedBox(height: 32),
+
+                // ===== FORM =====
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _uText(
+                        theme: theme,
+                        label: 'Project name',
+                        controller: _nameCtrl,
+                        icon: Icons.home_work_outlined,
+                        hint: 'e.g. Winston Ridge Renovation',
+                        validator: (v) {
+                          if ((v ?? '').trim().isEmpty) {
+                            return 'Project name is required';
+                          }
+                          return null;
+                        },
+                      ),
+                      _uSelect(
+                        theme: theme,
+                        label: 'Status',
+                        icon: Icons.flag_outlined,
+                        value: _status,
+                        items: _statusOptions,
+                        onChanged: (v) => setState(() => _status = v),
+                      ),
+                      _uSelect(
+                        theme: theme,
+                        label: 'Province',
+                        icon: Icons.map_outlined,
+                        value: _province,
+                        items: _provinceOptions,
+                        onChanged: (v) => setState(() => _province = v),
+                      ),
+                      _uText(
+                        theme: theme,
+                        label: 'City / Area',
+                        controller: _cityCtrl,
+                        icon: Icons.location_city_outlined,
+                        hint: 'e.g. Durbanville',
+                      ),
+                      _uText(
+                        theme: theme,
+                        label: 'Address',
+                        controller: _addressCtrl,
+                        icon: Icons.place_outlined,
+                        hint: 'Street address (optional)',
+                      ),
+                      _uDate(
+                        theme: theme,
+                        label: 'Start date',
+                        icon: Icons.calendar_month_outlined,
+                        value: _dateLabel(_startDate),
+                        onTap: () => _pickDate(isStart: true),
+                      ),
+                      _uDate(
+                        theme: theme,
+                        label: 'End date',
+                        icon: Icons.event_outlined,
+                        value: _dateLabel(_endDate),
+                        onTap: () => _pickDate(isStart: false),
+                      ),
+                      _uText(
+                        theme: theme,
+                        label: 'Notes',
+                        controller: _notesCtrl,
+                        icon: Icons.notes_outlined,
+                        hint:
+                            'Anything important (budget notes, build phases, key contacts)…',
+                        maxLines: 4,
+                      ),
+                      _uArchiveRow(theme, accent),
+                      const SizedBox(height: 28),
+                      _primarySave(theme),
+                      const SizedBox(height: 16),
+                      Center(
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: _saving
+                                ? null
+                                : () {
+                                    final nav = Navigator.of(context);
+                                    if (nav.canPop()) nav.pop();
+                                  },
+                            borderRadius: BorderRadius.circular(8),
+                            splashFactory: NoSplash.splashFactory,
+                            splashColor: Colors.transparent,
+                            highlightColor: Colors.transparent,
+                            hoverColor: Colors.transparent,
+                            overlayColor:
+                                WidgetStateProperty.all(Colors.transparent),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
+                              child: Text(
+                                'Cancel',
+                                style: theme.bodyMedium.override(
+                                  fontFamily: _bodyFont,
+                                  color: _inkMute,
+                                  letterSpacing: 0.0,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 14,
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Tip: This updates the selected project document and My Projects will refresh automatically (StreamBuilder).',
-                      style: _helperStyle(theme),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

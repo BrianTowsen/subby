@@ -12,8 +12,11 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
+import 'package:flutter/services.dart'; // SystemUiOverlayStyle (dark status bar over white form)
 
 class AddProjectsPageView extends StatefulWidget {
   const AddProjectsPageView({
@@ -182,7 +185,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
   }) {
     final multiline = maxLines > 1;
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: 19),
       decoration: _uRule,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -250,7 +253,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
   }) {
     final safeValue = items.contains(value) ? value : items.first;
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: 19),
       decoration: _uRule,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -317,7 +320,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
         hoverColor: Colors.transparent,
         overlayColor: WidgetStateProperty.all(Colors.transparent),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 19),
           decoration: _uRule,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -401,7 +404,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
           opacity: _saving ? 0.7 : 1,
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 16),
+            padding: const EdgeInsets.symmetric(vertical: 19),
             decoration: BoxDecoration(
               color: _ink,
               borderRadius: BorderRadius.circular(999),
@@ -466,7 +469,10 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
               backgroundColor: _paper,
               headerBackgroundColor: _teal,
               headerForegroundColor: _paper,
-              todayForegroundColor: const WidgetStatePropertyAll(_ink),
+              todayForegroundColor: WidgetStateProperty.resolveWith(
+                (states) =>
+                    states.contains(WidgetState.selected) ? _paper : _ink,
+              ),
               todayBorder: const BorderSide(color: _teal, width: 1.4),
               dayStyle: const TextStyle(
                 fontFamily: _bodyFont,
@@ -541,6 +547,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
     if (currentUserReference == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          backgroundColor: _ink,
           content: Text(
             'You must be logged in to create a project.',
             style: theme.bodyMedium.override(
@@ -604,6 +611,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          backgroundColor: _ink,
           content: Text(
             'Failed to save project: $e',
             style: theme.bodyMedium.override(
@@ -623,203 +631,208 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
 
-    return GestureDetector(
-      behavior: HitTestBehavior.deferToChild,
-      onHorizontalDragUpdate: _onDragUpdate,
-      onHorizontalDragEnd: _onDragEnd,
-      child: Transform.translate(
-        offset: Offset(_dragX, 0),
-        child: Container(
-          width: widget.width ?? double.infinity,
-          height: widget.height ?? double.infinity,
-          color: _paper,
-          child: SafeArea(
-            top: true,
-            bottom: true,
-            // ---------------------------------------------------------
-            // ✅ OPTION C — MINIMAL UNDERLINE
-            // ---------------------------------------------------------
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, _vPad),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ===== TOP ROW: back =====
-                  Row(
-                    children: [
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () {
-                            final nav = Navigator.of(context);
-                            if (nav.canPop()) nav.pop();
-                          },
-                          borderRadius: BorderRadius.circular(999),
-                          splashFactory: NoSplash.splashFactory,
-                          splashColor: Colors.transparent,
-                          highlightColor: Colors.transparent,
-                          hoverColor: Colors.transparent,
-                          overlayColor:
-                              WidgetStateProperty.all(Colors.transparent),
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: _surface,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: _hairline),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark,
+      child: GestureDetector(
+        behavior: HitTestBehavior.deferToChild,
+        onHorizontalDragUpdate: _onDragUpdate,
+        onHorizontalDragEnd: _onDragEnd,
+        child: Transform.translate(
+          offset: Offset(_dragX, 0),
+          child: Container(
+            width: widget.width ?? double.infinity,
+            height: widget.height ?? double.infinity,
+            color: _paper,
+            child: SafeArea(
+              top: true,
+              bottom: true,
+              // ---------------------------------------------------------
+              // ✅ OPTION C — MINIMAL UNDERLINE
+              // ---------------------------------------------------------
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, _vPad),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ===== TOP ROW: back =====
+                    Row(
+                      children: [
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () {
+                              final nav = Navigator.of(context);
+                              if (nav.canPop()) nav.pop();
+                            },
+                            borderRadius: BorderRadius.circular(999),
+                            splashFactory: NoSplash.splashFactory,
+                            splashColor: Colors.transparent,
+                            highlightColor: Colors.transparent,
+                            hoverColor: Colors.transparent,
+                            overlayColor:
+                                WidgetStateProperty.all(Colors.transparent),
+                            child: Container(
+                              width: 36,
+                              height: 36,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: _surface,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: _hairline),
+                              ),
+                              child: const Icon(
+                                  Icons.arrow_back_ios_new_rounded,
+                                  size: 15,
+                                  color: _inkMute),
                             ),
-                            child: const Icon(Icons.arrow_back_ios_new_rounded,
-                                size: 15, color: _inkMute),
                           ),
                         ),
-                      ),
-                      const Spacer(),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // ===== TITLE =====
-                  Text(
-                    'Add project',
-                    style: theme.titleLarge.override(
-                      fontFamily: _displayFont,
-                      color: _ink,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 30,
-                      lineHeight: 1.05,
+                        const Spacer(),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Create a workspace for tasks, costs & snags.',
-                    style: _appSubtitleStyle(theme).copyWith(fontSize: 13),
-                  ),
 
-                  const SizedBox(height: 26),
+                    const SizedBox(height: 20),
 
-                  // ===== FORM =====
-                  Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _uText(
-                          theme: theme,
-                          label: 'Project name',
-                          controller: _nameCtrl,
-                          icon: Icons.home_work_outlined,
-                          hint: 'e.g. Winston Ridge Renovation',
-                          validator: (v) {
-                            if ((v ?? '').trim().isEmpty) {
-                              return 'Project name is required';
-                            }
-                            return null;
-                          },
-                        ),
-                        _uSelect(
-                          theme: theme,
-                          label: 'Status',
-                          icon: Icons.flag_outlined,
-                          value: _status,
-                          items: _statusOptions,
-                          onChanged: (v) => setState(() => _status = v),
-                        ),
-                        _uSelect(
-                          theme: theme,
-                          label: 'Province',
-                          icon: Icons.map_outlined,
-                          value: _province,
-                          items: _provinceOptions,
-                          onChanged: (v) => setState(() => _province = v),
-                        ),
-                        _uText(
-                          theme: theme,
-                          label: 'City / Area',
-                          controller: _cityCtrl,
-                          icon: Icons.location_city_outlined,
-                          hint: 'e.g. Durbanville',
-                        ),
-                        _uText(
-                          theme: theme,
-                          label: 'Address',
-                          controller: _addressCtrl,
-                          icon: Icons.place_outlined,
-                          hint: 'Street address (optional)',
-                        ),
-                        _uDate(
-                          theme: theme,
-                          label: 'Start date',
-                          icon: Icons.calendar_month_outlined,
-                          value: _dateLabel(_startDate),
-                          onTap: () => _pickDate(isStart: true),
-                        ),
-                        _uDate(
-                          theme: theme,
-                          label: 'End date',
-                          icon: Icons.event_outlined,
-                          value: _dateLabel(_endDate),
-                          onTap: () => _pickDate(isStart: false),
-                        ),
-                        _uText(
-                          theme: theme,
-                          label: 'Notes',
-                          controller: _notesCtrl,
-                          icon: Icons.notes_outlined,
-                          hint:
-                              'Anything important (budget notes, build phases, key contacts)…',
-                          maxLines: 4,
-                        ),
-                        _uArchiveRow(theme),
-                        const SizedBox(height: 28),
-                        _primarySave(theme),
-                        const SizedBox(height: 16),
-                        Center(
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: _saving
-                                  ? null
-                                  : () {
-                                      final nav = Navigator.of(context);
-                                      if (nav.canPop()) nav.pop();
-                                    },
-                              borderRadius: BorderRadius.circular(8),
-                              splashFactory: NoSplash.splashFactory,
-                              splashColor: Colors.transparent,
-                              highlightColor: Colors.transparent,
-                              hoverColor: Colors.transparent,
-                              overlayColor:
-                                  WidgetStateProperty.all(Colors.transparent),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 8),
-                                child: Text(
-                                  'Cancel',
-                                  style: theme.bodyMedium.override(
-                                    fontFamily: _bodyFont,
-                                    color: _inkMute,
-                                    letterSpacing: 0.0,
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 14,
+                    // ===== TITLE =====
+                    Text(
+                      'Add project',
+                      style: theme.titleLarge.override(
+                        fontFamily: _displayFont,
+                        color: _ink,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 30,
+                        lineHeight: 1.05,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Create a workspace for tasks, costs & snags.',
+                      style: _appSubtitleStyle(theme).copyWith(fontSize: 13),
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // ===== FORM =====
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _uText(
+                            theme: theme,
+                            label: 'Project name',
+                            controller: _nameCtrl,
+                            icon: Icons.home_work_outlined,
+                            hint: 'e.g. Winston Ridge Renovation',
+                            validator: (v) {
+                              if ((v ?? '').trim().isEmpty) {
+                                return 'Project name is required';
+                              }
+                              return null;
+                            },
+                          ),
+                          _uSelect(
+                            theme: theme,
+                            label: 'Status',
+                            icon: Icons.flag_outlined,
+                            value: _status,
+                            items: _statusOptions,
+                            onChanged: (v) => setState(() => _status = v),
+                          ),
+                          _uSelect(
+                            theme: theme,
+                            label: 'Province',
+                            icon: Icons.map_outlined,
+                            value: _province,
+                            items: _provinceOptions,
+                            onChanged: (v) => setState(() => _province = v),
+                          ),
+                          _uText(
+                            theme: theme,
+                            label: 'City / Area',
+                            controller: _cityCtrl,
+                            icon: Icons.location_city_outlined,
+                            hint: 'e.g. Durbanville',
+                          ),
+                          _uText(
+                            theme: theme,
+                            label: 'Address',
+                            controller: _addressCtrl,
+                            icon: Icons.place_outlined,
+                            hint: 'Street address (optional)',
+                          ),
+                          _uDate(
+                            theme: theme,
+                            label: 'Start date',
+                            icon: Icons.calendar_month_outlined,
+                            value: _dateLabel(_startDate),
+                            onTap: () => _pickDate(isStart: true),
+                          ),
+                          _uDate(
+                            theme: theme,
+                            label: 'End date',
+                            icon: Icons.event_outlined,
+                            value: _dateLabel(_endDate),
+                            onTap: () => _pickDate(isStart: false),
+                          ),
+                          _uText(
+                            theme: theme,
+                            label: 'Notes',
+                            controller: _notesCtrl,
+                            icon: Icons.notes_outlined,
+                            hint:
+                                'Anything important (budget notes, build phases, key contacts)…',
+                            maxLines: 4,
+                          ),
+                          _uArchiveRow(theme),
+                          const SizedBox(height: 28),
+                          _primarySave(theme),
+                          const SizedBox(height: 16),
+                          Center(
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: _saving
+                                    ? null
+                                    : () {
+                                        final nav = Navigator.of(context);
+                                        if (nav.canPop()) nav.pop();
+                                      },
+                                borderRadius: BorderRadius.circular(8),
+                                splashFactory: NoSplash.splashFactory,
+                                splashColor: Colors.transparent,
+                                highlightColor: Colors.transparent,
+                                hoverColor: Colors.transparent,
+                                overlayColor:
+                                    WidgetStateProperty.all(Colors.transparent),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 8),
+                                  child: Text(
+                                    'Cancel',
+                                    style: theme.bodyMedium.override(
+                                      fontFamily: _bodyFont,
+                                      color: _inkMute,
+                                      letterSpacing: 0.0,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 14,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          'This creates a new home building project.',
-                          style: _helperStyle(theme),
-                        ),
-                      ],
+                          const SizedBox(height: 10),
+                          Text(
+                            'This creates a new home building project.',
+                            style: _helperStyle(theme),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
