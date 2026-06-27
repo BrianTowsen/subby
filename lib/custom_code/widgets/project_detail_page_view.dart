@@ -22,6 +22,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -118,7 +120,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       Color(0xFFFBF2C2); // tinted module card (sage)
   static const Color _tealSurfaceBorder = Color(0xFFEFDE93);
   // Snag identity — Persimmon (snags own this inside a teal project)
-  static const Color _persimmon = Color(0xFFAB6455);
+  static const Color _persimmon = Color(0xFFCC4B3C);
   static const Color _persimmonSurface = Color(0xFFF3E7E2);
   static const Color _persimmonSurfaceBorder = Color(0xFFE8CFC7);
   // To-Do identity — Cobalt
@@ -127,8 +129,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   static const Color _cobaltSurfaceBorder = Color(0xFFD5E2F6);
   // Status
   static const Color _live =
-      Color(0xFFAB6455); // clay — live / open-now / warning
-  static const Color _coral = Color(0xFFAB6455);
+      Color(0xFFCC4B3C); // clay — live / open-now / warning
+  static const Color _coral = Color(0xFFCC4B3C);
   // Info / feed accent — true teal (matches the Dashboard activity signals)
   static const Color _infoTeal = Color(0xFFFBB12A);
   // Type
@@ -757,109 +759,151 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     );
   }
 
+  // Centered destructive confirm dialog — shared "delete warning" module.
+  Future<void> _showDeleteDialog({
+    required FlutterFlowTheme theme,
+    required String title,
+    required String message,
+    required String confirmLabel,
+    required IconData icon,
+    required Future<void> Function() onConfirm,
+  }) async {
+    await showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.55),
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 34),
+          child: Container(
+            width: 322,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _paper,
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.30),
+                  blurRadius: 54,
+                  offset: const Offset(0, 22),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 62,
+                  height: 62,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: _coral.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                    border:
+                        Border.all(color: _coral.withOpacity(0.22), width: 1),
+                  ),
+                  child: Icon(icon, color: _coral, size: 30),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: theme.titleMedium.override(
+                    fontFamily: _displayFont,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.4,
+                    color: _ink,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: theme.bodyMedium.override(
+                    fontFamily: _bodyFont,
+                    fontWeight: FontWeight.w500,
+                    lineHeight: 1.5,
+                    color: _inkMute,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      await onConfirm();
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _coral,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        confirmLabel,
+                        style: theme.bodyMedium.override(
+                          fontFamily: _bodyFont,
+                          fontWeight: FontWeight.w700,
+                          color: _paper,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => Navigator.pop(ctx),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _paper,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: const Color(0xFFCDD6E2), width: 1.4),
+                      ),
+                      child: Text(
+                        'Cancel',
+                        style: theme.bodyMedium.override(
+                          fontFamily: _bodyFont,
+                          fontWeight: FontWeight.w700,
+                          color: _ink,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _showRemoveListingSheet({
     required FlutterFlowTheme theme,
     required Color accent,
     required String listingTitle,
     required DocumentReference<Map<String, dynamic>> projectListingDocRef,
   }) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: false,
-      builder: (ctx) {
-        return SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-            child: Container(
-              decoration: BoxDecoration(
-                color: _paper,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _hairline.withOpacity(0.75)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.10),
-                    blurRadius: 18,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 44,
-                        height: 5,
-                        margin: const EdgeInsets.only(bottom: 10),
-                        decoration: BoxDecoration(
-                          color: _hairline.withOpacity(0.55),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            listingTitle,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.titleMedium.override(
-                              fontFamily: _displayFont,
-                              fontWeight: FontWeight.w900,
-                              color: _ink,
-                            ),
-                          ),
-                        ),
-                        InkWell(
-                          onTap: () => Navigator.pop(ctx),
-                          borderRadius: BorderRadius.circular(12),
-                          child: Padding(
-                            padding: const EdgeInsets.all(6),
-                            child: Icon(
-                              Icons.close_rounded,
-                              color: _inkMute,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    _actionModuleRow(
-                      theme: theme,
-                      icon: Icons.delete_outline_rounded,
-                      iconColor: _coral,
-                      title: 'Remove listing',
-                      subtitle:
-                          'Removes it from this project (does not delete it).',
-                      destructive: true,
-                      onTap: () async {
-                        Navigator.pop(ctx);
-                        await _removeProjectListingDoc(projectListingDocRef);
-                      },
-                    ),
-                    const SizedBox(height: 10),
-                    _actionModuleRow(
-                      theme: theme,
-                      icon: Icons.close_rounded,
-                      iconColor: _inkMute,
-                      title: 'Cancel',
-                      subtitle: 'Close this menu.',
-                      onTap: () => Navigator.pop(ctx),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
+    _showDeleteDialog(
+      theme: theme,
+      icon: Icons.delete_rounded,
+      title: 'Remove listing?',
+      message:
+          '“$listingTitle” will be removed from this project. This doesn’t delete the listing itself.',
+      confirmLabel: 'Remove listing',
+      onConfirm: () => _removeProjectListingDoc(projectListingDocRef),
     );
   }
 
@@ -869,103 +913,14 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     required String documentTitle,
     required QueryDocumentSnapshot<Map<String, dynamic>> docSnap,
   }) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: false,
-      builder: (ctx) {
-        return SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-            child: Container(
-              decoration: BoxDecoration(
-                color: _paper,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _hairline.withOpacity(0.75)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.10),
-                    blurRadius: 18,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 44,
-                        height: 5,
-                        margin: const EdgeInsets.only(bottom: 10),
-                        decoration: BoxDecoration(
-                          color: _hairline.withOpacity(0.55),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            documentTitle,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.titleMedium.override(
-                              fontFamily: _displayFont,
-                              fontWeight: FontWeight.w900,
-                              color: _ink,
-                            ),
-                          ),
-                        ),
-                        InkWell(
-                          onTap: () => Navigator.pop(ctx),
-                          borderRadius: BorderRadius.circular(12),
-                          child: Padding(
-                            padding: const EdgeInsets.all(6),
-                            child: Icon(
-                              Icons.close_rounded,
-                              color: _inkMute,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    _actionModuleRow(
-                      theme: theme,
-                      icon: Icons.delete_outline_rounded,
-                      iconColor: _coral,
-                      title: 'Delete document',
-                      subtitle:
-                          'Permanently removes this document and its file.',
-                      destructive: true,
-                      onTap: () async {
-                        Navigator.pop(ctx);
-                        await _removeProjectDocument(docSnap);
-                      },
-                    ),
-                    const SizedBox(height: 10),
-                    _actionModuleRow(
-                      theme: theme,
-                      icon: Icons.close_rounded,
-                      iconColor: _inkMute,
-                      title: 'Cancel',
-                      subtitle: 'Close this menu.',
-                      onTap: () => Navigator.pop(ctx),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
+    _showDeleteDialog(
+      theme: theme,
+      icon: Icons.delete_rounded,
+      title: 'Delete document?',
+      message:
+          '“$documentTitle” and its file will be permanently removed. This can’t be undone.',
+      confirmLabel: 'Delete document',
+      onConfirm: () => _removeProjectDocument(docSnap),
     );
   }
 

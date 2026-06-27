@@ -17,6 +17,8 @@ import 'index.dart'; // Imports other custom widgets
 import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
+
+import 'index.dart'; // Imports other custom widgets
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 import 'index.dart'; // Imports other custom widgets
@@ -155,10 +157,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   static const Color _yellow = Color(0xFFEB7A02); // sage — "on site" / on track
   static const Color _teal = Color(0xFFFBB12A); // info / shared / "needs you"
   static const Color _ringTrack = Color(0xFFEEF2F7);
-  static const Color _orange = Color(0xFFAB6455); // attention / snagging (clay)
+  static const Color _orange = Color(0xFFCC4B3C); // attention / snagging (clay)
   static const Color _orangeTint = Color(0xFFF3E7E2);
   static const Color _orangeBorder = Color(0xFFE8CFC7);
-  static const Color _orangeText = Color(0xFFAB6455);
+  static const Color _orangeText = Color(0xFFCC4B3C);
   static const Color _projTint = Color(0xFFEEF1F4); // add / empty card fill
 
   // Geometry
@@ -364,14 +366,14 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         fontFamily: _bodyFont,
         fontSize: 11,
         fontWeight: FontWeight.w600,
-        color: _ink,
+        color: _yellow,
       );
 
   TextStyle get _rowActivityStyle => const TextStyle(
         fontFamily: _bodyFont,
         fontSize: 11,
         fontWeight: FontWeight.w600,
-        color: _teal,
+        color: _yellow,
       );
   // =========================================================
 
@@ -948,7 +950,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  const Icon(Icons.bolt, size: 15, color: _ink),
+                  const Icon(Icons.bolt, size: 15, color: _yellow),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(act,
@@ -1041,7 +1043,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                                 width: 6,
                                 height: 6,
                                 decoration: const BoxDecoration(
-                                    color: _teal, shape: BoxShape.circle),
+                                    color: _yellow, shape: BoxShape.circle),
                               ),
                               const SizedBox(width: 5),
                               Expanded(
@@ -1058,7 +1060,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                   ),
                   const SizedBox(width: 8),
                   const Icon(Icons.chevron_right_rounded,
-                      size: 20, color: Color(0xFFCDD6E2)),
+                      size: 20, color: _ink),
                 ],
               ),
               const SizedBox(height: 12),
@@ -1568,7 +1570,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  const Icon(Icons.bolt, size: 15, color: _ink),
+                  const Icon(Icons.bolt, size: 15, color: _yellow),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(act,
@@ -1690,7 +1692,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                                 width: 6,
                                 height: 6,
                                 decoration: const BoxDecoration(
-                                    color: _teal, shape: BoxShape.circle),
+                                    color: _yellow, shape: BoxShape.circle),
                               ),
                               const SizedBox(width: 5),
                               Expanded(
@@ -1707,7 +1709,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                   ),
                   const SizedBox(width: 8),
                   const Icon(Icons.chevron_right_rounded,
-                      size: 20, color: Color(0xFFCDD6E2)),
+                      size: 20, color: _ink),
                 ],
               ),
               const SizedBox(height: 12),
