@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
+
+import 'index.dart'; // Imports other custom widgets
 import 'package:flutter/services.dart'; // HapticFeedback (medium impact on tab tap)
 
 import 'index.dart'; // Imports other custom widgets
@@ -113,7 +115,8 @@ class _MainBottomNavState extends State<MainBottomNav> {
     final bool selected = index == widget.currentIndex;
     const Color _slate = Color(0xFF1E2730);
     final Color color = selected ? _slate : _faint;
-    final Color iconColor = selected ? _slate : _faint;
+    // Active icon sits inside the coloured pill → render it white.
+    final Color iconColor = selected ? _paper : _faint;
 
     return Expanded(
       child: Material(
