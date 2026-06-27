@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -69,8 +71,8 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
   static const Color _teal = Color(0xFF39454B);
   // Status
   static const Color _live =
-      Color(0xFFAB6455); // clay — live / paid / done / warning
-  static const Color _coral = Color(0xFFAB6455);
+      Color(0xFFCC4B3C); // clay — live / paid / done / warning
+  static const Color _coral = Color(0xFFCC4B3C);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -379,115 +381,151 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
   }
 
   // ✅ Confirm-before-delete sheet (deletes are destructive + irreversible).
+  // Centered destructive confirm dialog — shared "delete warning" module.
+  Future<void> _showDeleteDialog({
+    required FlutterFlowTheme theme,
+    required String title,
+    required String message,
+    required String confirmLabel,
+    required IconData icon,
+    required Future<void> Function() onConfirm,
+  }) async {
+    await showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.55),
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 34),
+          child: Container(
+            width: 322,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _paper,
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.30),
+                  blurRadius: 54,
+                  offset: const Offset(0, 22),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 62,
+                  height: 62,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: _coral.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                    border:
+                        Border.all(color: _coral.withOpacity(0.22), width: 1),
+                  ),
+                  child: Icon(icon, color: _coral, size: 30),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: theme.titleMedium.override(
+                    fontFamily: _displayFont,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.4,
+                    color: _ink,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: theme.bodyMedium.override(
+                    fontFamily: _bodyFont,
+                    fontWeight: FontWeight.w500,
+                    lineHeight: 1.5,
+                    color: _inkMute,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      await onConfirm();
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _coral,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        confirmLabel,
+                        style: theme.bodyMedium.override(
+                          fontFamily: _bodyFont,
+                          fontWeight: FontWeight.w700,
+                          color: _paper,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => Navigator.pop(ctx),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _paper,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: const Color(0xFFCDD6E2), width: 1.4),
+                      ),
+                      child: Text(
+                        'Cancel',
+                        style: theme.bodyMedium.override(
+                          fontFamily: _bodyFont,
+                          fontWeight: FontWeight.w700,
+                          color: _ink,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _confirmDeleteDoc(
     QueryDocumentSnapshot<Map<String, dynamic>> snap,
     String title,
   ) {
     FocusScope.of(context).unfocus();
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: false,
-      builder: (ctx) {
-        final theme = FlutterFlowTheme.of(ctx);
-        return SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-            child: Container(
-              decoration: BoxDecoration(
-                color: _paper,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _hairline.withOpacity(0.75)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.10),
-                    blurRadius: 18,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 44,
-                        height: 5,
-                        margin: const EdgeInsets.only(bottom: 10),
-                        decoration: BoxDecoration(
-                          color: _hairline.withOpacity(0.55),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Delete this document?',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.titleMedium.override(
-                              fontFamily: _displayFont,
-                              fontWeight: FontWeight.w900,
-                              color: _ink,
-                            ),
-                          ),
-                        ),
-                        InkWell(
-                          onTap: () => Navigator.pop(ctx),
-                          borderRadius: BorderRadius.circular(12),
-                          child: const Padding(
-                            padding: EdgeInsets.all(6),
-                            child: Icon(Icons.close_rounded,
-                                color: _inkMute, size: 20),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '“$title” and its file will be permanently removed. This can’t be undone.',
-                      style: theme.bodySmall.override(
-                        fontFamily: _bodyFont,
-                        color: _inkMute,
-                        fontWeight: FontWeight.w600,
-                        lineHeight: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    _sheetActionRow(
-                      theme,
-                      Icons.delete_outline_rounded,
-                      _coral,
-                      'Delete document',
-                      'Permanently removes the file.',
-                      destructive: true,
-                      onTap: () async {
-                        Navigator.pop(ctx);
-                        await _deleteDoc(snap);
-                      },
-                    ),
-                    const SizedBox(height: 10),
-                    _sheetActionRow(
-                      theme,
-                      Icons.close_rounded,
-                      _inkMute,
-                      'Cancel',
-                      'Keep this document.',
-                      onTap: () => Navigator.pop(ctx),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
+    final theme = FlutterFlowTheme.of(context);
+    _showDeleteDialog(
+      theme: theme,
+      icon: Icons.delete_rounded,
+      title: 'Delete this document?',
+      message:
+          '“$title” and its file will be permanently removed. This can’t be undone.',
+      confirmLabel: 'Delete document',
+      onConfirm: () => _deleteDoc(snap),
     );
   }
 

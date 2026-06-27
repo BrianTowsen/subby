@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (dark status bar over white form)
@@ -52,8 +54,8 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
   // primary CTA stays ink to match the dashboard's "Create project".
   static const Color _teal = Color(0xFF39454B);
   // Status
-  static const Color _live = Color(0xFFAB6455); // clay — live / warning
-  static const Color _coral = Color(0xFFAB6455);
+  static const Color _live = Color(0xFFCC4B3C); // clay — live / warning
+  static const Color _coral = Color(0xFFCC4B3C);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';

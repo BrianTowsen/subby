@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/services.dart'; // SystemChrome / SystemUiOverlayStyle (dark status bar over white form)
@@ -65,8 +67,8 @@ class _EditProjectViewState extends State<EditProjectView>
   static const Color _teal = Color(0xFF39454B);
   // Status
   static const Color _live =
-      Color(0xFFAB6455); // clay — live / open-now / warning
-  static const Color _coral = Color(0xFFAB6455);
+      Color(0xFFCC4B3C); // clay — live / open-now / warning
+  static const Color _coral = Color(0xFFCC4B3C);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -953,105 +955,146 @@ class _EditProjectViewState extends State<EditProjectView>
     );
   }
 
-  Future<void> _confirmDelete(FlutterFlowTheme theme, Color accent) async {
-    // Bottom action sheet — identical pattern to ProjectDetail's remove sheets.
-    showModalBottomSheet(
+  // Centered destructive confirm dialog — shared "delete warning" module.
+  Future<void> _showDeleteDialog({
+    required FlutterFlowTheme theme,
+    required String title,
+    required String message,
+    required String confirmLabel,
+    required IconData icon,
+    required Future<void> Function() onConfirm,
+  }) async {
+    await showDialog(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: false,
+      barrierColor: Colors.black.withOpacity(0.55),
       builder: (ctx) {
-        return SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-            child: Container(
-              decoration: BoxDecoration(
-                color: _paper,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _hairline.withOpacity(0.75)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.10),
-                    blurRadius: 18,
-                    offset: const Offset(0, 10),
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 34),
+          child: Container(
+            width: 322,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _paper,
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.30),
+                  blurRadius: 54,
+                  offset: const Offset(0, 22),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 62,
+                  height: 62,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: _coral.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                    border:
+                        Border.all(color: _coral.withOpacity(0.22), width: 1),
                   ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 44,
-                        height: 5,
-                        margin: const EdgeInsets.only(bottom: 10),
-                        decoration: BoxDecoration(
-                          color: _hairline.withOpacity(0.55),
-                          borderRadius: BorderRadius.circular(999),
+                  child: Icon(icon, color: _coral, size: 30),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: theme.titleMedium.override(
+                    fontFamily: _displayFont,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.4,
+                    color: _ink,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: theme.bodyMedium.override(
+                    fontFamily: _bodyFont,
+                    fontWeight: FontWeight.w500,
+                    lineHeight: 1.5,
+                    color: _inkMute,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      await onConfirm();
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _coral,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        confirmLabel,
+                        style: theme.bodyMedium.override(
+                          fontFamily: _bodyFont,
+                          fontWeight: FontWeight.w700,
+                          color: _paper,
                         ),
                       ),
                     ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Delete project?',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.titleMedium.override(
-                              fontFamily: _displayFont,
-                              fontWeight: FontWeight.w900,
-                              color: _ink,
-                            ),
-                          ),
-                        ),
-                        InkWell(
-                          onTap: () => Navigator.pop(ctx),
-                          borderRadius: BorderRadius.circular(12),
-                          child: Padding(
-                            padding: const EdgeInsets.all(6),
-                            child: Icon(
-                              Icons.close_rounded,
-                              color: _inkMute,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    _actionModuleRow(
-                      theme: theme,
-                      icon: Icons.delete_outline_rounded,
-                      iconColor: accent,
-                      title: 'Delete project',
-                      subtitle:
-                          'Archives and marks it as deleted. You can restore it later.',
-                      destructive: true,
-                      onTap: () async {
-                        Navigator.pop(ctx);
-                        await _deleteProject();
-                      },
-                    ),
-                    const SizedBox(height: 10),
-                    _actionModuleRow(
-                      theme: theme,
-                      icon: Icons.close_rounded,
-                      iconColor: _inkMute,
-                      title: 'Cancel',
-                      subtitle: 'Keep this project.',
-                      onTap: () => Navigator.pop(ctx),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+                const SizedBox(height: 10),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => Navigator.pop(ctx),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _paper,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: const Color(0xFFCDD6E2), width: 1.4),
+                      ),
+                      child: Text(
+                        'Cancel',
+                        style: theme.bodyMedium.override(
+                          fontFamily: _bodyFont,
+                          fontWeight: FontWeight.w700,
+                          color: _ink,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         );
       },
+    );
+  }
+
+  Future<void> _confirmDelete(FlutterFlowTheme theme, Color accent) async {
+    await _showDeleteDialog(
+      theme: theme,
+      icon: Icons.delete_rounded,
+      title: 'Delete project?',
+      message:
+          'Archives this build and marks it as deleted. You can restore it from Archived builds later.',
+      confirmLabel: 'Delete project',
+      onConfirm: _deleteProject,
     );
   }
 
