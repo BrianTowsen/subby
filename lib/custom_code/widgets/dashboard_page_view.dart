@@ -13,6 +13,8 @@ import 'index.dart'; // Imports other custom widgets
 import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
+
+import 'index.dart'; // Imports other custom widgets
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 import 'index.dart'; // Imports other custom widgets
@@ -324,8 +326,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
   TextStyle get _statNumberStyle => const TextStyle(
         fontFamily: _displayFont,
-        fontSize: 26,
-        fontWeight: FontWeight.w800,
+        fontSize: 22,
+        fontWeight: FontWeight.w900,
         height: 1.0,
         color: _ink,
       );
@@ -1437,11 +1439,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     bool dark = false,
     bool attention = false,
   }) {
-    final Color bg = dark ? _ink : (attention ? _surface : _yellow);
-    // "Needs you" number is TEAL (was clay/orange).
-    final Color numColor = dark ? _paper : (attention ? _teal : _ink);
+    // Active builds → ORANGE fill (white text, soft shadow).
+    // On track     → YELLOW fill (white text).
+    // Needs you    → surface fill, teal (amber) number.
+    final Color bg = dark ? _yellow : (attention ? _surface : _teal);
+    final Color numColor = attention ? _teal : _paper;
     final Color labelColor =
-        dark ? Colors.white.withOpacity(0.7) : (attention ? _inkMute : _ink);
+        attention ? _inkMute : Colors.white.withOpacity(0.85);
 
     return Container(
       padding: const EdgeInsets.fromLTRB(13, 13, 13, 12),
@@ -1449,6 +1453,15 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         color: bg,
         borderRadius: BorderRadius.circular(11),
         border: attention ? Border.all(color: const Color(0xFFE2E7EE)) : null,
+        boxShadow: dark
+            ? [
+                BoxShadow(
+                  color: _yellow.withOpacity(0.30),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ]
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1462,7 +1475,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             style: TextStyle(
               fontFamily: _bodyFont,
               fontSize: 11,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w700,
               color: labelColor,
             ),
           ),
@@ -1490,8 +1503,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       borderRadius: BorderRadius.circular(16),
       child: Container(
         decoration: BoxDecoration(
-          // MOST RECENT card — sage-TINT to match the ProjectDetail "Manage"
-          // module tiles (was solid _yellow).
+          // MOST RECENT card — sage-yellow tint (matches the ProjectDetail
+          // "Manage" module tiles + the rest of the project cards).
           color: const Color(0xFFFBF2C2),
           border: Border.all(color: const Color(0xFFEFDE93)),
           borderRadius: BorderRadius.circular(16),
@@ -1524,7 +1537,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                 fontFamily: _bodyFont,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: _inkMute,
+                color: _ink,
               ),
             ),
             if (status.isNotEmpty) ...[
@@ -1636,9 +1649,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         borderRadius: BorderRadius.circular(14),
         child: Container(
           decoration: BoxDecoration(
-            color: _surface,
+            // Owned project rows — sage-yellow tint (matches the Manage tiles).
+            color: const Color(0xFFFBF2C2),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: _hairline),
+            border: Border.all(color: const Color(0xFFEFDE93)),
           ),
           padding: const EdgeInsets.all(14),
           child: Column(
@@ -1661,7 +1675,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                           loc.isEmpty ? 'No location set' : loc,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: _tileSubtitleStyle,
+                          style: _tileSubtitleStyle.copyWith(color: _ink),
                         ),
                         if (act != null) ...[
                           const SizedBox(height: 5),

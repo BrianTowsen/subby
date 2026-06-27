@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -1036,11 +1038,14 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     bool readOnly = false,
   }) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      // White status-bar icons (time, signal, battery) over the dark ink hero.
-      value: SystemUiOverlayStyle.light,
+      // Dark status-bar icons over the light header.
+      value: SystemUiOverlayStyle.dark,
       child: Container(
         width: double.infinity,
-        decoration: const BoxDecoration(color: _ink),
+        decoration: const BoxDecoration(
+          color: _paper,
+          border: Border(bottom: BorderSide(color: _hairline)),
+        ),
         padding: EdgeInsets.fromLTRB(_hPad, topInset + 8, _hPad, 22),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1054,12 +1059,12 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                     width: 40,
                     height: 40,
                     alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.10),
+                    decoration: const BoxDecoration(
+                      color: _surface,
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.arrow_back_ios_new_rounded,
-                        size: 16, color: _paper),
+                        size: 16, color: _ink),
                   ),
                 ),
                 const Spacer(),
@@ -1082,13 +1087,13 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(Icons.edit_outlined,
-                                  size: 18, color: _ink),
+                                  size: 18, color: _paper),
                               const SizedBox(width: 8),
                               Text(
                                 'Edit',
                                 style: theme.bodySmall.override(
                                   fontFamily: _bodyFont,
-                                  color: _ink,
+                                  color: _paper,
                                   fontWeight: FontWeight.w900,
                                 ),
                               ),
@@ -1103,9 +1108,10 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
               readOnly ? 'SHARED PROJECT' : 'PROJECT',
               style: theme.labelSmall.override(
                 fontFamily: _bodyFont,
-                color: _tealBright,
-                letterSpacing: 1.5,
-                fontWeight: FontWeight.w900,
+                color: const Color(0xFF93A0B0),
+                letterSpacing: 1.2,
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
               ),
             ),
             const SizedBox(height: 7),
@@ -1115,7 +1121,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
               overflow: TextOverflow.ellipsis,
               style: theme.titleLarge.override(
                 fontFamily: _displayFont,
-                color: _paper,
+                color: _ink,
                 fontWeight: FontWeight.w900,
                 fontSize: 26,
                 lineHeight: 1.08,
@@ -1156,7 +1162,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             Row(
               children: [
                 Icon(Icons.location_on_outlined,
-                    size: 16, color: Colors.white.withOpacity(0.55)),
+                    size: 16, color: const Color(0xFF93A0B0)),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -1165,7 +1171,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                     overflow: TextOverflow.ellipsis,
                     style: theme.bodySmall.override(
                       fontFamily: _bodyFont,
-                      color: Colors.white.withOpacity(0.75),
+                      color: _inkMute,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -1179,7 +1185,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
               overflow: TextOverflow.ellipsis,
               style: theme.labelSmall.override(
                 fontFamily: _bodyFont,
-                color: Colors.white.withOpacity(0.55),
+                color: const Color(0xFF93A0B0),
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -1205,9 +1211,11 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             theme: theme,
             value: days,
             label: 'Days left',
-            valueColor: _tealText,
-            bg: _tealSurface,
-            border: _tealSurfaceBorder,
+            valueColor: _paper,
+            bg: const Color(0xFFEB7A02),
+            border: const Color(0xFFEB7A02),
+            labelColor: _paper,
+            shadow: true,
           ),
         ),
         const SizedBox(width: 10),
@@ -1216,9 +1224,10 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             theme: theme,
             value: budget,
             label: 'Budget',
-            valueColor: _ink,
-            bg: _surface,
-            border: _hairline,
+            valueColor: _paper,
+            bg: const Color(0xFFFBB12A),
+            border: const Color(0xFFFBB12A),
+            labelColor: _paper,
           ),
         ),
         const SizedBox(width: 10),
@@ -1243,12 +1252,23 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     required Color valueColor,
     required Color bg,
     required Color border,
+    Color? labelColor,
+    bool shadow = false,
   }) {
     return Container(
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(_radius),
         border: Border.all(color: border.withOpacity(0.9)),
+        boxShadow: shadow
+            ? [
+                BoxShadow(
+                  color: const Color(0xFFEB7A02).withOpacity(0.30),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ]
+            : null,
       ),
       padding: const EdgeInsets.all(13),
       child: Column(
@@ -1273,7 +1293,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             overflow: TextOverflow.ellipsis,
             style: theme.labelSmall.override(
               fontFamily: _bodyFont,
-              color: _inkMute,
+              color: labelColor ?? _inkMute,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.0,
             ),
@@ -2664,19 +2684,19 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: const Color(0xFFE4F1F1),
+                color: const Color(0xFFEB7A02).withOpacity(0.12),
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.bolt, size: 14, color: _infoTeal),
+                  const Icon(Icons.bolt, size: 14, color: Color(0xFFEB7A02)),
                   const SizedBox(width: 5),
                   Text('$todayCount today',
                       style: theme.labelSmall.override(
                         fontFamily: _bodyFont,
-                        color: _infoTeal,
-                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFFEB7A02),
+                        fontWeight: FontWeight.w900,
                       )),
                 ],
               ),
