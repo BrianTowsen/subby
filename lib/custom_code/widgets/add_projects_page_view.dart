@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (dark status bar over white form)
@@ -39,7 +41,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
   // Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF28333E);
+  static const Color _ink = Color(0xFF39454B);
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _faint = Color(0xFF93A0B0);
   static const Color _paper = Color(0xFFFFFFFF);
@@ -48,7 +50,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
   static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
   // Brand accent — TEAL. Used as the accent (focus ring, active switch); the
   // primary CTA stays ink to match the dashboard's "Create project".
-  static const Color _teal = Color(0xFF28333E);
+  static const Color _teal = Color(0xFF39454B);
   // Status
   static const Color _live = Color(0xFFAB6455); // clay — live / warning
   static const Color _coral = Color(0xFFAB6455);

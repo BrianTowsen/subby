@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
+
+import 'index.dart'; // Imports other custom widgets
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 import 'index.dart'; // Imports other custom widgets
@@ -138,7 +140,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   //
   // Neutrals
   static const Color _ink =
-      Color(0xFF28333E); // text, chrome, dark surfaces (slate)
+      Color(0xFF39454B); // text, chrome, dark surfaces (slate)
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _faint = Color(0xFF93A0B0); // muted labels, chevrons
   static const Color _paper = Color(0xFFFFFFFF);
@@ -146,8 +148,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   static const Color _hairline = Color(0xFFEEF1F2);
 
   // Accents
-  static const Color _yellow = Color(0xFFB1C984); // sage — "on site" / on track
-  static const Color _teal = Color(0xFF319DA3); // info / shared / "needs you"
+  static const Color _yellow = Color(0xFFEB7A02); // sage — "on site" / on track
+  static const Color _teal = Color(0xFFFBB12A); // info / shared / "needs you"
   static const Color _ringTrack = Color(0xFFEEF2F7);
   static const Color _orange = Color(0xFFAB6455); // attention / snagging (clay)
   static const Color _orangeTint = Color(0xFFF3E7E2);
@@ -1490,8 +1492,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         decoration: BoxDecoration(
           // MOST RECENT card — sage-TINT to match the ProjectDetail "Manage"
           // module tiles (was solid _yellow).
-          color: const Color(0xFFEDF2DE),
-          border: Border.all(color: const Color(0xFFDCE9B0)),
+          color: const Color(0xFFFBF2C2),
+          border: Border.all(color: const Color(0xFFEFDE93)),
           borderRadius: BorderRadius.circular(16),
         ),
         padding: const EdgeInsets.all(18),
@@ -2203,8 +2205,8 @@ class _CapabilityChip extends StatelessWidget {
 
   final String label;
 
-  static const Color _tealTint = Color(0xFFEDF2DE);
-  static const Color _tealText = Color(0xFF28333E);
+  static const Color _tealTint = Color(0xFFFBF2C2);
+  static const Color _tealText = Color(0xFF39454B);
 
   @override
   Widget build(BuildContext context) {

@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -61,14 +63,14 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF28333E);
+  static const Color _ink = Color(0xFF39454B);
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
   static const Color _hairline = Color(0xFFEEF1F4);
   static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
   // Brand accent — TEAL.
-  static const Color _teal = Color(0xFF28333E);
+  static const Color _teal = Color(0xFF39454B);
   // Status
   static const Color _live =
       Color(0xFFAB6455); // clay — live / paid / done / warning
@@ -624,7 +626,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: visibility == 'shared'
-                        ? const Color(0xFFEDF2DE)
+                        ? const Color(0xFFFBF2C2)
                         : _surface,
                     borderRadius: BorderRadius.circular(999),
                   ),
