@@ -20,6 +20,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -1501,6 +1503,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   Widget _visToggle({
     required String visibility,
     required VoidCallback onTap,
+    Color? bgColor,
   }) {
     final shared = visibility == 'shared';
     return Material(
@@ -1513,7 +1516,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
           height: 30,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: _surface,
+            color: bgColor ?? _surface,
             shape: BoxShape.circle,
           ),
           child: Icon(
@@ -1733,7 +1736,10 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
               ),
             ),
             if (visibility != null && onToggleVisibility != null) ...[
-              _visToggle(visibility: visibility, onTap: onToggleVisibility),
+              _visToggle(
+                  visibility: visibility,
+                  onTap: onToggleVisibility,
+                  bgColor: Colors.transparent),
               const SizedBox(width: 8),
             ],
             const Icon(Icons.chevron_right_rounded,
@@ -2242,7 +2248,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                     _roundAction(Icons.call_rounded, _ink,
                         () => launchURL('tel:$phone')),
                     const SizedBox(width: 8),
-                    _roundAction(Icons.chat_bubble_rounded, _coral,
+                    _roundAction(Icons.chat_bubble_rounded, _tealBright,
                         () => launchURL('sms:$phone')),
                   ],
                 ],
@@ -2300,9 +2306,11 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             theme: theme,
             value: days,
             label: 'Days left',
-            valueColor: _tealText,
-            bg: _tealSurface,
-            border: _tealSurfaceBorder,
+            valueColor: _paper,
+            bg: const Color(0xFFEB7A02),
+            border: const Color(0xFFEB7A02),
+            labelColor: _paper,
+            shadow: true,
           ),
         ),
         const SizedBox(width: 10),
@@ -2311,9 +2319,10 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             theme: theme,
             value: snags,
             label: 'Open snags',
-            valueColor: _infoTeal,
-            bg: _surface,
-            border: _hairline,
+            valueColor: _paper,
+            bg: const Color(0xFFFBB12A),
+            border: const Color(0xFFFBB12A),
+            labelColor: _paper,
           ),
         ),
         const SizedBox(width: 10),
@@ -2322,7 +2331,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             theme: theme,
             value: files,
             label: 'Shared files',
-            valueColor: _ink,
+            valueColor: _infoTeal,
             bg: _surface,
             border: _hairline,
           ),
@@ -2465,28 +2474,29 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       case 'snag':
       case 'snagadded':
       case 'snagresolved':
-        return const _FeedVisual(Icons.fact_check_outlined, _persimmon,
-            _persimmonSurface, _persimmonSurfaceBorder);
+        return const _FeedVisual(
+            Icons.fact_check_outlined, _ink, _tealSurface, _tealSurfaceBorder);
       case 'document':
       case 'documentuploaded':
-        return const _FeedVisual(Icons.description_rounded, _infoTeal,
-            Color(0xFFE4F1F1), Color(0xFFC9E5E6));
+        return const _FeedVisual(
+            Icons.description_rounded, _ink, _tealSurface, _tealSurfaceBorder);
       case 'timeline':
-        return const _FeedVisual(Icons.timeline_rounded, _infoTeal,
-            Color(0xFFE4F1F1), Color(0xFFC9E5E6));
+        return const _FeedVisual(
+            Icons.timeline_rounded, _ink, _tealSurface, _tealSurfaceBorder);
       case 'todo':
       case 'task':
-        return const _FeedVisual(Icons.task_alt_rounded, _cobalt,
-            _cobaltSurface, _cobaltSurfaceBorder);
+        return const _FeedVisual(
+            Icons.task_alt_rounded, _ink, _tealSurface, _tealSurfaceBorder);
       case 'team':
       case 'memberadded':
-        return const _FeedVisual(Icons.group_add_rounded, Color(0xFF8AA253),
-            _tealSurface, _tealSurfaceBorder);
+        return const _FeedVisual(
+            Icons.group_add_rounded, _ink, _tealSurface, _tealSurfaceBorder);
       case 'status':
         return const _FeedVisual(
-            Icons.flag_rounded, _ink, _surface, Color(0xFFDCE2E8));
+            Icons.flag_rounded, _ink, _tealSurface, _tealSurfaceBorder);
       default:
-        return const _FeedVisual(Icons.bolt, _ink, _surface, Color(0xFFDCE2E8));
+        return const _FeedVisual(
+            Icons.bolt, _ink, _tealSurface, _tealSurfaceBorder);
     }
   }
 
@@ -2535,15 +2545,16 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     required bool readOnly,
   }) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
+      value: SystemUiOverlayStyle.dark,
       child: Container(
-        decoration: BoxDecoration(
-          color: _ink,
+        decoration: const BoxDecoration(
+          color: _paper,
+          border: Border(bottom: BorderSide(color: _hairline)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.20),
+              color: Color(0x1A19232D),
               blurRadius: 18,
-              offset: const Offset(0, 6),
+              offset: Offset(0, 6),
             ),
           ],
         ),
@@ -2557,12 +2568,12 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                 width: 34,
                 height: 34,
                 alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.10),
+                decoration: const BoxDecoration(
+                  color: _surface,
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.arrow_back_ios_new_rounded,
-                    size: 15, color: _paper),
+                    size: 15, color: _ink),
               ),
             ),
             const SizedBox(width: 12),
@@ -2576,7 +2587,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                       overflow: TextOverflow.ellipsis,
                       style: theme.titleMedium.override(
                         fontFamily: _displayFont,
-                        color: _paper,
+                        color: _ink,
                         fontWeight: FontWeight.w900,
                         fontSize: 15,
                       ),
@@ -2600,19 +2611,19 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                     padding:
                         const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.14),
+                      color: _surface,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(Icons.visibility_outlined,
-                            size: 15, color: _paper),
+                            size: 15, color: _ink),
                         const SizedBox(width: 6),
                         Text('View only',
                             style: theme.bodySmall.override(
                               fontFamily: _bodyFont,
-                              color: _paper,
+                              color: _ink,
                               fontWeight: FontWeight.w900,
                               fontSize: 12,
                             )),
@@ -2634,12 +2645,12 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(Icons.edit_outlined,
-                              size: 15, color: _ink),
+                              size: 15, color: _paper),
                           const SizedBox(width: 6),
                           Text('Edit',
                               style: theme.bodySmall.override(
                                 fontFamily: _bodyFont,
-                                color: _ink,
+                                color: _paper,
                                 fontWeight: FontWeight.w900,
                                 fontSize: 12,
                               )),

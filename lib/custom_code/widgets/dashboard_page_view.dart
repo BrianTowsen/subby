@@ -15,6 +15,8 @@ import 'index.dart'; // Imports other custom widgets
 import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
+
+import 'index.dart'; // Imports other custom widgets
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 import 'index.dart'; // Imports other custom widgets
@@ -865,7 +867,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       borderRadius: BorderRadius.circular(16),
       child: Container(
         decoration: BoxDecoration(
-          color: _yellow,
+          // SHARED hero — fade-yellow tint (matches owner cards).
+          color: const Color(0xFFFBF2C2),
+          border: Border.all(color: const Color(0xFFEFDE93)),
           borderRadius: BorderRadius.circular(16),
         ),
         padding: const EdgeInsets.all(18),
@@ -896,7 +900,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                 fontFamily: _bodyFont,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: _inkMute,
+                color: _ink,
               ),
             ),
             if (pm.isNotEmpty) ...[
@@ -914,7 +918,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                         fontFamily: _bodyFont,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: _inkMute,
+                        color: _ink,
                       ),
                     ),
                   ),
@@ -1001,9 +1005,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         borderRadius: BorderRadius.circular(14),
         child: Container(
           decoration: BoxDecoration(
-            color: _surface,
+            // SHARED primary row — fade-yellow tint (matches owner cards).
+            color: const Color(0xFFFBF2C2),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: _hairline),
+            border: Border.all(color: const Color(0xFFEFDE93)),
           ),
           padding: const EdgeInsets.all(14),
           child: Column(
@@ -1026,7 +1031,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                           sub.isEmpty ? 'Shared with you' : sub,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: _tileSubtitleStyle,
+                          style: _tileSubtitleStyle.copyWith(color: _ink),
                         ),
                         if (act != null) ...[
                           const SizedBox(height: 5),
