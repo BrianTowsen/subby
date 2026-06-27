@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -93,24 +95,24 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF28333E);
+  static const Color _ink = Color(0xFF39454B);
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
   static const Color _hairline = Color(0xFFEEF1F4);
   static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
   // Brand accent — TEAL.
-  static const Color _spark = Color(0xFF28333E); // primary CTA / ranked accent
+  static const Color _spark = Color(0xFF39454B); // primary CTA / ranked accent
   static const Color _sparkInk = Color(0xFFFFFFFF);
-  static const Color _teal = Color(0xFF28333E);
+  static const Color _teal = Color(0xFF39454B);
   static const Color _tealBright =
-      Color(0xFFB1C984); // icon on ink chips (sage)
+      Color(0xFFEB7A02); // icon on ink chips (sage)
   static const Color _tealTint =
-      Color(0xFFEDF2DE); // pill / chip fill (sage tint)
-  static const Color _tealText = Color(0xFF28333E); // pill text
+      Color(0xFFFBF2C2); // pill / chip fill (sage tint)
+  static const Color _tealText = Color(0xFF39454B); // pill text
   static const Color _tealSurface =
-      Color(0xFFEDF2DE); // tinted module card (sage)
-  static const Color _tealSurfaceBorder = Color(0xFFDCE9B0);
+      Color(0xFFFBF2C2); // tinted module card (sage)
+  static const Color _tealSurfaceBorder = Color(0xFFEFDE93);
   // Snag identity — Persimmon (snags own this inside a teal project)
   static const Color _persimmon = Color(0xFFAB6455);
   static const Color _persimmonSurface = Color(0xFFF3E7E2);
@@ -124,7 +126,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       Color(0xFFAB6455); // clay — live / open-now / warning
   static const Color _coral = Color(0xFFAB6455);
   // Info / feed accent — true teal (matches the Dashboard activity signals)
-  static const Color _infoTeal = Color(0xFF319DA3);
+  static const Color _infoTeal = Color(0xFFFBB12A);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -1073,7 +1075,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 10),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFB1C984),
+                            color: const Color(0xFFEB7A02),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
@@ -2605,7 +2607,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 11, vertical: 7),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFB1C984),
+                        color: const Color(0xFFEB7A02),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(
