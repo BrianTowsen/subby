@@ -12,10 +12,6 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -382,6 +378,202 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
     }
   }
 
+  // ✅ Confirm-before-delete sheet (deletes are destructive + irreversible).
+  void _confirmDeleteDoc(
+    QueryDocumentSnapshot<Map<String, dynamic>> snap,
+    String title,
+  ) {
+    FocusScope.of(context).unfocus();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: false,
+      builder: (ctx) {
+        final theme = FlutterFlowTheme.of(ctx);
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            child: Container(
+              decoration: BoxDecoration(
+                color: _paper,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _hairline.withOpacity(0.75)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.10),
+                    blurRadius: 18,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 44,
+                        height: 5,
+                        margin: const EdgeInsets.only(bottom: 10),
+                        decoration: BoxDecoration(
+                          color: _hairline.withOpacity(0.55),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Delete this document?',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.titleMedium.override(
+                              fontFamily: _displayFont,
+                              fontWeight: FontWeight.w900,
+                              color: _ink,
+                            ),
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () => Navigator.pop(ctx),
+                          borderRadius: BorderRadius.circular(12),
+                          child: const Padding(
+                            padding: EdgeInsets.all(6),
+                            child: Icon(Icons.close_rounded,
+                                color: _inkMute, size: 20),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '“$title” and its file will be permanently removed. This can’t be undone.',
+                      style: theme.bodySmall.override(
+                        fontFamily: _bodyFont,
+                        color: _inkMute,
+                        fontWeight: FontWeight.w600,
+                        lineHeight: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    _sheetActionRow(
+                      theme,
+                      Icons.delete_outline_rounded,
+                      _coral,
+                      'Delete document',
+                      'Permanently removes the file.',
+                      destructive: true,
+                      onTap: () async {
+                        Navigator.pop(ctx);
+                        await _deleteDoc(snap);
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    _sheetActionRow(
+                      theme,
+                      Icons.close_rounded,
+                      _inkMute,
+                      'Cancel',
+                      'Keep this document.',
+                      onTap: () => Navigator.pop(ctx),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _sheetActionRow(
+    FlutterFlowTheme theme,
+    IconData icon,
+    Color iconColor,
+    String title,
+    String subtitle, {
+    bool destructive = false,
+    required VoidCallback onTap,
+  }) {
+    final borderColor =
+        destructive ? _coral.withOpacity(0.25) : _hairline.withOpacity(0.75);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        splashFactory: NoSplash.splashFactory,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: _surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: borderColor, width: 1),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: iconColor.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border:
+                      Border.all(color: iconColor.withOpacity(0.22), width: 1),
+                ),
+                child: Icon(icon, color: iconColor, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.bodyMedium.override(
+                        fontFamily: _bodyFont,
+                        color: destructive ? _coral : _ink,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.0,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.bodySmall.override(
+                        fontFamily: _bodyFont,
+                        color: _inkMute,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Icon(Icons.chevron_right_rounded,
+                  color: _inkMute, size: 22),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   // Animated segmented control — one ink indicator that SLIDES between the
   // two options (240ms easeOutCubic); the icon + label colours cross-fade in
   // sync as it passes.
@@ -403,6 +595,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
       ),
       padding: const EdgeInsets.all(3),
       child: Stack(
+        alignment: Alignment.center,
         children: [
           // Sliding ink indicator (half the track, snaps to the active side).
           AnimatedAlign(
@@ -528,7 +721,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
           if (url.trim().isEmpty) return;
           await launchURL(url);
         },
-        onDelete: () => _deleteDoc(snap),
+        onDelete: () => _confirmDeleteDoc(snap, title),
       );
     }
 
