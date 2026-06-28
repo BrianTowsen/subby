@@ -26,6 +26,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -3197,6 +3199,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                                 () => setState(() => _docsOpen = !_docsOpen),
                                 count: _docRows.length,
                                 countUnit: 'files',
+                                alwaysShowCount: true,
                               ),
                             ),
                             if (!readOnly)
