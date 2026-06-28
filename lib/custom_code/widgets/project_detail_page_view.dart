@@ -24,6 +24,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -46,6 +48,9 @@ class ProjectDetailPageView extends StatefulWidget {
     this.getQuotesRouteName,
     this.snagListRouteName,
     this.toDoListRouteName,
+
+    /// ✅ NEW: Directory route (empty Project Team → find/add trades)
+    this.directoryRouteName,
 
     /// ✅ NEW: Listing detail route (tap on added listing)
     this.listingDetailRouteName,
@@ -80,6 +85,9 @@ class ProjectDetailPageView extends StatefulWidget {
   final String? getQuotesRouteName;
   final String? snagListRouteName;
   final String? toDoListRouteName;
+
+  /// Directory (HomePageView) — opened from the empty Project Team state.
+  final String? directoryRouteName;
 
   final String? listingDetailRouteName;
 
@@ -458,6 +466,22 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         _listingParamName: listingRef,
       },
     ).whenComplete(() {
+      _isNavigating = false;
+    });
+  }
+
+  // ✅ NEW: navigate to the Directory (HomePageView) to find & add trades.
+  // Used by the empty Project Team state.
+  static const String _fallbackDirectoryRoute = 'homePage';
+  void _navigateToDirectory() {
+    if (_isNavigating) return;
+    final target = (widget.directoryRouteName ?? '').trim().isEmpty
+        ? _fallbackDirectoryRoute
+        : widget.directoryRouteName!.trim();
+    if (target.isEmpty) return;
+    _isNavigating = true;
+    FocusScope.of(context).unfocus();
+    context.pushNamed(target).whenComplete(() {
       _isNavigating = false;
     });
   }
@@ -1401,6 +1425,24 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
 
   String _moduleVisFor(String key) => _moduleVisMap()[key] ?? 'private';
 
+  // Human label for a module key (used by the visibility snackbar).
+  String _moduleLabel(String key) {
+    switch (key) {
+      case 'timeline':
+        return 'Timeline';
+      case 'toDo':
+        return 'To-Do List';
+      case 'snagList':
+        return 'Snag List';
+      case 'projectCost':
+        return 'Project Cost';
+      case 'getQuotes':
+        return 'Get Quotes';
+      default:
+        return 'Module';
+    }
+  }
+
   Future<void> _toggleModuleVis(String key) async {
     final ref = widget.projectRef;
     if (ref == null) return;
@@ -1411,6 +1453,17 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     _projectData = Map<String, dynamic>.from(_projectData)
       ..['moduleVisibility'] = mv;
     if (mounted) setState(() {});
+
+    // Confirm the change with a snackbar.
+    if (mounted) {
+      final label = _moduleLabel(key);
+      final msg = next == 'shared'
+          ? '$label is now shared with your team.'
+          : '$label is now private.';
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(_inkSnack(msg));
+    }
 
     try {
       await ref.set(
@@ -1697,8 +1750,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                   bgColor: Colors.transparent),
               const SizedBox(width: 8),
             ],
-            const Icon(Icons.chevron_right_rounded,
-                size: 22, color: Color(0xFFCDD6E2)),
+            const Icon(Icons.chevron_right_rounded, size: 22, color: _ink),
           ],
         ),
       ),
@@ -2306,6 +2358,22 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         'fb': _fallbackTimelineRoute,
       },
       {
+        'key': 'toDo',
+        'icon': Icons.checklist_rounded,
+        'title': 'To-Do List',
+        'sub': 'Tasks & reminders',
+        'route': widget.toDoListRouteName,
+        'fb': _fallbackToDoRoute,
+      },
+      {
+        'key': 'snagList',
+        'icon': Icons.fact_check_outlined,
+        'title': 'Snag List',
+        'sub': 'Defects & fixes',
+        'route': widget.snagListRouteName,
+        'fb': _fallbackSnagRoute,
+      },
+      {
         'key': 'projectCost',
         'icon': Icons.calculate_outlined,
         'title': 'Project Cost',
@@ -2320,22 +2388,6 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         'sub': 'Compare trades',
         'route': widget.getQuotesRouteName,
         'fb': _fallbackQuotesRoute,
-      },
-      {
-        'key': 'snagList',
-        'icon': Icons.fact_check_outlined,
-        'title': 'Snag List',
-        'sub': 'Defects & fixes',
-        'route': widget.snagListRouteName,
-        'fb': _fallbackSnagRoute,
-      },
-      {
-        'key': 'toDo',
-        'icon': Icons.checklist_rounded,
-        'title': 'To-Do List',
-        'sub': 'Tasks & reminders',
-        'route': widget.toDoListRouteName,
-        'fb': _fallbackToDoRoute,
       },
     ];
     final shared = mods
@@ -2460,8 +2512,13 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     FlutterFlowTheme theme,
     String title,
     bool open,
-    VoidCallback onToggle,
-  ) {
+    VoidCallback onToggle, {
+    int? count,
+    String countUnit = '',
+    bool alwaysShowCount = false,
+  }) {
+    final bool showCount =
+        !open && count != null && (count > 0 || alwaysShowCount);
     return _tapCard(
       onTap: onToggle,
       child: Row(
@@ -2475,6 +2532,24 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             child: const Icon(Icons.expand_more_rounded,
                 size: 24, color: Color(0xFF93A0B0)),
           ),
+          if (showCount) ...[
+            const SizedBox(width: 9),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: _surface,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                '$count $countUnit'.trim(),
+                style: theme.labelSmall.override(
+                  fontFamily: _bodyFont,
+                  color: _ink,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -3051,6 +3126,34 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                               const SizedBox(height: 12),
                               _moduleRow(
                                 theme: theme,
+                                icon: Icons.checklist_rounded,
+                                title: 'To-Do List',
+                                subtitle: 'Tasks & reminders',
+                                visibility: _moduleVisFor('toDo'),
+                                onToggleVisibility: () =>
+                                    _toggleModuleVis('toDo'),
+                                onTap: () => _safeNavigate(
+                                  widget.toDoListRouteName,
+                                  fallbackRoute: _fallbackToDoRoute,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              _moduleRow(
+                                theme: theme,
+                                icon: Icons.fact_check_outlined,
+                                title: 'Snag List',
+                                subtitle: 'Defects & fixes',
+                                visibility: _moduleVisFor('snagList'),
+                                onToggleVisibility: () =>
+                                    _toggleModuleVis('snagList'),
+                                onTap: () => _safeNavigate(
+                                  widget.snagListRouteName,
+                                  fallbackRoute: _fallbackSnagRoute,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              _moduleRow(
+                                theme: theme,
                                 icon: Icons.calculate_outlined,
                                 title: 'Project Cost',
                                 subtitle: 'Budget & estimates',
@@ -3076,34 +3179,6 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                                   fallbackRoute: _fallbackQuotesRoute,
                                 ),
                               ),
-                              const SizedBox(height: 12),
-                              _moduleRow(
-                                theme: theme,
-                                icon: Icons.fact_check_outlined,
-                                title: 'Snag List',
-                                subtitle: 'Defects & fixes',
-                                visibility: _moduleVisFor('snagList'),
-                                onToggleVisibility: () =>
-                                    _toggleModuleVis('snagList'),
-                                onTap: () => _safeNavigate(
-                                  widget.snagListRouteName,
-                                  fallbackRoute: _fallbackSnagRoute,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              _moduleRow(
-                                theme: theme,
-                                icon: Icons.checklist_rounded,
-                                title: 'To-Do List',
-                                subtitle: 'Tasks & reminders',
-                                visibility: _moduleVisFor('toDo'),
-                                onToggleVisibility: () =>
-                                    _toggleModuleVis('toDo'),
-                                onTap: () => _safeNavigate(
-                                  widget.toDoListRouteName,
-                                  fallbackRoute: _fallbackToDoRoute,
-                                ),
-                              ),
                             ],
                           ),
 
@@ -3120,6 +3195,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                                 'Documents',
                                 _docsOpen,
                                 () => setState(() => _docsOpen = !_docsOpen),
+                                count: _docRows.length,
+                                countUnit: 'files',
                               ),
                             ),
                             if (!readOnly)
@@ -3219,6 +3296,9 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                           'Project Team',
                           _teamOpen,
                           () => setState(() => _teamOpen = !_teamOpen),
+                          count: _listingRows.length,
+                          countUnit: 'members',
+                          alwaysShowCount: true,
                         ),
                         const SizedBox(height: 4),
                         _sectionDescription(
@@ -3239,27 +3319,114 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                             _cardShell(
                               theme: theme,
                               colorOverride: _surface,
-                              child: Row(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Container(
-                                    width: 44,
-                                    height: 44,
-                                    decoration: BoxDecoration(
-                                      color: projectsAccent.withOpacity(0.12),
-                                      borderRadius:
-                                          BorderRadius.circular(_radius),
-                                    ),
-                                    child: Icon(Icons.storefront_outlined,
-                                        color: projectsAccent, size: 22),
+                                  Row(
+                                    children: [
+                                      Container(
+                                        width: 48,
+                                        height: 48,
+                                        alignment: Alignment.center,
+                                        decoration: BoxDecoration(
+                                          color: _ink.withOpacity(0.10),
+                                          borderRadius:
+                                              BorderRadius.circular(14),
+                                        ),
+                                        child: const Icon(Icons.groups_rounded,
+                                            color: _ink, size: 24),
+                                      ),
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'No team members yet',
+                                              style: theme.bodyMedium.override(
+                                                fontFamily: _bodyFont,
+                                                color: _ink,
+                                                fontWeight: FontWeight.w900,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'Add the trades and suppliers working on this build so everyone stays in sync.',
+                                              style: theme.bodySmall.override(
+                                                fontFamily: _bodyFont,
+                                                color: _inkMute,
+                                                fontWeight: FontWeight.w600,
+                                                lineHeight: 1.45,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      'No providers added yet.',
-                                      style: theme.bodyMedium.override(
-                                        fontFamily: _bodyFont,
+                                  const SizedBox(height: 16),
+                                  _tapCard(
+                                    onTap: _navigateToDirectory,
+                                    radius: BorderRadius.circular(12),
+                                    child: Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 14),
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
                                         color: _ink,
-                                        fontWeight: FontWeight.w800,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.person_add_alt_1,
+                                              size: 18, color: _paper),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Add team member',
+                                            style: theme.bodyMedium.override(
+                                              fontFamily: _bodyFont,
+                                              color: _paper,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  _tapCard(
+                                    onTap: _navigateToDirectory,
+                                    radius: BorderRadius.circular(12),
+                                    child: Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 14),
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
+                                        color: _paper,
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                            color: const Color(0xFFCDD6E2),
+                                            width: 1.4),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.contacts_rounded,
+                                              size: 18, color: _ink),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Find trades in the Directory',
+                                            style: theme.bodyMedium.override(
+                                              fontFamily: _bodyFont,
+                                              color: _ink,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
