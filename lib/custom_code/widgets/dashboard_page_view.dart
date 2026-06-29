@@ -10,28 +10,7 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
 
 // ======================= DashboardPageView (FULL FILE) =======================
 //
@@ -620,11 +599,16 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   }
 
   // Icon-only mark — bold, no wordmark.
+  // Updated: now renders the green Subby house PNG instead of the painted mark.
+  // Add the file to pubspec.yaml under assets and adjust the path if needed.
   Widget _logo() => const SizedBox(
         width: 34,
         height: 34,
-        child: CustomPaint(
-          painter: _SubbyMarkPainter(peak: _yellow, base: _yellow),
+        child: Image(
+          image: AssetImage('assets/images/subby-mark-green.png'),
+          width: 34,
+          height: 34,
+          fit: BoxFit.contain,
         ),
       );
 
@@ -2259,6 +2243,9 @@ class _CapabilityChip extends StatelessWidget {
 // Subby mark — bold, icon only (viewBox 0 0 64 64):
 //   roof  : filled triangle, peak (32,11), base from (12.8,28.4)-(51.2,28.4).
 //   bars  : two full-width rounded bars beneath, matching the roof base width.
+// NOTE: retained for reference — the logo now renders from a PNG asset
+// (assets/images/subby-mark-green.png). Kept so the painted mark can be restored.
+// ignore: unused_element
 class _SubbyMarkPainter extends CustomPainter {
   final Color peak;
   final Color base;
