@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 class LocationSelectPageView extends StatefulWidget {
@@ -45,6 +47,10 @@ class _LocationSelectPageViewState extends State<LocationSelectPageView> {
   static const Color _faint = Color(0xFF93A0B0); // subtitles / unselected
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
+  static const Color _orange =
+      Color(0xFFEB7A02); // DS: leading icons / active bookmark
+  static const Color _green = Color(0xFF1F8A5B); // DS: verified / info
+  static const Color _gold = Color(0xFFFBB12A); // DS: rating stars
   static const Color _hairline = Color(0xFFEEF1F2);
   static const Color _rule = Color(0xFFE2E7EE);
   static const String _displayFont = 'Inter Tight';
@@ -367,7 +373,7 @@ class _LocationSelectPageViewState extends State<LocationSelectPageView> {
           const SizedBox(height: 6),
           Row(
             children: [
-              Icon(icon, size: 19, color: _amber),
+              Icon(icon, size: 19, color: _orange),
               const SizedBox(width: 10),
               Expanded(
                 child: DropdownButtonHideUnderline(

@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -45,10 +47,15 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
   static const Color _hairline = Color(0xFFEEF1F2);
   static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
   static const Color _teal = Color(0xFF323F4D);
-  static const Color _tealTint = Color(0xFFEEF7D6);
-  static const Color _live = Color(0xFFC7E87A);
-  static const Color _coral = Color(0xFFCA2E55);
+  static const Color _tealTint =
+      Color(0xFFEEF1F4); // DS: lime tint → neutral surface
+  static const Color _live =
+      Color(0xFFCC4B3C); // DS: lime → clay (high/attention)
+  static const Color _coral =
+      Color(0xFFCC4B3C); // DS: → clay (destructive/error)
   static const Color _navy = Color(0xFF323F4D);
+  static const Color _green =
+      Color(0xFF1F8A5B); // DS: to-do / in-progress / info
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
   // ────────────────────────────────────────────────────────────────────
@@ -333,7 +340,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
       final sel = _priority == key;
       final isHigh = key == 'high';
       final selFg = isHigh ? _live : _teal;
-      final selBg = isHigh ? const Color(0x33C7E87A) : _tealTint;
+      final selBg = isHigh ? const Color(0x33CC4B3C) : _tealTint;
       return GestureDetector(
         onTap: () => setState(() => _priority = key),
         child: Container(

@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'dart:typed_data';
@@ -58,6 +60,10 @@ class _EditListingPageViewState extends State<EditListingPageView> {
   static const Color _coral = Color(0xFFC24A1A); // destructive
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
+  static const Color _orange =
+      Color(0xFFEB7A02); // DS: leading icons / active bookmark
+  static const Color _green = Color(0xFF1F8A5B); // DS: verified / info
+  static const Color _gold = Color(0xFFFBB12A); // DS: rating stars
   static const Color _hairline = Color(0xFFEEF1F2);
   static const Color _rule = Color(0xFFE2E7EE);
   static const String _displayFont = 'Inter Tight';
@@ -906,7 +912,7 @@ class _EditListingPageViewState extends State<EditListingPageView> {
             children: [
               Padding(
                 padding: EdgeInsets.only(top: multiline ? 3 : 0),
-                child: Icon(icon, size: 19, color: _amber),
+                child: Icon(icon, size: 19, color: _orange),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -954,7 +960,7 @@ class _EditListingPageViewState extends State<EditListingPageView> {
           const SizedBox(height: 6),
           Row(
             children: [
-              Icon(icon, size: 19, color: _amber),
+              Icon(icon, size: 19, color: _orange),
               const SizedBox(width: 10),
               Expanded(
                 child: DropdownButtonHideUnderline(
@@ -1016,7 +1022,7 @@ class _EditListingPageViewState extends State<EditListingPageView> {
               width: 44, height: 44, fit: BoxFit.cover),
         );
       }
-      return const Icon(Icons.add_a_photo_outlined, size: 19, color: _amber);
+      return const Icon(Icons.add_a_photo_outlined, size: 19, color: _orange);
     }
 
     return Container(

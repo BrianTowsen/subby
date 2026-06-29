@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/auth/firebase_auth/auth_util.dart';
@@ -44,10 +46,15 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
   static const Color _hairline = Color(0xFFEEF1F2);
   static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
   static const Color _teal = Color(0xFF323F4D);
-  static const Color _tealTint = Color(0xFFEEF7D6);
-  static const Color _live = Color(0xFFC7E87A);
-  static const Color _coral = Color(0xFFCA2E55);
+  static const Color _tealTint =
+      Color(0xFFEEF1F4); // DS: lime tint → neutral surface
+  static const Color _live =
+      Color(0xFFCC4B3C); // DS: lime → clay (high/attention)
+  static const Color _coral =
+      Color(0xFFCC4B3C); // DS: → clay (destructive/error)
   static const Color _navy = Color(0xFF323F4D);
+  static const Color _green =
+      Color(0xFF1F8A5B); // DS: to-do / in-progress / info
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
   // ────────────────────────────────────────────────────────────────────
@@ -184,7 +191,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
   Color _statusTint(String s) {
     switch (s) {
       case 'in_progress':
-        return _ink; // solid cobalt fill
+        return _green; // solid green fill
       case 'done':
         return _surface;
       case 'todo':
@@ -208,7 +215,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
   Color _priorityColor(String s) =>
       s == 'high' ? _live : (s == 'low' ? _faint : _teal);
   Color _priorityTint(String s) => s == 'high'
-      ? const Color(0x33C7E87A)
+      ? const Color(0x33CC4B3C)
       : (s == 'low' ? _surface : _tealTint);
 
   Widget _softPill(String text,

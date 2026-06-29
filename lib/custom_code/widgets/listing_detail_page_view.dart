@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -44,6 +46,10 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
   static const Color _coral = Color(0xFFC24A1A); // error
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
+  static const Color _orange =
+      Color(0xFFEB7A02); // DS: leading icons / active bookmark
+  static const Color _green = Color(0xFF1F8A5B); // DS: verified / info
+  static const Color _gold = Color(0xFFFBB12A); // DS: rating stars
   static const Color _hairline = Color(0xFFEEF1F2);
   static const Color _rule = Color(0xFFE2E7EE);
   static const String _displayFont = 'Inter Tight';
@@ -812,7 +818,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           const Icon(Icons.star_rounded,
-                                              size: 17, color: _amber),
+                                              size: 17, color: _gold),
                                           const SizedBox(width: 4),
                                           Text(rating.toStringAsFixed(1),
                                               style: const TextStyle(
@@ -864,7 +870,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                         mainAxisSize: MainAxisSize.min,
                                         children: const [
                                           Icon(Icons.verified_rounded,
-                                              size: 15, color: _amber),
+                                              size: 15, color: _green),
                                           SizedBox(width: 4),
                                           Text('Verified',
                                               style: TextStyle(
@@ -885,7 +891,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                   Row(
                                     children: [
                                       const Icon(Icons.handyman_outlined,
-                                          size: 16, color: _amber),
+                                          size: 16, color: _gold),
                                       const SizedBox(width: 8),
                                       if (speciality.isNotEmpty)
                                         Flexible(
@@ -1231,7 +1237,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
         decoration: _uRule,
         child: Row(
           children: [
-            Icon(icon, size: 19, color: _amber),
+            Icon(icon, size: 19, color: _orange),
             const SizedBox(width: 10),
             Expanded(child: Text(value, style: _valueStyle)),
             const Icon(Icons.chevron_right_rounded, color: _rule),
