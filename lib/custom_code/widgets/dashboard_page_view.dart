@@ -1484,15 +1484,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         color: bg,
         borderRadius: BorderRadius.circular(11),
         border: attention ? Border.all(color: const Color(0xFFE2E7EE)) : null,
-        boxShadow: dark
-            ? [
-                BoxShadow(
-                  color: _yellow.withOpacity(0.30),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
-                ),
-              ]
-            : null,
+        boxShadow: null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
