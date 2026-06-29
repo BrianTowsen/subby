@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -22,6 +24,16 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
+
+// ─────────────────────────────────────────────────────────────────────
+// UPDATE (this revision): this screen now doubles as the EDIT screen.
+//   • A `snagRef` query-param (DetailSnagPageView's Edit button passes it)
+//     loads that snag, prefills every field + media, re-titles to "Edit
+//     Snag" / "Save Changes", and _save() UPDATES the existing doc (status,
+//     createdBy and createdAt are preserved) instead of creating one.
+//   • Saving an edit shows "Snag updated."; a new snag shows "Snag added.".
+//   • No snagRef → behaves exactly as the original Add Snag screen.
+// ─────────────────────────────────────────────────────────────────────
 
 class AddSnagPageView extends StatefulWidget {
   const AddSnagPageView({
@@ -39,8 +51,6 @@ class AddSnagPageView extends StatefulWidget {
 
 class _AddSnagPageViewState extends State<AddSnagPageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  // Synced with ToDoListPageView / DetailTaskPageView (DS slate system).
-  // Lime retired: tints → neutral surface, attention → clay, info → green.
   static const Color _ink = Color(0xFF323F4D);
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _faint = Color(0xFF93A0B0);
@@ -73,6 +83,10 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
   DocumentReference? _projectRef;
   bool _resolved = false;
 
+  // ✅ Edit mode: when set, _save() updates this doc instead of creating one.
+  DocumentReference? _editingRef;
+  bool get _isEditing => _editingRef != null;
+
   String _severity = 'minor'; // 'minor' | 'major' | 'critical'
   DateTime? _dueDate;
 
@@ -93,6 +107,15 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
     super.didChangeDependencies();
     if (_resolved) return;
     _resolved = true;
+
+    // ✅ Edit path: a snagRef means "edit this existing snag".
+    final snagRef = _readRefFromRoute('snagRef', 'snags');
+    if (snagRef != null) {
+      _editingRef = snagRef;
+      _loadSnagForEdit(snagRef);
+      return;
+    }
+
     // 1) projectRef from the route query (Snag List passes this), else prefs.
     _projectRef = _readRefFromRoute('projectRef', 'projects');
     if (_projectRef == null) _loadActiveProject();
@@ -129,6 +152,44 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
     final path = (prefs.getString(_kActiveProjectPath) ?? '').trim();
     if (path.isEmpty || !mounted) return;
     setState(() => _projectRef = FirebaseFirestore.instance.doc(path));
+  }
+
+  // ✅ Pull the existing snag and prefill the whole form.
+  Future<void> _loadSnagForEdit(DocumentReference ref) async {
+    try {
+      final snap = await ref.get();
+      final data = (snap.data() as Map<String, dynamic>? ?? {});
+
+      _projectRef = data['projectRef'] as DocumentReference?;
+      if (_projectRef == null) await _loadActiveProject();
+
+      _titleCtrl.text = (data['title'] ?? '').toString();
+      _descCtrl.text = (data['description'] ?? '').toString();
+      _areaCtrl.text = (data['area'] ?? data['room'] ?? '').toString();
+      _severity = (data['severity'] ?? 'minor').toString();
+
+      final due = data['dueDate'];
+      if (due is Timestamp) _dueDate = due.toDate();
+
+      final rawMedia = data['media'];
+      if (rawMedia is List) {
+        _media
+          ..clear()
+          ..addAll(rawMedia
+              .whereType<Map>()
+              .map((e) => Map<String, dynamic>.from(e)));
+      }
+
+      _assignedListingRef = data['assignedListingRef'] as DocumentReference?;
+      _assignedListingName =
+          (data['assignedListingName'] ?? data['assignedToName'] ?? '')
+              .toString();
+
+      if (mounted) setState(() {});
+    } catch (e) {
+      debugPrint('🔥 Load snag for edit failed: $e');
+      if (mounted) _toast('Could not load this snag.');
+    }
   }
 
   void _handleBack() {
@@ -504,7 +565,8 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
   }
 
   Widget _assignField() {
-    final hasPick = _assignedListingRef != null;
+    final hasPick =
+        _assignedListingRef != null || _assignedListingName.isNotEmpty;
     return GestureDetector(
       onTap: _saving ? null : _pickListing,
       child: Container(
@@ -808,12 +870,12 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
   }
 
   // =========================================================
-  // Save
+  // Save (create OR update when editing)
   // =========================================================
   Future<void> _save() async {
     if (_saving || _uploading) return;
     final projectRef = _projectRef;
-    if (projectRef == null) {
+    if (projectRef == null && !_isEditing) {
       _toast('No project selected.');
       return;
     }
@@ -829,6 +891,29 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
       );
       final photoUrl = (firstImage['url'] ?? '').toString();
 
+      if (_isEditing) {
+        // ✅ UPDATE existing snag — preserve status / createdBy / createdAt.
+        await _editingRef!.update(<String, dynamic>{
+          'title': _titleCtrl.text.trim(),
+          'description': _descCtrl.text.trim(),
+          'area': _areaCtrl.text.trim(),
+          'severity': _severity,
+          'dueDate': _dueDate == null ? null : Timestamp.fromDate(_dueDate!),
+          'media': _media,
+          'photoUrl': photoUrl,
+          'assignedListingRef': _assignedListingRef,
+          'assignedListingName': _assignedListingName,
+          'assignedToName': _assignedListingName,
+          'updatedAt': now,
+        });
+
+        if (!mounted) return;
+        _toast('Snag updated.');
+        _handleBack();
+        return;
+      }
+
+      // CREATE new snag (original behaviour).
       final docRef = FirebaseFirestore.instance.collection('snags').doc();
       await docRef.set(<String, dynamic>{
         'projectRef': projectRef,
@@ -854,7 +939,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
       _toast('Snag added.');
       _handleBack(); // back to the Snag List (its stream refreshes)
     } catch (e) {
-      debugPrint('🔥 Add snag failed: $e');
+      debugPrint('🔥 Save snag failed: $e');
       if (mounted) _toast('Could not save. Please try again.');
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -879,6 +964,14 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
 
   @override
   Widget build(BuildContext context) {
+    final headerTitle = _isEditing ? 'Edit Snag' : 'Add Snag';
+    final headerSubtitle = _isEditing
+        ? 'Update the details and save your changes'
+        : 'Log a defect with photos, video & details';
+    final ctaLabel =
+        _saving ? 'Saving…' : (_isEditing ? 'Save Changes' : 'Add Snag');
+    final ctaIcon = _isEditing ? Icons.check_rounded : Icons.add_rounded;
+
     return Container(
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
@@ -898,8 +991,8 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                   children: [
                     _minBack(),
                     const SizedBox(height: 16),
-                    const Text('Add Snag',
-                        style: TextStyle(
+                    Text(headerTitle,
+                        style: const TextStyle(
                             fontFamily: _displayFont,
                             color: _ink,
                             fontWeight: FontWeight.w900,
@@ -907,8 +1000,8 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                             height: 1.05,
                             letterSpacing: -0.5)),
                     const SizedBox(height: 8),
-                    const Text('Log a defect with photos, video & details',
-                        style: TextStyle(
+                    Text(headerSubtitle,
+                        style: const TextStyle(
                             fontFamily: _bodyFont,
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
@@ -975,10 +1068,9 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                                       AlwaysStoppedAnimation<Color>(_paper)),
                             )
                           else
-                            const Icon(Icons.add_rounded,
-                                color: _paper, size: 20),
+                            Icon(ctaIcon, color: _paper, size: 20),
                           const SizedBox(width: 9),
-                          Text(_saving ? 'Saving…' : 'Add Snag',
+                          Text(ctaLabel,
                               style: const TextStyle(
                                   fontFamily: _bodyFont,
                                   color: _paper,

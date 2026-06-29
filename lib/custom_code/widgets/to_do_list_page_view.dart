@@ -12,8 +12,17 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+// ─────────────────────────────────────────────────────────────────────
+// UPDATE (this revision):
+//   • Quick-toggling a task done/undone from the list now shows the standard
+//     ink snackbar ("Task updated.") — see _quickToggle + _snack().
+// (Edit / ownership / delete-warning live on DetailTaskPageView.)
+// ─────────────────────────────────────────────────────────────────────
 
 class ToDoListPageView extends StatefulWidget {
   const ToDoListPageView({
@@ -139,6 +148,21 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
 
   String _tabKey(int i) => i == 0 ? 'todo' : (i == 1 ? 'in_progress' : 'done');
 
+  // Standard app snackbar — ink background, white text.
+  void _snack(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        backgroundColor: _ink,
+        content: Text(msg,
+            style: const TextStyle(
+                fontFamily: _bodyFont,
+                color: _paper,
+                fontWeight: FontWeight.w700)),
+      ));
+  }
+
   // =========================================================
   // Type
   // =========================================================
@@ -226,8 +250,10 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
         if (next == 'done') 'doneAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
+      if (mounted) _snack('Task updated.'); // ✅ update snackbar
     } catch (e) {
       debugPrint('🔥 Quick toggle failed: $e');
+      if (mounted) _snack('Could not update. Please try again.');
     }
   }
 

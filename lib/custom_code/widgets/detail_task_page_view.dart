@@ -12,19 +12,41 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/auth/firebase_auth/auth_util.dart';
+
+// ─────────────────────────────────────────────────────────────────────
+// UPDATE (this revision):
+//   • Ownership — the Edit + Delete actions only show for the user who
+//     CREATED the task (task.createdBy == currentUserReference). Everyone
+//     else sees a read-only header.
+//   • Edit now works — it pushes `editTaskRouteName` (AddTaskPageView)
+//     with the task's ref, which loads the form in edit mode.
+//   • Delete uses the shared, centred "delete warning" dialog ported from
+//     DocumentUploadPageView (clay badge, 22-radius card, filled clay
+//     confirm + outlined cancel over a 55%-black scrim).
+//   • Snackbars — every successful mutation (start / mark done / reopen /
+//     checklist toggle) shows "Task updated."; a delete shows
+//     "Task deleted.". (Uses the standard ink snackbar = _toast.)
+// ─────────────────────────────────────────────────────────────────────
 
 class DetailTaskPageView extends StatefulWidget {
   const DetailTaskPageView({
     super.key,
     this.width,
     this.height,
+    this.editTaskRouteName, // ✅ route to AddTaskPageView (used for Edit)
   });
 
   final double? width;
   final double? height;
+
+  /// Route name of the Add/Edit Task page. The Edit button pushes this with
+  /// the current task's `taskRef`, putting that page into edit mode.
+  final String? editTaskRouteName;
 
   @override
   State<DetailTaskPageView> createState() => _DetailTaskPageViewState();
@@ -155,6 +177,35 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
     }
   }
 
+  // ✅ Is the signed-in user the one who created this task?
+  bool _isOwner(Map<String, dynamic> d) {
+    final me = currentUserReference;
+    if (me == null) return false;
+    final createdByRef = d['createdBy'] as DocumentReference?;
+    if (createdByRef != null) return createdByRef.path == me.path;
+    // Fallback for older records that only stored a name.
+    final createdByName = (d['createdByName'] ?? '').toString().trim();
+    final myName = (currentUserDisplayName).trim();
+    return createdByName.isNotEmpty &&
+        myName.isNotEmpty &&
+        createdByName == myName;
+  }
+
+  // ✅ Open the Add/Edit Task page in edit mode for this task.
+  void _openEdit(DocumentReference ref) {
+    final route = (widget.editTaskRouteName ?? '').trim();
+    if (route.isEmpty) {
+      _toast('Edit screen route not configured.');
+      return;
+    }
+    context.pushNamed(
+      route,
+      queryParameters: {
+        'taskRef': serializeParam(ref, ParamType.DocumentReference),
+      }.withoutNulls,
+    );
+  }
+
   // =========================================================
   // Labels / colors
   // =========================================================
@@ -259,6 +310,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
         'updatedAt': FieldValue.serverTimestamp(),
         ...?extra,
       });
+      if (mounted) _toast('Task updated.'); // ✅ update snackbar
     } catch (e) {
       debugPrint('🔥 Task status update failed: $e');
       _toast('Could not update. Please try again.');
@@ -280,6 +332,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
         'checklist': updated,
         'updatedAt': FieldValue.serverTimestamp(),
       });
+      if (mounted) _toast('Task updated.'); // ✅ update snackbar
     } catch (e) {
       debugPrint('🔥 Checklist toggle failed: $e');
     }
@@ -494,6 +547,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
     final status = (d['status'] ?? 'todo').toString();
     final priority = (d['priority'] ?? 'med').toString();
     final listingName = (d['assignedListingName'] ?? '').toString();
+    final isOwner = _isOwner(d); // ✅ gate Edit / Delete
 
     final checklist = <Map<String, dynamic>>[];
     final rawCl = d['checklist'];
@@ -530,14 +584,19 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _minBack(),
-                  Row(
-                    children: [
-                      _iconBtn(Icons.edit_outlined, _inkMute, () {}),
-                      const SizedBox(width: 4),
-                      _iconBtn(Icons.delete_outline_rounded, _coral,
-                          () => _confirmDelete(ref)),
-                    ],
-                  ),
+                  // ✅ Only the task's creator can edit or delete it.
+                  if (isOwner)
+                    Row(
+                      children: [
+                        _iconBtn(Icons.edit_outlined, _inkMute,
+                            () => _openEdit(ref)),
+                        const SizedBox(width: 4),
+                        _iconBtn(Icons.delete_outline_rounded, _coral,
+                            () => _confirmDelete(ref, title)),
+                      ],
+                    )
+                  else
+                    const SizedBox.shrink(),
                 ],
               ),
               const SizedBox(height: 14),
@@ -1072,50 +1131,165 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
     );
   }
 
-  Future<void> _confirmDelete(DocumentReference ref) async {
+  // =========================================================
+  // Delete — shared "delete warning" dialog (ported from
+  // DocumentUploadPageView: centred card, clay badge, 22-radius,
+  // filled clay confirm + outlined cancel, 55%-black scrim).
+  // =========================================================
+  Future<void> _confirmDelete(DocumentReference ref, String title) async {
+    FocusScope.of(context).unfocus();
+    await _showDeleteDialog(
+      icon: Icons.delete_rounded,
+      title: 'Delete this task?',
+      message: '“$title” will be permanently removed. This can’t be undone.',
+      confirmLabel: 'Delete task',
+      onConfirm: () => _deleteTask(ref),
+    );
+  }
+
+  Future<void> _deleteTask(DocumentReference ref) async {
+    try {
+      await ref.delete();
+      if (!mounted) return;
+      _toast('Task deleted.'); // ✅ delete snackbar
+      _handleBack();
+    } catch (e) {
+      debugPrint('🔥 Delete task failed: $e');
+      if (mounted) _toast('Could not delete. Please try again.');
+    }
+  }
+
+  // Centred destructive confirm dialog — shared "delete warning" module.
+  Future<void> _showDeleteDialog({
+    required String title,
+    required String message,
+    required String confirmLabel,
+    required IconData icon,
+    required Future<void> Function() onConfirm,
+  }) async {
     await showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: _paper,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: _hairline, width: 1),
-        ),
-        title: const Text('Delete task?',
-            style: TextStyle(
-                fontFamily: _displayFont,
-                color: _ink,
-                fontWeight: FontWeight.w900)),
-        content: const Text('This permanently removes the task.',
-            style: TextStyle(
-                fontFamily: _bodyFont, color: _inkMute, fontSize: 13)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel',
-                style: TextStyle(
+      barrierColor: Colors.black.withOpacity(0.55),
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 34),
+          child: Container(
+            width: 322,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _paper,
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.30),
+                  blurRadius: 54,
+                  offset: const Offset(0, 22),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 62,
+                  height: 62,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: _coral.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                    border:
+                        Border.all(color: _coral.withOpacity(0.22), width: 1),
+                  ),
+                  child: Icon(icon, color: _coral, size: 30),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontFamily: _displayFont,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.4,
+                    fontSize: 18,
+                    color: _ink,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
                     fontFamily: _bodyFont,
+                    fontWeight: FontWeight.w500,
+                    height: 1.5,
+                    fontSize: 14,
                     color: _inkMute,
-                    fontWeight: FontWeight.w800)),
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      await onConfirm();
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _coral,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        confirmLabel,
+                        style: const TextStyle(
+                          fontFamily: _bodyFont,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: _paper,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => Navigator.pop(ctx),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _paper,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: const Color(0xFFCDD6E2), width: 1.4),
+                      ),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: _ink,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(ctx).pop();
-              try {
-                await ref.delete();
-                if (mounted) _handleBack();
-              } catch (e) {
-                _toast('Could not delete.');
-              }
-            },
-            child: const Text('Delete',
-                style: TextStyle(
-                    fontFamily: _bodyFont,
-                    color: _coral,
-                    fontWeight: FontWeight.w900)),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
