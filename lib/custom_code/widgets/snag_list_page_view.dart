@@ -12,12 +12,6 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -45,24 +39,27 @@ class SnagListPageView extends StatefulWidget {
 class _SnagListPageViewState extends State<SnagListPageView>
     with SingleTickerProviderStateMixin {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  // Synced with DashboardPageView / AddProjectsPageView (flat teal system).
-  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
+  // Synced with ToDoListPageView / DetailTaskPageView (DS slate system).
+  // Lime is retired: tints fall back to neutral surface; "live/attention"
+  // is carried by clay, and in-progress/info by green.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF323F4D); // snag identity — Persimmon
+  static const Color _ink = Color(0xFF323F4D);
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _faint = Color(0xFF93A0B0);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
   static const Color _hairline = Color(0xFFEEF1F2);
   static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
-  // Brand accent — PERSIMMON (snags own this; Projects keep teal).
+  // Brand accent
   static const Color _teal = Color(0xFF323F4D);
-  static const Color _tealTint = Color(0xFFF3FAE6);
+  static const Color _tealTint =
+      Color(0xFFEEF1F4); // DS: lime tint → neutral surface
   // Status
   static const Color _live =
-      Color(0xFF323F4D); // persimmon — open / in-progress accent
-  static const Color _coral = Color(0xFFCA2E55); // destructive / error red
+      Color(0xFFCC4B3C); // DS: lime → clay (high / attention)
+  static const Color _green = Color(0xFF1F8A5B); // DS: in-progress / info
+  static const Color _coral = Color(0xFFCC4B3C); // destructive / error (clay)
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -166,7 +163,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
   }
 
   // =========================================================
-  // ✅ TYPOGRAPHY (flat teal system)
+  // ✅ TYPOGRAPHY (flat slate system)
   // =========================================================
   TextStyle _pageTitle(FlutterFlowTheme t) => t.titleLarge.override(
         fontFamily: _displayFont,
@@ -282,29 +279,30 @@ class _SnagListPageViewState extends State<SnagListPageView>
     }
   }
 
-  // In Progress = teal accent; Open / Closed = orange; neutral = faint.
+  // In Progress = white on solid GREEN; Open = ink on neutral surface;
+  // Closed = faint on surface.
   Color _statusColor(FlutterFlowTheme theme, Color accent, String status) {
     switch (status) {
       case 'in_progress':
-        return _paper; // white on solid persimmon
+        return _paper; // white on solid green
       case 'closed':
       case 'review':
         return _faint; // done — neutral
       case 'open':
       default:
-        return _ink; // persimmon
+        return _ink;
     }
   }
 
   Color _statusTint(String status) {
     switch (status) {
       case 'in_progress':
-        return _ink; // solid persimmon fill
+        return _green; // solid green fill
       case 'closed':
       case 'review':
         return _surface;
       default:
-        return _tealTint; // persimmon @ light
+        return _tealTint; // neutral surface
     }
   }
 
@@ -322,8 +320,11 @@ class _SnagListPageViewState extends State<SnagListPageView>
     }
   }
 
-  Color _severityColor(String sev) => sev == 'minor' ? _faint : _ink;
-  Color _severityTint(String sev) => sev == 'minor' ? _surface : _tealTint;
+  // Critical = clay; major = ink; minor = faint. Tint: critical clay@16%, else surface.
+  Color _severityColor(String sev) =>
+      sev == 'critical' ? _live : (sev == 'minor' ? _faint : _ink);
+  Color _severityTint(String sev) =>
+      sev == 'critical' ? const Color(0x29CC4B3C) : _surface;
 
   String _severityLabel(String sev) {
     switch (sev) {
@@ -819,7 +820,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
               ),
             ),
 
-            // Floating Add button — flat teal
+            // Floating Add button — flat slate
             Positioned(
               left: _hPad,
               right: _hPad,

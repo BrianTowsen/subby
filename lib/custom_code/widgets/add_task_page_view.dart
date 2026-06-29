@@ -83,6 +83,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
   // attachments: [{ 'url', 'type' ('image'|'file'), 'name', 'storagePath' }]
   final List<Map<String, dynamic>> _attachments = [];
 
+  // The task is assigned to a TEAM MEMBER on the project (a listing record).
   DocumentReference? _listingRef;
   String _listingName = '';
   String _listingSubtitle = '';
@@ -383,7 +384,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
   }
 
   // =========================================================
-  // Assignee rows (listing + person)
+  // Assignee rows (team member + person)
   // =========================================================
   Widget _assignRow({
     required String label,
@@ -423,7 +424,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                       : Icon(
                           isPerson
                               ? Icons.person_outline
-                              : Icons.handyman_outlined,
+                              : Icons.person_outline_rounded,
                           size: 19,
                           color: _faint),
                 ),
@@ -457,7 +458,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                       : Text(
                           isPerson
                               ? 'Choose a project member'
-                              : 'Choose a listing on this project',
+                              : 'Choose a team member on this project',
                           style: const TextStyle(
                               fontFamily: _bodyFont,
                               fontSize: 14,
@@ -518,7 +519,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text(isPerson ? 'Assign to person' : 'Assign to listing',
+                Text(isPerson ? 'Assign to person' : 'Assign to team member',
                     style: const TextStyle(
                         fontFamily: _displayFont,
                         fontSize: 20,
@@ -552,7 +553,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                           child: Text(
                             isPerson
                                 ? 'No project members yet.'
-                                : 'No listings added to this project yet.',
+                                : 'No team members added to this project yet.',
                             style: const TextStyle(
                                 fontFamily: _bodyFont,
                                 fontSize: 13,
@@ -573,7 +574,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                                       d['displayName'] ??
                                       d['userName'] ??
                                       'Member')
-                                  : (d['title'] ?? d['name'] ?? 'Listing'))
+                                  : (d['title'] ?? d['name'] ?? 'Team member'))
                               .toString();
                           final subtitle = (isPerson
                                   ? (d['role'] ??
@@ -1065,7 +1066,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                     _dueDateField(),
                     _priorityField(),
                     _assignRow(
-                      label: 'Assign to listing',
+                      label: 'Assign to team member',
                       isPerson: false,
                       has: _listingRef != null,
                       name: _listingName,

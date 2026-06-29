@@ -23,6 +23,8 @@ import 'index.dart'; // Imports other custom widgets
 import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
+
+import 'index.dart'; // Imports other custom widgets
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 import 'index.dart'; // Imports other custom widgets
@@ -158,8 +160,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   static const Color _hairline = Color(0xFFEEF1F2);
 
   // Accents
-  static const Color _yellow = Color(0xFFEB7A02); // sage — "on site" / on track
-  static const Color _teal = Color(0xFFFBB12A); // info / shared / "needs you"
+  static const Color _yellow = Color(0xFF166341); // sage — "on site" / on track
+  static const Color _teal = Color(0xFF1F8A5B); // info / shared / "needs you"
   static const Color _ringTrack = Color(0xFFEEF2F7);
   static const Color _orange = Color(0xFFCC4B3C); // attention / snagging (clay)
   static const Color _orangeTint = Color(0xFFF3E7E2);
@@ -874,8 +876,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       child: Container(
         decoration: BoxDecoration(
           // SHARED hero — fade-yellow tint (matches owner cards).
-          color: const Color(0xFFFBF2C2),
-          border: Border.all(color: const Color(0xFFEFDE93)),
+          color: const Color(0xFFE7F3EC),
+          border: Border.all(color: const Color(0xFFC9E4D6)),
           borderRadius: BorderRadius.circular(16),
         ),
         padding: const EdgeInsets.all(18),
@@ -1012,9 +1014,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         child: Container(
           decoration: BoxDecoration(
             // SHARED primary row — fade-yellow tint (matches owner cards).
-            color: const Color(0xFFFBF2C2),
+            color: const Color(0xFFE7F3EC),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFEFDE93)),
+            border: Border.all(color: const Color(0xFFC9E4D6)),
           ),
           padding: const EdgeInsets.all(14),
           child: Column(
@@ -1516,8 +1518,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         decoration: BoxDecoration(
           // MOST RECENT card — sage-yellow tint (matches the ProjectDetail
           // "Manage" module tiles + the rest of the project cards).
-          color: const Color(0xFFFBF2C2),
-          border: Border.all(color: const Color(0xFFEFDE93)),
+          color: const Color(0xFFE7F3EC),
+          border: Border.all(color: const Color(0xFFC9E4D6)),
           borderRadius: BorderRadius.circular(16),
         ),
         padding: const EdgeInsets.all(18),
@@ -1661,9 +1663,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         child: Container(
           decoration: BoxDecoration(
             // Owned project rows — sage-yellow tint (matches the Manage tiles).
-            color: const Color(0xFFFBF2C2),
+            color: const Color(0xFFE7F3EC),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFEFDE93)),
+            border: Border.all(color: const Color(0xFFC9E4D6)),
           ),
           padding: const EdgeInsets.all(14),
           child: Column(
@@ -2230,7 +2232,7 @@ class _CapabilityChip extends StatelessWidget {
 
   final String label;
 
-  static const Color _tealTint = Color(0xFFFBF2C2);
+  static const Color _tealTint = Color(0xFFE7F3EC);
   static const Color _tealText = Color(0xFF39454B);
 
   @override
