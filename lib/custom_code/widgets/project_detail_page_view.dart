@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -1003,6 +1005,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     required String status,
     required String address,
     required String dates,
+    required double progress,
     bool readOnly = false,
   }) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -1095,36 +1098,47 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                 lineHeight: 1.08,
               ),
             ),
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: _tealBright.withOpacity(0.14),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: const BoxDecoration(
-                      color: _tealBright,
-                      shape: BoxShape.circle,
+            const SizedBox(height: 16),
+            // Overall completion bar (replaces the stage/status pill).
+            Row(
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(999),
+                    child: Container(
+                      height: 8,
+                      color: _tealTint,
+                      child: FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: progress,
+                        child: Container(color: const Color(0xFF166341)),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 6),
-                  Text(
-                    status,
-                    style: theme.labelSmall.override(
-                      fontFamily: _bodyFont,
-                      color: _tealBright,
-                      letterSpacing: 0.0,
-                      fontWeight: FontWeight.w900,
-                    ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  '${(progress * 100).round()}%',
+                  style: theme.titleMedium.override(
+                    fontFamily: _displayFont,
+                    color: _ink,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 14,
+                    letterSpacing: 0.0,
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'COMPLETE',
+                  style: theme.labelSmall.override(
+                    fontFamily: _bodyFont,
+                    color: const Color(0xFF93A0B0),
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
+                    fontSize: 10,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 14),
             Row(
@@ -1593,7 +1607,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       final vis = _docVisibility(d);
       final cat = _docCategory(d);
       return Padding(
-        padding: EdgeInsets.only(bottom: i == rows.length - 1 ? 0 : _gap),
+        padding: EdgeInsets.zero,
         child: _documentRow(
           theme: theme,
           accent: accent,
@@ -1737,6 +1751,146 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
               const SizedBox(width: 8),
             ],
             const Icon(Icons.chevron_right_rounded, size: 22, color: _ink),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 2-up Sage module tile (Manage grid) — ink icon chip, title + subtitle.
+  Widget _moduleGridCell({
+    required FlutterFlowTheme theme,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+    String? visibility,
+    VoidCallback? onToggleVisibility,
+  }) {
+    return _tapCard(
+      onTap: onTap,
+      child: Container(
+        height: 118,
+        decoration: BoxDecoration(
+          color: _tealSurface,
+          borderRadius: BorderRadius.circular(_radius),
+          border: Border.all(color: _tealSurfaceBorder),
+        ),
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: _ink,
+                    borderRadius: BorderRadius.circular(11),
+                  ),
+                  child: Icon(icon, size: 21, color: _paper),
+                ),
+                const Spacer(),
+                if (visibility != null && onToggleVisibility != null)
+                  _visToggle(
+                    visibility: visibility,
+                    onTap: onToggleVisibility,
+                    bgColor: Colors.transparent,
+                  ),
+              ],
+            ),
+            const Spacer(),
+            Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.titleMedium.override(
+                fontFamily: _displayFont,
+                color: _ink,
+                fontWeight: FontWeight.w800,
+                fontSize: 14.5,
+                letterSpacing: -0.1,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.labelSmall.override(
+                fontFamily: _bodyFont,
+                color: _inkMute,
+                fontWeight: FontWeight.w500,
+                fontSize: 11,
+                letterSpacing: 0.0,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Full-width Sage module tile — used for the odd last module (Get Quotes).
+  Widget _wideModuleCell({
+    required FlutterFlowTheme theme,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return _tapCard(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: _tealSurface,
+          borderRadius: BorderRadius.circular(_radius),
+          border: Border.all(color: _tealSurfaceBorder),
+        ),
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: _ink,
+                borderRadius: BorderRadius.circular(11),
+              ),
+              child: Icon(icon, size: 21, color: _paper),
+            ),
+            const SizedBox(width: 13),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.titleMedium.override(
+                      fontFamily: _displayFont,
+                      color: _ink,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14.5,
+                      letterSpacing: -0.1,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: theme.labelSmall.override(
+                      fontFamily: _bodyFont,
+                      color: _inkMute,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 11,
+                      letterSpacing: 0.0,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded,
+                size: 22, color: Color(0xFF166341)),
           ],
         ),
       ),
@@ -1925,25 +2079,15 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     return _tapCard(
       onTap: onTap,
       child: Container(
-        decoration: BoxDecoration(
-          color: _surface,
-          borderRadius: BorderRadius.circular(_radius),
-          border: Border.all(color: _hairline.withOpacity(0.9)),
+        decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: Color(0xFFEEF1F2))),
         ),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 14, 10, 14),
+          padding: const EdgeInsets.fromLTRB(2, 14, 4, 14),
           child: Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: accent,
-                  borderRadius: BorderRadius.circular(_radius),
-                ),
-                child: Icon(icon, size: 22, color: _tealBright),
-              ),
-              const SizedBox(width: 12),
+              Icon(icon, size: 22, color: _tealBright),
+              const SizedBox(width: 13),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -3015,6 +3159,15 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     final snagsRaw = projData['openSnags'] ?? projData['snagCount'];
     final snagLabel = (snagsRaw is num) ? '${snagsRaw.toInt()}' : '—';
 
+    // Overall completion (0..1 or 0..100) — drives the hero progress bar.
+    final progressRaw = projData['progress'];
+    double progressVal = 0;
+    if (progressRaw is num) {
+      progressVal = progressRaw.toDouble();
+      if (progressVal > 1) progressVal = progressVal / 100.0;
+    }
+    progressVal = progressVal.clamp(0.0, 1.0);
+
     final topInset = MediaQuery.of(context).padding.top;
     final bottomInset = MediaQuery.of(context).padding.bottom;
 
@@ -3040,6 +3193,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                     status: projectStatus,
                     address: projectAddress,
                     dates: projectDates,
+                    progress: progressVal,
                     readOnly: readOnly,
                   ),
                   Padding(
@@ -3057,107 +3211,105 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                         ],
 
                         // ============================================================
-                        // 1) STAT STRIP
+                        // 1) STAT STRIP — shared / read-only view only
                         // ============================================================
-                        if (readOnly)
+                        if (readOnly) ...[
                           _statStripShared(
                             theme: theme,
                             days: daysLeftLabel,
                             snags: snagLabel,
                             files:
                                 '${_docRows.where((s) => _docVisibility(s.data()) == 'shared').length}',
-                          )
-                        else
-                          _statStrip(
-                            theme: theme,
-                            days: daysLeftLabel,
-                            budget: budgetLabel,
-                            snags: snagLabel,
                           ),
-
-                        const SizedBox(height: 28),
-
-                        // ============================================================
-                        // 1.5) PROJECT FEED (collapsible, read-only)
-                        // ============================================================
-                        _buildProjectFeed(theme),
-
-                        const SizedBox(height: 28),
+                          const SizedBox(height: 28),
+                        ],
 
                         // ============================================================
-                        // 2) PROJECT MODULE LINKS
+                        // 2) PROJECT MODULES — 2-up Sage grid (Manage)
                         // ============================================================
                         if (readOnly) _sharedManage(theme),
-                        if (!readOnly) _sectionTitle(theme, 'Manage'),
-                        if (!readOnly) const SizedBox(height: 10),
-                        if (!readOnly) _visLegend(theme),
                         if (!readOnly)
                           Column(
                             children: [
-                              _moduleRow(
-                                theme: theme,
-                                icon: Icons.timeline_rounded,
-                                title: 'Timeline',
-                                subtitle: 'Programme & phases',
-                                visibility: _moduleVisFor('timeline'),
-                                onToggleVisibility: () =>
-                                    _toggleModuleVis('timeline'),
-                                onTap: () => _safeNavigate(
-                                  widget.timelineRouteName,
-                                  fallbackRoute: _fallbackTimelineRoute,
-                                ),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: _moduleGridCell(
+                                      theme: theme,
+                                      icon: Icons.timeline_rounded,
+                                      title: 'Timeline',
+                                      subtitle: 'Programme & phases',
+                                      visibility: _moduleVisFor('timeline'),
+                                      onToggleVisibility: () =>
+                                          _toggleModuleVis('timeline'),
+                                      onTap: () => _safeNavigate(
+                                        widget.timelineRouteName,
+                                        fallbackRoute: _fallbackTimelineRoute,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: _moduleGridCell(
+                                      theme: theme,
+                                      icon: Icons.checklist_rounded,
+                                      title: 'To-Do List',
+                                      subtitle: 'Tasks & reminders',
+                                      visibility: _moduleVisFor('toDo'),
+                                      onToggleVisibility: () =>
+                                          _toggleModuleVis('toDo'),
+                                      onTap: () => _safeNavigate(
+                                        widget.toDoListRouteName,
+                                        fallbackRoute: _fallbackToDoRoute,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: 12),
-                              _moduleRow(
-                                theme: theme,
-                                icon: Icons.checklist_rounded,
-                                title: 'To-Do List',
-                                subtitle: 'Tasks & reminders',
-                                visibility: _moduleVisFor('toDo'),
-                                onToggleVisibility: () =>
-                                    _toggleModuleVis('toDo'),
-                                onTap: () => _safeNavigate(
-                                  widget.toDoListRouteName,
-                                  fallbackRoute: _fallbackToDoRoute,
-                                ),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: _moduleGridCell(
+                                      theme: theme,
+                                      icon: Icons.fact_check_outlined,
+                                      title: 'Snag List',
+                                      subtitle: 'Defects & fixes',
+                                      visibility: _moduleVisFor('snagList'),
+                                      onToggleVisibility: () =>
+                                          _toggleModuleVis('snagList'),
+                                      onTap: () => _safeNavigate(
+                                        widget.snagListRouteName,
+                                        fallbackRoute: _fallbackSnagRoute,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: _moduleGridCell(
+                                      theme: theme,
+                                      icon: Icons.calculate_outlined,
+                                      title: 'Project Cost',
+                                      subtitle: 'Budget & estimates',
+                                      visibility: _moduleVisFor('projectCost'),
+                                      onToggleVisibility: () =>
+                                          _toggleModuleVis('projectCost'),
+                                      onTap: () => _safeNavigate(
+                                        widget.projectCostRouteName,
+                                        fallbackRoute: _fallbackCostRoute,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: 12),
-                              _moduleRow(
-                                theme: theme,
-                                icon: Icons.fact_check_outlined,
-                                title: 'Snag List',
-                                subtitle: 'Defects & fixes',
-                                visibility: _moduleVisFor('snagList'),
-                                onToggleVisibility: () =>
-                                    _toggleModuleVis('snagList'),
-                                onTap: () => _safeNavigate(
-                                  widget.snagListRouteName,
-                                  fallbackRoute: _fallbackSnagRoute,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              _moduleRow(
-                                theme: theme,
-                                icon: Icons.calculate_outlined,
-                                title: 'Project Cost',
-                                subtitle: 'Budget & estimates',
-                                visibility: _moduleVisFor('projectCost'),
-                                onToggleVisibility: () =>
-                                    _toggleModuleVis('projectCost'),
-                                onTap: () => _safeNavigate(
-                                  widget.projectCostRouteName,
-                                  fallbackRoute: _fallbackCostRoute,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              _moduleRow(
+                              _wideModuleCell(
                                 theme: theme,
                                 icon: Icons.request_quote_outlined,
                                 title: 'Get Quotes',
                                 subtitle: 'Compare trades',
-                                visibility: _moduleVisFor('getQuotes'),
-                                onToggleVisibility: () =>
-                                    _toggleModuleVis('getQuotes'),
                                 onTap: () => _safeNavigate(
                                   widget.getQuotesRouteName,
                                   fallbackRoute: _fallbackQuotesRoute,

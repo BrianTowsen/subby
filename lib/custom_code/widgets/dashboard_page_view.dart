@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -679,50 +681,22 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         }
 
         // ── OWNER layout ───────────────────────────────────────────────
-        // Stats: "Active builds" = owned + shared; "On track" / "Needs you"
-        // stay derived from the owner's own active projects (unchanged).
-        final ownedActive = docs.length;
-        int needs = 0;
-        for (final d in docs) {
-          final s = (d.data()['status'] as String?)?.trim() ?? '';
-          if (_needsAttention(s)) needs++;
-        }
-        final onTrack = ownedActive - needs;
-        final displayedActive = ownedActive + _sharedCount;
-
-        // Focus layout: most-recent (updatedAt desc) is the hero; the rest are
-        // condensed quick-list rows.
-        final feat = docs.first;
-        final rest = docs.skip(1).toList();
-
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(_hPad, 18, _hPad, 0),
-              child: _statStrip(displayedActive, onTrack, needs),
-            ),
-            const SizedBox(height: 28),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 0),
-              child: _sectionHeader(),
-            ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 22),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: _hPad),
-              child: _heroCard(feat),
+              child: _buildsGrid(docs),
             ),
             const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: _hPad),
-              child: Column(
-                children: [
-                  for (final d in rest) _condensedRow(d),
-                  const SizedBox(height: 14),
-                  _newProjectButton(),
-                ],
-              ),
+              child: _newProjectButton(),
             ),
+
+            // Projects Feed — aggregated activity across all builds.
+            _buildDashboardFeed(docs),
 
             // Shared with me — read-only projects (also keeps _sharedCount fresh).
             _buildSharedSection(),
@@ -1500,6 +1474,226 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               fontSize: 11,
               fontWeight: FontWeight.w700,
               color: labelColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===================================================================
+  // SAGE GRID — builds rendered as 2-up percentage-lead tiles.
+  // ===================================================================
+  Widget _buildsGrid(List<QueryDocumentSnapshot<Map<String, dynamic>>> docs) {
+    final rows = <Widget>[];
+    for (int i = 0; i < docs.length; i += 2) {
+      final left = docs[i];
+      final right = (i + 1 < docs.length) ? docs[i + 1] : null;
+      rows.add(Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: _buildGridTile(left)),
+          const SizedBox(width: 12),
+          Expanded(
+            child:
+                right != null ? _buildGridTile(right) : const SizedBox.shrink(),
+          ),
+        ],
+      ));
+      if (i + 2 < docs.length) rows.add(const SizedBox(height: 12));
+    }
+    return Column(children: rows);
+  }
+
+  Widget _buildGridTile(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data();
+    final name = (data['name'] as String?)?.trim() ?? '';
+    final city = (data['city'] as String?)?.trim() ?? '';
+    final province = (data['province'] as String?)?.trim() ?? '';
+    final loc = [city, province].where((x) => x.isNotEmpty).join(', ');
+    final progress = _progress(data);
+    final pct = (progress * 100).round();
+
+    return InkWell(
+      onTap: () => _goToProject(doc.reference),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        height: 132,
+        decoration: BoxDecoration(
+          color: const Color(0xFFE7F3EC),
+          border: Border.all(color: const Color(0xFFC9E4D6)),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        padding: const EdgeInsets.all(15),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('$pct%',
+                style: const TextStyle(
+                  fontFamily: _displayFont,
+                  fontSize: 32,
+                  fontWeight: FontWeight.w900,
+                  height: 1.0,
+                  color: _ink,
+                )),
+            const Spacer(),
+            Text(name.isEmpty ? 'Untitled' : name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontFamily: _displayFont,
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.1,
+                  color: _ink,
+                )),
+            const SizedBox(height: 2),
+            Text(loc.isEmpty ? 'No location set' : loc,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontFamily: _bodyFont,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: _inkMute,
+                )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ===================================================================
+  // PROJECTS FEED — aggregated activity across all builds (rail).
+  // ===================================================================
+  Widget _buildDashboardFeed(
+      List<QueryDocumentSnapshot<Map<String, dynamic>>> docs) {
+    final items = <Widget>[];
+    for (final d in docs) {
+      final data = d.data();
+      final act = _activityFor(data); // "summary · 2h ago" or null
+      if (act == null) continue;
+      final name = (data['name'] as String?)?.trim() ?? 'Untitled';
+      items.add(_dashFeedRow(name, act));
+    }
+    if (items.isEmpty) return const SizedBox.shrink();
+    final count = items.length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 30),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: _hPad),
+          child: Row(
+            children: [
+              _accentMarker(_yellow),
+              const SizedBox(width: 10),
+              Expanded(child: Text('Projects Feed', style: _stepHeadlineStyle)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF166341).withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.bolt, size: 13, color: Color(0xFF166341)),
+                    const SizedBox(width: 4),
+                    Text('$count today',
+                        style: const TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF166341),
+                        )),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(38, 0, _hPad, 0),
+          child: Text('Latest across all your builds.',
+              style: const TextStyle(
+                fontFamily: _bodyFont,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: _faint,
+              )),
+        ),
+        const SizedBox(height: 14),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: _hPad),
+          child: Stack(
+            children: [
+              Positioned(
+                left: 14,
+                top: 8,
+                bottom: 8,
+                child: Container(width: 2, color: const Color(0xFFE2E7EE)),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: items,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _dashFeedRow(String project, String activity) {
+    final parts = activity.split(' · ');
+    final title = parts.isNotEmpty ? parts.first : activity;
+    final time = parts.length > 1 ? parts.last : '';
+    final meta = time.isEmpty ? project : '$project · $time';
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: const Color(0xFFE7F3EC),
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFFC9E4D6), width: 1.5),
+            ),
+            child: const Icon(Icons.bolt, size: 16, color: Color(0xFF166341)),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: _displayFont,
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.1,
+                      color: _ink,
+                    )),
+                const SizedBox(height: 3),
+                Text(meta,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: _inkMute,
+                    )),
+              ],
             ),
           ),
         ],
