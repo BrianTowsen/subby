@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -23,15 +25,38 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 
+// ─────────────────────────────────────────────────────────────────────
+// UPDATE (this revision) — mirrors the To-Do changes + the snag-specific
+// proof-of-fix requirement:
+//   • Ownership — Edit + Delete only show for the user who CREATED the snag
+//     (snag.createdBy == currentUserReference).
+//   • Edit now works — a new `editSnagRouteName` is pushed (AddSnagPageView)
+//     with this snag's ref, loading the form in edit mode.
+//   • Delete uses the shared, centred "delete warning" dialog ported from
+//     DocumentUploadPageView (clay badge, 22-radius card, filled clay confirm
+//     + outlined cancel over a 55%-black scrim).
+//   • Snackbars — status changes (Move to In Progress / Reopen) show
+//     "Snag updated."; closing shows "Snag closed out."; delete shows
+//     "Snag deleted.".
+//   • Close-out is GATED on a proof-of-fix photo (kept from the original).
+//   • BEFORE / AFTER — once closed, the detail shows the original snag photo
+//     beside the uploaded fix photo so both are visible side by side.
+// ─────────────────────────────────────────────────────────────────────
+
 class DetailSnagPageView extends StatefulWidget {
   const DetailSnagPageView({
     super.key,
     this.width,
     this.height,
+    this.editSnagRouteName, // ✅ route to AddSnagPageView (used for Edit)
   });
 
   final double? width;
   final double? height;
+
+  /// Route name of the Add/Edit Snag page. The Edit button pushes this with
+  /// the current snag's `snagRef`, putting that page into edit mode.
+  final String? editSnagRouteName;
 
   @override
   State<DetailSnagPageView> createState() => _DetailSnagPageViewState();
@@ -39,8 +64,6 @@ class DetailSnagPageView extends StatefulWidget {
 
 class _DetailSnagPageViewState extends State<DetailSnagPageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  // Synced with ToDoListPageView / DetailTaskPageView (DS slate system).
-  // Lime retired: tints → neutral surface, attention → clay, info → green.
   static const Color _ink = Color(0xFF323F4D);
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _faint = Color(0xFF93A0B0);
@@ -179,6 +202,34 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
     }
   }
 
+  // ✅ Is the signed-in user the one who created this snag?
+  bool _isOwner(Map<String, dynamic> d) {
+    final me = currentUserReference;
+    if (me == null) return false;
+    final createdByRef = d['createdBy'] as DocumentReference?;
+    if (createdByRef != null) return createdByRef.path == me.path;
+    final createdByName = (d['createdByName'] ?? '').toString().trim();
+    final myName = (currentUserDisplayName).trim();
+    return createdByName.isNotEmpty &&
+        myName.isNotEmpty &&
+        createdByName == myName;
+  }
+
+  // ✅ Open the Add/Edit Snag page in edit mode for this snag.
+  void _openEdit(DocumentReference ref) {
+    final route = (widget.editSnagRouteName ?? '').trim();
+    if (route.isEmpty) {
+      _toast('Edit screen route not configured.');
+      return;
+    }
+    context.pushNamed(
+      route,
+      queryParameters: {
+        'snagRef': serializeParam(ref, ParamType.DocumentReference),
+      }.withoutNulls,
+    );
+  }
+
   // =========================================================
   // Status helpers
   // =========================================================
@@ -273,6 +324,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
         'updatedAt': FieldValue.serverTimestamp(),
         ...?extra,
       });
+      if (mounted) _toast('Snag updated.'); // ✅ update snackbar
     } catch (e) {
       debugPrint('🔥 Snag status update failed: $e');
       _toast('Could not update. Please try again.');
@@ -475,6 +527,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
     final listingName =
         (d['assignedListingName'] ?? d['assignedToName'] ?? '').toString();
     final createdByName = (d['createdByName'] ?? '').toString();
+    final isOwner = _isOwner(d); // ✅ gate Edit / Delete
 
     final media = <Map<String, dynamic>>[];
     final rawMedia = d['media'];
@@ -486,6 +539,20 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
     if (media.isEmpty) {
       final single = (d['photoUrl'] ?? '').toString();
       if (single.isNotEmpty) media.add({'url': single, 'type': 'image'});
+    }
+
+    // ✅ Before / After proof. before = first snag photo; after = fixed photo.
+    final fixedUrl = (d['fixedPhotoUrl'] ?? '').toString();
+    String beforeUrl = '';
+    for (final m in media) {
+      final u = (m['url'] ?? '').toString();
+      if (u.isNotEmpty && (m['type'] ?? 'image') != 'video') {
+        beforeUrl = u;
+        break;
+      }
+    }
+    if (beforeUrl.isEmpty && media.isNotEmpty) {
+      beforeUrl = (media.first['url'] ?? '').toString();
     }
 
     final due = _asDate(d['dueDate']);
@@ -504,14 +571,19 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _minBack(),
-                  Row(
-                    children: [
-                      _iconBtn(Icons.ios_share_rounded, _inkMute, () {}),
-                      const SizedBox(width: 4),
-                      _iconBtn(Icons.delete_outline_rounded, _coral,
-                          () => _confirmDelete(ref)),
-                    ],
-                  ),
+                  // ✅ Only the snag's creator can edit or delete it.
+                  if (isOwner)
+                    Row(
+                      children: [
+                        _iconBtn(Icons.edit_outlined, _inkMute,
+                            () => _openEdit(ref)),
+                        const SizedBox(width: 4),
+                        _iconBtn(Icons.delete_outline_rounded, _coral,
+                            () => _confirmDelete(ref, title)),
+                      ],
+                    )
+                  else
+                    const SizedBox.shrink(),
                 ],
               ),
               const SizedBox(height: 14),
@@ -536,6 +608,8 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
                       bg: _severityTint(severity)),
                 ],
               ),
+              // ✅ BEFORE / AFTER — visible once a fix photo has been attached.
+              if (fixedUrl.isNotEmpty) _beforeAfter(beforeUrl, fixedUrl),
               const SizedBox(height: 14),
               _metaRow(
                 leading:
@@ -582,6 +656,60 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
           child: _closeOutDock(status),
         ),
       ],
+    );
+  }
+
+  // ✅ Before/after proof strip — two labelled tiles side by side.
+  Widget _beforeAfter(String beforeUrl, String afterUrl) {
+    Widget tile(String url, String label, Color labelColor, IconData ph) {
+      return Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label,
+                style: TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 11,
+                    letterSpacing: 0.6,
+                    fontWeight: FontWeight.w800,
+                    color: labelColor)),
+            const SizedBox(height: 7),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(_radius),
+              child: Container(
+                height: 110,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: _surface,
+                  borderRadius: BorderRadius.circular(_radius),
+                  border: Border.all(color: _hairlineOnSurface),
+                ),
+                child: url.isEmpty
+                    ? Center(child: Icon(ph, color: _faint, size: 22))
+                    : Image.network(
+                        url,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Center(
+                            child: Icon(Icons.broken_image_outlined,
+                                color: _faint, size: 22)),
+                      ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 18),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          tile(beforeUrl, 'BEFORE', _inkMute, Icons.photo_camera_outlined),
+          const SizedBox(width: 10),
+          tile(afterUrl, 'AFTER · FIX', _green, Icons.verified_outlined),
+        ],
+      ),
     );
   }
 
@@ -1103,50 +1231,165 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
         ),
       );
 
-  Future<void> _confirmDelete(DocumentReference ref) async {
+  // =========================================================
+  // Delete — shared "delete warning" dialog (ported from
+  // DocumentUploadPageView: centred card, clay badge, 22-radius,
+  // filled clay confirm + outlined cancel, 55%-black scrim).
+  // =========================================================
+  Future<void> _confirmDelete(DocumentReference ref, String title) async {
+    FocusScope.of(context).unfocus();
+    await _showDeleteDialog(
+      icon: Icons.delete_rounded,
+      title: 'Delete this snag?',
+      message: '“$title” will be permanently removed. This can’t be undone.',
+      confirmLabel: 'Delete snag',
+      onConfirm: () => _deleteSnag(ref),
+    );
+  }
+
+  Future<void> _deleteSnag(DocumentReference ref) async {
+    try {
+      await ref.delete();
+      if (!mounted) return;
+      _toast('Snag deleted.'); // ✅ delete snackbar
+      _handleBack();
+    } catch (e) {
+      debugPrint('🔥 Delete snag failed: $e');
+      if (mounted) _toast('Could not delete. Please try again.');
+    }
+  }
+
+  // Centred destructive confirm dialog — shared "delete warning" module.
+  Future<void> _showDeleteDialog({
+    required String title,
+    required String message,
+    required String confirmLabel,
+    required IconData icon,
+    required Future<void> Function() onConfirm,
+  }) async {
     await showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: _paper,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: _hairline, width: 1),
-        ),
-        title: const Text('Delete snag?',
-            style: TextStyle(
-                fontFamily: _displayFont,
-                color: _ink,
-                fontWeight: FontWeight.w900)),
-        content: const Text('This permanently removes the snag.',
-            style: TextStyle(
-                fontFamily: _bodyFont, color: _inkMute, fontSize: 13)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel',
-                style: TextStyle(
+      barrierColor: Colors.black.withOpacity(0.55),
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 34),
+          child: Container(
+            width: 322,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _paper,
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.30),
+                  blurRadius: 54,
+                  offset: const Offset(0, 22),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 62,
+                  height: 62,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: _coral.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                    border:
+                        Border.all(color: _coral.withOpacity(0.22), width: 1),
+                  ),
+                  child: Icon(icon, color: _coral, size: 30),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontFamily: _displayFont,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.4,
+                    fontSize: 18,
+                    color: _ink,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
                     fontFamily: _bodyFont,
+                    fontWeight: FontWeight.w500,
+                    height: 1.5,
+                    fontSize: 14,
                     color: _inkMute,
-                    fontWeight: FontWeight.w800)),
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      await onConfirm();
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _coral,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        confirmLabel,
+                        style: const TextStyle(
+                          fontFamily: _bodyFont,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: _paper,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => Navigator.pop(ctx),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _paper,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: const Color(0xFFCDD6E2), width: 1.4),
+                      ),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: _ink,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(ctx).pop();
-              try {
-                await ref.delete();
-                if (mounted) _handleBack();
-              } catch (e) {
-                _toast('Could not delete.');
-              }
-            },
-            child: const Text('Delete',
-                style: TextStyle(
-                    fontFamily: _bodyFont,
-                    color: _coral,
-                    fontWeight: FontWeight.w900)),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 

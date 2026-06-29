@@ -12,8 +12,19 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+// ─────────────────────────────────────────────────────────────────────
+// NOTE: The Snag List itself is unchanged — it has no inline status toggle,
+// so the To-Do "snackbar on quick action" change has no equivalent here.
+// All behavioural changes (working Edit, ownership-gated Edit/Delete, the
+// shared delete-warning dialog, update/close/delete snackbars, the
+// before/after proof view) live on DetailSnagPageView + AddSnagPageView.
+// Pass the Detail page's new `editSnagRouteName` to your Add/Edit Snag route.
+// ─────────────────────────────────────────────────────────────────────
 
 class SnagListPageView extends StatefulWidget {
   const SnagListPageView({
@@ -39,11 +50,6 @@ class SnagListPageView extends StatefulWidget {
 class _SnagListPageViewState extends State<SnagListPageView>
     with SingleTickerProviderStateMixin {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  // Synced with ToDoListPageView / DetailTaskPageView (DS slate system).
-  // Lime is retired: tints fall back to neutral surface; "live/attention"
-  // is carried by clay, and in-progress/info by green.
-  //
-  // Neutrals
   static const Color _ink = Color(0xFF323F4D);
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _faint = Color(0xFF93A0B0);
@@ -51,16 +57,13 @@ class _SnagListPageViewState extends State<SnagListPageView>
   static const Color _surface = Color(0xFFEEF1F4);
   static const Color _hairline = Color(0xFFEEF1F2);
   static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
-  // Brand accent
   static const Color _teal = Color(0xFF323F4D);
   static const Color _tealTint =
       Color(0xFFEEF1F4); // DS: lime tint → neutral surface
-  // Status
   static const Color _live =
       Color(0xFFCC4B3C); // DS: lime → clay (high / attention)
   static const Color _green = Color(0xFF1F8A5B); // DS: in-progress / info
   static const Color _coral = Color(0xFFCC4B3C); // destructive / error (clay)
-  // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
   static const String _monoFont = 'Inter';

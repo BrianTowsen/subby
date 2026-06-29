@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -22,6 +24,18 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
+
+// ─────────────────────────────────────────────────────────────────────
+// UPDATE (this revision): this screen now doubles as the EDIT screen.
+//   • If a `taskRef` query-param is supplied (DetailTaskPageView's Edit
+//     button passes it), the form loads that task, prefills every field,
+//     re-titles to "Edit Task" / "Save Changes", and _save() UPDATES the
+//     existing doc (status, createdBy and createdAt are preserved) instead
+//     of creating a new one.
+//   • Saving an edit shows the "Task updated." snackbar; a new task shows
+//     "Task added.".
+//   • No taskRef → behaves exactly as the original Add Task screen.
+// ─────────────────────────────────────────────────────────────────────
 
 class AddTaskPageView extends StatefulWidget {
   const AddTaskPageView({
@@ -74,6 +88,10 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
   DocumentReference? _projectRef;
   bool _resolved = false;
 
+  // ✅ Edit mode: when set, _save() updates this doc instead of creating one.
+  DocumentReference? _editingRef;
+  bool get _isEditing => _editingRef != null;
+
   String _priority = 'med'; // 'low' | 'med' | 'high'
   DateTime? _dueDate;
 
@@ -100,6 +118,15 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
     super.didChangeDependencies();
     if (_resolved) return;
     _resolved = true;
+
+    // ✅ Edit path: a taskRef means "edit this existing task".
+    final taskRef = _readRefFromRoute('taskRef', 'tasks');
+    if (taskRef != null) {
+      _editingRef = taskRef;
+      _loadTaskForEdit(taskRef);
+      return;
+    }
+
     _projectRef = _readRefFromRoute('projectRef', 'projects');
     if (_projectRef == null) _loadActiveProject();
   }
@@ -135,6 +162,48 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
     final path = (prefs.getString(_kActiveProjectPath) ?? '').trim();
     if (path.isEmpty || !mounted) return;
     setState(() => _projectRef = FirebaseFirestore.instance.doc(path));
+  }
+
+  // ✅ Pull the existing task and prefill the whole form.
+  Future<void> _loadTaskForEdit(DocumentReference ref) async {
+    try {
+      final snap = await ref.get();
+      final data = (snap.data() as Map<String, dynamic>? ?? {});
+
+      _projectRef = data['projectRef'] as DocumentReference?;
+      if (_projectRef == null) await _loadActiveProject();
+
+      _titleCtrl.text = (data['title'] ?? '').toString();
+      _descCtrl.text = (data['description'] ?? '').toString();
+      _priority = (data['priority'] ?? 'med').toString();
+
+      final due = data['dueDate'];
+      if (due is Timestamp) _dueDate = due.toDate();
+
+      final rawCl = data['checklist'];
+      if (rawCl is List) {
+        _checklist
+          ..clear()
+          ..addAll(
+              rawCl.whereType<Map>().map((e) => Map<String, dynamic>.from(e)));
+      }
+
+      final rawAtt = data['attachments'];
+      if (rawAtt is List) {
+        _attachments
+          ..clear()
+          ..addAll(
+              rawAtt.whereType<Map>().map((e) => Map<String, dynamic>.from(e)));
+      }
+
+      _listingRef = data['assignedListingRef'] as DocumentReference?;
+      _listingName = (data['assignedListingName'] ?? '').toString();
+
+      if (mounted) setState(() {});
+    } catch (e) {
+      debugPrint('🔥 Load task for edit failed: $e');
+      if (mounted) _toast('Could not load this task.');
+    }
   }
 
   void _handleBack() {
@@ -952,12 +1021,12 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
   }
 
   // =========================================================
-  // Save
+  // Save (create OR update when editing)
   // =========================================================
   Future<void> _save() async {
     if (_saving || _uploading) return;
     final projectRef = _projectRef;
-    if (projectRef == null) {
+    if (projectRef == null && !_isEditing) {
       _toast('No project selected.');
       return;
     }
@@ -966,6 +1035,28 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
     setState(() => _saving = true);
     try {
       final now = Timestamp.now();
+
+      if (_isEditing) {
+        // ✅ UPDATE existing task — preserve status / createdBy / createdAt.
+        await _editingRef!.update(<String, dynamic>{
+          'title': _titleCtrl.text.trim(),
+          'description': _descCtrl.text.trim(),
+          'priority': _priority,
+          'dueDate': _dueDate == null ? null : Timestamp.fromDate(_dueDate!),
+          'checklist': _checklist,
+          'attachments': _attachments,
+          'assignedListingRef': _listingRef,
+          'assignedListingName': _listingName,
+          'updatedAt': now,
+        });
+
+        if (!mounted) return;
+        _toast('Task updated.');
+        _handleBack();
+        return;
+      }
+
+      // CREATE new task (original behaviour).
       final docRef = FirebaseFirestore.instance.collection('tasks').doc();
       await docRef.set(<String, dynamic>{
         'projectRef': projectRef,
@@ -989,7 +1080,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
       _toast('Task added.');
       _handleBack();
     } catch (e) {
-      debugPrint('🔥 Add task failed: $e');
+      debugPrint('🔥 Save task failed: $e');
       if (mounted) _toast('Could not save. Please try again.');
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -1012,6 +1103,14 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
 
   @override
   Widget build(BuildContext context) {
+    final headerTitle = _isEditing ? 'Edit Task' : 'Add Task';
+    final headerSubtitle = _isEditing
+        ? 'Update the details and save your changes'
+        : 'Plan work, set a due date and assign it';
+    final ctaLabel =
+        _saving ? 'Saving…' : (_isEditing ? 'Save Changes' : 'Add Task');
+    final ctaIcon = _isEditing ? Icons.check_rounded : Icons.add_rounded;
+
     return Container(
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
@@ -1031,8 +1130,8 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                   children: [
                     _minBack(),
                     const SizedBox(height: 16),
-                    const Text('Add Task',
-                        style: TextStyle(
+                    Text(headerTitle,
+                        style: const TextStyle(
                             fontFamily: _displayFont,
                             color: _ink,
                             fontWeight: FontWeight.w900,
@@ -1040,8 +1139,8 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                             height: 1.05,
                             letterSpacing: -0.5)),
                     const SizedBox(height: 8),
-                    const Text('Plan work, set a due date and assign it',
-                        style: TextStyle(
+                    Text(headerSubtitle,
+                        style: const TextStyle(
                             fontFamily: _bodyFont,
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
@@ -1068,7 +1167,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                     _assignRow(
                       label: 'Assign to team member',
                       isPerson: false,
-                      has: _listingRef != null,
+                      has: _listingRef != null || _listingName.isNotEmpty,
                       name: _listingName,
                       subtitle: _listingSubtitle,
                       onTap: () => _pickAssignee(isPerson: false),
@@ -1109,10 +1208,9 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                                       AlwaysStoppedAnimation<Color>(_paper)),
                             )
                           else
-                            const Icon(Icons.add_rounded,
-                                color: _paper, size: 20),
+                            Icon(ctaIcon, color: _paper, size: 20),
                           const SizedBox(width: 9),
-                          Text(_saving ? 'Saving…' : 'Add Task',
+                          Text(ctaLabel,
                               style: const TextStyle(
                                   fontFamily: _bodyFont,
                                   color: _paper,
