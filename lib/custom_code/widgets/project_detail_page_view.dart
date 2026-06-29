@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -1181,7 +1183,6 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             bg: const Color(0xFF166341),
             border: const Color(0xFF166341),
             labelColor: _paper,
-            shadow: true,
           ),
         ),
         const SizedBox(width: 10),
@@ -2302,7 +2303,6 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             bg: const Color(0xFF166341),
             border: const Color(0xFF166341),
             labelColor: _paper,
-            shadow: true,
           ),
         ),
         const SizedBox(width: 10),
@@ -2730,8 +2730,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
           ],
         ),
         const SizedBox(height: 4),
-        _sectionDescription(theme,
-            'Auto-logged updates from your project team — newest first.'),
+        _sectionDescription(theme, 'Auto-logged updates — newest first.'),
         if (_feedOpen) _projectFeedBody(theme),
       ],
     );

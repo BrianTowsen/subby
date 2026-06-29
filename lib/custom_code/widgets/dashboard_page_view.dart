@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -541,6 +543,21 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         t.contains('delay');
   }
 
+  // Activity-line attention — a snag/attention feed summary paints the card's
+  // activity line clay (attention) instead of the default green; routine
+  // updates (timeline, quotes, docs…) stay green.
+  bool _activityNeedsAttention(Map<String, dynamic> data) {
+    final s = (data['lastActivity'] as String?)?.trim().toLowerCase() ?? '';
+    return s.contains('snag') ||
+        s.contains('attention') ||
+        s.contains('overdue') ||
+        s.contains('block') ||
+        s.contains('delay');
+  }
+
+  Color _activityColor(Map<String, dynamic> data) =>
+      _activityNeedsAttention(data) ? _orange : _yellow;
+
   String _capitalize(String s) =>
       s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 
@@ -743,12 +760,26 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         }
 
         if (shared.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(_hPad, 18, _hPad, 0),
-            child: _buildEmptyState(),
+          // Empty state — but archived builds remain visible if any exist.
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(_hPad, 18, _hPad, 0),
+                child: _buildEmptyState(),
+              ),
+              _buildArchivedSection(),
+            ],
           );
         }
-        return _buildSharedPrimary(shared);
+        // Shared-primary layout — also keep the archived section below it.
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSharedPrimary(shared),
+            _buildArchivedSection(),
+          ],
+        );
       },
     );
   }
@@ -940,13 +971,14 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  const Icon(Icons.bolt, size: 15, color: _yellow),
+                  Icon(Icons.bolt, size: 15, color: _activityColor(data)),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(act,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: _heroActivityStyle),
+                        style: _heroActivityStyle.copyWith(
+                            color: _activityColor(data))),
                   ),
                 ],
               ),
@@ -1032,15 +1064,17 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                               Container(
                                 width: 6,
                                 height: 6,
-                                decoration: const BoxDecoration(
-                                    color: _yellow, shape: BoxShape.circle),
+                                decoration: BoxDecoration(
+                                    color: _activityColor(data),
+                                    shape: BoxShape.circle),
                               ),
                               const SizedBox(width: 5),
                               Expanded(
                                 child: Text(act,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: _rowActivityStyle),
+                                    style: _rowActivityStyle.copyWith(
+                                        color: _activityColor(data))),
                               ),
                             ],
                           ),
@@ -1450,15 +1484,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         color: bg,
         borderRadius: BorderRadius.circular(11),
         border: attention ? Border.all(color: const Color(0xFFE2E7EE)) : null,
-        boxShadow: dark
-            ? [
-                BoxShadow(
-                  color: _yellow.withOpacity(0.30),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
-                ),
-              ]
-            : null,
+        boxShadow: null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1560,13 +1586,14 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  const Icon(Icons.bolt, size: 15, color: _yellow),
+                  Icon(Icons.bolt, size: 15, color: _activityColor(data)),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(act,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: _heroActivityStyle),
+                        style: _heroActivityStyle.copyWith(
+                            color: _activityColor(data))),
                   ),
                 ],
               ),
@@ -1681,15 +1708,17 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                               Container(
                                 width: 6,
                                 height: 6,
-                                decoration: const BoxDecoration(
-                                    color: _yellow, shape: BoxShape.circle),
+                                decoration: BoxDecoration(
+                                    color: _activityColor(data),
+                                    shape: BoxShape.circle),
                               ),
                               const SizedBox(width: 5),
                               Expanded(
                                 child: Text(act,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: _rowActivityStyle),
+                                    style: _rowActivityStyle.copyWith(
+                                        color: _activityColor(data))),
                               ),
                             ],
                           ),
