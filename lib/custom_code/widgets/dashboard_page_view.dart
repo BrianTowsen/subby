@@ -21,6 +21,8 @@ import 'index.dart'; // Imports other custom widgets
 import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
+
+import 'index.dart'; // Imports other custom widgets
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 import 'index.dart'; // Imports other custom widgets
@@ -1452,7 +1454,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     // On track     → YELLOW fill (white text).
     // Needs you    → surface fill, teal (amber) number.
     final Color bg = dark ? _yellow : (attention ? _surface : _teal);
-    final Color numColor = attention ? _teal : _paper;
+    final Color numColor = attention ? const Color(0xFFCC4B3C) : _paper;
     final Color labelColor =
         attention ? _inkMute : Colors.white.withOpacity(0.85);
 

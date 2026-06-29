@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -51,9 +53,13 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
   static const Color _hairline = Color(0xFFEEF1F2);
   static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
   static const Color _teal = Color(0xFF323F4D);
-  static const Color _tealTint = Color(0xFFEEF7D6);
-  static const Color _live = Color(0xFFC7E87A);
+  static const Color _tealTint =
+      Color(0xFFEEF1F4); // DS: lime tint → neutral surface
+  static const Color _live =
+      Color(0xFFCC4B3C); // DS: lime → clay (high/attention)
   static const Color _navy = Color(0xFF323F4D);
+  static const Color _green =
+      Color(0xFF1F8A5B); // DS: to-do / in-progress / info
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
   // ────────────────────────────────────────────────────────────────────
@@ -166,7 +172,7 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
   Color _priorityColor(String s) =>
       s == 'high' ? _live : (s == 'low' ? _faint : _teal);
   Color _priorityTint(String s) => s == 'high'
-      ? const Color(0x33C7E87A)
+      ? const Color(0x33CC4B3C)
       : (s == 'low' ? _surface : _tealTint);
 
   Widget _softPill(String text,
@@ -322,7 +328,7 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
       children: [
         pill('To Do', 'todo', Icons.radio_button_unchecked, _ink, _tealTint),
         pill('In Progress', 'in_progress', Icons.play_arrow_rounded, _paper,
-            _teal),
+            _green),
         pill('Done', 'done', Icons.check_circle, _faint, _surface),
       ],
     );
@@ -486,7 +492,7 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
           }
         }
 
-        section('Overdue', _live, const Color(0x33C7E87A), overdue);
+        section('Overdue', _live, const Color(0x33CC4B3C), overdue);
         section('Due Today', _teal, _tealTint, today);
         section('Upcoming', _faint, _surface, upcoming);
 

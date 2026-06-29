@@ -28,6 +28,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -142,7 +144,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       Color(0xFFCC4B3C); // clay — live / open-now / warning
   static const Color _coral = Color(0xFFCC4B3C);
   // Info / feed accent — true teal (matches the Dashboard activity signals)
-  static const Color _infoTeal = Color(0xFFFBB12A);
+  static const Color _infoTeal =
+      Color(0xFFCC4B3C); // DS: snags/needs-you = clay
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';

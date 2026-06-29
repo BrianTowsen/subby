@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -57,6 +59,10 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
   static const Color _faint = Color(0xFF93A0B0); // meta
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
+  static const Color _orange =
+      Color(0xFFEB7A02); // DS: leading icons / active bookmark
+  static const Color _green = Color(0xFF1F8A5B); // DS: verified / info
+  static const Color _gold = Color(0xFFFBB12A); // DS: rating stars
   static const Color _hairline = Color(0xFFEEF1F2);
   static const Color _rule = Color(0xFFE2E7EE);
   static const String _displayFont = 'Inter Tight';
@@ -651,7 +657,7 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                             child: Row(
                               children: [
                                 const Icon(Icons.sort_rounded,
-                                    size: 19, color: _amber),
+                                    size: 19, color: _orange),
                                 const SizedBox(width: 10),
                                 Text(_sortBy,
                                     style: const TextStyle(
@@ -669,7 +675,7 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                             child: Row(
                               children: [
                                 const Icon(Icons.tune_rounded,
-                                    size: 19, color: _amber),
+                                    size: 19, color: _orange),
                                 const SizedBox(width: 8),
                                 const Text('Filters',
                                     style: TextStyle(
@@ -865,7 +871,7 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                       if (isVerified) ...[
                         const SizedBox(width: 6),
                         const Icon(Icons.verified_rounded,
-                            size: 15, color: _amber),
+                            size: 15, color: _green),
                       ],
                     ],
                   ),
@@ -896,7 +902,7 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
             ),
             const SizedBox(width: 10),
             if (rating > 0) ...[
-              const Icon(Icons.star_rounded, size: 16, color: _amber),
+              const Icon(Icons.star_rounded, size: 16, color: _gold),
               const SizedBox(width: 3),
               Text(rating.toStringAsFixed(1),
                   style: const TextStyle(

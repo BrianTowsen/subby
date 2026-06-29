@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -38,6 +40,10 @@ class _ExplorePageViewState extends State<ExplorePageView> {
   static const Color _faint = Color(0xFF93A0B0); // subtitles / meta
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
+  static const Color _orange =
+      Color(0xFFEB7A02); // DS: leading icons / active bookmark
+  static const Color _green = Color(0xFF1F8A5B); // DS: verified / info
+  static const Color _gold = Color(0xFFFBB12A); // DS: rating stars
   static const Color _hairline = Color(0xFFEEF1F2);
   static const Color _rule = Color(0xFFE2E7EE);
   static const String _displayFont = 'Inter Tight';
@@ -635,7 +641,7 @@ class _ExplorePageViewState extends State<ExplorePageView> {
                               Row(
                                 children: [
                                   const Icon(Icons.search,
-                                      size: 19, color: _amber),
+                                      size: 19, color: _orange),
                                   const SizedBox(width: 10),
                                   Expanded(
                                     child: TextField(
@@ -899,7 +905,7 @@ class _ExplorePageViewState extends State<ExplorePageView> {
             ),
             const SizedBox(width: 10),
             if (rating != null) ...[
-              const Icon(Icons.star_rounded, size: 16, color: _amber),
+              const Icon(Icons.star_rounded, size: 16, color: _gold),
               const SizedBox(width: 3),
               Text(rating.toStringAsFixed(1),
                   style: const TextStyle(
@@ -918,7 +924,7 @@ class _ExplorePageViewState extends State<ExplorePageView> {
                     ? Icons.bookmark_rounded
                     : Icons.bookmark_border_rounded,
                 size: 20,
-                color: isSaved ? _amber : _faint,
+                color: isSaved ? _orange : _faint,
               ),
             ),
           ],
@@ -949,7 +955,7 @@ class _ExplorePageViewState extends State<ExplorePageView> {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Icon(icon, size: 19, color: _amber),
+                  Icon(icon, size: 19, color: _orange),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(empty ? hint : value,
