@@ -12,12 +12,6 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/auth/firebase_auth/auth_util.dart';
@@ -119,7 +113,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
   }
 
   // =========================================================
-  // READ RECEIPT — stamp when the assigned listing's owner opens this task.
+  // READ RECEIPT — stamp when the assigned team member's owner opens this task.
   // =========================================================
   Future<void> _maybeStampReadReceipt() async {
     if (_stampChecked) return;
@@ -179,12 +173,12 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
   Color _statusColor(String s) {
     switch (s) {
       case 'in_progress':
-        return _paper; // white on solid cobalt
+        return _paper; // white on solid green
       case 'done':
         return _faint;
       case 'todo':
       default:
-        return _ink; // cobalt
+        return _ink;
     }
   }
 
@@ -196,7 +190,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
         return _surface;
       case 'todo':
       default:
-        return _tealTint; // cobalt @ light
+        return _tealTint; // neutral surface
     }
   }
 
@@ -583,7 +577,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
                 trailingLabel: _dueHint(due, status),
                 trailingColor: _dueColor(due, status),
               ),
-              // Listing + read receipt
+              // Team member + read receipt
               if (listingName.trim().isNotEmpty)
                 _assignedListingRow(listingName, readAt),
               // Checklist
@@ -809,7 +803,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
               ],
             ),
           ),
-          const Text('Listing',
+          const Text('Team member',
               style: TextStyle(
                   fontFamily: _bodyFont,
                   fontSize: 11.5,

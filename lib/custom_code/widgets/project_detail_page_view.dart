@@ -10,26 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -124,13 +104,13 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   static const Color _sparkInk = Color(0xFFFFFFFF);
   static const Color _teal = Color(0xFF39454B);
   static const Color _tealBright =
-      Color(0xFFEB7A02); // icon on ink chips (sage)
+      Color(0xFF166341); // icon on ink chips (sage)
   static const Color _tealTint =
-      Color(0xFFFBF2C2); // pill / chip fill (sage tint)
+      Color(0xFFE7F3EC); // pill / chip fill (sage tint)
   static const Color _tealText = Color(0xFF39454B); // pill text
   static const Color _tealSurface =
-      Color(0xFFFBF2C2); // tinted module card (sage)
-  static const Color _tealSurfaceBorder = Color(0xFFEFDE93);
+      Color(0xFFE7F3EC); // tinted module card (sage)
+  static const Color _tealSurfaceBorder = Color(0xFFC9E4D6);
   // Snag identity — Persimmon (snags own this inside a teal project)
   static const Color _persimmon = Color(0xFFCC4B3C);
   static const Color _persimmonSurface = Color(0xFFF3E7E2);
@@ -1066,7 +1046,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 10),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEB7A02),
+                            color: const Color(0xFF166341),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
@@ -1198,8 +1178,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             value: days,
             label: 'Days left',
             valueColor: _paper,
-            bg: const Color(0xFFEB7A02),
-            border: const Color(0xFFEB7A02),
+            bg: const Color(0xFF166341),
+            border: const Color(0xFF166341),
             labelColor: _paper,
             shadow: true,
           ),
@@ -1211,8 +1191,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             value: budget,
             label: 'Budget',
             valueColor: _paper,
-            bg: const Color(0xFFFBB12A),
-            border: const Color(0xFFFBB12A),
+            bg: const Color(0xFF1F8A5B),
+            border: const Color(0xFF1F8A5B),
             labelColor: _paper,
           ),
         ),
@@ -1249,7 +1229,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         boxShadow: shadow
             ? [
                 BoxShadow(
-                  color: const Color(0xFFEB7A02).withOpacity(0.30),
+                  color: const Color(0xFF166341).withOpacity(0.30),
                   blurRadius: 16,
                   offset: const Offset(0, 6),
                 ),
@@ -2319,8 +2299,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             value: days,
             label: 'Days left',
             valueColor: _paper,
-            bg: const Color(0xFFEB7A02),
-            border: const Color(0xFFEB7A02),
+            bg: const Color(0xFF166341),
+            border: const Color(0xFF166341),
             labelColor: _paper,
             shadow: true,
           ),
@@ -2332,8 +2312,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             value: snags,
             label: 'Open snags',
             valueColor: _paper,
-            bg: const Color(0xFFFBB12A),
-            border: const Color(0xFFFBB12A),
+            bg: const Color(0xFF1F8A5B),
+            border: const Color(0xFF1F8A5B),
             labelColor: _paper,
           ),
         ),
@@ -2673,7 +2653,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 11, vertical: 7),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEB7A02),
+                        color: const Color(0xFF166341),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(
@@ -2730,18 +2710,18 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: const Color(0xFFEB7A02).withOpacity(0.12),
+                color: const Color(0xFF166341).withOpacity(0.12),
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.bolt, size: 14, color: Color(0xFFEB7A02)),
+                  const Icon(Icons.bolt, size: 14, color: Color(0xFF166341)),
                   const SizedBox(width: 5),
                   Text('$todayCount today',
                       style: theme.labelSmall.override(
                         fontFamily: _bodyFont,
-                        color: const Color(0xFFEB7A02),
+                        color: const Color(0xFF166341),
                         fontWeight: FontWeight.w900,
                       )),
                 ],

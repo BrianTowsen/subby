@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -859,7 +861,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: visibility == 'shared'
-                        ? const Color(0xFFFBF2C2)
+                        ? const Color(0xFFE7F3EC)
                         : _surface,
                     borderRadius: BorderRadius.circular(999),
                   ),

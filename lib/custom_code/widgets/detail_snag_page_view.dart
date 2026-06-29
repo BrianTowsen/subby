@@ -39,6 +39,8 @@ class DetailSnagPageView extends StatefulWidget {
 
 class _DetailSnagPageViewState extends State<DetailSnagPageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // Synced with ToDoListPageView / DetailTaskPageView (DS slate system).
+  // Lime retired: tints → neutral surface, attention → clay, info → green.
   static const Color _ink = Color(0xFF323F4D);
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _faint = Color(0xFF93A0B0);
@@ -47,9 +49,12 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
   static const Color _hairline = Color(0xFFEEF1F2);
   static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
   static const Color _teal = Color(0xFF323F4D);
-  static const Color _tealTint = Color(0xFFF3FAE6);
-  static const Color _live = Color(0xFF323F4D);
-  static const Color _coral = Color(0xFFCA2E55);
+  static const Color _tealTint =
+      Color(0xFFEEF1F4); // DS: lime tint → neutral surface
+  static const Color _live =
+      Color(0xFFCC4B3C); // DS: lime → clay (high / attention)
+  static const Color _green = Color(0xFF1F8A5B); // DS: in-progress / info
+  static const Color _coral = Color(0xFFCC4B3C);
   static const Color _navy = Color(0xFF323F4D);
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -69,6 +74,12 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
 
   bool _stampChecked = false; // read-receipt stamped at most once per open
   bool _working = false;
+
+  // ── CLOSE-OUT GATE ──
+  // A proof-of-fix photo is MANDATORY before a snag can move to "closed".
+  String? _fixedPhotoUrl;
+  String? _fixedPhotoStoragePath;
+  bool _uploadingFixed = false;
 
   @override
   void didChangeDependencies() {
@@ -125,7 +136,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
   }
 
   // =========================================================
-  // READ RECEIPT — stamp when the ASSIGNED LISTING's owner opens this snag.
+  // READ RECEIPT — stamp when the ASSIGNED team member's owner opens this snag.
   // =========================================================
   Future<void> _maybeStampReadReceipt() async {
     if (_stampChecked) return;
@@ -186,24 +197,24 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
   Color _statusColor(String s) {
     switch (s) {
       case 'in_progress':
-        return _paper; // white on solid persimmon
+        return _paper; // white on solid green
       case 'closed':
         return _faint; // done — neutral
       case 'open':
       default:
-        return _ink; // persimmon
+        return _ink;
     }
   }
 
   Color _statusTint(String s) {
     switch (s) {
       case 'in_progress':
-        return _ink; // solid persimmon fill
+        return _green; // solid green fill
       case 'closed':
         return _surface;
       case 'open':
       default:
-        return _tealTint; // persimmon @ light
+        return _tealTint; // neutral surface
     }
   }
 
@@ -219,8 +230,11 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
     }
   }
 
-  Color _severityColor(String s) => s == 'minor' ? _faint : _ink;
-  Color _severityTint(String s) => s == 'minor' ? _surface : _tealTint;
+  // Critical = clay; major = ink; minor = faint.
+  Color _severityColor(String s) =>
+      s == 'critical' ? _live : (s == 'minor' ? _faint : _ink);
+  Color _severityTint(String s) =>
+      s == 'critical' ? const Color(0x29CC4B3C) : _surface;
 
   Widget _softPill(String text, {required Color fg, required Color bg}) {
     return Container(
@@ -267,9 +281,11 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
     }
   }
 
-  Future<void> _pickProofAndClose() async {
+  // ── Pick + upload the proof-of-fix photo. Does NOT close on its own —
+  //    it arms the gate so "Mark as Fixed" can run.
+  Future<void> _pickFixedPhoto() async {
     final ref = _snagRef;
-    if (ref == null || _working) return;
+    if (ref == null || _uploadingFixed || _working) return;
 
     try {
       final result = await FilePicker.platform.pickFiles(
@@ -277,10 +293,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
         allowMultiple: false,
         withData: true,
       );
-      if (result == null || result.files.isEmpty) {
-        _toast('Add a "fixed" photo to close this snag.');
-        return;
-      }
+      if (result == null || result.files.isEmpty) return;
       final f = result.files.first;
       final Uint8List? bytes = f.bytes;
       if (bytes == null || bytes.isEmpty) {
@@ -288,7 +301,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
         return;
       }
 
-      setState(() => _working = true);
+      setState(() => _uploadingFixed = true);
 
       final fileName = p.basename(f.name.isNotEmpty ? f.name : 'fixed.jpg');
       final safeName = fileName.replaceAll(RegExp(r'[^\w\.\- ]+'), '_');
@@ -301,15 +314,37 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
       await sref.putData(bytes, SettableMetadata(contentType: contentType));
       final url = await sref.getDownloadURL();
 
+      if (!mounted) return;
+      setState(() {
+        _fixedPhotoUrl = url;
+        _fixedPhotoStoragePath = storagePath;
+      });
+    } catch (e) {
+      debugPrint('🔥 Fixed-photo upload failed: $e');
+      _toast('Could not upload. Please try again.');
+    } finally {
+      if (mounted) setState(() => _uploadingFixed = false);
+    }
+  }
+
+  // ── Close-out is GATED on the fixed photo. ──
+  Future<void> _closeWithFixedPhoto() async {
+    final ref = _snagRef;
+    if (ref == null || _working) return;
+    if (_fixedPhotoUrl == null) {
+      _toast('Add a fixed photo to close this snag out.');
+      return;
+    }
+    setState(() => _working = true);
+    try {
       await ref.update(<String, dynamic>{
         'status': 'closed',
-        'fixedPhotoUrl': url,
-        'fixedPhotoStoragePath': storagePath,
+        'fixedPhotoUrl': _fixedPhotoUrl,
+        'fixedPhotoStoragePath': _fixedPhotoStoragePath,
         'closedAt': FieldValue.serverTimestamp(),
         'closedBy': currentUserReference,
         'updatedAt': FieldValue.serverTimestamp(),
       });
-
       if (mounted) _toast('Snag closed out.');
     } catch (e) {
       debugPrint('🔥 Proof upload / close failed: $e');
@@ -461,7 +496,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
       children: [
         SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(_hPad, 6, _hPad, 150),
+          padding: const EdgeInsets.fromLTRB(_hPad, 6, _hPad, 230),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -737,7 +772,8 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
                         fontSize: 12,
                         fontWeight: FontWeight.w800,
                         color: _ink))
-                : const Icon(Icons.handyman_outlined, size: 17, color: _faint),
+                : const Icon(Icons.person_outline_rounded,
+                    size: 17, color: _faint),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -753,7 +789,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
                         fontWeight: FontWeight.w700,
                         color: _navy)),
                 const SizedBox(height: 2),
-                Text(has ? 'Assigned listing' : 'Assign from the form',
+                Text(has ? 'Team member' : 'Assign from the form',
                     style: const TextStyle(
                         fontFamily: _bodyFont,
                         fontSize: 11.5,
@@ -765,7 +801,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
                   Row(
                     children: [
                       const Icon(Icons.done_all_rounded,
-                          size: 14, color: _teal),
+                          size: 14, color: _green),
                       const SizedBox(width: 5),
                       Text(
                         'Read ${dateTimeFormat('d MMM · HH:mm', readAt)}',
@@ -773,7 +809,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
                             fontFamily: _bodyFont,
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: _teal),
+                            color: _green),
                       ),
                     ],
                   ),
@@ -805,6 +841,8 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
 
   // ---- Close-out dock ----
   Widget _closeOutDock(String status) {
+    final inProgress = status == 'in_progress';
+    final gated = inProgress && _fixedPhotoUrl == null;
     return Container(
       decoration: const BoxDecoration(
         color: _paper,
@@ -817,19 +855,105 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
           mainAxisSize: MainAxisSize.min,
           children: [
             _stepper(status),
+            if (inProgress) ...[
+              const SizedBox(height: 14),
+              _fixedPhotoRequirement(),
+            ],
             const SizedBox(height: 12),
             _primaryAction(status),
-            if (status == 'in_progress') ...[
+            if (gated) ...[
               const SizedBox(height: 8),
-              const Text('Add a “fixed” photo to close this snag out',
-                  style: TextStyle(
-                      fontFamily: _bodyFont,
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w500,
-                      color: _faint)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.info_outline_rounded, size: 13, color: _faint),
+                  SizedBox(width: 5),
+                  Text('A fixed photo is required to close out',
+                      style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w600,
+                          color: _faint)),
+                ],
+              ),
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  // ── Mandatory proof-of-fix capture row. ──
+  Widget _fixedPhotoRequirement() {
+    final hasPhoto = _fixedPhotoUrl != null;
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: hasPhoto ? _surface : const Color(0x0FCC4B3C),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+            color: hasPhoto ? _hairlineOnSurface : const Color(0x59CC4B3C)),
+      ),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: _uploadingFixed ? null : _pickFixedPhoto,
+            child: Container(
+              width: 56,
+              height: 56,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: _paper,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                    color: hasPhoto ? _hairlineOnSurface : _live,
+                    width: hasPhoto ? 1 : 1.5),
+                image: hasPhoto
+                    ? DecorationImage(
+                        image: NetworkImage(_fixedPhotoUrl!), fit: BoxFit.cover)
+                    : null,
+              ),
+              child: hasPhoto
+                  ? null
+                  : (_uploadingFixed
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(_live)))
+                      : const Icon(Icons.add_a_photo_outlined,
+                          size: 20, color: _live)),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                    hasPhoto ? 'FIXED PHOTO · ADDED' : 'FIXED PHOTO · REQUIRED',
+                    style: TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 11,
+                        letterSpacing: 0.6,
+                        fontWeight: FontWeight.w800,
+                        color: hasPhoto ? _green : _live)),
+                const SizedBox(height: 3),
+                Text(
+                    hasPhoto
+                        ? 'Proof of the completed fix is attached.'
+                        : 'Add a photo of the completed fix to close this snag out.',
+                    style: const TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500,
+                        height: 1.35,
+                        color: _inkMute)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -842,13 +966,12 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
             : 0;
     Widget node(String label, int i) {
       final done = i <= idx;
-      final color = i == 0 ? _live : _teal;
       return Text(label,
           style: TextStyle(
               fontFamily: _bodyFont,
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: done ? color : const Color(0xFFC7D0DA)));
+              color: done ? _teal : const Color(0xFFC7D0DA)));
     }
 
     Widget bar(bool active) => Expanded(
@@ -865,7 +988,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
             height: 9,
             margin: const EdgeInsets.only(right: 6),
             decoration: BoxDecoration(
-                color: idx >= 0 ? _live : const Color(0xFFC7D0DA),
+                color: idx >= 0 ? _teal : const Color(0xFFC7D0DA),
                 shape: BoxShape.circle)),
         node('Open', 0),
         bar(idx >= 1),
@@ -877,32 +1000,55 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
   }
 
   Widget _primaryAction(String status) {
-    String label;
-    IconData icon;
-    VoidCallback onTap;
-    Color bg = _teal;
-
-    switch (status) {
-      case 'open':
-        label = 'Move to In Progress';
-        icon = Icons.play_arrow_rounded;
-        onTap = () => _setStatus('in_progress');
-        break;
-      case 'in_progress':
-        label = 'Mark as Fixed';
-        icon = Icons.task_alt_rounded;
-        onTap = _pickProofAndClose;
-        break;
-      case 'closed':
-      default:
-        label = 'Reopen Snag';
-        icon = Icons.replay_rounded;
-        bg = _surface;
-        onTap = () => _setStatus('open', extra: {'fixedPhotoUrl': null});
-        break;
+    // OPEN → start work.
+    if (status == 'open') {
+      return _actionButton(
+        label: 'Move to In Progress',
+        icon: Icons.play_arrow_rounded,
+        bg: _teal,
+        fg: _paper,
+        onTap: () => _setStatus('in_progress'),
+      );
     }
 
-    final isGhost = status == 'closed';
+    // IN PROGRESS → close-out, GATED on a fixed photo.
+    if (status == 'in_progress') {
+      final ready = _fixedPhotoUrl != null;
+      return _actionButton(
+        label: 'Mark as Fixed',
+        icon: ready ? Icons.task_alt_rounded : Icons.lock_outline_rounded,
+        bg: ready ? _teal : _surface,
+        fg: ready ? _paper : _faint,
+        border: ready ? null : _hairlineOnSurface,
+        onTap: ready ? _closeWithFixedPhoto : _pickFixedPhoto,
+      );
+    }
+
+    // CLOSED → reopen (clears the proof gate).
+    return _actionButton(
+      label: 'Reopen Snag',
+      icon: Icons.replay_rounded,
+      bg: _surface,
+      fg: _ink,
+      border: _hairlineOnSurface,
+      onTap: () {
+        setState(() {
+          _fixedPhotoUrl = null;
+          _fixedPhotoStoragePath = null;
+        });
+        _setStatus('open', extra: {'fixedPhotoUrl': null});
+      },
+    );
+  }
+
+  Widget _actionButton({
+    required String label,
+    required IconData icon,
+    required Color bg,
+    required Color fg,
+    required VoidCallback onTap,
+    Color? border,
+  }) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -915,7 +1061,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
             decoration: BoxDecoration(
               color: bg,
               borderRadius: BorderRadius.circular(_radius),
-              border: isGhost ? Border.all(color: _hairlineOnSurface) : null,
+              border: border != null ? Border.all(color: border) : null,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -926,18 +1072,17 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
                     height: 18,
                     child: CircularProgressIndicator(
                         strokeWidth: 2.2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                            isGhost ? _ink : _paper)),
+                        valueColor: AlwaysStoppedAnimation<Color>(fg)),
                   )
                 else
-                  Icon(icon, size: 20, color: isGhost ? _ink : _paper),
+                  Icon(icon, size: 20, color: fg),
                 const SizedBox(width: 9),
                 Text(label,
                     style: TextStyle(
                         fontFamily: _bodyFont,
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
-                        color: isGhost ? _ink : _paper)),
+                        color: fg)),
               ],
             ),
           ),

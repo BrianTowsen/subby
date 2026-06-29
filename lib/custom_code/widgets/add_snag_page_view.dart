@@ -12,10 +12,6 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -43,6 +39,8 @@ class AddSnagPageView extends StatefulWidget {
 
 class _AddSnagPageViewState extends State<AddSnagPageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // Synced with ToDoListPageView / DetailTaskPageView (DS slate system).
+  // Lime retired: tints → neutral surface, attention → clay, info → green.
   static const Color _ink = Color(0xFF323F4D);
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _faint = Color(0xFF93A0B0);
@@ -51,9 +49,12 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
   static const Color _hairline = Color(0xFFEEF1F2);
   static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
   static const Color _teal = Color(0xFF323F4D);
-  static const Color _tealTint = Color(0xFFF3FAE6);
-  static const Color _live = Color(0xFF323F4D);
-  static const Color _coral = Color(0xFFCA2E55);
+  static const Color _tealTint =
+      Color(0xFFEEF1F4); // DS: lime tint → neutral surface
+  static const Color _live =
+      Color(0xFFCC4B3C); // DS: lime → clay (high / attention)
+  static const Color _green = Color(0xFF1F8A5B); // DS: in-progress / info
+  static const Color _coral = Color(0xFFCC4B3C);
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
   // ────────────────────────────────────────────────────────────────────
@@ -78,7 +79,9 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
   // Each entry: { 'url', 'type' ('image'|'video'), 'storagePath' }
   final List<Map<String, dynamic>> _media = [];
 
-  DocumentReference? _assignedListingRef; // -> subby_listings
+  // The snag is assigned to a TEAM MEMBER on the project (a listing record).
+  DocumentReference?
+      _assignedListingRef; // -> project_listings / subby_listings
   String _assignedListingName = '';
   String _assignedListingSubtitle = '';
 
@@ -412,17 +415,23 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
     );
   }
 
+  // Severity selector. Critical = clay, Major = ink, Minor = faint.
+  Color _sevColor(String k) =>
+      k == 'critical' ? _live : (k == 'minor' ? _faint : _ink);
+
   Widget _severityField() {
     Widget pill(String key, String label) {
       final sel = _severity == key;
+      final c = _sevColor(key);
       return GestureDetector(
         onTap: () => setState(() => _severity = key),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
           decoration: BoxDecoration(
-            color: sel ? const Color(0x33C7E87A) : _surface,
+            color:
+                sel && key == 'critical' ? const Color(0x29CC4B3C) : _surface,
             borderRadius: BorderRadius.circular(999),
-            border: sel ? Border.all(color: _live, width: 1.5) : null,
+            border: sel ? Border.all(color: c, width: 1.5) : null,
           ),
           child: Text(
             label,
@@ -430,7 +439,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
               fontFamily: _bodyFont,
               fontSize: 12,
               fontWeight: sel ? FontWeight.w800 : FontWeight.w700,
-              color: sel ? _live : _faint,
+              color: sel ? c : _faint,
             ),
           ),
         ),
@@ -503,7 +512,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('ASSIGN TO LISTING', style: _uLabel()),
+            Text('ASSIGN TO TEAM MEMBER', style: _uLabel()),
             const SizedBox(height: 10),
             Row(
               children: [
@@ -524,7 +533,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                               fontWeight: FontWeight.w800,
                               color: _ink),
                         )
-                      : const Icon(Icons.handyman_outlined,
+                      : const Icon(Icons.person_outline_rounded,
                           size: 20, color: _faint),
                 ),
                 const SizedBox(width: 12),
@@ -555,7 +564,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                                     color: _faint)),
                           ],
                         )
-                      : const Text('Choose a listing added to this project',
+                      : const Text('Choose a team member on this project',
                           style: TextStyle(
                               fontFamily: _bodyFont,
                               fontSize: 14,
@@ -618,7 +627,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text('Assign to listing',
+                const Text('Assign to team member',
                     style: TextStyle(
                         fontFamily: _displayFont,
                         fontSize: 20,
@@ -653,7 +662,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                         return const Padding(
                           padding: EdgeInsets.symmetric(vertical: 18),
                           child: Text(
-                            'No listings added to this project yet. Add one from the Directory first.',
+                            'No team members on this project yet. Add one from the Directory first.',
                             style: TextStyle(
                                 fontFamily: _bodyFont,
                                 fontSize: 13,
@@ -670,7 +679,8 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                         itemBuilder: (context, i) {
                           final d = docs[i].data();
                           final name =
-                              (d['title'] ?? d['name'] ?? 'Listing').toString();
+                              (d['title'] ?? d['name'] ?? 'Team member')
+                                  .toString();
                           final subtitle = (d['subtitle'] ??
                                   d['ratingText'] ??
                                   'Added to project')
@@ -760,7 +770,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
   }
 
   // =========================================================
-  // Due date picker (teal themed)
+  // Due date picker (slate themed)
   // =========================================================
   Future<void> _pickDueDate() async {
     final picked = await showDatePicker(
@@ -833,7 +843,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
         'assignedListingRef': _assignedListingRef,
         'assignedListingName': _assignedListingName,
         'assignedToName': _assignedListingName, // SnagList back-compat
-        'readByListingAt': null, // stamped when the listing opens it
+        'readByListingAt': null, // stamped when the team member opens it
         'createdBy': currentUserReference,
         'createdByName': currentUserDisplayName,
         'createdAt': now,
