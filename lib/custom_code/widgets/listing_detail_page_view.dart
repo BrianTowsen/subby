@@ -10,12 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -852,7 +846,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                                 ? Icons.check_circle_rounded
                                                 : Icons.cancel_outlined,
                                             size: 13,
-                                            color: openNow ? _amber : _faint,
+                                            color: openNow ? _green : _faint,
                                           ),
                                           const SizedBox(width: 5),
                                           Text(openNow ? 'Open now' : 'Closed',
@@ -861,7 +855,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.w700,
                                                 color:
-                                                    openNow ? _coral : _faint,
+                                                    openNow ? _green : _faint,
                                               )),
                                         ],
                                       ),
@@ -892,7 +886,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                   Row(
                                     children: [
                                       const Icon(Icons.handyman_outlined,
-                                          size: 16, color: _gold),
+                                          size: 16, color: _green),
                                       const SizedBox(width: 8),
                                       if (speciality.isNotEmpty)
                                         Flexible(
