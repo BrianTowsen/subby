@@ -167,14 +167,21 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
       final data = (snap.data() as Map<String, dynamic>? ?? {});
       if (data['readByListingAt'] != null) return;
 
-      final listingRef = data['assignedListingRef'] as DocumentReference?;
-      if (listingRef == null) return;
+      // Prefer the owner ref stored on the snag at assign time (reliable, no
+      // extra read, and what the security rules gate on).
+      DocumentReference? ownerRef =
+          data['assignedListingOwnerRef'] as DocumentReference?;
 
-      final listingSnap = await listingRef.get();
-      final ld = (listingSnap.data() as Map<String, dynamic>? ?? {});
-      final ownerRef =
-          (ld['ownerRef'] ?? ld['providerRef']) as DocumentReference?;
+      // Back-compat: snags created before assignedListingOwnerRef existed —
+      // resolve the owner live from the assigned listing.
+      if (ownerRef == null) {
+        final listingRef = data['assignedListingRef'] as DocumentReference?;
+        if (listingRef != null) {
+          ownerRef = await _resolveListingOwner(listingRef);
+        }
+      }
 
+      // Only the ASSIGNED listing's owner stamps the receipt.
       if (ownerRef == null || ownerRef.path != me.path) return;
 
       await ref.update(<String, dynamic>{
@@ -184,6 +191,30 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
     } catch (e) {
       debugPrint('⚠️ Read-receipt stamp skipped: $e');
     }
+  }
+
+  // Resolves the listing OWNER's user ref from an assigned-listing ref, whether
+  // that ref points at a subby_listings doc (has ownerRef) or a project_listings
+  // doc (only has listingRef → follow it to the subby_listings doc).
+  Future<DocumentReference?> _resolveListingOwner(
+      DocumentReference listingRef) async {
+    try {
+      final snap = await listingRef.get();
+      final d = (snap.data() as Map<String, dynamic>? ?? {});
+      final owner = (d['ownerRef'] ?? d['providerRef']) as DocumentReference?;
+      if (owner != null) return owner;
+
+      // assignedListingRef was a project_listings doc → follow listingRef.
+      final inner = d['listingRef'] as DocumentReference?;
+      if (inner != null) {
+        final innerSnap = await inner.get();
+        final id = (innerSnap.data() as Map<String, dynamic>? ?? {});
+        return (id['ownerRef'] ?? id['providerRef']) as DocumentReference?;
+      }
+    } catch (e) {
+      debugPrint('⚠️ resolve listing owner failed: $e');
+    }
+    return null;
   }
 
   void _handleBack() {

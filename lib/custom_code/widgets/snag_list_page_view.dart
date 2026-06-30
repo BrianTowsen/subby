@@ -10,10 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -717,6 +713,13 @@ class _SnagListPageViewState extends State<SnagListPageView>
                       },
                       body: TabBarView(
                         controller: _tabController,
+                        // Tabs switch by TAPPING only. Disabling horizontal
+                        // swipe here frees the iOS left-edge back-gesture —
+                        // a swipeable TabBarView/PageView otherwise wins the
+                        // gesture arena and eats the back-swipe (even on the
+                        // first tab), which is why you couldn't sweep back
+                        // from ProjectDetail → SnagList.
+                        physics: const NeverScrollableScrollPhysics(),
                         children: List.generate(3, (tabIndex) {
                           final stream = _snagStreamForTab(tabIndex);
 
