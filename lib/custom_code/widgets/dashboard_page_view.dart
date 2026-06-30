@@ -10,14 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -622,16 +614,27 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   }
 
   // Icon-only mark — bold, no wordmark.
-  // Updated: now renders the green Subby house PNG instead of the painted mark.
-  // Add the file to pubspec.yaml under assets and adjust the path if needed.
-  Widget _logo() => const SizedBox(
+  // Loads the green Subby house PNG from FlutterFlow asset storage; falls back to
+  // the painted _SubbyMarkPainter if the network image fails (offline / cold
+  // start) so the logo never renders blank.
+  static const String _logoUrl =
+      'https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/winston-9dy48u/assets/nfqbnusfa58y/subby-mark-green.png';
+
+  Widget _logo() => SizedBox(
         width: 34,
         height: 34,
-        child: Image(
-          image: AssetImage('assets/images/subby-mark-green.png'),
+        child: Image.network(
+          _logoUrl,
           width: 34,
           height: 34,
           fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) => CustomPaint(
+            size: const Size(34, 34),
+            painter: const _SubbyMarkPainter(
+              peak: Color(0xFF166341), // Subby brand green
+              base: Color(0xFF166341),
+            ),
+          ),
         ),
       );
 
