@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -707,15 +709,20 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                     if (mounted) setState(() => _sharedCount = shared.length);
                   });
                 }
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: _hPad),
-                  child: _buildsGrid(docs, shared),
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: _hPad),
+                      child: _buildsGrid(docs, shared),
+                    ),
+                    // Projects Feed — real activity log, grouped by day,
+                    // scoped to owned + shared builds.
+                    _buildActivityFeed(docs, shared),
+                  ],
                 );
               },
             ),
-
-            // Projects Feed — aggregated activity across all builds.
-            _buildDashboardFeed(docs),
 
             // Archived Building Projects.
             _buildArchivedSection(),
@@ -1654,6 +1661,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // ===================================================================
   // PROJECTS FEED — aggregated activity across all builds (rail).
   // ===================================================================
+  // ignore: unused_element
   Widget _buildDashboardFeed(
       List<QueryDocumentSnapshot<Map<String, dynamic>>> docs) {
     final items = <Widget>[];
@@ -1735,6 +1743,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     );
   }
 
+  // ignore: unused_element
   Widget _dashFeedRow(String project, String activity) {
     final parts = activity.split(' · ');
     final title = parts.isNotEmpty ? parts.first : activity;
@@ -1787,6 +1796,293 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         ],
       ),
     );
+  }
+
+  // =========================================================
+  // PROJECTS FEED — real activity log, grouped by day.
+  // Streams the top-level `activity` collection scoped to the
+  // viewer's owned + shared builds, groups events by calendar day
+  // (device-local), and collapses same-type repeats per project per
+  // day into one counted row ("Snag recorded x3").
+  //
+  // Each activity doc is fully denormalised (zero lookups):
+  //   projectRef, type, title, actorName, createdAt
+  //
+  // Requires composite index: activity(projectRef ASC, createdAt DESC).
+  // whereIn caps at 30 refs — for >30 builds the 30 most-recent are used.
+  // =========================================================
+  Widget _buildActivityFeed(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> owned,
+    List<_SharedProject> shared,
+  ) {
+    final refs = <DocumentReference>[];
+    final seen = <String>{};
+    final names = <String, String>{}; // projectRef.path -> name (row subtitle)
+
+    for (final d in owned) {
+      final r = d.reference;
+      if (seen.add(r.path)) {
+        refs.add(r);
+        names[r.path] = (d.data()['name'] as String?)?.trim() ?? 'Untitled';
+      }
+    }
+    for (final sp in shared) {
+      if (seen.add(sp.ref.path)) {
+        refs.add(sp.ref);
+        names[sp.ref.path] = (sp.data['name'] as String?)?.trim() ?? 'Untitled';
+      }
+    }
+    if (refs.isEmpty) return const SizedBox.shrink();
+
+    // whereIn supports up to 30 values; owned are already most-recent first.
+    final queryRefs = refs.length > 30 ? refs.sublist(0, 30) : refs;
+
+    final q = FirebaseFirestore.instance
+        .collection('activity')
+        .where('projectRef', whereIn: queryRefs)
+        .orderBy('createdAt', descending: true)
+        .limit(60);
+
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: q.snapshots(),
+      builder: (context, snap) {
+        if (!snap.hasData) return const SizedBox.shrink();
+        final docs = snap.data!.docs;
+        if (docs.isEmpty) return const SizedBox.shrink();
+
+        // Group by day, collapse per (project + type) within each day.
+        final dayOrder = <String>[];
+        final dayRows = <String, List<_FeedRow>>{};
+        final collapse = <String, _FeedRow>{}; // 'day|projPath|type' -> row
+
+        for (final doc in docs) {
+          final data = doc.data();
+          final ts = data['createdAt'];
+          if (ts is! Timestamp) continue; // pending serverTimestamp
+          final dt = ts.toDate();
+          final dayKey = _dayKey(dt);
+          final type = (data['type'] as String?) ?? '';
+          final pr = data['projectRef'];
+          final projPath = (pr is DocumentReference) ? pr.path : '';
+          final projName = names[projPath] ?? 'A build';
+          final title = (data['title'] as String?)?.trim() ?? '';
+
+          if (!dayRows.containsKey(dayKey)) {
+            dayRows[dayKey] = <_FeedRow>[];
+            dayOrder.add(dayKey);
+          }
+
+          final cKey = '$dayKey|$projPath|$type';
+          final existing = collapse[cKey];
+          if (existing == null) {
+            final row = _FeedRow(
+              type: type,
+              project: projName,
+              title: title,
+              latest: dt,
+              count: 1,
+            );
+            collapse[cKey] = row;
+            dayRows[dayKey]!.add(row);
+          } else {
+            existing.count += 1;
+            if (dt.isAfter(existing.latest)) existing.latest = dt;
+          }
+        }
+
+        final children = <Widget>[
+          const SizedBox(height: 30),
+          _feedHeader(docs.length),
+        ];
+
+        for (final dayKey in dayOrder) {
+          children.add(Padding(
+            padding: const EdgeInsets.fromLTRB(_hPad, 16, _hPad, 8),
+            child: Text(
+              _dayLabel(dayKey),
+              style: const TextStyle(
+                fontFamily: _bodyFont,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.8,
+                color: _faint,
+              ),
+            ),
+          ));
+          children.add(Padding(
+            padding: const EdgeInsets.symmetric(horizontal: _hPad),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [for (final r in dayRows[dayKey]!) _activityRow(r)],
+            ),
+          ));
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: children,
+        );
+      },
+    );
+  }
+
+  Widget _feedHeader(int count) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: _hPad),
+      child: Row(
+        children: [
+          _accentMarker(_yellow),
+          const SizedBox(width: 10),
+          Expanded(child: Text('Projects Feed', style: _stepHeadlineStyle)),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFF166341).withOpacity(0.12),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.bolt, size: 13, color: Color(0xFF166341)),
+                const SizedBox(width: 4),
+                Text('$count recent',
+                    style: const TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF166341),
+                    )),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _activityRow(_FeedRow r) {
+    final collapsed = r.count > 1;
+    final label = collapsed
+        ? '${_activityTypeLabel(r.type)} \u00d7${r.count}'
+        : (r.title.isNotEmpty ? r.title : _activityTypeLabel(r.type));
+    final sub = '${r.project} \u00b7 ${_relativeTime(r.latest)}';
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: const Color(0xFFE7F3EC),
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFFC9E4D6), width: 1.5),
+            ),
+            child: Icon(_activityIcon(r.type),
+                size: 16, color: const Color(0xFF166341)),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: _displayFont,
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.1,
+                      color: _ink,
+                    )),
+                const SizedBox(height: 3),
+                Text(sub,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: _inkMute,
+                    )),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _activityTypeLabel(String type) {
+    switch (type) {
+      case 'snag_recorded':
+        return 'Snag recorded';
+      case 'task_added':
+        return 'Task added';
+      case 'task_completed':
+        return 'Task completed';
+      case 'snag_status':
+        return 'Snag updated';
+      case 'document_uploaded':
+        return 'Document uploaded';
+      default:
+        return 'Activity';
+    }
+  }
+
+  IconData _activityIcon(String type) {
+    switch (type) {
+      case 'snag_recorded':
+        return Icons.report_outlined;
+      case 'task_added':
+        return Icons.add_task;
+      case 'task_completed':
+        return Icons.check_circle_outline;
+      case 'snag_status':
+        return Icons.sync;
+      case 'document_uploaded':
+        return Icons.description_outlined;
+      default:
+        return Icons.bolt;
+    }
+  }
+
+  // Calendar-day key in device-local time: 'yyyy-mm-dd'.
+  String _dayKey(DateTime dt) {
+    final l = dt.toLocal();
+    final m = l.month.toString().padLeft(2, '0');
+    final d = l.day.toString().padLeft(2, '0');
+    return '${l.year}-$m-$d';
+  }
+
+  // Human day label: TODAY / YESTERDAY / 'WED 25 JUN'.
+  String _dayLabel(String dayKey) {
+    final p = dayKey.split('-');
+    final dt = DateTime(int.parse(p[0]), int.parse(p[1]), int.parse(p[2]));
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final diff = today.difference(dt).inDays;
+    if (diff == 0) return 'TODAY';
+    if (diff == 1) return 'YESTERDAY';
+    const wd = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+    const mo = [
+      'JAN',
+      'FEB',
+      'MAR',
+      'APR',
+      'MAY',
+      'JUN',
+      'JUL',
+      'AUG',
+      'SEP',
+      'OCT',
+      'NOV',
+      'DEC'
+    ];
+    return '${wd[dt.weekday - 1]} ${dt.day} ${mo[dt.month - 1]}';
   }
 
   // -----------------------------
@@ -2618,4 +2914,21 @@ class _SharedProject {
     required this.pmName,
     required this.pmPhotoUrl,
   });
+}
+
+// One collapsed feed row: all events of the same type on the same project
+// within one calendar day fold into a single row carrying a count.
+class _FeedRow {
+  _FeedRow({
+    required this.type,
+    required this.project,
+    required this.title,
+    required this.latest,
+    required this.count,
+  });
+  final String type;
+  final String project;
+  final String title;
+  DateTime latest;
+  int count;
 }
