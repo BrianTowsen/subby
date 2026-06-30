@@ -10,10 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -26,21 +22,20 @@ import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 
 // ─────────────────────────────────────────────────────────────────────
-// UPDATE (this revision) — mirrors the To-Do changes + the snag-specific
-// proof-of-fix requirement:
-//   • Ownership — Edit + Delete only show for the user who CREATED the snag
-//     (snag.createdBy == currentUserReference).
-//   • Edit now works — a new `editSnagRouteName` is pushed (AddSnagPageView)
-//     with this snag's ref, loading the form in edit mode.
-//   • Delete uses the shared, centred "delete warning" dialog ported from
-//     DocumentUploadPageView (clay badge, 22-radius card, filled clay confirm
-//     + outlined cancel over a 55%-black scrim).
-//   • Snackbars — status changes (Move to In Progress / Reopen) show
-//     "Snag updated."; closing shows "Snag closed out."; delete shows
-//     "Snag deleted.".
-//   • Close-out is GATED on a proof-of-fix photo (kept from the original).
-//   • BEFORE / AFTER — once closed, the detail shows the original snag photo
-//     beside the uploaded fix photo so both are visible side by side.
+// UPDATE (this revision):
+//   • EDITING REMOVED — there is no Edit button anymore (snags aren't edited
+//     after logging). The `editSnagRouteName` param and `_openEdit` are gone.
+//     Only the owner-gated Delete remains in the header.
+//   • CLOSE-OUT NOW TAKES MULTIPLE FIX MEDIA — the proof-of-fix is no longer a
+//     single photo. The user can attach one OR MANY photos *and* videos. Stored
+//     as `fixedMedia` (a List of {url, type, storagePath}); `fixedPhotoUrl` is
+//     still written (first image) for back-compat with the Snag List thumbnail.
+//     Close-out is gated on at least one fix item.
+//   • THE FIX MEDIA SHOW IN THE MAIN GALLERY — the detail's main photo gallery
+//     now contains the defect photos AND the fix media (tagged with a green
+//     "FIX" badge + green-bordered thumbnail), so the user can swipe/tap to
+//     view every fix photo/video in the main viewer. The old before/after
+//     strip is removed in favour of this unified gallery.
 // ─────────────────────────────────────────────────────────────────────
 
 class DetailSnagPageView extends StatefulWidget {
@@ -48,15 +43,10 @@ class DetailSnagPageView extends StatefulWidget {
     super.key,
     this.width,
     this.height,
-    this.editSnagRouteName, // ✅ route to AddSnagPageView (used for Edit)
   });
 
   final double? width;
   final double? height;
-
-  /// Route name of the Add/Edit Snag page. The Edit button pushes this with
-  /// the current snag's `snagRef`, putting that page into edit mode.
-  final String? editSnagRouteName;
 
   @override
   State<DetailSnagPageView> createState() => _DetailSnagPageViewState();
@@ -77,6 +67,8 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
   static const Color _live =
       Color(0xFFCC4B3C); // DS: lime → clay (high / attention)
   static const Color _green = Color(0xFF1F8A5B); // DS: in-progress / info
+  static const Color _greenSurface = Color(0xFFE7F3EC);
+  static const Color _greenBorder = Color(0xFFC9E4D6);
   static const Color _coral = Color(0xFFCC4B3C);
   static const Color _navy = Color(0xFF323F4D);
   static const String _displayFont = 'Inter Tight';
@@ -99,10 +91,11 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
   bool _working = false;
 
   // ── CLOSE-OUT GATE ──
-  // A proof-of-fix photo is MANDATORY before a snag can move to "closed".
-  String? _fixedPhotoUrl;
-  String? _fixedPhotoStoragePath;
+  // One or more proof-of-fix photos/videos are MANDATORY before a snag can
+  // move to "closed". Each entry: { url, type ('image'|'video'), storagePath }.
+  final List<Map<String, dynamic>> _fixedMedia = [];
   bool _uploadingFixed = false;
+  bool _seededFromDoc = false; // prefill _fixedMedia from a closed snag once
 
   @override
   void didChangeDependencies() {
@@ -202,7 +195,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
     }
   }
 
-  // ✅ Is the signed-in user the one who created this snag?
+  // ✅ Is the signed-in user the one who created this snag? (Gates Delete.)
   bool _isOwner(Map<String, dynamic> d) {
     final me = currentUserReference;
     if (me == null) return false;
@@ -213,21 +206,6 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
     return createdByName.isNotEmpty &&
         myName.isNotEmpty &&
         createdByName == myName;
-  }
-
-  // ✅ Open the Add/Edit Snag page in edit mode for this snag.
-  void _openEdit(DocumentReference ref) {
-    final route = (widget.editSnagRouteName ?? '').trim();
-    if (route.isEmpty) {
-      _toast('Edit screen route not configured.');
-      return;
-    }
-    context.pushNamed(
-      route,
-      queryParameters: {
-        'snagRef': serializeParam(ref, ParamType.DocumentReference),
-      }.withoutNulls,
-    );
   }
 
   // =========================================================
@@ -324,7 +302,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
         'updatedAt': FieldValue.serverTimestamp(),
         ...?extra,
       });
-      if (mounted) _toast('Snag updated.'); // ✅ update snackbar
+      if (mounted) _toast('Snag updated.');
     } catch (e) {
       debugPrint('🔥 Snag status update failed: $e');
       _toast('Could not update. Please try again.');
@@ -333,66 +311,84 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
     }
   }
 
-  // ── Pick + upload the proof-of-fix photo. Does NOT close on its own —
-  //    it arms the gate so "Mark as Fixed" can run.
-  Future<void> _pickFixedPhoto() async {
+  // ── Pick + upload one OR MANY proof-of-fix photos/videos. Does NOT close on
+  //    its own — it arms the gate so "Mark as Fixed" can run.
+  Future<void> _pickFixedMedia() async {
     final ref = _snagRef;
     if (ref == null || _uploadingFixed || _working) return;
 
     try {
       final result = await FilePicker.platform.pickFiles(
-        type: FileType.image,
-        allowMultiple: false,
+        type: FileType.media, // images + videos
+        allowMultiple: true,
         withData: true,
       );
       if (result == null || result.files.isEmpty) return;
-      final f = result.files.first;
-      final Uint8List? bytes = f.bytes;
-      if (bytes == null || bytes.isEmpty) {
-        _toast('Could not read that photo.');
-        return;
-      }
 
       setState(() => _uploadingFixed = true);
 
-      final fileName = p.basename(f.name.isNotEmpty ? f.name : 'fixed.jpg');
-      final safeName = fileName.replaceAll(RegExp(r'[^\w\.\- ]+'), '_');
-      final ts = DateTime.now().millisecondsSinceEpoch;
-      final storagePath = 'snags/${ref.id}/fixed/${ts}_$safeName';
-      final contentType =
-          lookupMimeType(fileName, headerBytes: bytes) ?? 'image/jpeg';
+      for (final f in result.files) {
+        final Uint8List? bytes = f.bytes;
+        if (bytes == null || bytes.isEmpty) continue;
 
-      final sref = FirebaseStorage.instance.ref().child(storagePath);
-      await sref.putData(bytes, SettableMetadata(contentType: contentType));
-      final url = await sref.getDownloadURL();
+        final fileName = p.basename(f.name.isNotEmpty ? f.name : 'fixed');
+        final safeName = fileName.replaceAll(RegExp(r'[^\w\.\- ]+'), '_');
+        final ts = DateTime.now().millisecondsSinceEpoch;
+        final storagePath = 'snags/${ref.id}/fixed/${ts}_$safeName';
+        final contentType = lookupMimeType(fileName, headerBytes: bytes) ??
+            'application/octet-stream';
+        final kind = contentType.startsWith('video') ? 'video' : 'image';
 
-      if (!mounted) return;
-      setState(() {
-        _fixedPhotoUrl = url;
-        _fixedPhotoStoragePath = storagePath;
-      });
+        final sref = FirebaseStorage.instance.ref().child(storagePath);
+        await sref.putData(bytes, SettableMetadata(contentType: contentType));
+        final url = await sref.getDownloadURL();
+
+        _fixedMedia.add({'url': url, 'type': kind, 'storagePath': storagePath});
+        if (mounted) setState(() {});
+      }
     } catch (e) {
-      debugPrint('🔥 Fixed-photo upload failed: $e');
+      debugPrint('🔥 Fixed-media upload failed: $e');
       _toast('Could not upload. Please try again.');
     } finally {
       if (mounted) setState(() => _uploadingFixed = false);
     }
   }
 
-  // ── Close-out is GATED on the fixed photo. ──
-  Future<void> _closeWithFixedPhoto() async {
+  // Remove an attached fix item (best-effort Storage delete too).
+  void _removeFixedMedia(int index) {
+    if (index < 0 || index >= _fixedMedia.length) return;
+    final item = _fixedMedia[index];
+    final storagePath = (item['storagePath'] ?? '').toString();
+    if (storagePath.isNotEmpty) {
+      FirebaseStorage.instance.ref().child(storagePath).delete().catchError(
+            (e) => debugPrint('⚠️ fixed-media delete skipped: $e'),
+          );
+    }
+    setState(() => _fixedMedia.removeAt(index));
+  }
+
+  // ── Close-out is GATED on at least one fixed photo/video. ──
+  Future<void> _closeWithFixedMedia() async {
     final ref = _snagRef;
     if (ref == null || _working) return;
-    if (_fixedPhotoUrl == null) {
-      _toast('Add a fixed photo to close this snag out.');
+    if (_fixedMedia.isEmpty) {
+      _toast('Add a fixed photo or video to close this snag out.');
       return;
     }
     setState(() => _working = true);
     try {
+      // Keep fixedPhotoUrl (first image) for the Snag List thumbnail + any
+      // older readers; the full set lives in fixedMedia.
+      final firstImage = _fixedMedia.firstWhere(
+        (m) => (m['type'] ?? 'image') == 'image',
+        orElse: () => const {},
+      );
+      final firstImageUrl = (firstImage['url'] ?? '').toString();
+
       await ref.update(<String, dynamic>{
         'status': 'closed',
-        'fixedPhotoUrl': _fixedPhotoUrl,
-        'fixedPhotoStoragePath': _fixedPhotoStoragePath,
+        'fixedMedia': _fixedMedia,
+        'fixedPhotoUrl': firstImageUrl,
         'closedAt': FieldValue.serverTimestamp(),
         'closedBy': currentUserReference,
         'updatedAt': FieldValue.serverTimestamp(),
@@ -418,6 +414,17 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
                 color: _paper,
                 fontWeight: FontWeight.w700)),
       ));
+  }
+
+  // Parse a Firestore media list into a clean List<Map>.
+  List<Map<String, dynamic>> _parseMedia(dynamic raw) {
+    final out = <Map<String, dynamic>>[];
+    if (raw is List) {
+      for (final m in raw) {
+        if (m is Map) out.add(Map<String, dynamic>.from(m));
+      }
+    }
+    return out;
   }
 
   // =========================================================
@@ -486,6 +493,25 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
           }
           final raw = snap.data?.data();
           final d = raw is Map<String, dynamic> ? raw : <String, dynamic>{};
+
+          // Seed local fix media from an already-closed snag (once) so the
+          // gallery + (if reopened) the dock show what's on record.
+          if (!_seededFromDoc) {
+            final docFixed = _parseMedia(d['fixedMedia']);
+            if (docFixed.isEmpty) {
+              final fp = (d['fixedPhotoUrl'] ?? '').toString().trim();
+              if (fp.isNotEmpty) {
+                docFixed.add({'url': fp, 'type': 'image'});
+              }
+            }
+            if (docFixed.isNotEmpty) {
+              _fixedMedia
+                ..clear()
+                ..addAll(docFixed);
+            }
+            _seededFromDoc = true;
+          }
+
           return _content(ref, d);
         },
       ),
@@ -527,33 +553,29 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
     final listingName =
         (d['assignedListingName'] ?? d['assignedToName'] ?? '').toString();
     final createdByName = (d['createdByName'] ?? '').toString();
-    final isOwner = _isOwner(d); // ✅ gate Edit / Delete
+    final isOwner = _isOwner(d); // ✅ gate Delete
 
-    final media = <Map<String, dynamic>>[];
-    final rawMedia = d['media'];
-    if (rawMedia is List) {
-      for (final m in rawMedia) {
-        if (m is Map) media.add(Map<String, dynamic>.from(m));
-      }
-    }
+    // Original defect media.
+    final media = _parseMedia(d['media']);
     if (media.isEmpty) {
       final single = (d['photoUrl'] ?? '').toString();
       if (single.isNotEmpty) media.add({'url': single, 'type': 'image'});
     }
 
-    // ✅ Before / After proof. before = first snag photo; after = fixed photo.
-    final fixedUrl = (d['fixedPhotoUrl'] ?? '').toString();
-    String beforeUrl = '';
-    for (final m in media) {
-      final u = (m['url'] ?? '').toString();
-      if (u.isNotEmpty && (m['type'] ?? 'image') != 'video') {
-        beforeUrl = u;
-        break;
-      }
+    // Fix media — prefer what's attached locally (in progress), else the doc.
+    final docFixed = _parseMedia(d['fixedMedia']);
+    if (docFixed.isEmpty) {
+      final fp = (d['fixedPhotoUrl'] ?? '').toString().trim();
+      if (fp.isNotEmpty) docFixed.add({'url': fp, 'type': 'image'});
     }
-    if (beforeUrl.isEmpty && media.isNotEmpty) {
-      beforeUrl = (media.first['url'] ?? '').toString();
-    }
+    final fixList = _fixedMedia.isNotEmpty ? _fixedMedia : docFixed;
+
+    // ✅ Unified gallery: defect photos first, then the fix media (badged), so
+    //    the user can view every fix photo/video in the main viewer.
+    final galleryMedia = <Map<String, dynamic>>[
+      ...media.map((m) => {...m, 'origin': 'snag'}),
+      ...fixList.map((m) => {...m, 'origin': 'fix'}),
+    ];
 
     final due = _asDate(d['dueDate']);
     final createdAt = _asDate(d['createdAt']);
@@ -563,7 +585,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
       children: [
         SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(_hPad, 6, _hPad, 230),
+          padding: const EdgeInsets.fromLTRB(_hPad, 6, _hPad, 250),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -571,23 +593,16 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _minBack(),
-                  // ✅ Only the snag's creator can edit or delete it.
+                  // ✅ Snags aren't edited — only the creator can delete.
                   if (isOwner)
-                    Row(
-                      children: [
-                        _iconBtn(Icons.edit_outlined, _inkMute,
-                            () => _openEdit(ref)),
-                        const SizedBox(width: 4),
-                        _iconBtn(Icons.delete_outline_rounded, _coral,
-                            () => _confirmDelete(ref, title)),
-                      ],
-                    )
+                    _iconBtn(Icons.delete_outline_rounded, _coral,
+                        () => _confirmDelete(ref, title))
                   else
                     const SizedBox.shrink(),
                 ],
               ),
               const SizedBox(height: 14),
-              _gallery(media),
+              _gallery(galleryMedia),
               const SizedBox(height: 16),
               Text(title,
                   style: const TextStyle(
@@ -608,8 +623,6 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
                       bg: _severityTint(severity)),
                 ],
               ),
-              // ✅ BEFORE / AFTER — visible once a fix photo has been attached.
-              if (fixedUrl.isNotEmpty) _beforeAfter(beforeUrl, fixedUrl),
               const SizedBox(height: 14),
               _metaRow(
                 leading:
@@ -659,61 +672,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
     );
   }
 
-  // ✅ Before/after proof strip — two labelled tiles side by side.
-  Widget _beforeAfter(String beforeUrl, String afterUrl) {
-    Widget tile(String url, String label, Color labelColor, IconData ph) {
-      return Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label,
-                style: TextStyle(
-                    fontFamily: _bodyFont,
-                    fontSize: 11,
-                    letterSpacing: 0.6,
-                    fontWeight: FontWeight.w800,
-                    color: labelColor)),
-            const SizedBox(height: 7),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(_radius),
-              child: Container(
-                height: 110,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: _surface,
-                  borderRadius: BorderRadius.circular(_radius),
-                  border: Border.all(color: _hairlineOnSurface),
-                ),
-                child: url.isEmpty
-                    ? Center(child: Icon(ph, color: _faint, size: 22))
-                    : Image.network(
-                        url,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Center(
-                            child: Icon(Icons.broken_image_outlined,
-                                color: _faint, size: 22)),
-                      ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 18),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          tile(beforeUrl, 'BEFORE', _inkMute, Icons.photo_camera_outlined),
-          const SizedBox(width: 10),
-          tile(afterUrl, 'AFTER · FIX', _green, Icons.verified_outlined),
-        ],
-      ),
-    );
-  }
-
-  // ---- Gallery ----
+  // ---- Gallery (defect photos + fix media, with FIX badges) ----
   Widget _gallery(List<Map<String, dynamic>> media) {
     if (media.isEmpty) {
       return Container(
@@ -728,6 +687,10 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
         ),
       );
     }
+
+    // Keep the index in range when the list size changes.
+    if (_galleryIndex >= media.length) _galleryIndex = media.length - 1;
+
     return Column(
       children: [
         ClipRRect(
@@ -769,6 +732,35 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
                     );
                   },
                 ),
+                // FIX badge on fix media.
+                if ((media[_galleryIndex]['origin'] ?? 'snag') == 'fix')
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 9, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _green,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(Icons.verified_rounded,
+                              size: 12, color: Colors.white),
+                          SizedBox(width: 5),
+                          Text('FIX',
+                              style: TextStyle(
+                                  fontFamily: _bodyFont,
+                                  fontSize: 10,
+                                  letterSpacing: 0.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white)),
+                        ],
+                      ),
+                    ),
+                  ),
                 if (media.length > 1)
                   Positioned(
                     top: 12,
@@ -794,13 +786,14 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
         ),
         if (media.length > 1) ...[
           const SizedBox(height: 8),
-          Row(
-            children: [
-              for (int i = 0; i < media.length; i++) ...[
-                if (i > 0) const SizedBox(width: 8),
-                _thumb(media[i], i),
-              ],
-            ],
+          SizedBox(
+            height: 48,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: media.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, i) => _thumb(media[i], i),
+            ),
           ),
         ],
       ],
@@ -810,7 +803,9 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
   Widget _thumb(Map<String, dynamic> m, int i) {
     final url = (m['url'] ?? '').toString();
     final isVideo = (m['type'] ?? 'image') == 'video';
+    final isFix = (m['origin'] ?? 'snag') == 'fix';
     final selected = i == _galleryIndex;
+    final selColor = isFix ? _green : _teal;
     return GestureDetector(
       onTap: () {
         _galleryCtrl.animateToPage(i,
@@ -823,17 +818,36 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
           color: _surface,
           borderRadius: BorderRadius.circular(9),
           border: Border.all(
-              color: selected ? _teal : _hairlineOnSurface,
+              color: selected
+                  ? selColor
+                  : (isFix ? _greenBorder : _hairlineOnSurface),
               width: selected ? 2 : 1),
           image: (url.isNotEmpty)
               ? DecorationImage(image: NetworkImage(url), fit: BoxFit.cover)
               : null,
         ),
-        child: isVideo
-            ? const Center(
-                child: Icon(Icons.play_circle_fill_rounded,
-                    size: 18, color: Colors.white))
-            : null,
+        child: Stack(
+          children: [
+            if (isVideo)
+              const Center(
+                  child: Icon(Icons.play_circle_fill_rounded,
+                      size: 18, color: Colors.white)),
+            if (isFix)
+              Positioned(
+                bottom: 3,
+                right: 3,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: _green,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: _paper, width: 1),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -970,7 +984,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
   // ---- Close-out dock ----
   Widget _closeOutDock(String status) {
     final inProgress = status == 'in_progress';
-    final gated = inProgress && _fixedPhotoUrl == null;
+    final gated = inProgress && _fixedMedia.isEmpty;
     return Container(
       decoration: const BoxDecoration(
         color: _paper,
@@ -985,7 +999,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
             _stepper(status),
             if (inProgress) ...[
               const SizedBox(height: 14),
-              _fixedPhotoRequirement(),
+              _fixedMediaRequirement(),
             ],
             const SizedBox(height: 12),
             _primaryAction(status),
@@ -996,7 +1010,9 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
                 children: const [
                   Icon(Icons.info_outline_rounded, size: 13, color: _faint),
                   SizedBox(width: 5),
-                  Text('A fixed photo is required to close out',
+                  Text(
+                      'At least one fixed photo or video is required to close out',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                           fontFamily: _bodyFont,
                           fontSize: 10.5,
@@ -1011,78 +1027,140 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
     );
   }
 
-  // ── Mandatory proof-of-fix capture row. ──
-  Widget _fixedPhotoRequirement() {
-    final hasPhoto = _fixedPhotoUrl != null;
+  // ── Mandatory proof-of-fix capture — one or more photos/videos. ──
+  Widget _fixedMediaRequirement() {
+    final has = _fixedMedia.isNotEmpty;
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: hasPhoto ? _surface : const Color(0x0FCC4B3C),
+        color: has ? _surface : const Color(0x0FCC4B3C),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-            color: hasPhoto ? _hairlineOnSurface : const Color(0x59CC4B3C)),
+            color: has ? _hairlineOnSurface : const Color(0x59CC4B3C)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          GestureDetector(
-            onTap: _uploadingFixed ? null : _pickFixedPhoto,
-            child: Container(
-              width: 56,
-              height: 56,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: _paper,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                    color: hasPhoto ? _hairlineOnSurface : _live,
-                    width: hasPhoto ? 1 : 1.5),
-                image: hasPhoto
-                    ? DecorationImage(
-                        image: NetworkImage(_fixedPhotoUrl!), fit: BoxFit.cover)
-                    : null,
-              ),
-              child: hasPhoto
-                  ? null
-                  : (_uploadingFixed
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(_live)))
-                      : const Icon(Icons.add_a_photo_outlined,
-                          size: 20, color: _live)),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          Text(
+              has
+                  ? 'FIXED MEDIA · ${_fixedMedia.length} ADDED'
+                  : 'FIXED MEDIA · REQUIRED',
+              style: TextStyle(
+                  fontFamily: _bodyFont,
+                  fontSize: 11,
+                  letterSpacing: 0.6,
+                  fontWeight: FontWeight.w800,
+                  color: has ? _green : _live)),
+          const SizedBox(height: 3),
+          Text(
+              has
+                  ? 'Add more photos or video, or mark this snag as fixed.'
+                  : 'Add one or more photos or video of the completed fix to close this snag out.',
+              style: const TextStyle(
+                  fontFamily: _bodyFont,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w500,
+                  height: 1.35,
+                  color: _inkMute)),
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 56,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
               children: [
-                Text(
-                    hasPhoto ? 'FIXED PHOTO · ADDED' : 'FIXED PHOTO · REQUIRED',
-                    style: TextStyle(
-                        fontFamily: _bodyFont,
-                        fontSize: 11,
-                        letterSpacing: 0.6,
-                        fontWeight: FontWeight.w800,
-                        color: hasPhoto ? _green : _live)),
-                const SizedBox(height: 3),
-                Text(
-                    hasPhoto
-                        ? 'Proof of the completed fix is attached.'
-                        : 'Add a photo of the completed fix to close this snag out.',
-                    style: const TextStyle(
-                        fontFamily: _bodyFont,
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w500,
-                        height: 1.35,
-                        color: _inkMute)),
+                // Add tile
+                GestureDetector(
+                  onTap: _uploadingFixed ? null : _pickFixedMedia,
+                  child: Container(
+                    width: 56,
+                    height: 56,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: _paper,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                          color: has ? _hairlineOnSurface : _live,
+                          width: has ? 1 : 1.5),
+                    ),
+                    child: _uploadingFixed
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(_live)))
+                        : Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.add_a_photo_outlined,
+                                  size: 18, color: has ? _ink : _live),
+                              const SizedBox(height: 2),
+                              Text('Add',
+                                  style: TextStyle(
+                                      fontFamily: _bodyFont,
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.w700,
+                                      color: _inkMute)),
+                            ],
+                          ),
+                  ),
+                ),
+                for (int i = 0; i < _fixedMedia.length; i++) ...[
+                  const SizedBox(width: 8),
+                  _fixedThumb(i),
+                ],
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _fixedThumb(int i) {
+    final m = _fixedMedia[i];
+    final url = (m['url'] ?? '').toString();
+    final isVideo = (m['type'] ?? 'image') == 'video';
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            color: _greenSurface,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: _greenBorder),
+            image: (!isVideo && url.isNotEmpty)
+                ? DecorationImage(image: NetworkImage(url), fit: BoxFit.cover)
+                : null,
+          ),
+          child: isVideo
+              ? const Center(
+                  child: Icon(Icons.play_circle_fill_rounded,
+                      size: 24, color: Colors.white))
+              : (url.isEmpty
+                  ? const Center(
+                      child:
+                          Icon(Icons.image_outlined, size: 20, color: _green))
+                  : null),
+        ),
+        Positioned(
+          top: -6,
+          right: -6,
+          child: GestureDetector(
+            onTap: () => _removeFixedMedia(i),
+            child: Container(
+              width: 22,
+              height: 22,
+              decoration:
+                  const BoxDecoration(color: _ink, shape: BoxShape.circle),
+              child: const Icon(Icons.close_rounded, size: 14, color: _paper),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -1139,16 +1217,16 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
       );
     }
 
-    // IN PROGRESS → close-out, GATED on a fixed photo.
+    // IN PROGRESS → close-out, GATED on at least one fix photo/video.
     if (status == 'in_progress') {
-      final ready = _fixedPhotoUrl != null;
+      final ready = _fixedMedia.isNotEmpty;
       return _actionButton(
         label: 'Mark as Fixed',
         icon: ready ? Icons.task_alt_rounded : Icons.lock_outline_rounded,
         bg: ready ? _teal : _surface,
         fg: ready ? _paper : _faint,
         border: ready ? null : _hairlineOnSurface,
-        onTap: ready ? _closeWithFixedPhoto : _pickFixedPhoto,
+        onTap: ready ? _closeWithFixedMedia : _pickFixedMedia,
       );
     }
 
@@ -1161,10 +1239,10 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
       border: _hairlineOnSurface,
       onTap: () {
         setState(() {
-          _fixedPhotoUrl = null;
-          _fixedPhotoStoragePath = null;
+          _fixedMedia.clear();
+          _galleryIndex = 0;
         });
-        _setStatus('open', extra: {'fixedPhotoUrl': null});
+        _setStatus('open', extra: {'fixedMedia': [], 'fixedPhotoUrl': null});
       },
     );
   }
@@ -1232,9 +1310,8 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
       );
 
   // =========================================================
-  // Delete — shared "delete warning" dialog (ported from
-  // DocumentUploadPageView: centred card, clay badge, 22-radius,
-  // filled clay confirm + outlined cancel, 55%-black scrim).
+  // Delete — shared "delete warning" dialog (centred card, clay badge,
+  // 22-radius, filled clay confirm + outlined cancel, 55%-black scrim).
   // =========================================================
   Future<void> _confirmDelete(DocumentReference ref, String title) async {
     FocusScope.of(context).unfocus();
@@ -1251,7 +1328,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
     try {
       await ref.delete();
       if (!mounted) return;
-      _toast('Snag deleted.'); // ✅ delete snackbar
+      _toast('Snag deleted.');
       _handleBack();
     } catch (e) {
       debugPrint('🔥 Delete snag failed: $e');
@@ -1259,7 +1336,6 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
     }
   }
 
-  // Centred destructive confirm dialog — shared "delete warning" module.
   Future<void> _showDeleteDialog({
     required String title,
     required String message,
