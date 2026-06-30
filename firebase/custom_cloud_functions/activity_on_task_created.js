@@ -63,16 +63,16 @@ function snagStatusLabel(status) {
   }
 }
 
-exports.activityOnSnagCreated = functions
+exports.activityOnTaskCreated = functions
   .region(REGION)
-  .firestore.document("snags/{snagId}")
+  .firestore.document("tasks/{taskId}")
   .onCreate(async (snap) => {
     const d = snap.data() || {};
     const actorRef = d.createdBy || null;
     const actorName = await resolveActorName(actorRef, d.createdByName);
     await writeActivity({
       projectRef: d.projectRef,
-      type: "snag_recorded",
+      type: "task_added",
       title: d.title,
       actorRef,
       actorName,

@@ -8,3 +8,47 @@ class ActivityOnSnagCreatedCloudFunctionCallResponse {
   bool? succeeded;
   dynamic jsonBody;
 }
+
+class ActivityOnTaskCreatedCloudFunctionCallResponse {
+  ActivityOnTaskCreatedCloudFunctionCallResponse({
+    this.errorCode,
+    this.succeeded,
+    this.jsonBody,
+  });
+  String? errorCode;
+  bool? succeeded;
+  dynamic jsonBody;
+}
+
+class ActivityOnDocumentUploadedCloudFunctionCallResponse {
+  ActivityOnDocumentUploadedCloudFunctionCallResponse({
+    this.errorCode,
+    this.succeeded,
+    this.jsonBody,
+  });
+  String? errorCode;
+  bool? succeeded;
+  dynamic jsonBody;
+}
+
+class ActivityOnSnagStatusChangedCloudFunctionCallResponse {
+  ActivityOnSnagStatusChangedCloudFunctionCallResponse({
+    this.errorCode,
+    this.succeeded,
+    this.jsonBody,
+  });
+  String? errorCode;
+  bool? succeeded;
+  dynamic jsonBody;
+}
+
+class ActivityOnTaskCompletedCloudFunctionCallResponse {
+  ActivityOnTaskCompletedCloudFunctionCallResponse({
+    this.errorCode,
+    this.succeeded,
+    this.jsonBody,
+  });
+  String? errorCode;
+  bool? succeeded;
+  dynamic jsonBody;
+}

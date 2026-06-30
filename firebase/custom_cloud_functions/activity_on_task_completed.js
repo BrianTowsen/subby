@@ -63,19 +63,20 @@ function snagStatusLabel(status) {
   }
 }
 
-exports.activityOnSnagCreated = functions
+exports.activityOnTaskCompleted = functions
   .region(REGION)
-  .firestore.document("snags/{snagId}")
-  .onCreate(async (snap) => {
-    const d = snap.data() || {};
-    const actorRef = d.createdBy || null;
-    const actorName = await resolveActorName(actorRef, d.createdByName);
+  .firestore.document("tasks/{taskId}")
+  .onUpdate(async (change) => {
+    const before = change.before.data() || {};
+    const after = change.after.data() || {};
+    if (after.status !== "done" || before.status === "done") return null;
+    const actor = await pickUpdateActor(after);
     await writeActivity({
-      projectRef: d.projectRef,
-      type: "snag_recorded",
-      title: d.title,
-      actorRef,
-      actorName,
+      projectRef: after.projectRef,
+      type: "task_completed",
+      title: after.title,
+      actorRef: actor.ref,
+      actorName: actor.name,
     });
     return null;
   });
