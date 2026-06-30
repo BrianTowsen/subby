@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -1020,6 +1022,30 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
     setState(() => _attachments.removeAt(i));
   }
 
+  // Resolves the listing OWNER's user ref from an assigned-listing ref, whether
+  // that ref points at a subby_listings doc (has ownerRef) or a project_listings
+  // doc (only has listingRef → follow it to the subby_listings doc). Used to
+  // denormalize assignedListingOwnerRef onto the task at save time.
+  Future<DocumentReference?> _resolveListingOwner(
+      DocumentReference listingRef) async {
+    try {
+      final snap = await listingRef.get();
+      final d = (snap.data() as Map<String, dynamic>? ?? {});
+      final owner = (d['ownerRef'] ?? d['providerRef']) as DocumentReference?;
+      if (owner != null) return owner;
+
+      final inner = d['listingRef'] as DocumentReference?;
+      if (inner != null) {
+        final innerSnap = await inner.get();
+        final id = (innerSnap.data() as Map<String, dynamic>? ?? {});
+        return (id['ownerRef'] ?? id['providerRef']) as DocumentReference?;
+      }
+    } catch (e) {
+      debugPrint('⚠️ resolve listing owner failed: $e');
+    }
+    return null;
+  }
+
   // =========================================================
   // Save (create OR update when editing)
   // =========================================================
@@ -1036,6 +1062,13 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
     try {
       final now = Timestamp.now();
 
+      // Resolve the assigned listing's owner ref so the read-receipt rule and
+      // DetailTaskPageView can gate on a denormalized field (parity with snags).
+      DocumentReference? assignedListingOwnerRef;
+      if (_listingRef != null) {
+        assignedListingOwnerRef = await _resolveListingOwner(_listingRef!);
+      }
+
       if (_isEditing) {
         // ✅ UPDATE existing task — preserve status / createdBy / createdAt.
         await _editingRef!.update(<String, dynamic>{
@@ -1047,6 +1080,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
           'attachments': _attachments,
           'assignedListingRef': _listingRef,
           'assignedListingName': _listingName,
+          'assignedListingOwnerRef': assignedListingOwnerRef,
           'updatedAt': now,
         });
 
@@ -1069,6 +1103,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
         'attachments': _attachments,
         'assignedListingRef': _listingRef,
         'assignedListingName': _listingName,
+        'assignedListingOwnerRef': assignedListingOwnerRef,
         'readByListingAt': null,
         'createdBy': currentUserReference,
         'createdByName': currentUserDisplayName,
