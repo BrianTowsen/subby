@@ -46,6 +46,7 @@ async function writeActivity(args) {
     title: (args.title || "").toString().trim() || "Untitled",
     actorRef: args.actorRef || null,
     actorName: (args.actorName || "").toString().trim(),
+    targetRef: args.targetRef || null,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 }
@@ -76,6 +77,7 @@ exports.activityOnTaskCreated = functions
       title: d.title,
       actorRef,
       actorName,
+      targetRef: snap.ref,
     });
     return null;
   });

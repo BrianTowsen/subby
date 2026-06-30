@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -75,6 +77,8 @@ class DashboardPageView extends StatefulWidget {
     this.projectDetailRouteName, // open a single project
     this.addProjectsRouteName, // create a new project
     this.projectParamName, // param name for the project ref (default "projectRef")
+    this.snagDetailRouteName, // deep-link a single snag from the feed
+    this.taskDetailRouteName, // deep-link a single task from the feed
 
     /// Listing management routes — USED by the Directory card in the empty state
     this.addListingRouteName,
@@ -105,6 +109,8 @@ class DashboardPageView extends StatefulWidget {
   final String? projectDetailRouteName;
   final String? addProjectsRouteName;
   final String? projectParamName;
+  final String? snagDetailRouteName;
+  final String? taskDetailRouteName;
 
   // USED for the Directory listing card (empty state)
   final String? addListingRouteName;
@@ -188,6 +194,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // Shared-build count — keeps the "Active builds" stat (owned + shared) in
   // sync once the async shared loader resolves.
   int _sharedCount = 0;
+  bool _archivedExpanded = false;
 
   // Date formatting (SA: DD MMM YYYY)
   static const List<String> _months = [
@@ -721,9 +728,6 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                 );
               },
             ),
-
-            // Archived Building Projects.
-            _buildArchivedSection(),
           ],
         );
       },
@@ -763,7 +767,6 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                 padding: const EdgeInsets.fromLTRB(_hPad, 18, _hPad, 0),
                 child: _buildEmptyState(),
               ),
-              _buildArchivedSection(),
             ],
           );
         }
@@ -772,7 +775,6 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSharedPrimary(shared),
-            _buildArchivedSection(),
           ],
         );
       },
@@ -1113,6 +1115,80 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // -----------------------------
   // Archived Building Projects section
   // -----------------------------
+  // Archived builds — collapsed by default, pinned to the bottom. Reuses the
+  // archived query + _archivedRow. Renders nothing (no toggle) when empty.
+  Widget _buildArchivedCollapsible() {
+    final q = _archivedProjectsQuery();
+    if (q == null) return const SizedBox.shrink();
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: q.snapshots(),
+      builder: (context, snap) {
+        final docs = snap.data?.docs ?? const [];
+        if (docs.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 30),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: _hPad),
+              child: InkWell(
+                onTap: () =>
+                    setState(() => _archivedExpanded = !_archivedExpanded),
+                borderRadius: BorderRadius.circular(10),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      _accentMarker(_faint),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text('Archived Home Builds',
+                            style: _stepHeadlineStyle),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 9, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _hairline,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text('${docs.length}',
+                            style: const TextStyle(
+                              fontFamily: _bodyFont,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                              color: _inkMute,
+                            )),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        _archivedExpanded
+                            ? Icons.keyboard_arrow_up
+                            : Icons.keyboard_arrow_down,
+                        size: 22,
+                        color: _faint,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            if (_archivedExpanded) ...[
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: _hPad),
+                child: Column(
+                  children: [for (final d in docs) _archivedRow(d)],
+                ),
+              ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+
+  // ignore: unused_element
   Widget _buildArchivedSection() {
     final q = _archivedProjectsQuery();
     if (q == null) return const SizedBox.shrink();
@@ -1873,12 +1949,15 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           final cKey = '$dayKey|$projPath|$type';
           final existing = collapse[cKey];
           if (existing == null) {
+            final tref = data['targetRef'];
             final row = _FeedRow(
               type: type,
               project: projName,
               title: title,
               latest: dt,
               count: 1,
+              targetRef: tref is DocumentReference ? tref : null,
+              projectRef: pr is DocumentReference ? pr : null,
             );
             collapse[cKey] = row;
             dayRows[dayKey]!.add(row);
@@ -1974,54 +2053,88 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       label = '${_activityTypeLabel(r.type)}: ${r.title}';
     }
     final sub = '${r.project} \u00b7 ${_relativeTime(r.latest)}';
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 30,
-            height: 30,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE7F3EC),
-              shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFC9E4D6), width: 1.5),
-            ),
-            child: Icon(_activityIcon(r.type),
-                size: 16, color: const Color(0xFF166341)),
+    return InkWell(
+        onTap: () => _openActivityTarget(r),
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 30,
+                height: 30,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE7F3EC),
+                  shape: BoxShape.circle,
+                  border:
+                      Border.all(color: const Color(0xFFC9E4D6), width: 1.5),
+                ),
+                child: Icon(_activityIcon(r.type),
+                    size: 16, color: const Color(0xFF166341)),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: _displayFont,
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.1,
+                          color: _ink,
+                        )),
+                    const SizedBox(height: 3),
+                    Text(sub,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: _inkMute,
+                        )),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontFamily: _displayFont,
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.1,
-                      color: _ink,
-                    )),
-                const SizedBox(height: 3),
-                Text(sub,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontFamily: _bodyFont,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: _inkMute,
-                    )),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+        ));
+  }
+
+  // Open the snag/task an activity row points at. Single events deep-link to
+  // their detail page (mirrors SnagList/ToDoList); collapsed rows, document
+  // uploads, and older events with no targetRef fall back to the project.
+  void _openActivityTarget(_FeedRow r) {
+    final target = r.targetRef;
+    final isSnag = r.type == 'snag_recorded' || r.type == 'snag_status';
+    final isTask = r.type == 'task_added' || r.type == 'task_completed';
+
+    if (r.count == 1 && target != null && isSnag) {
+      final route = (widget.snagDetailRouteName ?? '').trim();
+      if (route.isNotEmpty) {
+        context.pushNamed(route, queryParameters: {
+          'snagRef': serializeParam(target, ParamType.DocumentReference),
+        });
+        return;
+      }
+    }
+    if (r.count == 1 && target != null && isTask) {
+      final route = (widget.taskDetailRouteName ?? '').trim();
+      if (route.isNotEmpty) {
+        context.pushNamed(route, queryParameters: {
+          'taskRef': serializeParam(target, ParamType.DocumentReference),
+        });
+        return;
+      }
+    }
+    final pr = r.projectRef;
+    if (pr != null) _goToProject(pr);
   }
 
   String _activityTypeLabel(String type) {
@@ -2814,6 +2927,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             children: [
               _buildWelcomeHeader(),
               _buildBody(),
+              // Archived builds — collapsed, pinned to the bottom.
+              _buildArchivedCollapsible(),
               // Clear the overlaid MainBottomNav (72) + breathing room (28)
               // + system gesture inset.
               SizedBox(height: 72 + 28 + MediaQuery.of(context).padding.bottom),
@@ -2933,10 +3048,14 @@ class _FeedRow {
     required this.title,
     required this.latest,
     required this.count,
+    this.targetRef,
+    this.projectRef,
   });
   final String type;
   final String project;
   final String title;
   DateTime latest;
   int count;
+  final DocumentReference? targetRef;
+  final DocumentReference? projectRef;
 }
