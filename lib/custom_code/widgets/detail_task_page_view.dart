@@ -10,21 +10,19 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/auth/firebase_auth/auth_util.dart';
 
 // ─────────────────────────────────────────────────────────────────────
 // UPDATE (this revision):
-//   • Ownership — the Edit + Delete actions only show for the user who
-//     CREATED the task (task.createdBy == currentUserReference). Everyone
-//     else sees a read-only header.
-//   • Edit now works — it pushes `editTaskRouteName` (AddTaskPageView)
-//     with the task's ref, which loads the form in edit mode.
+//   • Edit action REMOVED — the header now only exposes Delete for the
+//     task's creator (no Edit icon, no editTaskRouteName, no _openEdit).
+//   • Read receipt is now GREEN (_green) — both the done_all icon and the
+//     "Read …" timestamp.
+//   • Ownership — the Delete action only shows for the user who CREATED the
+//     task (task.createdBy == currentUserReference). Everyone else sees a
+//     read-only header.
 //   • Delete uses the shared, centred "delete warning" dialog ported from
 //     DocumentUploadPageView (clay badge, 22-radius card, filled clay
 //     confirm + outlined cancel over a 55%-black scrim).
@@ -38,15 +36,10 @@ class DetailTaskPageView extends StatefulWidget {
     super.key,
     this.width,
     this.height,
-    this.editTaskRouteName, // ✅ route to AddTaskPageView (used for Edit)
   });
 
   final double? width;
   final double? height;
-
-  /// Route name of the Add/Edit Task page. The Edit button pushes this with
-  /// the current task's `taskRef`, putting that page into edit mode.
-  final String? editTaskRouteName;
 
   @override
   State<DetailTaskPageView> createState() => _DetailTaskPageViewState();
@@ -189,21 +182,6 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
     return createdByName.isNotEmpty &&
         myName.isNotEmpty &&
         createdByName == myName;
-  }
-
-  // ✅ Open the Add/Edit Task page in edit mode for this task.
-  void _openEdit(DocumentReference ref) {
-    final route = (widget.editTaskRouteName ?? '').trim();
-    if (route.isEmpty) {
-      _toast('Edit screen route not configured.');
-      return;
-    }
-    context.pushNamed(
-      route,
-      queryParameters: {
-        'taskRef': serializeParam(ref, ParamType.DocumentReference),
-      }.withoutNulls,
-    );
   }
 
   // =========================================================
@@ -547,7 +525,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
     final status = (d['status'] ?? 'todo').toString();
     final priority = (d['priority'] ?? 'med').toString();
     final listingName = (d['assignedListingName'] ?? '').toString();
-    final isOwner = _isOwner(d); // ✅ gate Edit / Delete
+    final isOwner = _isOwner(d); // ✅ gate Delete
 
     final checklist = <Map<String, dynamic>>[];
     final rawCl = d['checklist'];
@@ -584,17 +562,10 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _minBack(),
-                  // ✅ Only the task's creator can edit or delete it.
+                  // ✅ Only the task's creator can delete it. (Edit removed.)
                   if (isOwner)
-                    Row(
-                      children: [
-                        _iconBtn(Icons.edit_outlined, _inkMute,
-                            () => _openEdit(ref)),
-                        const SizedBox(width: 4),
-                        _iconBtn(Icons.delete_outline_rounded, _coral,
-                            () => _confirmDelete(ref, title)),
-                      ],
-                    )
+                    _iconBtn(Icons.delete_outline_rounded, _coral,
+                        () => _confirmDelete(ref, title))
                   else
                     const SizedBox.shrink(),
                 ],
@@ -832,15 +803,16 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
                   const SizedBox(height: 3),
                   Row(
                     children: [
+                      // ✅ Read receipt is GREEN.
                       const Icon(Icons.done_all_rounded,
-                          size: 14, color: _teal),
+                          size: 14, color: _green),
                       const SizedBox(width: 5),
                       Text('Read ${dateTimeFormat('d MMM · HH:mm', readAt)}',
                           style: const TextStyle(
                               fontFamily: _bodyFont,
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
-                              color: _teal)),
+                              color: _green)),
                     ],
                   ),
                 ] else ...[
