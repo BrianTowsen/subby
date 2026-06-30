@@ -10,22 +10,25 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/auth/firebase_auth/auth_util.dart';
 
 // ─────────────────────────────────────────────────────────────────────
 // UPDATE (this revision):
-//   • Edit action REMOVED — the header now only exposes Delete for the
-//     task's creator (no Edit icon, no editTaskRouteName, no _openEdit).
-//   • Read receipt is now GREEN (_green) — both the done_all icon and the
-//     "Read …" timestamp.
-//   • Ownership — the Delete action only shows for the user who CREATED the
-//     task (task.createdBy == currentUserReference). Everyone else sees a
-//     read-only header.
-//   • Delete uses the shared, centred "delete warning" dialog ported from
-//     DocumentUploadPageView (clay badge, 22-radius card, filled clay
-//     confirm + outlined cancel over a 55%-black scrim).
+//   • "Mark as done" now uses the shared, centred "warning"-style dialog
+//     (the same module as Delete) but in GREEN: a 62px green-tinted badge
+//     with a task_alt icon, 22-radius card, an optional completion-note
+//     field, a filled GREEN "Mark done" confirm + outlined "Cancel" over a
+//     55%-black scrim. (Replaces the old plain AlertDialog.)
+//   • Read receipt is GREEN and means the ASSIGNED LISTING has VIEWED the
+//     task — stamped (_maybeStampReadReceipt) only when the listing's owner
+//     opens this screen. Shows "Read d MMM · HH:mm" (green) or "Not read
+//     yet" (faint). (Unchanged this revision — clarified here.)
+//   • Edit action REMOVED — the header only exposes Delete for the task's
+//     creator (task.createdBy == currentUserReference).
 //   • Snackbars — every successful mutation (start / mark done / reopen /
 //     checklist toggle) shows "Task updated."; a delete shows
 //     "Task deleted.". (Uses the standard ink snackbar = _toast.)
@@ -63,7 +66,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
       Color(0xFFCC4B3C); // DS: → clay (destructive/error)
   static const Color _navy = Color(0xFF323F4D);
   static const Color _green =
-      Color(0xFF1F8A5B); // DS: to-do / in-progress / info
+      Color(0xFF1F8A5B); // DS: to-do / in-progress / info / mark-done
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
   // ────────────────────────────────────────────────────────────────────
@@ -128,7 +131,9 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
   }
 
   // =========================================================
-  // READ RECEIPT — stamp when the assigned team member's owner opens this task.
+  // READ RECEIPT — stamp when the assigned LISTING's owner opens this task.
+  // The green "Read …" line on the assignee row reflects this stamp; until
+  // it exists the row shows "Not read yet".
   // =========================================================
   Future<void> _maybeStampReadReceipt() async {
     if (_stampChecked) return;
@@ -316,83 +321,171 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
     }
   }
 
+  // ✅ Mark as done — now uses the shared centred "warning"-style dialog,
+  // recoloured GREEN, with an optional completion note.
   Future<void> _markDone() async {
     final ref = _taskRef;
     if (ref == null || _working) return;
+    FocusScope.of(context).unfocus();
 
     final controller = TextEditingController();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: _paper,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-          side: const BorderSide(color: _hairline, width: 1),
-        ),
-        title: const Text('Mark as done',
-            style: TextStyle(
-                fontFamily: _displayFont,
-                color: _ink,
-                fontWeight: FontWeight.w900,
-                fontSize: 18)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Add a completion note (optional).',
-                style: TextStyle(
-                    fontFamily: _bodyFont,
-                    color: _inkMute,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500)),
-            const SizedBox(height: 12),
-            TextField(
-              controller: controller,
-              maxLines: 3,
-              cursorColor: _teal,
-              style: const TextStyle(
-                  fontFamily: _bodyFont, fontSize: 14, color: _navy),
-              decoration: InputDecoration(
-                hintText: 'e.g. Done, photos attached',
-                hintStyle: const TextStyle(
-                    fontFamily: _bodyFont, color: _faint, fontSize: 14),
-                filled: true,
-                fillColor: _surface,
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel',
-                style: TextStyle(
-                    fontFamily: _bodyFont,
-                    color: _inkMute,
-                    fontWeight: FontWeight.w800)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Mark Done',
-                style: TextStyle(
-                    fontFamily: _bodyFont,
-                    color: _teal,
-                    fontWeight: FontWeight.w900)),
-          ),
-        ],
-      ),
-    );
+    final confirmed = await _showCompleteDialog(controller: controller);
 
     if (confirmed != true) return;
     await _setStatus('done', extra: {
       'completionNote': controller.text.trim(),
       'doneBy': currentUserReference,
     });
+  }
+
+  // Centred affirmative confirm dialog — the shared "warning" module in GREEN
+  // (mirrors _showDeleteDialog: green badge, 22-radius card, filled green
+  // confirm + outlined cancel, 55%-black scrim) plus a completion-note field.
+  Future<bool?> _showCompleteDialog(
+      {required TextEditingController controller}) {
+    return showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.55),
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 34),
+          child: Container(
+            width: 322,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _paper,
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.30),
+                  blurRadius: 54,
+                  offset: const Offset(0, 22),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 62,
+                  height: 62,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: _green.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                    border:
+                        Border.all(color: _green.withOpacity(0.24), width: 1),
+                  ),
+                  child: const Icon(Icons.task_alt_rounded,
+                      color: _green, size: 30),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Mark as done?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: _displayFont,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.4,
+                    fontSize: 18,
+                    color: _ink,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'This task moves to Done. Add a completion note if you like.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: _bodyFont,
+                    fontWeight: FontWeight.w500,
+                    height: 1.5,
+                    fontSize: 14,
+                    color: _inkMute,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: controller,
+                  maxLines: 3,
+                  cursorColor: _green,
+                  style: const TextStyle(
+                      fontFamily: _bodyFont, fontSize: 14, color: _navy),
+                  decoration: InputDecoration(
+                    hintText: 'e.g. Done — photos attached',
+                    hintStyle: const TextStyle(
+                        fontFamily: _bodyFont, color: _faint, fontSize: 14),
+                    filled: true,
+                    fillColor: _surface,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 11),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => Navigator.pop(ctx, true),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _green,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Text(
+                        'Mark done',
+                        style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: _paper,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => Navigator.pop(ctx, false),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _paper,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: const Color(0xFFCDD6E2), width: 1.4),
+                      ),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: _ink,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _toast(String msg) {
@@ -697,7 +790,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Icon(Icons.check_circle_rounded,
-                          size: 16, color: _teal),
+                          size: 16, color: _green),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(completionNote,
@@ -758,6 +851,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
     );
   }
 
+  // Assigned LISTING row + green read receipt (Read … / Not read yet).
   Widget _assignedListingRow(String name, DateTime? readAt) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 11),
@@ -803,7 +897,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
                   const SizedBox(height: 3),
                   Row(
                     children: [
-                      // ✅ Read receipt is GREEN.
+                      // ✅ Read receipt is GREEN — the listing has viewed it.
                       const Icon(Icons.done_all_rounded,
                           size: 14, color: _green),
                       const SizedBox(width: 5),
@@ -1104,9 +1198,8 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
   }
 
   // =========================================================
-  // Delete — shared "delete warning" dialog (ported from
-  // DocumentUploadPageView: centred card, clay badge, 22-radius,
-  // filled clay confirm + outlined cancel, 55%-black scrim).
+  // Delete — shared "delete warning" dialog (clay): centred card, clay badge,
+  // 22-radius, filled clay confirm + outlined cancel, 55%-black scrim.
   // =========================================================
   Future<void> _confirmDelete(DocumentReference ref, String title) async {
     FocusScope.of(context).unfocus();

@@ -10,10 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -651,6 +647,30 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
     return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
   }
 
+  // Resolves the listing OWNER's user ref from an assigned-listing ref, whether
+  // that ref points at a subby_listings doc (has ownerRef) or a project_listings
+  // doc (only has listingRef → follow it to the subby_listings doc). Stored on
+  // the snag as assignedListingOwnerRef so the read-receipt can stamp reliably.
+  Future<DocumentReference?> _resolveListingOwner(
+      DocumentReference listingRef) async {
+    try {
+      final snap = await listingRef.get();
+      final d = (snap.data() as Map<String, dynamic>? ?? {});
+      final owner = (d['ownerRef'] ?? d['providerRef']) as DocumentReference?;
+      if (owner != null) return owner;
+
+      final inner = d['listingRef'] as DocumentReference?;
+      if (inner != null) {
+        final innerSnap = await inner.get();
+        final id = (innerSnap.data() as Map<String, dynamic>? ?? {});
+        return (id['ownerRef'] ?? id['providerRef']) as DocumentReference?;
+      }
+    } catch (e) {
+      debugPrint('⚠️ resolve listing owner failed: $e');
+    }
+    return null;
+  }
+
   // =========================================================
   // Assign-to picker (project_listings for this project)
   // =========================================================
@@ -891,6 +911,14 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
       );
       final photoUrl = (firstImage['url'] ?? '').toString();
 
+      // Resolve the assigned listing's OWNER once, so the read-receipt can
+      // stamp reliably (and so security rules can gate on this field).
+      DocumentReference? assignedListingOwnerRef;
+      if (_assignedListingRef != null) {
+        assignedListingOwnerRef =
+            await _resolveListingOwner(_assignedListingRef!);
+      }
+
       if (_isEditing) {
         // ✅ UPDATE existing snag — preserve status / createdBy / createdAt.
         await _editingRef!.update(<String, dynamic>{
@@ -904,6 +932,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
           'assignedListingRef': _assignedListingRef,
           'assignedListingName': _assignedListingName,
           'assignedToName': _assignedListingName,
+          'assignedListingOwnerRef': assignedListingOwnerRef,
           'updatedAt': now,
         });
 
@@ -928,6 +957,8 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
         'assignedListingRef': _assignedListingRef,
         'assignedListingName': _assignedListingName,
         'assignedToName': _assignedListingName, // SnagList back-compat
+        'assignedListingOwnerRef':
+            assignedListingOwnerRef, // read-receipt owner gate
         'readByListingAt': null, // stamped when the team member opens it
         'createdBy': currentUserReference,
         'createdByName': currentUserDisplayName,
