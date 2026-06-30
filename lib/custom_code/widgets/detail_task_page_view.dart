@@ -10,10 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/auth/firebase_auth/auth_util.dart';
@@ -82,7 +78,8 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
   bool _resolved = false;
   bool _refLoading = true;
 
-  bool _stampChecked = false;
+  bool _stampDone = false; // read-receipt conclusively handled — stop retrying
+  bool _stampInFlight = false; // a stamp attempt is currently awaiting
   bool _working = false;
 
   @override
@@ -95,8 +92,6 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
       _loadActiveTask();
     } else {
       _refLoading = false;
-      WidgetsBinding.instance
-          .addPostFrameCallback((_) => _maybeStampReadReceipt());
     }
   }
 
@@ -126,29 +121,31 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
       _taskRef = path.isEmpty ? null : FirebaseFirestore.instance.doc(path);
       _refLoading = false;
     });
-    if (_taskRef != null) {
-      WidgetsBinding.instance
-          .addPostFrameCallback((_) => _maybeStampReadReceipt());
-    }
   }
 
   // =========================================================
-  // READ RECEIPT — stamp when the assigned LISTING's owner opens this task.
-  // The green "Read …" line on the assignee row reflects this stamp; until
-  // it exists the row shows "Not read yet".
+  // READ RECEIPT — stamp when the assigned LISTING's owner views this task.
+  //
+  // Driven by the live StreamBuilder snapshot rather than a one-shot
+  // first-frame callback: the doc data is already in hand (no extra read), and
+  // the attempt is retried on each snapshot until it conclusively succeeds or
+  // proves the viewer isn't the owner. A transient auth-not-ready state
+  // (currentUserReference still null on a cold open / deep-link) or a network
+  // blip no longer permanently suppresses the receipt — it simply retries on
+  // the next snapshot. The green "Read …" line reflects this stamp; until it
+  // exists the row shows "Not read yet".
   // =========================================================
-  Future<void> _maybeStampReadReceipt() async {
-    if (_stampChecked) return;
-    _stampChecked = true;
-
-    final ref = _taskRef;
-    final me = currentUserReference;
-    if (ref == null || me == null) return;
-
+  Future<void> _maybeStampReadReceipt(
+      DocumentReference ref, Map<String, dynamic> data) async {
+    if (_stampDone || _stampInFlight) return;
+    _stampInFlight = true;
     try {
-      final snap = await ref.get();
-      final data = (snap.data() as Map<String, dynamic>? ?? {});
-      if (data['readByListingAt'] != null) return;
+      if (data['readByListingAt'] != null) {
+        _stampDone = true; // already stamped by someone — stop trying
+        return;
+      }
+      final me = currentUserReference;
+      if (me == null) return; // auth not ready yet — retry on next snapshot
 
       // Prefer the owner ref denormalized onto the task at assign time; fall
       // back to resolving it live (handles assignedListingRef pointing at a
@@ -163,14 +160,21 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
       }
 
       // Only the ASSIGNED listing's owner stamps the receipt.
-      if (ownerRef == null || ownerRef.path != me.path) return;
+      if (ownerRef == null || ownerRef.path != me.path) {
+        _stampDone = true; // not the owner (auth present) — never stamp
+        return;
+      }
 
       await ref.update(<String, dynamic>{
         'readByListingAt': FieldValue.serverTimestamp(),
         'readByListingUserRef': me,
       });
+      _stampDone = true;
     } catch (e) {
       debugPrint('⚠️ Read-receipt stamp skipped: $e');
+      // _stampDone stays false → a later snapshot retries.
+    } finally {
+      _stampInFlight = false;
     }
   }
 
@@ -599,6 +603,10 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
           }
           final raw = snap.data?.data();
           final d = raw is Map<String, dynamic> ? raw : <String, dynamic>{};
+          // Retry the read-receipt stamp off the live snapshot (auth + Firestore
+          // are warm once data has arrived) until it conclusively resolves.
+          WidgetsBinding.instance
+              .addPostFrameCallback((_) => _maybeStampReadReceipt(ref, d));
           return _content(ref, d);
         },
       ),
