@@ -10,8 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -90,7 +88,8 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView>
   bool _resolved = false;
   bool _refLoading = true;
 
-  bool _stampChecked = false; // read-receipt stamped at most once per open
+  bool _stampDone = false; // read-receipt conclusively handled — stop retrying
+  bool _stampInFlight = false; // a stamp attempt is currently awaiting
   bool _working = false;
 
   // ── CLOSE-OUT GATE ──
@@ -111,8 +110,6 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView>
       _loadActiveSnag();
     } else {
       _refLoading = false;
-      WidgetsBinding.instance
-          .addPostFrameCallback((_) => _maybeStampReadReceipt());
     }
   }
 
@@ -149,30 +146,33 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView>
       _snagRef = path.isEmpty ? null : FirebaseFirestore.instance.doc(path);
       _refLoading = false;
     });
-    if (_snagRef != null) {
-      WidgetsBinding.instance
-          .addPostFrameCallback((_) => _maybeStampReadReceipt());
-    }
   }
 
   // =========================================================
-  // READ RECEIPT — stamp when the ASSIGNED team member's owner opens this snag.
+  // READ RECEIPT — stamp when the ASSIGNED listing's owner views this snag.
+  //
+  // Driven by the live StreamBuilder snapshot rather than a one-shot
+  // first-frame callback: the doc data is already in hand (no extra read), and
+  // the attempt is retried on each snapshot until it conclusively succeeds or
+  // proves the viewer isn't the owner. A transient auth-not-ready state
+  // (currentUserReference still null on a cold open / deep-link) or a network
+  // blip no longer permanently suppresses the receipt — it simply retries on
+  // the next snapshot.
   // =========================================================
-  Future<void> _maybeStampReadReceipt() async {
-    if (_stampChecked) return;
-    _stampChecked = true;
-
-    final ref = _snagRef;
-    final me = currentUserReference;
-    if (ref == null || me == null) return;
-
+  Future<void> _maybeStampReadReceipt(
+      DocumentReference ref, Map<String, dynamic> data) async {
+    if (_stampDone || _stampInFlight) return;
+    _stampInFlight = true;
     try {
-      final snap = await ref.get();
-      final data = (snap.data() as Map<String, dynamic>? ?? {});
-      if (data['readByListingAt'] != null) return;
+      if (data['readByListingAt'] != null) {
+        _stampDone = true; // already stamped by someone — stop trying
+        return;
+      }
+      final me = currentUserReference;
+      if (me == null) return; // auth not ready yet — retry on next snapshot
 
-      // Prefer the owner ref stored on the snag at assign time (reliable, no
-      // extra read, and what the security rules gate on).
+      // Prefer the owner ref stored on the snag at assign time (reliable, and
+      // what the security rules gate on).
       DocumentReference? ownerRef =
           data['assignedListingOwnerRef'] as DocumentReference?;
 
@@ -186,14 +186,21 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView>
       }
 
       // Only the ASSIGNED listing's owner stamps the receipt.
-      if (ownerRef == null || ownerRef.path != me.path) return;
+      if (ownerRef == null || ownerRef.path != me.path) {
+        _stampDone = true; // not the owner (auth present) — never stamp
+        return;
+      }
 
       await ref.update(<String, dynamic>{
         'readByListingAt': FieldValue.serverTimestamp(),
         'readByListingUserRef': me,
       });
+      _stampDone = true;
     } catch (e) {
       debugPrint('⚠️ Read-receipt stamp skipped: $e');
+      // _stampDone stays false → a later snapshot retries.
+    } finally {
+      _stampInFlight = false;
     }
   }
 
@@ -603,6 +610,10 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView>
             _seededFromDoc = true;
           }
 
+          // Retry the read-receipt stamp off the live snapshot (auth + Firestore
+          // are warm once data has arrived) until it conclusively resolves.
+          WidgetsBinding.instance
+              .addPostFrameCallback((_) => _maybeStampReadReceipt(ref, d));
           return _content(ref, d);
         },
       ),

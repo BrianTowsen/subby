@@ -10,10 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -54,13 +50,12 @@ class ListingResultsPageView extends StatefulWidget {
 class _ListingResultsPageViewState extends State<ListingResultsPageView> {
   // ─── SUBBY PALETTE — DIRECTORY (amber / sunshine) ──────────────────
   static const Color _amber = Color(0xFF323F4D); // accent: title, value, rating
-  static const Color _sunshine = Color(0xFFC7E87A); // secondary highlight
   static const Color _inkMute = Color(0xFF5A6675); // labels
   static const Color _faint = Color(0xFF93A0B0); // meta
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _orange =
-      Color(0xFFEB7A02); // DS: leading icons / active bookmark
+  static const Color _orange = Color(
+      0xFF1F8A5B); // DS green: leading icons / active bookmark (was orange #EB7A02)
   static const Color _green = Color(0xFF1F8A5B); // DS: verified / info
   static const Color _gold = Color(0xFFFBB12A); // DS: rating stars
   static const Color _hairline = Color(0xFFEEF1F2);
@@ -690,7 +685,7 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                                     width: 7,
                                     height: 7,
                                     decoration: const BoxDecoration(
-                                      color: _sunshine,
+                                      color: _green,
                                       shape: BoxShape.circle,
                                     ),
                                   ),

@@ -10,8 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -672,7 +670,15 @@ class _SnagListPageViewState extends State<SnagListPageView>
     final double v = d.primaryVelocity ?? 0;
     final bool shouldClose = _dragX > width * 0.30 || v > 700;
     if (shouldClose) {
-      _animateDragTo(width, then: _handleBack);
+      // Pop immediately — do NOT slide the page out to `width` first.
+      // DetailProjectPageView is on the route BELOW this widget, not inside it,
+      // so animating _dragX out to full width reveals nothing but the host
+      // Scaffold's blank primaryBackground for 220ms before the pop fires.
+      // That empty flash was the "blank first page". Resetting the offset and
+      // popping lets the route's own reverse transition carry us off-screen and
+      // bring DetailProjectPageView back cleanly.
+      _dragX = 0;
+      _handleBack();
     } else {
       _animateDragTo(0);
     }
