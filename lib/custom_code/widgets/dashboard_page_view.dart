@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -685,21 +687,30 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 22),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: _hPad),
-              child: _buildsGrid(docs),
-            ),
-            const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: _hPad),
-              child: _newProjectButton(),
+            // Unified build grid: owned builds (the most-recent one rendered
+            // as a FULL-GREEN featured tile), followed by SHARED builds (no
+            // separate heading — each carries a share marker), and a trailing
+            // "New home build" add tile that matches the project-tile size.
+            // Shared loads async, so the grid is wrapped in a FutureBuilder
+            // and rebuilds (also keeping _sharedCount fresh) once it resolves.
+            FutureBuilder<List<_SharedProject>>(
+              future: _loadSharedProjects(),
+              builder: (context, sharedSnap) {
+                final shared = sharedSnap.data ?? const <_SharedProject>[];
+                if (_sharedCount != shared.length) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) setState(() => _sharedCount = shared.length);
+                  });
+                }
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: _hPad),
+                  child: _buildsGrid(docs, shared),
+                );
+              },
             ),
 
             // Projects Feed — aggregated activity across all builds.
             _buildDashboardFeed(docs),
-
-            // Shared with me — read-only projects (also keeps _sharedCount fresh).
-            _buildSharedSection(),
 
             // Archived Building Projects.
             _buildArchivedSection(),
@@ -1197,6 +1208,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     }
   }
 
+  // RETAINED — shared builds now render inline in the main grid (no separate
+  // heading); this standalone section is kept for reference.
+  // ignore: unused_element
   Widget _buildSharedSection() {
     if (currentUserReference == null) return const SizedBox.shrink();
     return FutureBuilder<List<_SharedProject>>(
@@ -1484,29 +1498,49 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // ===================================================================
   // SAGE GRID — builds rendered as 2-up percentage-lead tiles.
   // ===================================================================
-  Widget _buildsGrid(List<QueryDocumentSnapshot<Map<String, dynamic>>> docs) {
+  Widget _buildsGrid(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+    List<_SharedProject> shared,
+  ) {
+    // One tile per build: owned first (index 0 = featured FULL-GREEN tile),
+    // then shared builds (share marker, no heading), then the add tile.
+    final tiles = <Widget>[];
+    for (int i = 0; i < docs.length; i++) {
+      tiles.add(
+          _buildGridTile(docs[i].data(), docs[i].reference, featured: i == 0));
+    }
+    for (final sp in shared) {
+      tiles.add(_buildGridTile(sp.data, sp.ref, sharedBy: sp.pmName.trim()));
+    }
+    tiles.add(_addTile());
+
     final rows = <Widget>[];
-    for (int i = 0; i < docs.length; i += 2) {
-      final left = docs[i];
-      final right = (i + 1 < docs.length) ? docs[i + 1] : null;
+    for (int i = 0; i < tiles.length; i += 2) {
+      final left = tiles[i];
+      final right = (i + 1 < tiles.length) ? tiles[i + 1] : null;
       rows.add(Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(child: _buildGridTile(left)),
+          Expanded(child: left),
           const SizedBox(width: 12),
-          Expanded(
-            child:
-                right != null ? _buildGridTile(right) : const SizedBox.shrink(),
-          ),
+          Expanded(child: right ?? const SizedBox.shrink()),
         ],
       ));
-      if (i + 2 < docs.length) rows.add(const SizedBox(height: 12));
+      if (i + 2 < tiles.length) rows.add(const SizedBox(height: 12));
     }
     return Column(children: rows);
   }
 
-  Widget _buildGridTile(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
-    final data = doc.data();
+  // A single build tile. `featured` paints it as a full-green fill (white
+  // text) — used for the most-recent owned build. `sharedBy` (non-null) marks
+  // it as a shared build: it shows a share glyph and a "Shared by …" subtitle.
+  Widget _buildGridTile(
+    Map<String, dynamic> data,
+    DocumentReference ref, {
+    bool featured = false,
+    String? sharedBy,
+  }) {
+    final bool shared = sharedBy != null;
     final name = (data['name'] as String?)?.trim() ?? '';
     final city = (data['city'] as String?)?.trim() ?? '';
     final province = (data['province'] as String?)?.trim() ?? '';
@@ -1514,54 +1548,103 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     final progress = _progress(data);
     final pct = (progress * 100).round();
 
+    final Color bg = featured ? _teal : const Color(0xFFE7F3EC);
+    final Color border = featured ? _teal : const Color(0xFFC9E4D6);
+    final Color numColor = featured ? _paper : _ink;
+    final Color subColor = featured ? Colors.white.withOpacity(0.85) : _inkMute;
+
+    final String sub = shared
+        ? (sharedBy!.isNotEmpty ? 'Shared by $sharedBy' : 'Shared with you')
+        : (loc.isEmpty ? 'No location set' : loc);
+
     return InkWell(
-      onTap: () => _goToProject(doc.reference),
+      onTap: () => _goToProject(ref),
       borderRadius: BorderRadius.circular(16),
       child: Container(
         height: 132,
         decoration: BoxDecoration(
-          color: const Color(0xFFE7F3EC),
-          border: Border.all(color: const Color(0xFFC9E4D6)),
+          color: bg,
+          border: Border.all(color: border),
           borderRadius: BorderRadius.circular(16),
         ),
         padding: const EdgeInsets.all(15),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('$pct%',
-                style: const TextStyle(
-                  fontFamily: _displayFont,
-                  fontSize: 32,
-                  fontWeight: FontWeight.w900,
-                  height: 1.0,
-                  color: _ink,
-                )),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text('$pct%',
+                      style: TextStyle(
+                        fontFamily: _displayFont,
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        height: 1.0,
+                        color: numColor,
+                      )),
+                ),
+                if (shared)
+                  Icon(Icons.ios_share_rounded, size: 16, color: subColor),
+              ],
+            ),
             const Spacer(),
             Text(name.isEmpty ? 'Untitled' : name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: _displayFont,
                   fontSize: 14.5,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.1,
-                  color: _ink,
+                  color: numColor,
                 )),
             const SizedBox(height: 2),
-            Text(loc.isEmpty ? 'No location set' : loc,
+            Text(sub,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: _bodyFont,
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
-                  color: _inkMute,
+                  color: subColor,
                 )),
           ],
         ),
       ),
     );
   }
+
+  // "New home build" add tile — same size/shape as a project tile, neutral
+  // surface fill with a centred add affordance.
+  Widget _addTile() => InkWell(
+        onTap: _goToAddProject,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          height: 132,
+          decoration: BoxDecoration(
+            color: _surface,
+            border: Border.all(color: const Color(0xFFCDD6E2), width: 1.4),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          padding: const EdgeInsets.all(15),
+          child: const Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.add_rounded, size: 28, color: Color(0xFF4B555D)),
+              SizedBox(height: 8),
+              Text('New home build',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF4B555D),
+                  )),
+            ],
+          ),
+        ),
+      );
 
   // ===================================================================
   // PROJECTS FEED — aggregated activity across all builds (rail).
@@ -1990,6 +2073,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // -----------------------------
   // New build button
   // -----------------------------
+  // RETAINED — superseded by the in-grid _addTile(); kept for reference.
+  // ignore: unused_element
   Widget _newProjectButton() => InkWell(
         onTap: _goToAddProject,
         borderRadius: BorderRadius.circular(10),

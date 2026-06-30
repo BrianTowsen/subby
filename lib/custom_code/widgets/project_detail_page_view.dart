@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -1512,6 +1514,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     required String visibility,
     required VoidCallback onTap,
     Color? bgColor,
+    Color? iconColor,
   }) {
     final shared = visibility == 'shared';
     return Material(
@@ -1530,7 +1533,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
           child: Icon(
             shared ? Icons.visibility_outlined : Icons.lock_outline_rounded,
             size: 16,
-            color: _inkMute,
+            color: iconColor ?? _inkMute,
           ),
         ),
       ),
@@ -1758,6 +1761,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   }
 
   // 2-up Sage module tile (Manage grid) — ink icon chip, title + subtitle.
+  // featured:true renders the lead tile as a solid sage-green hero card.
   Widget _moduleGridCell({
     required FlutterFlowTheme theme,
     required IconData icon,
@@ -1766,15 +1770,22 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     required VoidCallback onTap,
     String? visibility,
     VoidCallback? onToggleVisibility,
+    bool featured = false,
   }) {
+    final Color cardBg = featured ? const Color(0xFF166341) : _tealSurface;
+    final Color cardBorder =
+        featured ? const Color(0xFF166341) : _tealSurfaceBorder;
+    final Color chipBg = featured ? Colors.white.withOpacity(0.16) : _ink;
+    final Color titleColor = featured ? _paper : _ink;
+    final Color subColor = featured ? Colors.white.withOpacity(0.8) : _inkMute;
     return _tapCard(
       onTap: onTap,
       child: Container(
         height: 118,
         decoration: BoxDecoration(
-          color: _tealSurface,
+          color: cardBg,
           borderRadius: BorderRadius.circular(_radius),
-          border: Border.all(color: _tealSurfaceBorder),
+          border: Border.all(color: cardBorder),
         ),
         padding: const EdgeInsets.all(14),
         child: Column(
@@ -1786,7 +1797,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: _ink,
+                    color: chipBg,
                     borderRadius: BorderRadius.circular(11),
                   ),
                   child: Icon(icon, size: 21, color: _paper),
@@ -1797,6 +1808,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                     visibility: visibility,
                     onTap: onToggleVisibility,
                     bgColor: Colors.transparent,
+                    iconColor: featured ? Colors.white.withOpacity(0.9) : null,
                   ),
               ],
             ),
@@ -1807,7 +1819,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
               overflow: TextOverflow.ellipsis,
               style: theme.titleMedium.override(
                 fontFamily: _displayFont,
-                color: _ink,
+                color: titleColor,
                 fontWeight: FontWeight.w800,
                 fontSize: 14.5,
                 letterSpacing: -0.1,
@@ -1820,7 +1832,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
               overflow: TextOverflow.ellipsis,
               style: theme.labelSmall.override(
                 fontFamily: _bodyFont,
-                color: _inkMute,
+                color: subColor,
                 fontWeight: FontWeight.w500,
                 fontSize: 11,
                 letterSpacing: 0.0,
@@ -2086,7 +2098,16 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
           padding: const EdgeInsets.fromLTRB(2, 14, 4, 14),
           child: Row(
             children: [
-              Icon(icon, size: 22, color: _tealBright),
+              Container(
+                width: 40,
+                height: 40,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: _surface,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, size: 22, color: _tealBright),
+              ),
               const SizedBox(width: 13),
               Expanded(
                 child: Column(
@@ -2198,7 +2219,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                   borderRadius: BorderRadius.circular(_radius),
                 ),
                 child: const Icon(Icons.storefront_outlined,
-                    size: 22, color: _tealBright),
+                    size: 22, color: _paper),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -3237,6 +3258,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                                   Expanded(
                                     child: _moduleGridCell(
                                       theme: theme,
+                                      featured: true,
                                       icon: Icons.timeline_rounded,
                                       title: 'Timeline',
                                       subtitle: 'Programme & phases',
