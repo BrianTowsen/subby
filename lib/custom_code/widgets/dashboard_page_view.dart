@@ -10,8 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -623,15 +621,15 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       'https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/winston-9dy48u/assets/nfqbnusfa58y/subby-mark-green.png';
 
   Widget _logo() => SizedBox(
-        width: 34,
-        height: 34,
+        width: 44,
+        height: 44,
         child: Image.network(
           _logoUrl,
-          width: 34,
-          height: 34,
+          width: 44,
+          height: 44,
           fit: BoxFit.contain,
           errorBuilder: (context, error, stackTrace) => CustomPaint(
-            size: const Size(34, 34),
+            size: const Size(44, 44),
             painter: const _SubbyMarkPainter(
               peak: Color(0xFF166341), // Subby brand green
               base: Color(0xFF166341),
@@ -1962,9 +1960,19 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
   Widget _activityRow(_FeedRow r) {
     final collapsed = r.count > 1;
-    final label = collapsed
-        ? '${_activityTypeLabel(r.type)} \u00d7${r.count}'
-        : (r.title.isNotEmpty ? r.title : _activityTypeLabel(r.type));
+    final String label;
+    if (collapsed) {
+      // Many same-type events on one build in a day -> "Task added x3".
+      label = '${_activityTypeLabel(r.type)} \u00d7${r.count}';
+    } else if (r.title.isEmpty) {
+      label = _activityTypeLabel(r.type);
+    } else if (r.type == 'snag_status') {
+      // snag_status titles already read "<snag> - <status>" -> no verb prefix.
+      label = r.title;
+    } else {
+      // Lead with the action so the row reads "Document uploaded: <name>".
+      label = '${_activityTypeLabel(r.type)}: ${r.title}';
+    }
     final sub = '${r.project} \u00b7 ${_relativeTime(r.latest)}';
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
