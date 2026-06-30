@@ -40,21 +40,18 @@ class _SnagListPageWidgetState extends State<SnagListPageWidget> {
         FocusScope.of(context).unfocus();
         FocusManager.instance.primaryFocus?.unfocus();
       },
-      child: PopScope(
-        canPop: false,
-        child: Scaffold(
-          key: scaffoldKey,
-          backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
-          body: Container(
+      child: Scaffold(
+        key: scaffoldKey,
+        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        body: Container(
+          width: double.infinity,
+          height: double.infinity,
+          child: custom_widgets.SnagListPageView(
             width: double.infinity,
             height: double.infinity,
-            child: custom_widgets.SnagListPageView(
-              width: double.infinity,
-              height: double.infinity,
-              addSnagRouteName: 'AddSnagPage',
-              snagDetailRouteName: 'DetailSnagPage',
-              backRouteName: '',
-            ),
+            addSnagRouteName: 'AddSnagPage',
+            snagDetailRouteName: 'DetailSnagPage',
+            backRouteName: '',
           ),
         ),
       ),
