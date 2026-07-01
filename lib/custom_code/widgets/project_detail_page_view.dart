@@ -10,14 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -1853,6 +1845,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     required String title,
     required String subtitle,
     required VoidCallback onTap,
+    String? visibility,
+    VoidCallback? onToggleVisibility,
   }) {
     return _tapCard(
       onTap: onTap,
@@ -1903,6 +1897,14 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                 ],
               ),
             ),
+            if (visibility != null && onToggleVisibility != null) ...[
+              _visToggle(
+                visibility: visibility,
+                onTap: onToggleVisibility,
+                bgColor: Colors.transparent,
+              ),
+              const SizedBox(width: 8),
+            ],
             const Icon(Icons.chevron_right_rounded,
                 size: 22, color: Color(0xFF166341)),
           ],
@@ -3334,6 +3336,9 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                                 icon: Icons.request_quote_outlined,
                                 title: 'Get Quotes',
                                 subtitle: 'Compare trades',
+                                visibility: _moduleVisFor('getQuotes'),
+                                onToggleVisibility: () =>
+                                    _toggleModuleVis('getQuotes'),
                                 onTap: () => _safeNavigate(
                                   widget.getQuotesRouteName,
                                   fallbackRoute: _fallbackQuotesRoute,
