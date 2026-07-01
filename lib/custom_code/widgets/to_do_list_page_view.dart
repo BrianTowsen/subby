@@ -12,16 +12,21 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // ─────────────────────────────────────────────────────────────────────
 // UPDATE (this revision):
-//   • Quick-toggling a task done/undone from the list now shows the standard
+//   • The status filter is now a single SEGMENTED PILL control (replaces the
+//     separate soft-pill counts row + underline TabBar). The active segment is
+//     a GREEN pill that SLIDES between To Do / In Progress / Done
+//     (AnimatedAlign, 260ms easeOutCubic). Each segment folds in its live count.
+//   • The page now uses a NestedScrollView so the project card scrolls away and
+//     the pill row stays PINNED to the top while the task list scrolls up
+//     (pinned SliverPersistentHeader). The old fixed header Column + standalone
+//     counts row have been removed.
+//   • Quick-toggling a task done/undone from the list still shows the standard
 //     ink snackbar ("Task updated.") — see _quickToggle + _snack().
-// (Edit / ownership / delete-warning live on DetailTaskPageView.)
 // ─────────────────────────────────────────────────────────────────────
 
 class ToDoListPageView extends StatefulWidget {
@@ -69,6 +74,7 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
 
   static const double _hPad = 24;
   static const double _radius = 12;
+  static const double _stickyTabsHeight = 62;
   static const String _kActiveProjectPath = 'subby_active_project_path';
 
   late TabController _tabController;
@@ -79,6 +85,7 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    // Rebuild so the sliding pill + segment weights track the selected tab.
     _tabController.addListener(() {
       if (mounted) setState(() {});
     });
@@ -258,7 +265,7 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
   }
 
   // =========================================================
-  // Project card + counts
+  // Project card
   // =========================================================
   Widget _projectCard() {
     if (_projectRef == null) {
@@ -326,58 +333,126 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
         child: child,
       );
 
-  Widget _countsRow() {
-    if (_projectRef == null) return const SizedBox.shrink();
-    Widget pill(String label, String key, IconData icon, Color fg, Color bg) {
-      return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: FirebaseFirestore.instance
-            .collection('tasks')
-            .where('projectRef', isEqualTo: _projectRef)
-            .where('status', isEqualTo: key)
-            .snapshots(),
-        builder: (context, snap) {
-          final n = snap.data?.docs.length ?? 0;
-          return _softPill('$label $n', fg: fg, bg: bg, icon: icon);
-        },
-      );
-    }
-
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        pill('To Do', 'todo', Icons.radio_button_unchecked, _ink, _tealTint),
-        pill('In Progress', 'in_progress', Icons.play_arrow_rounded, _paper,
-            _green),
-        pill('Done', 'done', Icons.check_circle, _faint, _surface),
-      ],
+  // =========================================================
+  // Segmented PILL tabs (sliding green indicator + folded counts)
+  // =========================================================
+  Widget _tabsBar() {
+    return Container(
+      color: _paper,
+      padding: const EdgeInsets.fromLTRB(_hPad, 4, _hPad, 10),
+      child: _pillTabs(
+        current: _tabController.index,
+        labels: const ['To Do', 'In Progress', 'Done'],
+        statusKeys: const ['todo', 'in_progress', 'done'],
+        collection: 'tasks',
+        onTap: (i) => _tabController.animateTo(i),
+      ),
     );
   }
 
-  // =========================================================
-  // Tabs
-  // =========================================================
-  Widget _tabs() {
-    return TabBar(
-      controller: _tabController,
-      isScrollable: true,
-      tabAlignment: TabAlignment.start,
-      labelPadding: const EdgeInsets.only(right: 24),
-      indicatorSize: TabBarIndicatorSize.label,
-      indicatorColor: _teal,
-      indicatorWeight: 2,
-      dividerColor: _hairlineOnSurface,
-      labelColor: _teal,
-      unselectedLabelColor: _faint,
-      labelStyle: const TextStyle(
-          fontFamily: _bodyFont, fontWeight: FontWeight.w800, fontSize: 14),
-      unselectedLabelStyle: const TextStyle(
-          fontFamily: _bodyFont, fontWeight: FontWeight.w600, fontSize: 14),
-      tabs: const [
-        Tab(text: 'To Do'),
-        Tab(text: 'In Progress'),
-        Tab(text: 'Done'),
-      ],
+  // Reusable segmented pill: a surface track with a GREEN pill that slides to
+  // the active segment; each segment shows its label + a live count.
+  Widget _pillTabs({
+    required int current,
+    required List<String> labels,
+    required List<String> statusKeys,
+    required String collection,
+    required ValueChanged<int> onTap,
+  }) {
+    final n = labels.length;
+    return Container(
+      height: 44,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: LayoutBuilder(
+        builder: (context, c) {
+          final segW = c.maxWidth / n;
+          return Stack(
+            children: [
+              // Sliding green pill.
+              AnimatedAlign(
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeOutCubic,
+                alignment: n == 1
+                    ? Alignment.center
+                    : Alignment(-1 + (2 * current / (n - 1)), 0),
+                child: Container(
+                  width: segW,
+                  height: double.infinity,
+                  decoration: BoxDecoration(
+                    color: _green,
+                    borderRadius: BorderRadius.circular(999),
+                    boxShadow: const [
+                      BoxShadow(
+                          color: Color(0x1A000000),
+                          blurRadius: 3,
+                          offset: Offset(0, 1)),
+                    ],
+                  ),
+                ),
+              ),
+              // Tappable labels.
+              Row(
+                children: List.generate(n, (i) {
+                  final active = i == current;
+                  return Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => onTap(i),
+                      child: Center(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              labels[i],
+                              style: TextStyle(
+                                fontFamily: _bodyFont,
+                                fontSize: 12.5,
+                                fontWeight:
+                                    active ? FontWeight.w800 : FontWeight.w600,
+                                color: active ? _paper : _faint,
+                              ),
+                            ),
+                            const SizedBox(width: 5),
+                            _tabCount(collection, statusKeys[i], active),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  // Live per-status count shown inside a pill segment.
+  Widget _tabCount(String collection, String statusKey, bool active) {
+    if (_projectRef == null) return const SizedBox.shrink();
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection(collection)
+          .where('projectRef', isEqualTo: _projectRef)
+          .where('status', isEqualTo: statusKey)
+          .snapshots(),
+      builder: (context, snap) {
+        final n = snap.data?.docs.length ?? 0;
+        return Text(
+          '$n',
+          style: TextStyle(
+            fontFamily: _bodyFont,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: (active ? _paper : _faint).withOpacity(0.75),
+          ),
+        );
+      },
     );
   }
 
@@ -386,8 +461,13 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
   // =========================================================
   Widget _taskList(int tabIndex) {
     if (_projectRef == null) {
-      return _emptyCard(
-          'No project selected', 'Open this page from a project to see tasks.');
+      return ListView(
+        padding: const EdgeInsets.fromLTRB(_hPad, 16, _hPad, 110),
+        children: [
+          _emptyCard('No project selected',
+              'Open this page from a project to see tasks.'),
+        ],
+      );
     }
     final statusKey = _tabKey(tabIndex);
     final stream = FirebaseFirestore.instance
@@ -688,6 +768,7 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Header — minimal back + big title (stays fixed)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(_hPad, 14, _hPad, 0),
                   child: Column(
@@ -710,23 +791,40 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                               color: _faint)),
-                      const SizedBox(height: 18),
-                      _projectCard(),
-                      const SizedBox(height: 14),
-                      _countsRow(),
-                      const SizedBox(height: 16),
-                      _tabs(),
                     ],
                   ),
                 ),
+                const SizedBox(height: 18),
+                // Body — project card scrolls away; the pill tabs pin.
                 Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _taskList(0),
-                      _taskList(1),
-                      _taskList(2),
-                    ],
+                  child: NestedScrollView(
+                    headerSliverBuilder: (context, inner) {
+                      return [
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 4),
+                            child: _projectCard(),
+                          ),
+                        ),
+                        SliverPersistentHeader(
+                          pinned: true,
+                          delegate: _StickyHeaderDelegate(
+                            minHeight: _stickyTabsHeight,
+                            maxHeight: _stickyTabsHeight,
+                            child: _tabsBar(),
+                          ),
+                        ),
+                      ];
+                    },
+                    body: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _taskList(0),
+                        _taskList(1),
+                        _taskList(2),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -786,5 +884,39 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
     if (days < 0) return 'Due ${dateTimeFormat('d MMM', due)}';
     if (days == 0) return 'Due today';
     return 'Due ${dateTimeFormat('d MMM', due)}';
+  }
+}
+
+// ============================================================================
+// Sticky header delegate (pinned pill tabs)
+// ============================================================================
+class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
+  _StickyHeaderDelegate({
+    required this.minHeight,
+    required this.maxHeight,
+    required this.child,
+  });
+
+  final double minHeight;
+  final double maxHeight;
+  final Widget child;
+
+  @override
+  double get minExtent => minHeight;
+
+  @override
+  double get maxExtent => maxHeight;
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return SizedBox.expand(child: child);
+  }
+
+  @override
+  bool shouldRebuild(_StickyHeaderDelegate oldDelegate) {
+    return minHeight != oldDelegate.minHeight ||
+        maxHeight != oldDelegate.maxHeight ||
+        child != oldDelegate.child;
   }
 }

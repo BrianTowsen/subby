@@ -10,16 +10,23 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // ─────────────────────────────────────────────────────────────────────
-// NOTE: The Snag List itself is unchanged — it has no inline status toggle,
-// so the To-Do "snackbar on quick action" change has no equivalent here.
-// All behavioural changes (working Edit, ownership-gated Edit/Delete, the
-// shared delete-warning dialog, update/close/delete snackbars, the
-// before/after proof view) live on DetailSnagPageView + AddSnagPageView.
-// Pass the Detail page's new `editSnagRouteName` to your Add/Edit Snag route.
+// UPDATE (this revision):
+//   • The status filter is now a single SEGMENTED PILL control (replaces the
+//     separate soft-pill counts row + underline TabBar). The active segment is
+//     a GREEN pill that SLIDES between Open / In Progress / Closed
+//     (AnimatedAlign, 260ms easeOutCubic). Each segment folds in its live count
+//     (Open 3, In Progress 2, Closed 2) — see _pillTabs + _tabCount.
+//   • The pill row stays PINNED to the top while the list scrolls up (it is the
+//     pinned SliverPersistentHeader in the NestedScrollView). The old standalone
+//     counts sliver has been removed.
+//   • Tapping a segment drives the TabController (animateTo); a controller
+//     listener rebuilds so the sliding pill tracks the selection.
 // ─────────────────────────────────────────────────────────────────────
 
 class SnagListPageView extends StatefulWidget {
@@ -71,7 +78,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
   static const double _gap = 0;
 
   static const double _sliverTopGap = 4;
-  static const double _stickyTabsHeight = 58;
+  static const double _stickyTabsHeight = 62;
   static const double _contentHPad = _hPad;
 
   static const String _kActiveProjectPath = 'subby_active_project_path';
@@ -85,6 +92,10 @@ class _SnagListPageViewState extends State<SnagListPageView>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    // Rebuild so the sliding pill + segment weights track the selected tab.
+    _tabController.addListener(() {
+      if (mounted) setState(() {});
+    });
     // NOTE: route reading must happen in didChangeDependencies (needs context).
   }
 
@@ -236,7 +247,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
         child: child,
       );
 
-  // Soft-tint pill.
+  // Soft-tint pill (still used by the snag row for status + severity).
   Widget _softPill(String text,
       {required Color fg, required Color bg, IconData? icon}) {
     return Container(
@@ -407,76 +418,126 @@ class _SnagListPageViewState extends State<SnagListPageView>
   }
 
   // ---------------------------------------
-  // Underline tabs
+  // Segmented PILL tabs (sliding green indicator + folded counts)
   // ---------------------------------------
   Widget _buildTabs(FlutterFlowTheme theme, Color accent) {
     return Container(
       color: _paper,
-      padding: const EdgeInsets.symmetric(horizontal: _contentHPad),
+      padding: const EdgeInsets.fromLTRB(_contentHPad, 4, _contentHPad, 10),
       alignment: Alignment.bottomLeft,
-      child: TabBar(
-        controller: _tabController,
-        isScrollable: true,
-        tabAlignment: TabAlignment.start,
-        labelPadding: const EdgeInsets.only(right: 24),
-        indicatorSize: TabBarIndicatorSize.label,
-        indicatorColor: _teal,
-        indicatorWeight: 2,
-        dividerColor: _hairlineOnSurface,
-        labelColor: _teal,
-        unselectedLabelColor: _faint,
-        labelStyle: theme.bodyMedium.override(
-          fontFamily: _bodyFont,
-          fontWeight: FontWeight.w800,
-          fontSize: 14,
-        ),
-        unselectedLabelStyle: theme.bodyMedium.override(
-          fontFamily: _bodyFont,
-          fontWeight: FontWeight.w600,
-          fontSize: 14,
-        ),
-        tabs: const [
-          Tab(text: 'Open'),
-          Tab(text: 'In Progress'),
-          Tab(text: 'Closed'),
-        ],
+      child: _pillTabs(
+        current: _tabController.index,
+        labels: const ['Open', 'In Progress', 'Closed'],
+        statusKeys: const ['open', 'in_progress', 'closed'],
+        collection: 'snags',
+        onTap: (i) => _tabController.animateTo(i),
       ),
     );
   }
 
-  // ---------------------------------------
-  // Snag counts row (soft pills)
-  // ---------------------------------------
-  Widget _buildCountsRow(FlutterFlowTheme theme, Color accent) {
-    if (_projectRef == null) return const SizedBox.shrink();
-
-    Widget countPill(String label, String statusKey, IconData icon) {
-      return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: FirebaseFirestore.instance
-            .collection('snags')
-            .where('projectRef', isEqualTo: _projectRef)
-            .where('status', isEqualTo: statusKey)
-            .snapshots(),
-        builder: (context, snap) {
-          final n = snap.data?.docs.length ?? 0;
-          final c = _statusColor(theme, accent, statusKey);
-          return _softPill('$label $n',
-              fg: c, bg: _statusTint(statusKey), icon: icon);
-        },
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: _contentHPad),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          countPill('Open', 'open', Icons.circle),
-          countPill('In Progress', 'in_progress', Icons.play_arrow_rounded),
-          countPill('Closed', 'closed', Icons.check_circle),
-        ],
+  // Reusable segmented pill: a surface track with a GREEN pill that slides to
+  // the active segment; each segment shows its label + a live count.
+  Widget _pillTabs({
+    required int current,
+    required List<String> labels,
+    required List<String> statusKeys,
+    required String collection,
+    required ValueChanged<int> onTap,
+  }) {
+    final n = labels.length;
+    return Container(
+      height: 44,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(999),
       ),
+      child: LayoutBuilder(
+        builder: (context, c) {
+          final segW = c.maxWidth / n;
+          return Stack(
+            children: [
+              // Sliding green pill.
+              AnimatedAlign(
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeOutCubic,
+                alignment: n == 1
+                    ? Alignment.center
+                    : Alignment(-1 + (2 * current / (n - 1)), 0),
+                child: Container(
+                  width: segW,
+                  height: double.infinity,
+                  decoration: BoxDecoration(
+                    color: _green,
+                    borderRadius: BorderRadius.circular(999),
+                    boxShadow: const [
+                      BoxShadow(
+                          color: Color(0x1A000000),
+                          blurRadius: 3,
+                          offset: Offset(0, 1)),
+                    ],
+                  ),
+                ),
+              ),
+              // Tappable labels.
+              Row(
+                children: List.generate(n, (i) {
+                  final active = i == current;
+                  return Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => onTap(i),
+                      child: Center(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              labels[i],
+                              style: TextStyle(
+                                fontFamily: _bodyFont,
+                                fontSize: 12.5,
+                                fontWeight:
+                                    active ? FontWeight.w800 : FontWeight.w600,
+                                color: active ? _paper : _faint,
+                              ),
+                            ),
+                            const SizedBox(width: 5),
+                            _tabCount(collection, statusKeys[i], active),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  // Live per-status count shown inside a pill segment.
+  Widget _tabCount(String collection, String statusKey, bool active) {
+    if (_projectRef == null) return const SizedBox.shrink();
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection(collection)
+          .where('projectRef', isEqualTo: _projectRef)
+          .where('status', isEqualTo: statusKey)
+          .snapshots(),
+      builder: (context, snap) {
+        final n = snap.data?.docs.length ?? 0;
+        return Text(
+          '$n',
+          style: TextStyle(
+            fontFamily: _bodyFont,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: (active ? _paper : _faint).withOpacity(0.75),
+          ),
+        );
+      },
     );
   }
 
@@ -648,9 +709,6 @@ class _SnagListPageViewState extends State<SnagListPageView>
   }
 
   // ─── Swipe-right-to-go-back (follow the thumb, snap back or pop) ──────
-  // Ported from ProjectDetailPageView so the page closes on a right-sweep on
-  // iOS AND Android. The native left-edge gesture is iOS-only and gets eaten by
-  // horizontally-scrolling children, so we drive the pop ourselves.
   double _dragX = 0;
   late final AnimationController _snapCtrl = AnimationController(
     vsync: this,
@@ -670,13 +728,6 @@ class _SnagListPageViewState extends State<SnagListPageView>
     final double v = d.primaryVelocity ?? 0;
     final bool shouldClose = _dragX > width * 0.30 || v > 700;
     if (shouldClose) {
-      // Pop immediately — do NOT slide the page out to `width` first.
-      // DetailProjectPageView is on the route BELOW this widget, not inside it,
-      // so animating _dragX out to full width reveals nothing but the host
-      // Scaffold's blank primaryBackground for 220ms before the pop fires.
-      // That empty flash was the "blank first page". Resetting the offset and
-      // popping lets the route's own reverse transition carry us off-screen and
-      // bring DetailProjectPageView back cleanly.
       _dragX = 0;
       _handleBack();
     } else {
@@ -697,8 +748,6 @@ class _SnagListPageViewState extends State<SnagListPageView>
       });
   }
 
-  // deferToChild lets vertical scroll views keep vertical drags; horizontal
-  // drags translate the page and pop on release.
   Widget _swipeBack(Widget child) {
     return GestureDetector(
       behavior: HitTestBehavior.deferToChild,
@@ -730,7 +779,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header — minimal back + big title
+                  // Header — minimal back + big title (stays fixed)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: _hPad),
                     child: Column(
@@ -748,7 +797,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
 
                   const SizedBox(height: 18),
 
-                  // Body
+                  // Body — project card scrolls away; the pill tabs pin.
                   Expanded(
                     child: NestedScrollView(
                       headerSliverBuilder: (context, inner) {
@@ -758,14 +807,8 @@ class _SnagListPageViewState extends State<SnagListPageView>
                           ),
                           SliverToBoxAdapter(
                             child: Padding(
-                              padding: const EdgeInsets.only(bottom: 14),
+                              padding: const EdgeInsets.only(bottom: 4),
                               child: _buildProjectCard(theme, accent),
-                            ),
-                          ),
-                          SliverToBoxAdapter(
-                            child: Padding(
-                              padding: const EdgeInsets.only(bottom: 16),
-                              child: _buildCountsRow(theme, accent),
                             ),
                           ),
                           SliverPersistentHeader(
@@ -780,12 +823,6 @@ class _SnagListPageViewState extends State<SnagListPageView>
                       },
                       body: TabBarView(
                         controller: _tabController,
-                        // Tabs switch by TAPPING only. Disabling horizontal
-                        // swipe here frees the iOS left-edge back-gesture —
-                        // a swipeable TabBarView/PageView otherwise wins the
-                        // gesture arena and eats the back-swipe (even on the
-                        // first tab), which is why you couldn't sweep back
-                        // from ProjectDetail → SnagList.
                         physics: const NeverScrollableScrollPhysics(),
                         children: List.generate(3, (tabIndex) {
                           final stream = _snagStreamForTab(tabIndex);
@@ -803,8 +840,6 @@ class _SnagListPageViewState extends State<SnagListPageView>
                               QuerySnapshot<Map<String, dynamic>>>(
                             stream: stream,
                             builder: (context, snap) {
-                              // Surface query errors instead of silently
-                              // showing an empty list (e.g. a missing index).
                               if (snap.hasError) {
                                 debugPrint('🔥 Snag list query error: '
                                     '${snap.error}');
@@ -940,7 +975,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
 }
 
 // ============================================================================
-// Sticky header delegate (pinned tabs)
+// Sticky header delegate (pinned pill tabs)
 // ============================================================================
 class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
   _StickyHeaderDelegate({
