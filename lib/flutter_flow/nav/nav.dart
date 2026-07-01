@@ -360,6 +360,36 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           name: DetailTaskPageWidget.routeName,
           path: DetailTaskPageWidget.routePath,
           builder: (context, params) => DetailTaskPageWidget(),
+        ),
+        FFRoute(
+          name: SubmitQuoteWidget.routeName,
+          path: SubmitQuoteWidget.routePath,
+          builder: (context, params) => SubmitQuoteWidget(),
+        ),
+        FFRoute(
+          name: QuotesReceivedWidget.routeName,
+          path: QuotesReceivedWidget.routePath,
+          builder: (context, params) => QuotesReceivedWidget(),
+        ),
+        FFRoute(
+          name: QuoteDetailWidget.routeName,
+          path: QuoteDetailWidget.routePath,
+          builder: (context, params) => QuoteDetailWidget(),
+        ),
+        FFRoute(
+          name: InviteWidget.routeName,
+          path: InviteWidget.routePath,
+          builder: (context, params) => InviteWidget(),
+        ),
+        FFRoute(
+          name: QuoteRequestWidget.routeName,
+          path: QuoteRequestWidget.routePath,
+          builder: (context, params) => QuoteRequestWidget(),
+        ),
+        FFRoute(
+          name: InboxWidget.routeName,
+          path: InboxWidget.routePath,
+          builder: (context, params) => InboxWidget(),
         )
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );
