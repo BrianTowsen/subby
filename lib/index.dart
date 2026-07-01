@@ -51,3 +51,9 @@ export '/snag_list/detail_snag_page/detail_snag_page_widget.dart'
 export '/add_task_page/add_task_page_widget.dart' show AddTaskPageWidget;
 export '/detail_task_page/detail_task_page_widget.dart'
     show DetailTaskPageWidget;
+export '/submit_quote/submit_quote_widget.dart' show SubmitQuoteWidget;
+export '/quotes_received/quotes_received_widget.dart' show QuotesReceivedWidget;
+export '/quote_detail/quote_detail_widget.dart' show QuoteDetailWidget;
+export '/invite/invite_widget.dart' show InviteWidget;
+export '/quote_request/quote_request_widget.dart' show QuoteRequestWidget;
+export '/inbox/inbox_widget.dart' show InboxWidget;
