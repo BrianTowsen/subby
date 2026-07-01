@@ -10,8 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -65,7 +63,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
       Color(0xFFEEF1F4); // DS: lime tint → neutral surface
   static const Color _live =
       Color(0xFFCC4B3C); // DS: lime → clay (high / attention)
-  static const Color _green = Color(0xFF1F8A5B); // DS: in-progress / info
+  static const Color _green = Color(0xFF166341); // DS: in-progress / info
   static const Color _coral = Color(0xFFCC4B3C); // destructive / error (clay)
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';

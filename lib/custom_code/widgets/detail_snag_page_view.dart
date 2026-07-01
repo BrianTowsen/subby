@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -67,7 +69,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView>
       Color(0xFFEEF1F4); // DS: lime tint → neutral surface
   static const Color _live =
       Color(0xFFCC4B3C); // DS: lime → clay (high / attention)
-  static const Color _green = Color(0xFF1F8A5B); // DS: in-progress / info
+  static const Color _green = Color(0xFF166341); // DS: in-progress / info
   static const Color _greenSurface = Color(0xFFE7F3EC);
   static const Color _greenBorder = Color(0xFFC9E4D6);
   static const Color _coral = Color(0xFFCC4B3C);

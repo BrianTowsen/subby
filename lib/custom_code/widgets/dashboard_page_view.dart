@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -146,7 +148,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
   // Accents
   static const Color _yellow = Color(0xFF166341); // sage — "on site" / on track
-  static const Color _teal = Color(0xFF1F8A5B); // info / shared / "needs you"
+  static const Color _teal = Color(0xFF166341); // info / shared / "needs you"
   static const Color _ringTrack = Color(0xFFEEF2F7);
   static const Color _orange = Color(0xFFCC4B3C); // attention / snagging (clay)
   static const Color _orangeTint = Color(0xFFF3E7E2);
