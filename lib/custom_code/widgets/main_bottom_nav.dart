@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // HapticFeedback (medium impact on tab tap)
 
 import '/custom_code/widgets/index.dart'; // (kept if FF expects it)
@@ -52,8 +54,8 @@ class MainBottomNav extends StatefulWidget {
 
 class _MainBottomNavState extends State<MainBottomNav> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _teal = Color(0xFF1F8A5B); // active (default) — green
-  static const Color _orange = Color(0xFF1F8A5B); // active (Directory) — green
+  static const Color _teal = Color(0xFF166341); // active (default) — green
+  static const Color _orange = Color(0xFF166341); // active (Directory) — green
   static const Color _faint = Color(0xFF93A0B0); // inactive
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _hairline = Color(0xFFEEF1F2);

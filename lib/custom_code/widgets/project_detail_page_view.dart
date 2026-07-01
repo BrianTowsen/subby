@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -1208,8 +1210,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             value: budget,
             label: 'Budget',
             valueColor: _paper,
-            bg: const Color(0xFF1F8A5B),
-            border: const Color(0xFF1F8A5B),
+            bg: const Color(0xFF166341),
+            border: const Color(0xFF166341),
             labelColor: _paper,
           ),
         ),
@@ -2477,8 +2479,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             value: snags,
             label: 'Open snags',
             valueColor: _paper,
-            bg: const Color(0xFF1F8A5B),
-            border: const Color(0xFF1F8A5B),
+            bg: const Color(0xFF166341),
+            border: const Color(0xFF166341),
             labelColor: _paper,
           ),
         ),

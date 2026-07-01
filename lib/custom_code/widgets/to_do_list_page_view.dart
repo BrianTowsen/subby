@@ -10,8 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -67,7 +65,7 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
       Color(0xFFCC4B3C); // DS: lime → clay (high/attention)
   static const Color _navy = Color(0xFF323F4D);
   static const Color _green =
-      Color(0xFF1F8A5B); // DS: to-do / in-progress / info
+      Color(0xFF166341); // DS: to-do / in-progress / info
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
   // ────────────────────────────────────────────────────────────────────
