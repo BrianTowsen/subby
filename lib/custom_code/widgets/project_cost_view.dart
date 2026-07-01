@@ -13,6 +13,7 @@ import 'index.dart'; // Imports other custom widgets
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '/auth/firebase_auth/auth_util.dart';
 
 /// ProjectCostView — Building Cost Estimate TEMPLATE.
 ///
@@ -107,8 +108,15 @@ class _ProjectCostViewState extends State<ProjectCostView> {
   final List<_EstSection> _sections = [];
   bool _breakdownOpen = false;
 
-  DocumentReference? _projectRef;
+  DocumentReference<Map<String, dynamic>>? _projectRef;
+  DocumentReference<Map<String, dynamic>>? _estimateRef;
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _projSub;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _estSub;
+  Timer? _saveTimer;
+  bool _isOwner = true;
+  bool _readOnly = false;
+  String _visibility = 'private';
+  bool _remoteLoaded = false;
   String _projectName = 'Project';
 
   @override
@@ -128,6 +136,8 @@ class _ProjectCostViewState extends State<ProjectCostView> {
   @override
   void dispose() {
     _projSub?.cancel();
+    _estSub?.cancel();
+    _saveTimer?.cancel();
     for (final s in _sections) {
       s.dispose();
     }
@@ -140,14 +150,129 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     if (path.isEmpty) return;
     final ref = FirebaseFirestore.instance.doc(path);
     _projectRef = ref;
+    _estimateRef = ref.collection('estimate').doc('plan');
+
     _projSub = ref.snapshots().listen((snap) {
       final raw = snap.data();
       final data = raw is Map<String, dynamic> ? raw : <String, dynamic>{};
       final name =
           (data['name'] ?? data['projectName'] ?? data['title'] ?? 'Project')
               .toString();
-      if (mounted) setState(() => _projectName = name);
+      final ownerRef = data['ownerRef'];
+      final isOwner = ownerRef is DocumentReference &&
+          currentUserReference != null &&
+          ownerRef.path == currentUserReference!.path;
+      if (!mounted) return;
+      setState(() {
+        _projectName = name;
+        _isOwner = isOwner;
+        _readOnly = !isOwner;
+      });
     });
+
+    _estSub =
+        _estimateRef!.snapshots().listen(_onRemoteEstimate, onError: (_) {});
+  }
+
+  // Apply a remote estimate snapshot (real-time sync across devices).
+  void _onRemoteEstimate(DocumentSnapshot<Map<String, dynamic>> snap) {
+    final data = snap.data();
+    if (data == null) {
+      _remoteLoaded = true;
+      if (_isOwner) _saveNow(); // seed the template on first open
+      return;
+    }
+    if (_saveTimer?.isActive ?? false) return; // don't clobber pending edits
+    final vis = (data['visibility'] ?? 'private').toString();
+    final list = data['sections'];
+    if (!mounted) return;
+    if (list is List) {
+      final parsed = <_EstSection>[];
+      for (final e in list) {
+        if (e is Map) {
+          parsed
+              .add(_sectionFromMap(e.map((k, v) => MapEntry(k.toString(), v))));
+        }
+      }
+      if (parsed.isNotEmpty) {
+        for (final s in _sections) {
+          s.dispose();
+        }
+        _sections
+          ..clear()
+          ..addAll(parsed);
+      }
+    }
+    setState(() {
+      _visibility = vis == 'shared' ? 'shared' : 'private';
+      _remoteLoaded = true;
+    });
+  }
+
+  Map<String, dynamic> _sectionToMap(_EstSection s) => {
+        'name': s.name,
+        'custom': s.custom,
+        'expanded': s.expanded,
+        'lines': s.lines
+            .map((l) => {
+                  'desc': l.desc.text,
+                  'unit': l.unit,
+                  'qty': l.qty.text,
+                  'rate': l.rate.text,
+                })
+            .toList(),
+      };
+
+  _EstSection _sectionFromMap(Map<String, dynamic> m) {
+    final lines = <_EstLine>[];
+    if (m['lines'] is List) {
+      for (final e in (m['lines'] as List)) {
+        if (e is Map) {
+          lines.add(_EstLine(
+            d: (e['desc'] ?? '').toString(),
+            q: (e['qty'] ?? '').toString(),
+            r: (e['rate'] ?? '').toString(),
+            unit: (e['unit'] ?? 'Sum').toString(),
+          ));
+        }
+      }
+    }
+    return _EstSection(
+      name: (m['name'] ?? '').toString(),
+      custom: m['custom'] == true,
+      expanded: m['expanded'] == true,
+      lines: lines,
+    );
+  }
+
+  // Debounced save so typing doesn't spam Firestore.
+  void _persist() {
+    if (_readOnly || _estimateRef == null) return;
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(milliseconds: 700), _saveNow);
+  }
+
+  Future<void> _saveNow() async {
+    final ref = _estimateRef;
+    if (ref == null || _readOnly) return;
+    try {
+      await ref.set({
+        'visibility': _visibility,
+        'updatedAt': FieldValue.serverTimestamp(),
+        'sections': _sections.map(_sectionToMap).toList(),
+      }, SetOptions(merge: true));
+    } catch (_) {}
+  }
+
+  void _toggleVisibility() {
+    setState(
+        () => _visibility = _visibility == 'shared' ? 'private' : 'shared');
+    _saveNow();
+  }
+
+  void _edited() {
+    setState(() {});
+    _persist();
   }
 
   void _handleBack() {
@@ -158,8 +283,11 @@ class _ProjectCostViewState extends State<ProjectCostView> {
   // -----------------------------------------------------------------
   // Mutations
   // -----------------------------------------------------------------
-  void _toggleSection(_EstSection s) =>
-      setState(() => s.expanded = !s.expanded);
+  void _toggleSection(_EstSection s) {
+    setState(() => s.expanded = !s.expanded);
+    _persist();
+  }
+
   void _toggleBreakdown() => setState(() => _breakdownOpen = !_breakdownOpen);
 
   void _toggleAll() {
@@ -169,29 +297,42 @@ class _ProjectCostViewState extends State<ProjectCostView> {
         s.expanded = !allOpen;
       }
     });
+    _persist();
   }
 
-  void _addLine(_EstSection s) => setState(() {
-        s.expanded = true;
-        s.lines.add(_EstLine());
-      });
+  void _addLine(_EstSection s) {
+    setState(() {
+      s.expanded = true;
+      s.lines.add(_EstLine());
+    });
+    _persist();
+  }
 
-  void _removeLine(_EstSection s, _EstLine l) => setState(() {
-        s.lines.remove(l);
-        l.dispose();
-      });
+  void _removeLine(_EstSection s, _EstLine l) {
+    setState(() {
+      s.lines.remove(l);
+      l.dispose();
+    });
+    _persist();
+  }
 
-  void _addSection() => setState(() {
-        final s = _EstSection(name: '', custom: true);
-        s.expanded = true;
-        s.lines.add(_EstLine());
-        _sections.add(s);
-      });
+  void _addSection() {
+    setState(() {
+      final s = _EstSection(name: '', custom: true);
+      s.expanded = true;
+      s.lines.add(_EstLine());
+      _sections.add(s);
+    });
+    _persist();
+  }
 
-  void _removeSection(_EstSection s) => setState(() {
-        _sections.remove(s);
-        s.dispose();
-      });
+  void _removeSection(_EstSection s) {
+    setState(() {
+      _sections.remove(s);
+      s.dispose();
+    });
+    _persist();
+  }
 
   // -----------------------------------------------------------------
   // Formatting
@@ -265,7 +406,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                _addSectionButton(),
+                if (!_readOnly) _addSectionButton(),
               ],
             ),
           ),
@@ -321,7 +462,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                   ),
                 ),
               ),
-              const SizedBox(width: 38),
+              _isOwner ? _visBtn() : _viewOnlyPill(),
             ],
           ),
           const SizedBox(height: 16),
@@ -377,6 +518,58 @@ class _ProjectCostViewState extends State<ProjectCostView> {
             ),
             child: Icon(icon, size: 16, color: _paper),
           ),
+        ),
+      );
+
+  Widget _visBtn() => GestureDetector(
+        onTap: _toggleVisibility,
+        child: Container(
+          height: 38,
+          padding: const EdgeInsets.symmetric(horizontal: 11),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+              color: _paper.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(999)),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                  _visibility == 'shared'
+                      ? Icons.visibility_outlined
+                      : Icons.lock_outline_rounded,
+                  size: 14,
+                  color: _paper),
+              const SizedBox(width: 5),
+              Text(_visibility == 'shared' ? 'Shared' : 'Private',
+                  style: const TextStyle(
+                      fontFamily: _body,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: _paper)),
+            ],
+          ),
+        ),
+      );
+
+  Widget _viewOnlyPill() => Container(
+        height: 38,
+        padding: const EdgeInsets.symmetric(horizontal: 11),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+            color: _paper.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(999)),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            Icon(Icons.visibility_outlined, size: 14, color: _paper),
+            SizedBox(width: 5),
+            Text('View only',
+                style: TextStyle(
+                    fontFamily: _body,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: _paper)),
+          ],
         ),
       );
 
@@ -488,7 +681,11 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                 child: s.custom
                     ? TextField(
                         controller: s.nameCtl,
-                        onChanged: (v) => setState(() => s.name = v),
+                        readOnly: _readOnly,
+                        onChanged: (v) {
+                          setState(() => s.name = v);
+                          _persist();
+                        },
                         style: const TextStyle(
                           fontFamily: _body,
                           fontSize: 13,
@@ -543,7 +740,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
             ),
           for (var j = 0; j < s.lines.length; j++)
             _lineRow(index, j, s, s.lines[j]),
-          _addLineRow(s),
+          if (!_readOnly) _addLineRow(s),
         ],
       ],
     );
@@ -577,7 +774,8 @@ class _ProjectCostViewState extends State<ProjectCostView> {
               Expanded(
                 child: TextField(
                   controller: l.desc,
-                  onChanged: (_) => setState(() {}),
+                  readOnly: _readOnly,
+                  onChanged: (_) => _edited(),
                   style: const TextStyle(
                     fontFamily: _body,
                     fontSize: 13,
@@ -624,18 +822,19 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                 const SizedBox(width: 6),
                 Expanded(
                     child: _numPill(label: 'R', ctl: l.rate, expand: true)),
-                const SizedBox(width: 2),
-                InkWell(
-                  onTap: () => _removeLine(s, l),
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.delete_outline_rounded,
-                        size: 19, color: _danger),
+                if (!_readOnly) const SizedBox(width: 2),
+                if (!_readOnly)
+                  InkWell(
+                    onTap: () => _removeLine(s, l),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      alignment: Alignment.center,
+                      child: const Icon(Icons.delete_outline_rounded,
+                          size: 19, color: _danger),
+                    ),
                   ),
-                ),
               ],
             ),
           ),
@@ -646,7 +845,11 @@ class _ProjectCostViewState extends State<ProjectCostView> {
 
   Widget _unitPicker(_EstLine l) {
     return PopupMenuButton<String>(
-      onSelected: (v) => setState(() => l.unit = v),
+      enabled: !_readOnly,
+      onSelected: (v) {
+        setState(() => l.unit = v);
+        _persist();
+      },
       padding: EdgeInsets.zero,
       itemBuilder: (_) => _units
           .map((u) => PopupMenuItem<String>(
@@ -690,7 +893,8 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       controller: ctl,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       textAlign: TextAlign.right,
-      onChanged: (_) => setState(() {}),
+      readOnly: _readOnly,
+      onChanged: (_) => _edited(),
       style: const TextStyle(
         fontFamily: _display,
         fontSize: 14,

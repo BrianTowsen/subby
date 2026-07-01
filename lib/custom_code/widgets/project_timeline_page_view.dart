@@ -14,6 +14,7 @@ import 'dart:async';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '/auth/firebase_auth/auth_util.dart';
 
 /// ProjectTimelinePageView — Construction Programme (Gantt) TEMPLATE.
 ///
@@ -97,6 +98,15 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   String _projectName = 'Project';
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _projSub;
 
+  DocumentReference<Map<String, dynamic>>? _projectRef;
+  DocumentReference<Map<String, dynamic>>? _programmeRef;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _progSub;
+  Timer? _saveTimer;
+  bool _isOwner = true;
+  bool _readOnly = false;
+  String _visibility = 'private';
+  bool _remoteLoaded = false;
+
   late List<_Section> _sections;
   int _selSi = 12; // Plumbing & Drainage
   int _selCi = -1;
@@ -116,6 +126,8 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   @override
   void dispose() {
     _projSub?.cancel();
+    _progSub?.cancel();
+    _saveTimer?.cancel();
     _nameCtl.dispose();
     _vCtl.dispose();
     super.dispose();
@@ -126,6 +138,9 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
     final path = (prefs.getString(_kActiveProjectPath) ?? '').trim();
     if (path.isEmpty) return;
     final ref = FirebaseFirestore.instance.doc(path);
+    _projectRef = ref;
+    _programmeRef = ref.collection('programme').doc('plan');
+
     _projSub = ref.snapshots().listen((snap) {
       final raw = snap.data();
       final data = raw is Map<String, dynamic> ? raw : <String, dynamic>{};
@@ -133,12 +148,121 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
           (data['name'] ?? data['projectName'] ?? data['title'] ?? 'Project')
               .toString();
       final sd = data['startDate'];
+      final ownerRef = data['ownerRef'];
+      final isOwner = ownerRef is DocumentReference &&
+          currentUserReference != null &&
+          ownerRef.path == currentUserReference!.path;
       if (!mounted) return;
       setState(() {
         _projectName = name;
         if (sd is Timestamp) _start = sd.toDate();
+        _isOwner = isOwner;
+        _readOnly = !isOwner;
       });
     });
+
+    _progSub = _programmeRef!.snapshots().listen(_onRemoteProgramme);
+  }
+
+  // Apply a remote programme snapshot (real-time sync across devices).
+  void _onRemoteProgramme(DocumentSnapshot<Map<String, dynamic>> snap) {
+    final data = snap.data();
+    if (data == null) {
+      _remoteLoaded = true;
+      if (_isOwner) _saveNow(); // seed the template to the cloud on first open
+      return;
+    }
+    if (_saveTimer?.isActive ?? false) return; // don't clobber pending edits
+    final vis = (data['visibility'] ?? 'private').toString();
+    final list = data['sections'];
+    if (!mounted) return;
+    setState(() {
+      if (list is List) {
+        final parsed = list
+            .whereType<Map>()
+            .map<_Section>((e) =>
+                _sectionFromMap(e.map((k, v) => MapEntry(k.toString(), v))))
+            .toList();
+        if (parsed.isNotEmpty) _sections = parsed;
+      }
+      _visibility = vis == 'shared' ? 'shared' : 'private';
+      _remoteLoaded = true;
+      if (_selSi >= _sections.length) {
+        _selSi = _sections.length - 1;
+        _selCi = -1;
+      }
+    });
+    _syncNameCtl();
+  }
+
+  Map<String, dynamic> _sectionToMap(_Section s) => {
+        'name': s.name,
+        'group': s.group,
+        'mode': s.mode,
+        'buffer': s.buffer,
+        'overlapPct': s.overlapPct,
+        'weeks': s.weeks,
+        'expanded': s.expanded,
+        'children': s.children
+            .map((c) => {
+                  'name': c.name,
+                  'mode': c.mode,
+                  'buffer': c.buffer,
+                  'overlapPct': c.overlapPct,
+                  'days': c.days,
+                })
+            .toList(),
+      };
+
+  _Section _sectionFromMap(Map<String, dynamic> m) {
+    int gi(dynamic v, int d) => v is num ? v.toInt() : d;
+    final kids = (m['children'] is List)
+        ? (m['children'] as List).whereType<Map>().map<_Child>((e) {
+            final c = e.map((k, v) => MapEntry(k.toString(), v));
+            return _Child(
+              name: (c['name'] ?? 'Sub-task').toString(),
+              mode: (c['mode'] ?? 'after').toString(),
+              buffer: gi(c['buffer'], 0),
+              overlapPct: gi(c['overlapPct'], 50),
+              days: gi(c['days'], 3),
+            );
+          }).toList()
+        : <_Child>[];
+    return _Section(
+      name: (m['name'] ?? 'Section').toString(),
+      group: (m['group'] ?? 'external').toString(),
+      mode: (m['mode'] ?? 'after').toString(),
+      buffer: gi(m['buffer'], 0),
+      overlapPct: gi(m['overlapPct'], 50),
+      weeks: gi(m['weeks'], 2),
+      expanded: m['expanded'] == true,
+      children: kids,
+    );
+  }
+
+  // Debounced save so stepping a value doesn't spam Firestore.
+  void _persist() {
+    if (_readOnly || _programmeRef == null) return;
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(milliseconds: 700), _saveNow);
+  }
+
+  Future<void> _saveNow() async {
+    final ref = _programmeRef;
+    if (ref == null || _readOnly) return;
+    try {
+      await ref.set({
+        'visibility': _visibility,
+        'updatedAt': FieldValue.serverTimestamp(),
+        'sections': _sections.map(_sectionToMap).toList(),
+      }, SetOptions(merge: true));
+    } catch (_) {}
+  }
+
+  void _toggleVisibility() {
+    setState(
+        () => _visibility = _visibility == 'shared' ? 'private' : 'shared');
+    _saveNow();
   }
 
   // =================================================================
@@ -305,8 +429,10 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   }
 
   void _closeInspector() => setState(() => _inspectorOpen = false);
-  void _toggleExpand(int si) =>
-      setState(() => _sections[si].expanded = !_sections[si].expanded);
+  void _toggleExpand(int si) {
+    setState(() => _sections[si].expanded = !_sections[si].expanded);
+    _persist();
+  }
 
   void _setName(String v) {
     setState(() {
@@ -316,42 +442,55 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
         _selSec.name = v;
       }
     });
+    _persist();
   }
 
-  void _setMode(String m) => setState(() {
-        if (_selIsChild) {
-          _selSec.children[_selCi].mode = m;
-        } else {
-          _selSec.mode = m;
-        }
-      });
+  void _setMode(String m) {
+    setState(() {
+      if (_selIsChild) {
+        _selSec.children[_selCi].mode = m;
+      } else {
+        _selSec.mode = m;
+      }
+    });
+    _persist();
+  }
 
-  void _durStep(int d) => setState(() {
-        if (_selIsChild) {
-          final c = _selSec.children[_selCi];
-          c.days = (c.days + d).clamp(1, 999);
-        } else if (_selSec.children.isEmpty) {
-          _selSec.weeks = (_selSec.weeks + d).clamp(1, 999);
-        }
-      });
+  void _durStep(int d) {
+    setState(() {
+      if (_selIsChild) {
+        final c = _selSec.children[_selCi];
+        c.days = (c.days + d).clamp(1, 999);
+      } else if (_selSec.children.isEmpty) {
+        _selSec.weeks = (_selSec.weeks + d).clamp(1, 999);
+      }
+    });
+    _persist();
+  }
 
-  void _bufStep(int d) => setState(() {
-        if (_selIsChild) {
-          final c = _selSec.children[_selCi];
-          c.buffer = (c.buffer + d).clamp(0, 999);
-        } else {
-          _selSec.buffer = (_selSec.buffer + d).clamp(0, 999);
-        }
-      });
+  void _bufStep(int d) {
+    setState(() {
+      if (_selIsChild) {
+        final c = _selSec.children[_selCi];
+        c.buffer = (c.buffer + d).clamp(0, 999);
+      } else {
+        _selSec.buffer = (_selSec.buffer + d).clamp(0, 999);
+      }
+    });
+    _persist();
+  }
 
-  void _ovStep(int d) => setState(() {
-        if (_selIsChild) {
-          final c = _selSec.children[_selCi];
-          c.overlapPct = (c.overlapPct + d).clamp(10, 90);
-        } else {
-          _selSec.overlapPct = (_selSec.overlapPct + d).clamp(10, 90);
-        }
-      });
+  void _ovStep(int d) {
+    setState(() {
+      if (_selIsChild) {
+        final c = _selSec.children[_selCi];
+        c.overlapPct = (c.overlapPct + d).clamp(10, 90);
+      } else {
+        _selSec.overlapPct = (_selSec.overlapPct + d).clamp(10, 90);
+      }
+    });
+    _persist();
+  }
 
   void _addSection() {
     setState(() {
@@ -362,6 +501,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
       _inspectorOpen = true;
     });
     _syncNameCtl();
+    _persist();
   }
 
   void _addChild() {
@@ -376,6 +516,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
       _inspectorOpen = true;
     });
     _syncNameCtl();
+    _persist();
   }
 
   void _deleteSel() {
@@ -390,6 +531,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
       }
     });
     _syncNameCtl();
+    _persist();
   }
 
   // =================================================================
@@ -425,8 +567,8 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                     child: Column(
                       children: [
                         _board(sch, weeksCount),
-                        const SizedBox(height: 12),
-                        _addSectionButton(),
+                        if (!_readOnly) const SizedBox(height: 12),
+                        if (!_readOnly) _addSectionButton(),
                       ],
                     ),
                   ),
@@ -434,7 +576,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
               ),
             ),
           ),
-          if (_inspectorOpen) _inspector(sch),
+          if (_inspectorOpen && !_readOnly) _inspector(sch),
         ],
       ),
     );
@@ -482,7 +624,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                   ),
                 ),
               ),
-              const SizedBox(width: 38),
+              _isOwner ? _visBtn() : _viewOnlyPill(),
             ],
           ),
           const SizedBox(height: 16),
@@ -553,6 +695,58 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                 color: _paper.withOpacity(0.12), shape: BoxShape.circle),
             child: Icon(icon, size: 16, color: _paper),
           ),
+        ),
+      );
+
+  Widget _visBtn() => GestureDetector(
+        onTap: _toggleVisibility,
+        child: Container(
+          height: 38,
+          padding: const EdgeInsets.symmetric(horizontal: 11),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+              color: _paper.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(999)),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                  _visibility == 'shared'
+                      ? Icons.visibility_outlined
+                      : Icons.lock_outline_rounded,
+                  size: 14,
+                  color: _paper),
+              const SizedBox(width: 5),
+              Text(_visibility == 'shared' ? 'Shared' : 'Private',
+                  style: const TextStyle(
+                      fontFamily: _body,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: _paper)),
+            ],
+          ),
+        ),
+      );
+
+  Widget _viewOnlyPill() => Container(
+        height: 38,
+        padding: const EdgeInsets.symmetric(horizontal: 11),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+            color: _paper.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(999)),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            Icon(Icons.visibility_outlined, size: 14, color: _paper),
+            SizedBox(width: 5),
+            Text('View only',
+                style: TextStyle(
+                    fontFamily: _body,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: _paper)),
+          ],
         ),
       );
 
@@ -719,12 +913,13 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
               ],
             ),
           ),
-          _addRow(
-            icon: Icons.add_circle_outline_rounded,
-            label: 'Add section',
-            color: _green,
-            onTap: _addSection,
-          ),
+          if (!_readOnly)
+            _addRow(
+              icon: Icons.add_circle_outline_rounded,
+              label: 'Add section',
+              color: _green,
+              onTap: _addSection,
+            ),
         ],
       ),
     );
