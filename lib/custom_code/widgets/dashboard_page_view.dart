@@ -10,10 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -627,14 +623,15 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // the painted _SubbyMarkPainter if the network image fails (offline / cold
   // start) so the logo never renders blank.
   static const String _logoUrl =
-      'https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/winston-9dy48u/assets/nfqbnusfa58y/subby-mark-green.png';
+      'https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/winston-9dy48u/assets/qy1ehft1zjiu/subby-mark-green-on-white-cropped.png';
 
+  // Non-square mark: anchor on height (44) and leave width unconstrained so
+  // the image renders at its natural aspect ratio rather than being squeezed
+  // into a square box. The 44px height keeps the header's vertical rhythm.
   Widget _logo() => SizedBox(
-        width: 44,
         height: 44,
         child: Image.network(
           _logoUrl,
-          width: 44,
           height: 44,
           fit: BoxFit.contain,
           errorBuilder: (context, error, stackTrace) => CustomPaint(
