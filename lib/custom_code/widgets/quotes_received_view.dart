@@ -17,9 +17,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// QuotesReceivedView — owner reviews & compares quotes on the active project.
 /// Streams projects/{id}/quotes. Accept / Decline updates status.
 class QuotesReceivedView extends StatefulWidget {
-  const QuotesReceivedView({super.key, this.width, this.height});
+  const QuotesReceivedView(
+      {super.key, this.width, this.height, this.inviteRouteName});
   final double? width;
   final double? height;
+
+  /// Optional FlutterFlow route name for the "Invite trades" button.
+  final String? inviteRouteName;
   @override
   State<QuotesReceivedView> createState() => _QuotesReceivedViewState();
 }
@@ -142,7 +146,7 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
                               color: _paper.withOpacity(0.5))),
                     ]),
                   ),
-                  const SizedBox(width: 38),
+                  _inviteBtn(),
                 ]),
               ],
             ),
@@ -427,6 +431,31 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
       ]),
     );
   }
+
+  Widget _inviteBtn() => GestureDetector(
+        onTap: () {
+          final r = widget.inviteRouteName;
+          if (r != null && r.isNotEmpty) context.pushNamed(r);
+        },
+        child: Container(
+          height: 34,
+          padding: const EdgeInsets.symmetric(horizontal: 11),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+              color: _paper.withOpacity(0.14),
+              borderRadius: BorderRadius.circular(999)),
+          child: Row(mainAxisSize: MainAxisSize.min, children: const [
+            Icon(Icons.person_add_alt_1_rounded, size: 15, color: _paper),
+            SizedBox(width: 5),
+            Text('Invite',
+                style: TextStyle(
+                    fontFamily: _body,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: _paper)),
+          ]),
+        ),
+      );
 
   Widget _circleBtn() => Material(
         color: Colors.transparent,
