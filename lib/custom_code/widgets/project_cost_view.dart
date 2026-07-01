@@ -10,12 +10,15 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:intl/intl.dart';
 
+/// ProjectCostView — Building Cost Estimate TEMPLATE.
+///
+/// The app owns the STRUCTURE (trade sections) and the ARITHMETIC
+/// (qty × rate → subtotals → contingency → VAT → total). The user owns the
+/// NUMBERS — their own quotes and rates. Nothing is auto-estimated.
 class ProjectCostView extends StatefulWidget {
   const ProjectCostView({
     super.key,
@@ -30,58 +33,104 @@ class ProjectCostView extends StatefulWidget {
   State<ProjectCostView> createState() => _ProjectCostViewState();
 }
 
-class _ProjectCostViewState extends State<ProjectCostView>
-    with SingleTickerProviderStateMixin {
+class _ProjectCostViewState extends State<ProjectCostView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  // Synced with DashboardPageView / AddProjectsPageView (flat teal system).
-  // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
-  //
-  // Neutrals
-  static const Color _ink = Color(0xFF323F4D); // text, chrome, accent
+  // Ported from the estimate template · ink + sage-green system.
+  static const Color _ink = Color(0xFF39454B);
   static const Color _inkMute = Color(0xFF5A6675);
   static const Color _faint = Color(0xFF93A0B0);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _hairline = Color(0xFFEEF1F2);
-  static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
-  // Brand accent — TEAL.
-  static const Color _teal = Color(0xFF323F4D);
-  static const Color _tealTint = Color(0xFFEEF7D6);
-  // Status
-  static const Color _live = Color(0xFFC7E87A); // orange — spent / paid
-  // Type
-  static const String _displayFont = 'Inter Tight';
-  static const String _bodyFont = 'Inter';
-  static const String _monoFont = 'Inter';
+  static const Color _band = Color(0xFFF4F6F8); // section header band
+  static const Color _border = Color(0xFFE7EBEF); // sheet outline
+  static const Color _line = Color(0xFFF2F4F6); // row separators
+  static const Color _green = Color(0xFF166341); // accent / filled subtotal
+  static const Color _danger = Color(0xFFC6A29B); // delete
+  static const Color _dash = Color(0xFFCDD6E2); // add-section border
+  static const String _display = 'Inter Tight';
+  static const String _body = 'Inter';
   // ────────────────────────────────────────────────────────────────────
-
-  static const double _hPad = 24;
-  static const double _vPad = 14;
-  static const double _radius = 12;
-  static const double _gap = 12;
-
-  static const double _sliverTopGap = 4;
-  static const double _stickyTabsHeight = 58;
-  static const double _contentHPad = _hPad;
 
   static const String _kActiveProjectPath = 'subby_active_project_path';
 
-  late TabController _tabController;
+  // Standard residential trade sections (the template scaffold).
+  static const List<String> _baseSections = [
+    'Professional Fees',
+    'Preliminaries & General',
+    'Site Preparation',
+    'Site Establishment',
+    'Earthworks & Excavation',
+    'Concrete Works (Foundations)',
+    'Brickwork & Blockwork',
+    'Damp Proofing & Waterproofing',
+    'Structural Steel Works',
+    'Roofing & Trusses',
+    'Windows & Door Frames',
+    'Glazing',
+    'Plumbing & Drainage',
+    'Sanitary Fittings',
+    'Electrical Works',
+    'Electrical Fittings',
+    'Plastering & Screeds',
+    'Ceilings & Partitioning',
+    'Internal Carpentry & Joinery',
+    'Kitchen (Built-in Units)',
+    'Built-in Cupboards',
+    'Tiling',
+    'Floor Covering',
+    'Special Items',
+    'Painting & Decorating',
+    'Balustrades & Railings',
+    'External Site Works',
+    'Landscaping',
+    'Cleaning & Handover',
+  ];
+
+  static const List<String> _units = [
+    'Sum',
+    'no',
+    'm',
+    'm²',
+    'm³',
+    'ton',
+    'point',
+    'load',
+    'month',
+    'item',
+    'lot',
+    '%',
+  ];
+
+  static const int _contingencyPct = 10;
+  static const int _vatPct = 15;
+
+  final List<_EstSection> _sections = [];
+  bool _breakdownOpen = false;
 
   DocumentReference? _projectRef;
-
-  final Set<String> _expandedCategoryKeysBudget = {};
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _projSub;
+  String _projectName = 'Project';
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    for (var i = 0; i < _baseSections.length; i++) {
+      final sec = _EstSection(name: _baseSections[i]);
+      if (i == 0) {
+        sec.expanded = true;
+        sec.lines.add(_EstLine());
+      }
+      _sections.add(sec);
+    }
     _loadActiveProject();
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _projSub?.cancel();
+    for (final s in _sections) {
+      s.dispose();
+    }
     super.dispose();
   }
 
@@ -89,9 +138,16 @@ class _ProjectCostViewState extends State<ProjectCostView>
     final prefs = await SharedPreferences.getInstance();
     final path = (prefs.getString(_kActiveProjectPath) ?? '').trim();
     if (path.isEmpty) return;
-    if (mounted) {
-      setState(() => _projectRef = FirebaseFirestore.instance.doc(path));
-    }
+    final ref = FirebaseFirestore.instance.doc(path);
+    _projectRef = ref;
+    _projSub = ref.snapshots().listen((snap) {
+      final raw = snap.data();
+      final data = raw is Map<String, dynamic> ? raw : <String, dynamic>{};
+      final name =
+          (data['name'] ?? data['projectName'] ?? data['title'] ?? 'Project')
+              .toString();
+      if (mounted) setState(() => _projectName = name);
+    });
   }
 
   void _handleBack() {
@@ -99,866 +155,815 @@ class _ProjectCostViewState extends State<ProjectCostView>
     if (nav.canPop()) nav.pop();
   }
 
-  Color _projectCostColor(FlutterFlowTheme theme) {
-    try {
-      final c = (theme as dynamic).projectCostColour as Color?;
-      return c ?? _ink;
-    } catch (_) {
-      return _ink;
+  // -----------------------------------------------------------------
+  // Mutations
+  // -----------------------------------------------------------------
+  void _toggleSection(_EstSection s) =>
+      setState(() => s.expanded = !s.expanded);
+  void _toggleBreakdown() => setState(() => _breakdownOpen = !_breakdownOpen);
+
+  void _toggleAll() {
+    final allOpen = _sections.every((s) => s.expanded);
+    setState(() {
+      for (final s in _sections) {
+        s.expanded = !allOpen;
+      }
+    });
+  }
+
+  void _addLine(_EstSection s) => setState(() {
+        s.expanded = true;
+        s.lines.add(_EstLine());
+      });
+
+  void _removeLine(_EstSection s, _EstLine l) => setState(() {
+        s.lines.remove(l);
+        l.dispose();
+      });
+
+  void _addSection() => setState(() {
+        final s = _EstSection(name: '', custom: true);
+        s.expanded = true;
+        s.lines.add(_EstLine());
+        _sections.add(s);
+      });
+
+  void _removeSection(_EstSection s) => setState(() {
+        _sections.remove(s);
+        s.dispose();
+      });
+
+  // -----------------------------------------------------------------
+  // Formatting
+  // -----------------------------------------------------------------
+  String _fmt(num v) {
+    final n = v.round();
+    final s = n.abs().toString();
+    final b = StringBuffer();
+    for (var i = 0; i < s.length; i++) {
+      if (i > 0 && (s.length - i) % 3 == 0) b.write(' ');
+      b.write(s[i]);
     }
+    return '${n < 0 ? '-' : ''}$b';
   }
 
-  // =========================================================
-  // ✅ TYPOGRAPHY (flat teal system)
-  // =========================================================
-  TextStyle _pageTitle(FlutterFlowTheme t) => t.titleLarge.override(
-        fontFamily: _displayFont,
-        color: _ink,
-        fontWeight: FontWeight.w900,
-        fontSize: 30,
-        lineHeight: 1.05,
-        letterSpacing: -0.5,
-      );
+  String _money(num v) => 'R ${_fmt(v)}';
 
-  TextStyle _pageSubtitle(FlutterFlowTheme t) => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 13,
-        fontWeight: FontWeight.w500,
-        color: _faint,
-      );
-
-  TextStyle _uLabel(FlutterFlowTheme t) => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 11,
-        fontWeight: FontWeight.w800,
-        letterSpacing: 0.6,
-        color: _inkMute,
-      );
-
-  TextStyle _rowTitleStyle(FlutterFlowTheme theme) => const TextStyle(
-        fontFamily: _displayFont,
-        fontSize: 15,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.1,
-        color: _ink,
-      );
-
-  TextStyle _rowMetaStyle(FlutterFlowTheme theme) => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
-        color: _faint,
-      );
-
-  TextStyle _moneyStyle(FlutterFlowTheme theme) => const TextStyle(
-        fontFamily: _displayFont,
-        fontSize: 14,
-        fontWeight: FontWeight.w700,
-        color: _ink,
-      );
-
-  String _fmtDate(DateTime d) => DateFormat('d MMM').format(d);
-
-  String _money(num v) {
-    final s = v.toStringAsFixed(0);
-    final withSep = s.replaceAllMapped(
-      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-      (m) => '${m[1]},',
-    );
-    return 'R$withSep';
-  }
-
-  String _pct(double v) => '${(v.clamp(0.0, 1.0) * 100).round()}%';
-
-  Widget _minBack() => Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: _handleBack,
-          borderRadius: BorderRadius.circular(999),
-          splashFactory: NoSplash.splashFactory,
-          splashColor: Colors.transparent,
-          highlightColor: Colors.transparent,
-          hoverColor: Colors.transparent,
-          overlayColor: WidgetStateProperty.all(Colors.transparent),
-          child: Container(
-            width: 36,
-            height: 36,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: _surface,
-              shape: BoxShape.circle,
-              border: Border.all(color: _hairline),
-            ),
-            child: const Icon(Icons.arrow_back_ios_new_rounded,
-                size: 15, color: _inkMute),
-          ),
-        ),
-      );
-
-  Widget _flatCard(Widget child,
-          {EdgeInsets padding = const EdgeInsets.all(14), Color? fill}) =>
-      Container(
-        width: double.infinity,
-        padding: padding,
-        decoration: BoxDecoration(
-          color: fill ?? _paper,
-          borderRadius: BorderRadius.circular(_radius),
-          border: Border.all(color: _hairline),
-        ),
-        child: child,
-      );
-
-  Widget _progressBar(double value, Color fill) {
-    final v = value.clamp(0.0, 1.0);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(999),
-      child: SizedBox(
-        height: 8,
-        child: LinearProgressIndicator(
-          value: v,
-          backgroundColor: _surface,
-          valueColor: AlwaysStoppedAnimation<Color>(fill),
-        ),
-      ),
-    );
-  }
-
-  Widget _softPill(String text, {required Color fg, required Color bg}) =>
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(text,
-            style: const TextStyle(
-              fontFamily: _bodyFont,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-            ).copyWith(color: fg)),
-      );
-
-  // -----------------------------
-  // Underline tabs
-  // -----------------------------
-  Widget _buildTabs(FlutterFlowTheme theme, Color accent) {
-    return Container(
-      color: _paper,
-      padding: const EdgeInsets.symmetric(horizontal: _contentHPad),
-      alignment: Alignment.bottomLeft,
-      child: TabBar(
-        controller: _tabController,
-        isScrollable: true,
-        tabAlignment: TabAlignment.start,
-        labelPadding: const EdgeInsets.only(right: 24),
-        indicatorSize: TabBarIndicatorSize.label,
-        indicatorColor: _teal,
-        indicatorWeight: 2,
-        dividerColor: _hairlineOnSurface,
-        labelColor: _teal,
-        unselectedLabelColor: _faint,
-        labelStyle: theme.bodyMedium.override(
-            fontFamily: _bodyFont, fontWeight: FontWeight.w800, fontSize: 14),
-        unselectedLabelStyle: theme.bodyMedium.override(
-            fontFamily: _bodyFont, fontWeight: FontWeight.w600, fontSize: 14),
-        tabs: const [
-          Tab(text: 'Budget'),
-          Tab(text: 'Invoices'),
-          Tab(text: 'Spend'),
-        ],
-      ),
-    );
-  }
-
-  // -----------------------------
-  // Mock data (UI only)
-  // -----------------------------
-  List<_CostCategory> _mockBudgetCategories() {
-    return const [
-      _CostCategory(
-        key: 'planning',
-        title: 'Planning & Permits',
-        icon: Icons.description_outlined,
-        lines: [
-          _CostLine('Architect / drawings', 14500.0, 1.0),
-          _CostLine('Municipal permits', 6200.0, 1.0),
-          _CostLine('Engineering', 9800.0, 0.55),
-        ],
-      ),
-      _CostCategory(
-        key: 'site',
-        title: 'Site Prep',
-        icon: Icons.construction_outlined,
-        lines: [
-          _CostLine('Site clearing', 9800.0, 1.0),
-          _CostLine('Temporary fencing', 7200.0, 0.4),
-          _CostLine('Skip / rubble removal', 2600.0, 0.2),
-        ],
-      ),
-      _CostCategory(
-        key: 'foundation',
-        title: 'Foundations',
-        icon: Icons.foundation_outlined,
-        lines: [
-          _CostLine('Excavation', 20000.0, 0.3),
-          _CostLine('Concrete work', 24000.0, 0.0),
-          _CostLine('Rebar & steel', 11600.0, 0.0),
-        ],
-      ),
-      _CostCategory(
-        key: 'structure',
-        title: 'Structure',
-        icon: Icons.account_tree_outlined,
-        lines: [
-          _CostLine('Bricks / blocks', 48200.0, 0.0),
-          _CostLine('Labour (structure)', 34200.0, 0.0),
-        ],
-      ),
-    ];
-  }
-
-  List<_InvoiceItem> _mockInvoices() {
-    return [
-      _InvoiceItem('Architect Invoice #102', 'Studio North', 8500.0,
-          DateTime(2026, 1, 7), true),
-      _InvoiceItem('Site Clearing Invoice #44', 'Cape Earthworks', 9800.0,
-          DateTime(2026, 1, 14), true),
-      _InvoiceItem('Temporary Fencing Deposit', 'SecureFence', 1800.0,
-          DateTime(2026, 1, 16), false),
-      _InvoiceItem('Excavation Progress Claim', 'Cape Earthworks', 6000.0,
-          DateTime(2026, 1, 23), false),
-    ];
-  }
-
-  List<_SpendTx> _mockSpend() {
-    return [
-      _SpendTx('Cement bags (x20)', 'BuildIt', 2380.0, DateTime(2026, 1, 21),
-          'Foundations'),
-      _SpendTx('Rebar offcut', 'SteelMart', 640.0, DateTime(2026, 1, 22),
-          'Foundations'),
-      _SpendTx('Site consumables', 'Builders Warehouse', 420.0,
-          DateTime(2026, 1, 18), 'Site Prep'),
-      _SpendTx('Transport / delivery', 'Courier', 280.0, DateTime(2026, 1, 18),
-          'Site Prep'),
-    ];
-  }
-
-  // -----------------------------
-  // Clean stat tile (bordered, no shadow)
-  // -----------------------------
-  Widget _statTile(FlutterFlowTheme theme,
-      {required String label,
-      required String value,
-      required Color valueColor}) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: _paper,
-        borderRadius: BorderRadius.circular(_radius),
-        border: Border.all(color: _hairline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.titleLarge.override(
-              fontFamily: _displayFont,
-              color: valueColor,
-              fontWeight: FontWeight.w800,
-              fontSize: 22,
-              letterSpacing: -0.4,
-            ),
-          ),
-          const SizedBox(height: 5),
-          Text(label,
-              style: const TextStyle(
-                  fontFamily: _bodyFont,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: _faint)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTopSummary(FlutterFlowTheme theme, Color accent) {
-    final cats = _mockBudgetCategories();
-    final totalBudget = cats.fold<double>(0.0,
-        (sum, c) => sum + c.lines.fold<double>(0.0, (s, l) => s + l.amount));
-    final committed = cats.fold<double>(
-        0.0,
-        (sum, c) =>
-            sum +
-            c.lines.fold<double>(0.0, (s, l) => s + (l.amount * l.progress)));
-    final spent = _mockSpend().fold<double>(0.0, (s, t) => s + t.amount);
-    final remaining = (totalBudget - spent).clamp(0.0, double.infinity);
-    final budgetProgress =
-        totalBudget <= 0 ? 0.0 : (spent / totalBudget).clamp(0.0, 1.0);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: _contentHPad),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                  child: _statTile(theme,
-                      label: 'Budget',
-                      value: _money(totalBudget),
-                      valueColor: _teal)),
-              const SizedBox(width: 10),
-              Expanded(
-                  child: _statTile(theme,
-                      label: 'Spent', value: _money(spent), valueColor: _live)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                  child: _statTile(theme,
-                      label: 'Committed',
-                      value: _money(committed),
-                      valueColor: _teal)),
-              const SizedBox(width: 10),
-              Expanded(
-                  child: _statTile(theme,
-                      label: 'Remaining',
-                      value: _money(remaining),
-                      valueColor: _teal)),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(child: _progressBar(budgetProgress, _teal)),
-              const SizedBox(width: 10),
-              Text('${_pct(budgetProgress)} used',
-                  style: const TextStyle(
-                      fontFamily: _bodyFont,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: _faint)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // -----------------------------
-  // Budget tab
-  // -----------------------------
-  Widget _buildBudgetTab(FlutterFlowTheme theme, Color accent) {
-    final cats = _mockBudgetCategories();
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(0, 12, 0, 28),
-      children: [
-        _buildTopSummary(theme, accent),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(_contentHPad, 22, _contentHPad, 4),
-          child: Text('CATEGORIES', style: _uLabel(theme)),
-        ),
-        ...List.generate(cats.length, (i) {
-          return Padding(
-            padding: EdgeInsets.fromLTRB(
-                _contentHPad, i == 0 ? 4 : _gap, _contentHPad, 0),
-            child: _buildCategoryCardBudget(theme, accent, cats[i]),
-          );
-        }),
-      ],
-    );
-  }
-
-  Widget _buildCategoryCardBudget(
-      FlutterFlowTheme theme, Color accent, _CostCategory c) {
-    final isExpanded = _expandedCategoryKeysBudget.contains(c.key);
-    final total = c.lines.fold<double>(0.0, (s, l) => s + l.amount);
-    final committed =
-        c.lines.fold<double>(0.0, (s, l) => s + (l.amount * l.progress));
-    final prog = total <= 0 ? 0.0 : (committed / total).clamp(0.0, 1.0);
-
-    return _flatCard(
-      Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(_radius),
-          splashFactory: NoSplash.splashFactory,
-          splashColor: Colors.transparent,
-          highlightColor: Colors.transparent,
-          hoverColor: Colors.transparent,
-          overlayColor: WidgetStateProperty.all(Colors.transparent),
-          onTap: () {
-            setState(() {
-              if (isExpanded) {
-                _expandedCategoryKeysBudget.remove(c.key);
-              } else {
-                _expandedCategoryKeysBudget.add(c.key);
-              }
-            });
-          },
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Icon(c.icon, color: _teal, size: 22),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(c.title, style: _rowTitleStyle(theme)),
-                        const SizedBox(height: 3),
-                        Text('${_money(committed)} of ${_money(total)}',
-                            style: _rowMetaStyle(theme)),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(_pct(prog),
-                      style: const TextStyle(
-                          fontFamily: _bodyFont,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: _teal)),
-                  const SizedBox(width: 6),
-                  Icon(
-                      isExpanded
-                          ? Icons.keyboard_arrow_up_rounded
-                          : Icons.keyboard_arrow_down_rounded,
-                      color: _faint),
-                ],
-              ),
-              const SizedBox(height: 12),
-              _progressBar(prog, _teal),
-              if (isExpanded) ...[
-                const SizedBox(height: 14),
-                Container(height: 1, color: _hairlineOnSurface),
-                ...c.lines.map((l) => _buildBudgetLine(theme, l)),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBudgetLine(FlutterFlowTheme theme, _CostLine line) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: _hairline, width: 1)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(line.title,
-                style: const TextStyle(
-                    fontFamily: _bodyFont,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: _ink)),
-          ),
-          const SizedBox(width: 10),
-          Text(_money(line.amount), style: _moneyStyle(theme)),
-          const SizedBox(width: 10),
-          SizedBox(
-            width: 36,
-            child: Text(_pct(line.progress),
-                textAlign: TextAlign.right,
-                style: const TextStyle(
-                    fontFamily: _bodyFont,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: _faint)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // -----------------------------
-  // Invoices tab
-  // -----------------------------
-  Widget _buildInvoicesTab(FlutterFlowTheme theme, Color accent) {
-    final invoices = _mockInvoices();
-    final total = invoices.fold<double>(0.0, (s, i) => s + i.amount);
-    final paid =
-        invoices.where((i) => i.paid).fold<double>(0.0, (s, i) => s + i.amount);
-    final outstanding = (total - paid).clamp(0.0, double.infinity);
-    final prog = total <= 0 ? 0.0 : (paid / total).clamp(0.0, 1.0);
-
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(0, 12, 0, 28),
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: _contentHPad),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                      child: _statTile(theme,
-                          label: 'Paid',
-                          value: _money(paid),
-                          valueColor: _live)),
-                  const SizedBox(width: 10),
-                  Expanded(
-                      child: _statTile(theme,
-                          label: 'Outstanding',
-                          value: _money(outstanding),
-                          valueColor: _teal)),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(child: _progressBar(prog, _live)),
-                  const SizedBox(width: 10),
-                  Text('${_pct(prog)} paid',
-                      style: const TextStyle(
-                          fontFamily: _bodyFont,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: _faint)),
-                ],
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(_contentHPad, 8, _contentHPad, 0),
-          child: Column(
-            children:
-                invoices.map((inv) => _buildInvoiceRow(theme, inv)).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInvoiceRow(FlutterFlowTheme theme, _InvoiceItem inv) {
-    final c = inv.paid ? _live : _teal;
-    final tint = inv.paid ? const Color(0x33C7E87A) : _tealTint;
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: _hairlineOnSurface, width: 1)),
-      ),
-      child: Row(
-        children: [
-          Icon(
-              inv.paid
-                  ? Icons.receipt_long_rounded
-                  : Icons.receipt_long_outlined,
-              color: c,
-              size: 22),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(inv.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: _rowTitleStyle(theme)),
-                const SizedBox(height: 3),
-                Text('${inv.vendor} · ${_fmtDate(inv.date)}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: _rowMetaStyle(theme)),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(_money(inv.amount), style: _moneyStyle(theme)),
-              const SizedBox(height: 6),
-              _softPill(inv.paid ? 'Paid' : 'Due', fg: c, bg: tint),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // -----------------------------
-  // Spend tab
-  // -----------------------------
-  Widget _buildSpendTab(FlutterFlowTheme theme, Color accent) {
-    final txs = _mockSpend();
-    txs.sort((a, b) => b.date.compareTo(a.date));
-    final total = txs.fold<double>(0.0, (s, t) => s + t.amount);
-
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(0, 12, 0, 28),
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: _contentHPad),
-          child: _flatCard(
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Total spend to date', style: _rowMetaStyle(theme)),
-                      const SizedBox(height: 4),
-                      Text(_money(total),
-                          style: theme.titleLarge.override(
-                            fontFamily: _displayFont,
-                            color: _ink,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 24,
-                            letterSpacing: -0.5,
-                          )),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.payments_outlined, color: _teal, size: 26),
-              ],
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(_contentHPad, 8, _contentHPad, 0),
-          child: Column(
-            children: txs.map((t) => _buildSpendRow(theme, t)).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSpendRow(FlutterFlowTheme theme, _SpendTx t) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: _hairlineOnSurface, width: 1)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.shopping_bag_outlined, color: _teal, size: 22),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(t.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: _rowTitleStyle(theme)),
-                const SizedBox(height: 3),
-                Text('${t.merchant} · ${t.category} · ${_fmtDate(t.date)}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: _rowMetaStyle(theme)),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          Text(_money(t.amount), style: _moneyStyle(theme)),
-        ],
-      ),
-    );
-  }
-
+  // =================================================================
+  // BUILD
+  // =================================================================
   @override
   Widget build(BuildContext context) {
-    final theme = FlutterFlowTheme.of(context);
-    final accent = _projectCostColor(theme);
+    final media = MediaQuery.of(context);
+    final topInset = media.padding.top;
+    final bottomInset = media.padding.bottom;
+
+    // Totals (roll up from the user's own numbers).
+    double net = 0;
+    int items = 0;
+    int started = 0;
+    for (final sec in _sections) {
+      var filled = false;
+      for (final l in sec.lines) {
+        net += l.amount;
+        items++;
+        if (l.hasData) filled = true;
+      }
+      if (filled) started++;
+    }
+    final contAmount = net * _contingencyPct / 100.0;
+    final subExcl = net + contAmount;
+    final vat = subExcl * _vatPct / 100.0;
+    final total = subExcl + vat;
 
     return Container(
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
       color: _paper,
-      child: SafeArea(
-        top: true,
-        bottom: true,
-        child: Padding(
-          padding: const EdgeInsets.only(top: _vPad),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: _hPad),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _minBack(),
-                    const SizedBox(height: 18),
-                    Text('Project Cost', style: _pageTitle(theme)),
-                    const SizedBox(height: 8),
-                    Text('Budget, invoices and spend',
-                        style: _pageSubtitle(theme)),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 18),
-
-              Expanded(
-                child: NestedScrollView(
-                  headerSliverBuilder: (context, inner) {
-                    return [
-                      const SliverToBoxAdapter(
-                          child: SizedBox(height: _sliverTopGap)),
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(
-                              _contentHPad, 0, _contentHPad, 14),
-                          child: _projectRef == null
-                              ? _flatCard(Text('No project selected.',
-                                  style: _rowMetaStyle(theme)))
-                              : StreamBuilder<DocumentSnapshot<Object?>>(
-                                  stream: _projectRef!.snapshots(),
-                                  builder: (context, snap) {
-                                    final raw = snap.data?.data();
-                                    final data = raw is Map<String, dynamic>
-                                        ? raw
-                                        : <String, dynamic>{};
-                                    final name = (data['name'] ??
-                                            data['projectName'] ??
-                                            data['title'] ??
-                                            'Project')
-                                        .toString();
-                                    return _flatCard(
-                                      Row(
-                                        children: [
-                                          const Icon(Icons.folder_open_rounded,
-                                              color: _teal, size: 22),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(name,
-                                                    maxLines: 1,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                    style:
-                                                        _rowTitleStyle(theme)),
-                                                const SizedBox(height: 2),
-                                                Text('Cost dashboard',
-                                                    style:
-                                                        _rowMetaStyle(theme)),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                ),
-                        ),
-                      ),
-                      SliverPersistentHeader(
-                        pinned: true,
-                        delegate: _StickyHeaderDelegate(
-                          minHeight: _stickyTabsHeight,
-                          maxHeight: _stickyTabsHeight,
-                          child: _buildTabs(theme, accent),
-                        ),
-                      ),
-                    ];
-                  },
-                  body: TabBarView(
-                    controller: _tabController,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _hero(topInset, total, started, items),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 24),
+              children: [
+                _sectionsHeaderRow(),
+                const SizedBox(height: 10),
+                Container(
+                  decoration: BoxDecoration(
+                    color: _paper,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: _border),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Column(
                     children: [
-                      _buildBudgetTab(theme, accent),
-                      _buildInvoicesTab(theme, accent),
-                      _buildSpendTab(theme, accent),
+                      for (var i = 0; i < _sections.length; i++)
+                        _sectionBlock(i, _sections[i]),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _addSectionButton(),
+              ],
+            ),
+          ),
+          _bottomBar(bottomInset, net, contAmount, vat),
+        ],
+      ),
+    );
+  }
+
+  // -----------------------------------------------------------------
+  // Hero
+  // -----------------------------------------------------------------
+  Widget _hero(double topInset, double total, int started, int items) {
+    return Container(
+      width: double.infinity,
+      color: _ink,
+      padding: EdgeInsets.fromLTRB(20, topInset + 14, 20, 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _circleBtn(Icons.arrow_back_ios_new_rounded, _handleBack),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Column(
+                    children: [
+                      Text(
+                        _projectName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontFamily: _body,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: _paper,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'BUILDING COST ESTIMATE',
+                        style: TextStyle(
+                          fontFamily: _body,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.7,
+                          color: _paper.withOpacity(0.5),
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ),
+              const SizedBox(width: 38),
             ],
           ),
+          const SizedBox(height: 16),
+          Text(
+            'YOUR TOTAL INCL. VAT',
+            style: TextStyle(
+              fontFamily: _body,
+              fontSize: 10.5,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1,
+              color: _paper.withOpacity(0.55),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _money(total),
+            style: const TextStyle(
+              fontFamily: _display,
+              fontSize: 34,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -1,
+              color: _paper,
+              height: 1.0,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            '$started of ${_sections.length} sections started · $items items',
+            style: TextStyle(
+              fontFamily: _body,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w600,
+              color: _paper.withOpacity(0.6),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _circleBtn(IconData icon, VoidCallback onTap) => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            width: 38,
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: _paper.withOpacity(0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 16, color: _paper),
+          ),
+        ),
+      );
+
+  // -----------------------------------------------------------------
+  // Sections header row (title + expand/collapse all)
+  // -----------------------------------------------------------------
+  Widget _sectionsHeaderRow() {
+    final allOpen = _sections.every((s) => s.expanded);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text('Sections',
+              style: TextStyle(
+                fontFamily: _display,
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+                color: _ink,
+              )),
+          InkWell(
+            onTap: _toggleAll,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                    allOpen
+                        ? Icons.unfold_less_rounded
+                        : Icons.unfold_more_rounded,
+                    size: 15,
+                    color: _green),
+                const SizedBox(width: 5),
+                Text(allOpen ? 'Collapse' : 'Expand all',
+                    style: const TextStyle(
+                      fontFamily: _body,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w800,
+                      color: _green,
+                    )),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // -----------------------------------------------------------------
+  // Section block (header band + editable lines)
+  // -----------------------------------------------------------------
+  Widget _sectionBlock(int index, _EstSection s) {
+    double sub = 0;
+    for (final l in s.lines) {
+      sub += l.amount;
+    }
+
+    final trailing = InkWell(
+      onTap: () => _toggleSection(s),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(_money(sub),
+              style: TextStyle(
+                fontFamily: _display,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: sub > 0 ? _green : const Color(0xFFB4BDC7),
+              )),
+          AnimatedRotation(
+            turns: s.expanded ? 0.5 : 0,
+            duration: const Duration(milliseconds: 180),
+            child:
+                const Icon(Icons.expand_more_rounded, size: 22, color: _faint),
+          ),
+        ],
+      ),
+    );
+
+    return Column(
+      children: [
+        // header band
+        Container(
+          padding: const EdgeInsets.fromLTRB(12, 9, 10, 9),
+          decoration: const BoxDecoration(
+            color: _band,
+            border: Border(top: BorderSide(color: _border)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                constraints: const BoxConstraints(minWidth: 24),
+                height: 20,
+                alignment: Alignment.center,
+                padding: const EdgeInsets.symmetric(horizontal: 5),
+                margin: const EdgeInsets.only(right: 10),
+                decoration: BoxDecoration(
+                  color: _ink,
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: Text('${index + 1}',
+                    style: const TextStyle(
+                      fontFamily: _body,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w800,
+                      color: _paper,
+                    )),
+              ),
+              Expanded(
+                child: s.custom
+                    ? TextField(
+                        controller: s.nameCtl,
+                        onChanged: (v) => setState(() => s.name = v),
+                        style: const TextStyle(
+                          fontFamily: _body,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: _ink,
+                        ),
+                        decoration: const InputDecoration(
+                          isCollapsed: true,
+                          border: InputBorder.none,
+                          hintText: 'Section name',
+                          hintStyle: TextStyle(color: _faint),
+                        ),
+                      )
+                    : GestureDetector(
+                        onTap: () => _toggleSection(s),
+                        behavior: HitTestBehavior.opaque,
+                        child: Text(
+                          s.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontFamily: _body,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: _ink,
+                          ),
+                        ),
+                      ),
+              ),
+              const SizedBox(width: 8),
+              trailing,
+            ],
+          ),
+        ),
+        // body
+        if (s.expanded) ...[
+          if (s.lines.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 4),
+              decoration: const BoxDecoration(
+                border: Border(top: BorderSide(color: _line)),
+              ),
+              child: const Text(
+                'No items yet. Add the first line for this trade.',
+                style: TextStyle(
+                    fontFamily: _body,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: _faint),
+              ),
+            ),
+          for (var j = 0; j < s.lines.length; j++)
+            _lineRow(index, j, s, s.lines[j]),
+          _addLineRow(s),
+        ],
+      ],
+    );
+  }
+
+  Widget _lineRow(int si, int li, _EstSection s, _EstLine l) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 9, 12, 11),
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: _line)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 28,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Text('${si + 1}.${li + 1}',
+                      style: const TextStyle(
+                        fontFamily: _body,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFFB4BDC7),
+                      )),
+                ),
+              ),
+              Expanded(
+                child: TextField(
+                  controller: l.desc,
+                  onChanged: (_) => setState(() {}),
+                  style: const TextStyle(
+                    fontFamily: _body,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: _ink,
+                    height: 1.35,
+                  ),
+                  decoration: const InputDecoration(
+                    isCollapsed: true,
+                    border: InputBorder.none,
+                    hintText: 'Item description',
+                    hintStyle: TextStyle(color: _faint),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Padding(
+                padding: const EdgeInsets.only(top: 1),
+                child: Text(_money(l.amount),
+                    style: const TextStyle(
+                      fontFamily: _display,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: _ink,
+                    )),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.only(left: 28),
+            child: Row(
+              children: [
+                _unitPicker(l),
+                const SizedBox(width: 6),
+                _numPill(label: 'QTY', ctl: l.qty, fieldWidth: 40),
+                const SizedBox(width: 6),
+                const Text('×',
+                    style: TextStyle(
+                        fontFamily: _body,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFFB4BDC7))),
+                const SizedBox(width: 6),
+                Expanded(
+                    child: _numPill(label: 'R', ctl: l.rate, expand: true)),
+                const SizedBox(width: 2),
+                InkWell(
+                  onTap: () => _removeLine(s, l),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.delete_outline_rounded,
+                        size: 19, color: _danger),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _unitPicker(_EstLine l) {
+    return PopupMenuButton<String>(
+      onSelected: (v) => setState(() => l.unit = v),
+      padding: EdgeInsets.zero,
+      itemBuilder: (_) => _units
+          .map((u) => PopupMenuItem<String>(
+                value: u,
+                height: 40,
+                child: Text(u,
+                    style: const TextStyle(
+                        fontFamily: _body, fontSize: 13, color: _ink)),
+              ))
+          .toList(),
+      child: Container(
+        height: 34,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        decoration: BoxDecoration(
+          color: _surface,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l.unit,
+                style: const TextStyle(
+                    fontFamily: _body,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: _inkMute)),
+            const Icon(Icons.arrow_drop_down_rounded, size: 18, color: _faint),
+          ],
         ),
       ),
     );
   }
-}
 
-// ============================================================================
-// Sticky header delegate (pinned tabs)
-// ============================================================================
-class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
-  _StickyHeaderDelegate({
-    required this.minHeight,
-    required this.maxHeight,
-    required this.child,
-  });
-
-  final double minHeight;
-  final double maxHeight;
-  final Widget child;
-
-  @override
-  double get minExtent => minHeight;
-
-  @override
-  double get maxExtent => maxHeight;
-
-  @override
-  Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return SizedBox.expand(child: child);
+  Widget _numPill({
+    required String label,
+    required TextEditingController ctl,
+    double? fieldWidth,
+    bool expand = false,
+  }) {
+    final field = TextField(
+      controller: ctl,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      textAlign: TextAlign.right,
+      onChanged: (_) => setState(() {}),
+      style: const TextStyle(
+        fontFamily: _display,
+        fontSize: 14,
+        fontWeight: FontWeight.w700,
+        color: _ink,
+      ),
+      decoration: const InputDecoration(
+        isCollapsed: true,
+        border: InputBorder.none,
+        hintText: '0',
+        hintStyle: TextStyle(color: _faint),
+      ),
+    );
+    return Container(
+      height: 34,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
+        children: [
+          Text(label,
+              style: const TextStyle(
+                fontFamily: _body,
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.4,
+                color: _faint,
+              )),
+          const SizedBox(width: 5),
+          expand
+              ? Expanded(child: field)
+              : SizedBox(width: fieldWidth ?? 40, child: field),
+        ],
+      ),
+    );
   }
 
-  @override
-  bool shouldRebuild(_StickyHeaderDelegate oldDelegate) {
-    return minHeight != oldDelegate.minHeight ||
-        maxHeight != oldDelegate.maxHeight ||
-        child != oldDelegate.child;
+  Widget _addLineRow(_EstSection s) {
+    return Container(
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: _line)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: InkWell(
+              onTap: () => _addLine(s),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 11, 12, 11),
+                child: Row(
+                  children: const [
+                    Icon(Icons.add_circle_outline_rounded,
+                        size: 18, color: _green),
+                    SizedBox(width: 7),
+                    Text('Add line item',
+                        style: TextStyle(
+                          fontFamily: _body,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: _green,
+                        )),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          if (s.custom)
+            InkWell(
+              onTap: () => _removeSection(s),
+              child: const Padding(
+                padding: EdgeInsets.fromLTRB(14, 11, 14, 11),
+                child: Text('Remove section',
+                    style: TextStyle(
+                      fontFamily: _body,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: _danger,
+                    )),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _addSectionButton() {
+    return InkWell(
+      onTap: _addSection,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(13),
+        decoration: BoxDecoration(
+          color: _paper,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _dash, width: 1.4),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.add_rounded, size: 19, color: _inkMute),
+            SizedBox(width: 8),
+            Text('Add custom section',
+                style: TextStyle(
+                  fontFamily: _body,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: _inkMute,
+                )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // -----------------------------------------------------------------
+  // Bottom bar (breakdown + saved cue)
+  // -----------------------------------------------------------------
+  Widget _bottomBar(double bottomInset, double net, double cont, double vat) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: _paper,
+        border: Border(top: BorderSide(color: _surface)),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x1A19232D),
+            blurRadius: 30,
+            offset: Offset(0, -10),
+          ),
+        ],
+      ),
+      padding: EdgeInsets.fromLTRB(20, 12, 20, bottomInset + 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (_breakdownOpen) ...[
+            _breakdownRow('Net total — trades', _money(net)),
+            _breakdownRow('Contingency @ $_contingencyPct%', _money(cont)),
+            _breakdownRow('VAT @ $_vatPct%', _money(vat)),
+            const SizedBox(height: 6),
+            Container(height: 1, color: _surface),
+          ],
+          InkWell(
+            onTap: _toggleBreakdown,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Row(
+                children: [
+                  const Icon(Icons.receipt_long_outlined,
+                      size: 18, color: _inkMute),
+                  const SizedBox(width: 9),
+                  const Expanded(
+                    child: Text('Estimate breakdown',
+                        style: TextStyle(
+                          fontFamily: _body,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: _ink,
+                        )),
+                  ),
+                  Text(_breakdownOpen ? 'Hide' : 'Show',
+                      style: const TextStyle(
+                        fontFamily: _body,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: _inkMute,
+                      )),
+                  AnimatedRotation(
+                    turns: _breakdownOpen ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 180),
+                    child: const Icon(Icons.expand_less_rounded,
+                        size: 20, color: _faint),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Row(
+            children: const [
+              Icon(Icons.cloud_done_outlined, size: 13, color: _green),
+              SizedBox(width: 5),
+              Text('Changes saved automatically',
+                  style: TextStyle(
+                    fontFamily: _body,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: _faint,
+                  )),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _breakdownRow(String label, String value) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 5),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label,
+                style: const TextStyle(
+                  fontFamily: _body,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: _inkMute,
+                )),
+            Text(value,
+                style: const TextStyle(
+                  fontFamily: _display,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: _ink,
+                )),
+          ],
+        ),
+      );
+}
+
+// ============================================================================
+// Editable models (own their TextEditingControllers)
+// ============================================================================
+class _EstLine {
+  final TextEditingController desc;
+  final TextEditingController qty;
+  final TextEditingController rate;
+  String unit;
+
+  _EstLine({String d = '', String q = '', String r = '', this.unit = 'Sum'})
+      : desc = TextEditingController(text: d),
+        qty = TextEditingController(text: q),
+        rate = TextEditingController(text: r);
+
+  double get amount {
+    final q = double.tryParse(qty.text.trim()) ?? 0;
+    final r = double.tryParse(rate.text.trim()) ?? 0;
+    return q * r;
+  }
+
+  bool get hasData =>
+      desc.text.trim().isNotEmpty ||
+      qty.text.trim().isNotEmpty ||
+      rate.text.trim().isNotEmpty;
+
+  void dispose() {
+    desc.dispose();
+    qty.dispose();
+    rate.dispose();
   }
 }
 
-// ============================================================================
-// Mock models (UI only)
-// ============================================================================
-class _CostLine {
-  final String title;
-  final double amount;
-  final double progress; // 0..1
-  const _CostLine(this.title, this.amount, this.progress);
-}
+class _EstSection {
+  String name;
+  final bool custom;
+  final TextEditingController? nameCtl;
+  bool expanded;
+  final List<_EstLine> lines;
 
-class _CostCategory {
-  final String key;
-  final String title;
-  final IconData icon;
-  final List<_CostLine> lines;
-  const _CostCategory({
-    required this.key,
-    required this.title,
-    required this.icon,
-    required this.lines,
-  });
-}
+  _EstSection({
+    required this.name,
+    this.custom = false,
+    this.expanded = false,
+    List<_EstLine>? lines,
+  })  : lines = lines ?? [],
+        nameCtl = custom ? TextEditingController(text: name) : null;
 
-class _InvoiceItem {
-  final String title;
-  final String vendor;
-  final double amount;
-  final DateTime date;
-  final bool paid;
-  _InvoiceItem(this.title, this.vendor, this.amount, this.date, this.paid);
-}
-
-class _SpendTx {
-  final String title;
-  final String merchant;
-  final double amount;
-  final DateTime date;
-  final String category;
-  _SpendTx(this.title, this.merchant, this.amount, this.date, this.category);
+  void dispose() {
+    nameCtl?.dispose();
+    for (final l in lines) {
+      l.dispose();
+    }
+  }
 }
