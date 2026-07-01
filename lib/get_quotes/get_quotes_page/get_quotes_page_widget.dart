@@ -44,11 +44,11 @@ class _GetQuotesPageWidgetState extends State<GetQuotesPageWidget> {
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
         body: Container(
-          width: double.infinity,
-          height: double.infinity,
-          child: custom_widgets.GetQuotesPageView(
-            width: double.infinity,
-            height: double.infinity,
+          width: MediaQuery.sizeOf(context).width * 1.0,
+          height: MediaQuery.sizeOf(context).height * 1.0,
+          child: custom_widgets.QuoteRequestView(
+            width: MediaQuery.sizeOf(context).width * 1.0,
+            height: MediaQuery.sizeOf(context).height * 1.0,
           ),
         ),
       ),
