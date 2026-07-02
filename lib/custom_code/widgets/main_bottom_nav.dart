@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // HapticFeedback (medium impact on tab tap)
 
 import '/custom_code/widgets/index.dart'; // (kept if FF expects it)
@@ -52,10 +54,12 @@ class MainBottomNav extends StatefulWidget {
 
 class _MainBottomNavState extends State<MainBottomNav> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _teal = Color(0xFF5D737E); // active (default) — green
-  static const Color _orange = Color(0xFF5D737E); // active (Directory) — green
+  static const Color _teal = Color(0xFF29343A); // active (default) — slate/ink
+  static const Color _orange =
+      Color(0xFF29343A); // active (Directory) — slate/ink
   static const Color _faint = Color(0xFF93A3AC); // inactive
   static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _surface = Color(0xFFECF0F2);
   static const Color _hairline = Color(0xFFEAEEF0);
   // ────────────────────────────────────────────────────────────────────
 
@@ -164,7 +168,11 @@ class _MainBottomNavState extends State<MainBottomNav> {
       height: (widget.height ?? _barHeight) + bottomInset,
       decoration: const BoxDecoration(
         color: _paper,
-        border: Border(top: BorderSide(color: _hairline, width: 1)),
+        border: Border(top: BorderSide(color: _surface, width: 1)),
+        boxShadow: [
+          BoxShadow(
+              color: Color(0x14121A21), blurRadius: 22, offset: Offset(0, -8)),
+        ],
       ),
       // Three roomy tabs — a little extra horizontal inset keeps them centred.
       // top:12 gives the pill + icons more breathing room from the top edge.

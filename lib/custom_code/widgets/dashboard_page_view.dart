@@ -2931,7 +2931,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       child: Container(
         width: widget.width ?? double.infinity,
         height: widget.height ?? double.infinity,
-        color: _paper,
+        color: FlutterFlowTheme.of(context).primaryBackground,
         child: SingleChildScrollView(
           child: Column(
             children: [
