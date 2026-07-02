@@ -313,6 +313,29 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
     );
   }
 
+  void _openDoc(Map<String, dynamic> d) {
+    final url = (d['url'] ??
+            d['fileUrl'] ??
+            d['file_url'] ??
+            d['downloadUrl'] ??
+            d['download_url'])
+        ?.toString()
+        .trim();
+    if (url != null && url.isNotEmpty) {
+      launchURL(url);
+      return;
+    }
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(
+          backgroundColor: _ink,
+          content: Text('No file attached to this document.',
+              style: TextStyle(
+                  fontFamily: _body,
+                  fontWeight: FontWeight.w700,
+                  color: _paper))));
+  }
+
   Widget _docsSection(DocumentReference<Map<String, dynamic>> ref, String title,
       String category, IconData icon) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -362,31 +385,35 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
             clipBehavior: Clip.antiAlias,
             child: Column(children: [
               for (var i = 0; i < rows.length; i++)
-                Container(
-                  decoration: BoxDecoration(
-                      border: i == 0
-                          ? null
-                          : const Border(top: BorderSide(color: _line))),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-                  child: Row(children: [
-                    Icon(icon, size: 22, color: _green),
-                    const SizedBox(width: 11),
-                    Expanded(
-                        child: Text(
-                            (rows[i].data()['title'] ??
-                                    rows[i].data()['name'] ??
-                                    'File')
-                                .toString(),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontFamily: _body,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: _ink))),
-                    const Icon(Icons.download_rounded, size: 20, color: _ink),
-                  ]),
+                InkWell(
+                  onTap: () => _openDoc(rows[i].data()),
+                  child: Container(
+                    decoration: BoxDecoration(
+                        border: i == 0
+                            ? null
+                            : const Border(top: BorderSide(color: _line))),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 11),
+                    child: Row(children: [
+                      Icon(icon, size: 22, color: _green),
+                      const SizedBox(width: 11),
+                      Expanded(
+                          child: Text(
+                              (rows[i].data()['title'] ??
+                                      rows[i].data()['name'] ??
+                                      'File')
+                                  .toString(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontFamily: _body,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: _ink))),
+                      const Icon(Icons.open_in_new_rounded,
+                          size: 19, color: _ink),
+                    ]),
+                  ),
                 ),
             ]),
           );
