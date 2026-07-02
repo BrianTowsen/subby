@@ -12,10 +12,6 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -55,23 +51,23 @@ class AddTaskPageView extends StatefulWidget {
 
 class _AddTaskPageViewState extends State<AddTaskPageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _ink = Color(0xFF323F4D);
-  static const Color _inkMute = Color(0xFF5A6675);
-  static const Color _faint = Color(0xFF93A0B0);
+  static const Color _ink = Color(0xFF29343A);
+  static const Color _inkMute = Color(0xFF566670);
+  static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _hairline = Color(0xFFEEF1F2);
-  static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
-  static const Color _teal = Color(0xFF323F4D);
+  static const Color _surface = Color(0xFFECF0F2);
+  static const Color _hairline = Color(0xFFEAEEF0);
+  static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
+  static const Color _teal = Color(0xFF29343A);
   static const Color _tealTint =
-      Color(0xFFEEF1F4); // DS: lime tint → neutral surface
+      Color(0xFFECF0F2); // DS: lime tint → neutral surface
   static const Color _live =
-      Color(0xFFCC4B3C); // DS: lime → clay (high/attention)
+      Color(0xFF566670); // DS: lime → clay (high/attention)
   static const Color _coral =
-      Color(0xFFCC4B3C); // DS: → clay (destructive/error)
-  static const Color _navy = Color(0xFF323F4D);
+      Color(0xFF566670); // DS: → clay (destructive/error)
+  static const Color _navy = Color(0xFF29343A);
   static const Color _green =
-      Color(0xFF1F8A5B); // DS: to-do / in-progress / info
+      Color(0xFF5D737E); // DS: to-do / in-progress / info
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
   // ────────────────────────────────────────────────────────────────────
@@ -316,7 +312,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                     hintText: hint,
                     hintStyle: const TextStyle(
                         fontFamily: _bodyFont,
-                        color: Color(0xCC5A6675),
+                        color: Color(0xCC566670),
                         fontWeight: FontWeight.w600,
                         fontSize: 16),
                     errorStyle: const TextStyle(
@@ -360,7 +356,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                           .copyWith(color: _dueDate == null ? _inkMute : _ink)),
                 ),
                 const Icon(Icons.chevron_right_rounded,
-                    color: Color(0xFFC7D0DA)),
+                    color: Color(0xFFCBD8DD)),
               ],
             ),
           ],
@@ -412,7 +408,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
       final sel = _priority == key;
       final isHigh = key == 'high';
       final selFg = isHigh ? _live : _teal;
-      final selBg = isHigh ? const Color(0x33CC4B3C) : _tealTint;
+      final selBg = isHigh ? const Color(0x33566670) : _tealTint;
       return GestureDetector(
         onTap: () => setState(() => _priority = key),
         child: Container(
@@ -537,7 +533,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                               color: _inkMute)),
                 ),
                 const Icon(Icons.chevron_right_rounded,
-                    color: Color(0xFFC7D0DA)),
+                    color: Color(0xFFCBD8DD)),
               ],
             ),
           ],
@@ -779,7 +775,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                   GestureDetector(
                     onTap: () => setState(() => _checklist.removeAt(i)),
                     child: const Icon(Icons.close_rounded,
-                        size: 18, color: Color(0xFFC7D0DA)),
+                        size: 18, color: Color(0xFFCBD8DD)),
                   ),
                 ],
               ),
@@ -863,7 +859,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(_radius),
                       border: Border.all(
-                          color: const Color(0xFFC7D0DA), width: 1.5),
+                          color: const Color(0xFFCBD8DD), width: 1.5),
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -919,7 +915,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(_radius),
             border: Border.all(color: _hairlineOnSurface),
-            color: const Color(0xFFF7FAFA),
+            color: const Color(0xFFF2F5F6),
             image: (isImage && url.isNotEmpty)
                 ? DecorationImage(image: NetworkImage(url), fit: BoxFit.cover)
                 : null,

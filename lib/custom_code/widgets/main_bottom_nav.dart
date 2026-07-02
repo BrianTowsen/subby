@@ -10,8 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:flutter/services.dart'; // HapticFeedback (medium impact on tab tap)
 
 import '/custom_code/widgets/index.dart'; // (kept if FF expects it)
@@ -54,11 +52,11 @@ class MainBottomNav extends StatefulWidget {
 
 class _MainBottomNavState extends State<MainBottomNav> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _teal = Color(0xFF166341); // active (default) — green
-  static const Color _orange = Color(0xFF166341); // active (Directory) — green
-  static const Color _faint = Color(0xFF93A0B0); // inactive
+  static const Color _teal = Color(0xFF5D737E); // active (default) — green
+  static const Color _orange = Color(0xFF5D737E); // active (Directory) — green
+  static const Color _faint = Color(0xFF93A3AC); // inactive
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _hairline = Color(0xFFEEF1F2);
+  static const Color _hairline = Color(0xFFEAEEF0);
   // ────────────────────────────────────────────────────────────────────
 
   static const double _barHeight = 72;
@@ -108,7 +106,7 @@ class _MainBottomNavState extends State<MainBottomNav> {
     required String label,
   }) {
     final bool selected = index == widget.currentIndex;
-    const Color _slate = Color(0xFF1E2730);
+    const Color _slate = Color(0xFF29343A);
     final Color color = selected ? _slate : _faint;
     // Active icon sits inside the coloured pill → render it white.
     final Color iconColor = selected ? _paper : _faint;

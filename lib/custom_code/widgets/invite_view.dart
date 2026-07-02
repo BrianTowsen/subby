@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,15 +28,15 @@ class InviteView extends StatefulWidget {
 }
 
 class _InviteViewState extends State<InviteView> {
-  static const Color _ink = Color(0xFF39454B);
-  static const Color _inkMute = Color(0xFF5A6675);
-  static const Color _faint = Color(0xFF93A0B0);
+  static const Color _ink = Color(0xFF29343A);
+  static const Color _inkMute = Color(0xFF566670);
+  static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _border = Color(0xFFE7EBEF);
-  static const Color _green = Color(0xFF166341);
-  static const Color _sageBorder = Color(0xFFC9E4D6);
-  static const Color _cobalt = Color(0xFF2A6FDB);
+  static const Color _surface = Color(0xFFECF0F2);
+  static const Color _border = Color(0xFFEAEEF0);
+  static const Color _green = Color(0xFF5D737E);
+  static const Color _sageBorder = Color(0xFFCBD8DD);
+  static const Color _cobalt = Color(0xFF5D737E);
   static const String _body = 'Inter';
   static const String _kActiveProjectPath = 'subby_active_project_path';
 
@@ -210,7 +212,7 @@ class _InviteViewState extends State<InviteView> {
                                 if (rows.isEmpty)
                                   Container(
                                     decoration: BoxDecoration(
-                                        color: const Color(0xFFF7F8FA),
+                                        color: const Color(0xFFF2F5F6),
                                         borderRadius: BorderRadius.circular(14),
                                         border: Border.all(color: _border)),
                                     padding: const EdgeInsets.all(18),
@@ -227,7 +229,7 @@ class _InviteViewState extends State<InviteView> {
                                 const SizedBox(height: 6),
                                 Container(
                                   decoration: BoxDecoration(
-                                      color: const Color(0xFFEEF4FC),
+                                      color: const Color(0xFFE7EDF0),
                                       borderRadius: BorderRadius.circular(12)),
                                   padding: const EdgeInsets.all(12),
                                   child: Row(
@@ -244,7 +246,7 @@ class _InviteViewState extends State<InviteView> {
                                                     fontFamily: _body,
                                                     fontSize: 12,
                                                     fontWeight: FontWeight.w600,
-                                                    color: Color(0xFF3A5680),
+                                                    color: Color(0xFF566670),
                                                     height: 1.4))),
                                       ]),
                                 ),
@@ -269,7 +271,7 @@ class _InviteViewState extends State<InviteView> {
                                 decoration: BoxDecoration(
                                     color: _selected.isNotEmpty
                                         ? _green
-                                        : const Color(0xFFB6C3BC),
+                                        : const Color(0xFFB7C2C7),
                                     borderRadius: BorderRadius.circular(14)),
                                 child: _sending
                                     ? const SizedBox(
@@ -370,7 +372,7 @@ class _InviteViewState extends State<InviteView> {
                 shape: BoxShape.circle,
                 border: on
                     ? null
-                    : Border.all(color: const Color(0xFFCDD6E2), width: 1.6)),
+                    : Border.all(color: const Color(0xFFCBD8DD), width: 1.6)),
             child: on
                 ? const Icon(Icons.check_rounded, size: 17, color: _paper)
                 : null,

@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -93,39 +95,39 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF39454B);
-  static const Color _inkMute = Color(0xFF5A6675);
+  static const Color _ink = Color(0xFF29343A);
+  static const Color _inkMute = Color(0xFF566670);
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _hairline = Color(0xFFEEF1F4);
-  static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
+  static const Color _surface = Color(0xFFECF0F2);
+  static const Color _hairline = Color(0xFFECF0F2);
+  static const Color _hairlineOnSurface = Color(0xFFCBD8DD);
   // Brand accent — TEAL.
-  static const Color _spark = Color(0xFF39454B); // primary CTA / ranked accent
+  static const Color _spark = Color(0xFF29343A); // primary CTA / ranked accent
   static const Color _sparkInk = Color(0xFFFFFFFF);
-  static const Color _teal = Color(0xFF39454B);
+  static const Color _teal = Color(0xFF29343A);
   static const Color _tealBright =
-      Color(0xFF166341); // icon on ink chips (sage)
+      Color(0xFF5D737E); // icon on ink chips (sage)
   static const Color _tealTint =
-      Color(0xFFE7F3EC); // pill / chip fill (sage tint)
-  static const Color _tealText = Color(0xFF39454B); // pill text
+      Color(0xFFE7EDF0); // pill / chip fill (sage tint)
+  static const Color _tealText = Color(0xFF29343A); // pill text
   static const Color _tealSurface =
-      Color(0xFFE7F3EC); // tinted module card (sage)
-  static const Color _tealSurfaceBorder = Color(0xFFC9E4D6);
+      Color(0xFFE7EDF0); // tinted module card (sage)
+  static const Color _tealSurfaceBorder = Color(0xFFCBD8DD);
   // Snag identity — Persimmon (snags own this inside a teal project)
-  static const Color _persimmon = Color(0xFFCC4B3C);
-  static const Color _persimmonSurface = Color(0xFFF3E7E2);
-  static const Color _persimmonSurfaceBorder = Color(0xFFE8CFC7);
+  static const Color _persimmon = Color(0xFF566670);
+  static const Color _persimmonSurface = Color(0xFFE7EDF0);
+  static const Color _persimmonSurfaceBorder = Color(0xFFCBD8DD);
   // To-Do identity — Cobalt
-  static const Color _cobalt = Color(0xFF2A6FDB);
-  static const Color _cobaltSurface = Color(0xFFEEF4FC);
-  static const Color _cobaltSurfaceBorder = Color(0xFFD5E2F6);
+  static const Color _cobalt = Color(0xFF5D737E);
+  static const Color _cobaltSurface = Color(0xFFE7EDF0);
+  static const Color _cobaltSurfaceBorder = Color(0xFFCBD8DD);
   // Status
   static const Color _live =
-      Color(0xFFCC4B3C); // clay — live / open-now / warning
-  static const Color _coral = Color(0xFFCC4B3C);
+      Color(0xFF566670); // clay — live / open-now / warning
+  static const Color _coral = Color(0xFF566670);
   // Info / feed accent — true teal (matches the Dashboard activity signals)
   static const Color _infoTeal =
-      Color(0xFFCC4B3C); // DS: snags/needs-you = clay
+      Color(0xFF566670); // DS: snags/needs-you = clay
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -878,7 +880,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                         color: _paper,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                            color: const Color(0xFFCDD6E2), width: 1.4),
+                            color: const Color(0xFFCBD8DD), width: 1.4),
                       ),
                       child: Text(
                         'Cancel',
@@ -1047,7 +1049,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 10),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF166341),
+                            color: const Color(0xFF5D737E),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
@@ -1075,7 +1077,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
               readOnly ? 'SHARED PROJECT' : 'PROJECT',
               style: theme.labelSmall.override(
                 fontFamily: _bodyFont,
-                color: const Color(0xFF93A0B0),
+                color: const Color(0xFF93A3AC),
                 letterSpacing: 1.2,
                 fontWeight: FontWeight.w600,
                 fontSize: 12,
@@ -1107,7 +1109,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                       child: FractionallySizedBox(
                         alignment: Alignment.centerLeft,
                         widthFactor: progress,
-                        child: Container(color: const Color(0xFF166341)),
+                        child: Container(color: const Color(0xFF5D737E)),
                       ),
                     ),
                   ),
@@ -1128,7 +1130,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                   'COMPLETE',
                   style: theme.labelSmall.override(
                     fontFamily: _bodyFont,
-                    color: const Color(0xFF93A0B0),
+                    color: const Color(0xFF93A3AC),
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.5,
                     fontSize: 10,
@@ -1140,7 +1142,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             Row(
               children: [
                 Icon(Icons.location_on_outlined,
-                    size: 16, color: const Color(0xFF93A0B0)),
+                    size: 16, color: const Color(0xFF93A3AC)),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -1163,7 +1165,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
               overflow: TextOverflow.ellipsis,
               style: theme.labelSmall.override(
                 fontFamily: _bodyFont,
-                color: const Color(0xFF93A0B0),
+                color: const Color(0xFF93A3AC),
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -1190,8 +1192,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             value: days,
             label: 'Days left',
             valueColor: _paper,
-            bg: const Color(0xFF166341),
-            border: const Color(0xFF166341),
+            bg: const Color(0xFF5D737E),
+            border: const Color(0xFF5D737E),
             labelColor: _paper,
           ),
         ),
@@ -1202,8 +1204,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             value: budget,
             label: 'Budget',
             valueColor: _paper,
-            bg: const Color(0xFF166341),
-            border: const Color(0xFF166341),
+            bg: const Color(0xFF5D737E),
+            border: const Color(0xFF5D737E),
             labelColor: _paper,
           ),
         ),
@@ -1240,7 +1242,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         boxShadow: shadow
             ? [
                 BoxShadow(
-                  color: const Color(0xFF166341).withOpacity(0.30),
+                  color: const Color(0xFF5D737E).withOpacity(0.30),
                   blurRadius: 16,
                   offset: const Offset(0, 6),
                 ),
@@ -1766,9 +1768,9 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     VoidCallback? onToggleVisibility,
     bool featured = false,
   }) {
-    final Color cardBg = featured ? const Color(0xFF166341) : _tealSurface;
+    final Color cardBg = featured ? const Color(0xFF5D737E) : _tealSurface;
     final Color cardBorder =
-        featured ? const Color(0xFF166341) : _tealSurfaceBorder;
+        featured ? const Color(0xFF5D737E) : _tealSurfaceBorder;
     final Color chipBg = featured ? Colors.white.withOpacity(0.16) : _ink;
     final Color titleColor = featured ? _paper : _ink;
     final Color subColor = featured ? Colors.white.withOpacity(0.8) : _inkMute;
@@ -1906,7 +1908,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
               const SizedBox(width: 8),
             ],
             const Icon(Icons.chevron_right_rounded,
-                size: 22, color: Color(0xFF166341)),
+                size: 22, color: Color(0xFF5D737E)),
           ],
         ),
       ),
@@ -2096,7 +2098,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       onTap: onTap,
       child: Container(
         decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: Color(0xFFEEF1F2))),
+          border: Border(top: BorderSide(color: Color(0xFFEAEEF0))),
         ),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(2, 14, 4, 14),
@@ -2133,7 +2135,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                       'UPDATED',
                       style: theme.labelSmall.override(
                         fontFamily: _bodyFont,
-                        color: const Color(0xFF93A0B0),
+                        color: const Color(0xFF93A3AC),
                         letterSpacing: 0.5,
                         fontWeight: FontWeight.w800,
                         fontSize: 10,
@@ -2469,8 +2471,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             value: days,
             label: 'Days left',
             valueColor: _paper,
-            bg: const Color(0xFF166341),
-            border: const Color(0xFF166341),
+            bg: const Color(0xFF5D737E),
+            border: const Color(0xFF5D737E),
             labelColor: _paper,
           ),
         ),
@@ -2481,8 +2483,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             value: snags,
             label: 'Open snags',
             valueColor: _paper,
-            bg: const Color(0xFF166341),
-            border: const Color(0xFF166341),
+            bg: const Color(0xFF5D737E),
+            border: const Color(0xFF5D737E),
             labelColor: _paper,
           ),
         ),
@@ -2581,21 +2583,21 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
             decoration: BoxDecoration(
-              color: const Color(0xFFF7F8FA),
+              color: const Color(0xFFF2F5F6),
               borderRadius: BorderRadius.circular(_radius),
               border: Border.all(color: _hairlineOnSurface),
             ),
             child: Row(
               children: [
                 const Icon(Icons.lock_outline_rounded,
-                    size: 18, color: Color(0xFF93A0B0)),
+                    size: 18, color: Color(0xFF93A3AC)),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     '${hidden.map((m) => m['title']).join(' & ')} ${hidden.length == 1 ? 'is' : 'are'} private to the project manager.',
                     style: theme.labelSmall.override(
                       fontFamily: _bodyFont,
-                      color: const Color(0xFF93A0B0),
+                      color: const Color(0xFF93A3AC),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -2684,7 +2686,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             duration: const Duration(milliseconds: 180),
             turns: open ? 0 : -0.25,
             child: const Icon(Icons.expand_more_rounded,
-                size: 24, color: Color(0xFF93A0B0)),
+                size: 24, color: Color(0xFF93A3AC)),
           ),
           if (showCount) ...[
             const SizedBox(width: 9),
@@ -2822,7 +2824,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 11, vertical: 7),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF166341),
+                        color: const Color(0xFF5D737E),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(
@@ -2879,18 +2881,18 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: const Color(0xFF166341).withOpacity(0.12),
+                color: const Color(0xFF5D737E).withOpacity(0.12),
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.bolt, size: 14, color: Color(0xFF166341)),
+                  const Icon(Icons.bolt, size: 14, color: Color(0xFF5D737E)),
                   const SizedBox(width: 5),
                   Text('$todayCount today',
                       style: theme.labelSmall.override(
                         fontFamily: _bodyFont,
-                        color: const Color(0xFF166341),
+                        color: const Color(0xFF5D737E),
                         fontWeight: FontWeight.w900,
                       )),
                 ],
@@ -2955,7 +2957,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
           left: 14,
           top: 8,
           bottom: 8,
-          child: Container(width: 2, color: const Color(0xFFE2E7EE)),
+          child: Container(width: 2, color: const Color(0xFFDCE3E6)),
         ),
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: rows),
       ],
@@ -3575,7 +3577,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                                         color: _paper,
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
-                                            color: const Color(0xFFCDD6E2),
+                                            color: const Color(0xFFCBD8DD),
                                             width: 1.4),
                                       ),
                                       child: Row(

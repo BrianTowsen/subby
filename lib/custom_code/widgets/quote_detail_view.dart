@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -25,15 +27,15 @@ class QuoteDetailView extends StatefulWidget {
 }
 
 class _QuoteDetailViewState extends State<QuoteDetailView> {
-  static const Color _ink = Color(0xFF39454B);
-  static const Color _inkMute = Color(0xFF5A6675);
-  static const Color _faint = Color(0xFF93A0B0);
+  static const Color _ink = Color(0xFF29343A);
+  static const Color _inkMute = Color(0xFF566670);
+  static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _border = Color(0xFFE7EBEF);
-  static const Color _line = Color(0xFFF2F4F6);
-  static const Color _green = Color(0xFF166341);
-  static const Color _coral = Color(0xFFCC4B3C);
+  static const Color _surface = Color(0xFFECF0F2);
+  static const Color _border = Color(0xFFEAEEF0);
+  static const Color _line = Color(0xFFF2F5F6);
+  static const Color _green = Color(0xFF5D737E);
+  static const Color _coral = Color(0xFF566670);
   static const String _display = 'Inter Tight';
   static const String _body = 'Inter';
   static const String _kActiveProjectPath = 'subby_active_project_path';
@@ -297,7 +299,7 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
                               color: _paper,
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                  color: const Color(0xFFE8CFC7), width: 1.4)),
+                                  color: const Color(0xFFCBD8DD), width: 1.4)),
                           child: const Icon(Icons.close_rounded,
                               size: 22, color: _coral)),
                     ),
@@ -307,8 +309,8 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
                 Container(
                   width: double.infinity,
                   color: status == 'accepted'
-                      ? const Color(0xFFE7F3EC)
-                      : const Color(0xFFF6E9E6),
+                      ? const Color(0xFFE7EDF0)
+                      : const Color(0xFFE7EDF0),
                   padding: EdgeInsets.fromLTRB(20, 16, 20, bottom + 16),
                   child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,

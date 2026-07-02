@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:intl/intl.dart';
 
 class PrivacyPageView extends StatefulWidget {
@@ -34,18 +36,18 @@ class _PrivacyPageViewState extends State<PrivacyPageView> {
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF323F4D); // text, chrome
-  static const Color _inkMute = Color(0xFF5A6675);
-  static const Color _faint = Color(0xFF93A0B0); // muted labels, chevrons
+  static const Color _ink = Color(0xFF29343A); // text, chrome
+  static const Color _inkMute = Color(0xFF566670);
+  static const Color _faint = Color(0xFF93A3AC); // muted labels, chevrons
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _hairline = Color(0xFFEEF1F2);
-  static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
+  static const Color _surface = Color(0xFFECF0F2);
+  static const Color _hairline = Color(0xFFEAEEF0);
+  static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
   // Brand accent — TEAL.
-  static const Color _teal = Color(0xFF323F4D);
+  static const Color _teal = Color(0xFF29343A);
   // Status
-  static const Color _live = Color(0xFFC7E87A); // orange — live / warning
-  static const Color _coral = Color(0xFFC7E87A);
+  static const Color _live = Color(0xFF5D737E); // orange — live / warning
+  static const Color _coral = Color(0xFF5D737E);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';

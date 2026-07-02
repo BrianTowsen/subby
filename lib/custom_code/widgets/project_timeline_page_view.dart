@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -39,19 +41,19 @@ class ProjectTimelinePageView extends StatefulWidget {
 
 class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _ink = Color(0xFF39454B);
-  static const Color _inkMute = Color(0xFF5A6675);
-  static const Color _faint = Color(0xFF93A0B0);
+  static const Color _ink = Color(0xFF29343A);
+  static const Color _inkMute = Color(0xFF566670);
+  static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _band = Color(0xFFF4F6F8);
-  static const Color _border = Color(0xFFE7EBEF);
-  static const Color _line = Color(0xFFF2F4F6);
-  static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
-  static const Color _green = Color(0xFF166341);
-  static const Color _selTint = Color(0xFFE7F3EC);
-  static const Color _danger = Color(0xFFC6A29B);
-  static const Color _dash = Color(0xFFCDD6E2);
+  static const Color _surface = Color(0xFFECF0F2);
+  static const Color _band = Color(0xFFF2F5F6);
+  static const Color _border = Color(0xFFEAEEF0);
+  static const Color _line = Color(0xFFF2F5F6);
+  static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
+  static const Color _green = Color(0xFF5D737E);
+  static const Color _selTint = Color(0xFFE7EDF0);
+  static const Color _danger = Color(0xFF93A3AC);
+  static const Color _dash = Color(0xFFCBD8DD);
   static const String _display = 'Inter Tight';
   static const String _body = 'Inter';
   // ────────────────────────────────────────────────────────────────────
@@ -81,10 +83,10 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   ];
 
   final Map<String, Color> _groupColor = const {
-    'struct': Color(0xFF39454B),
-    'services': Color(0xFF166341),
-    'finish': Color(0xFF5E9B7B),
-    'external': Color(0xFF98A4B0),
+    'struct': Color(0xFF29343A),
+    'services': Color(0xFF5D737E),
+    'finish': Color(0xFF6E8791),
+    'external': Color(0xFF93A3AC),
   };
 
   final Map<String, _ModeMeta> _modeMeta = const {
@@ -811,7 +813,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
             ? '${(dur / 5).toStringAsFixed(dur % 5 == 0 ? 0 : 1)}w'
             : '${sec.weeks}w',
         ruleIcon: si == 0 ? Icons.flag_rounded : meta.icon,
-        ruleColor: selHere ? _green : const Color(0xFFB4BDC7),
+        ruleColor: selHere ? _green : const Color(0xFFB7C2C7),
         ruleLabel: si == 0
             ? 'start'
             : (sec.mode == 'overlap' ? '${sec.overlapPct}%' : meta.short),
@@ -848,7 +850,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
             durLabel: '${c.days}d',
             ruleIcon:
                 ci == 0 ? Icons.subdirectory_arrow_right_rounded : cmeta.icon,
-            ruleColor: selC ? _green : const Color(0xFFB4BDC7),
+            ruleColor: selC ? _green : const Color(0xFFB7C2C7),
             ruleLabel: ci == 0
                 ? 'with section'
                 : (c.mode == 'overlap' ? '${c.overlapPct}%' : cmeta.short),
@@ -1276,7 +1278,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                    color: const Color(0xFFD7DCE3),
+                    color: const Color(0xFFCBD8DD),
                     borderRadius: BorderRadius.circular(999)),
               ),
             ),

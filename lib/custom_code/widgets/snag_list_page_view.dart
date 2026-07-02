@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -51,20 +53,20 @@ class SnagListPageView extends StatefulWidget {
 class _SnagListPageViewState extends State<SnagListPageView>
     with TickerProviderStateMixin {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _ink = Color(0xFF323F4D);
-  static const Color _inkMute = Color(0xFF5A6675);
-  static const Color _faint = Color(0xFF93A0B0);
+  static const Color _ink = Color(0xFF29343A);
+  static const Color _inkMute = Color(0xFF566670);
+  static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _hairline = Color(0xFFEEF1F2);
-  static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
-  static const Color _teal = Color(0xFF323F4D);
+  static const Color _surface = Color(0xFFECF0F2);
+  static const Color _hairline = Color(0xFFEAEEF0);
+  static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
+  static const Color _teal = Color(0xFF29343A);
   static const Color _tealTint =
-      Color(0xFFEEF1F4); // DS: lime tint → neutral surface
+      Color(0xFFECF0F2); // DS: lime tint → neutral surface
   static const Color _live =
-      Color(0xFFCC4B3C); // DS: lime → clay (high / attention)
-  static const Color _green = Color(0xFF166341); // DS: in-progress / info
-  static const Color _coral = Color(0xFFCC4B3C); // destructive / error (clay)
+      Color(0xFF566670); // DS: lime → clay (high / attention)
+  static const Color _green = Color(0xFF5D737E); // DS: in-progress / info
+  static const Color _coral = Color(0xFF566670); // destructive / error (clay)
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
   static const String _monoFont = 'Inter';
@@ -335,7 +337,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
   Color _severityColor(String sev) =>
       sev == 'critical' ? _live : (sev == 'minor' ? _faint : _ink);
   Color _severityTint(String sev) =>
-      sev == 'critical' ? const Color(0x29CC4B3C) : _surface;
+      sev == 'critical' ? const Color(0x29566670) : _surface;
 
   String _severityLabel(String sev) {
     switch (sev) {

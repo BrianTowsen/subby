@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,16 +31,16 @@ class QuotesReceivedView extends StatefulWidget {
 }
 
 class _QuotesReceivedViewState extends State<QuotesReceivedView> {
-  static const Color _ink = Color(0xFF39454B);
-  static const Color _inkMute = Color(0xFF5A6675);
-  static const Color _faint = Color(0xFF93A0B0);
+  static const Color _ink = Color(0xFF29343A);
+  static const Color _inkMute = Color(0xFF566670);
+  static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _border = Color(0xFFE7EBEF);
-  static const Color _green = Color(0xFF166341);
-  static const Color _sageBorder = Color(0xFFC9E4D6);
-  static const Color _coral = Color(0xFFCC4B3C);
-  static const Color _cobalt = Color(0xFF2A6FDB);
+  static const Color _surface = Color(0xFFECF0F2);
+  static const Color _border = Color(0xFFEAEEF0);
+  static const Color _green = Color(0xFF5D737E);
+  static const Color _sageBorder = Color(0xFFCBD8DD);
+  static const Color _coral = Color(0xFF566670);
+  static const Color _cobalt = Color(0xFF5D737E);
   static const String _display = 'Inter Tight';
   static const String _body = 'Inter';
   static const String _kActiveProjectPath = 'subby_active_project_path';
@@ -215,7 +217,7 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
 
   Widget _emptyCard() => Container(
         decoration: BoxDecoration(
-            color: const Color(0xFFF7F8FA),
+            color: const Color(0xFFF2F5F6),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: _border)),
         padding: const EdgeInsets.all(18),
@@ -242,7 +244,7 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: submitted ? _paper : const Color(0xFFF7F8FA),
+        color: submitted ? _paper : const Color(0xFFF2F5F6),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
             color: accepted ? _sageBorder : _border, width: accepted ? 1.5 : 1),
@@ -359,7 +361,7 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
                         color: _paper,
                         borderRadius: BorderRadius.circular(11),
                         border: Border.all(
-                            color: const Color(0xFFE8CFC7), width: 1.4)),
+                            color: const Color(0xFFCBD8DD), width: 1.4)),
                     child: const Icon(Icons.close_rounded,
                         size: 19, color: _coral),
                   ),
@@ -392,13 +394,13 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
     switch (status) {
       case 'viewed':
         fg = _cobalt;
-        bg = const Color(0xFFEEF4FC);
+        bg = const Color(0xFFE7EDF0);
         ic = Icons.visibility_outlined;
         label = 'Viewed';
         break;
       case 'submitted':
         fg = _green;
-        bg = const Color(0xFFE7F3EC);
+        bg = const Color(0xFFE7EDF0);
         ic = Icons.check_circle_rounded;
         label = 'Submitted';
         break;
@@ -410,7 +412,7 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
         break;
       case 'declined':
         fg = _coral;
-        bg = const Color(0xFFF6E9E6);
+        bg = const Color(0xFFE7EDF0);
         ic = Icons.close_rounded;
         label = 'Declined';
         break;

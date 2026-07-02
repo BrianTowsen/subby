@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -57,23 +59,23 @@ class DetailSnagPageView extends StatefulWidget {
 class _DetailSnagPageViewState extends State<DetailSnagPageView>
     with SingleTickerProviderStateMixin {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _ink = Color(0xFF323F4D);
-  static const Color _inkMute = Color(0xFF5A6675);
-  static const Color _faint = Color(0xFF93A0B0);
+  static const Color _ink = Color(0xFF29343A);
+  static const Color _inkMute = Color(0xFF566670);
+  static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _hairline = Color(0xFFEEF1F2);
-  static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
-  static const Color _teal = Color(0xFF323F4D);
+  static const Color _surface = Color(0xFFECF0F2);
+  static const Color _hairline = Color(0xFFEAEEF0);
+  static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
+  static const Color _teal = Color(0xFF29343A);
   static const Color _tealTint =
-      Color(0xFFEEF1F4); // DS: lime tint → neutral surface
+      Color(0xFFECF0F2); // DS: lime tint → neutral surface
   static const Color _live =
-      Color(0xFFCC4B3C); // DS: lime → clay (high / attention)
-  static const Color _green = Color(0xFF166341); // DS: in-progress / info
-  static const Color _greenSurface = Color(0xFFE7F3EC);
-  static const Color _greenBorder = Color(0xFFC9E4D6);
-  static const Color _coral = Color(0xFFCC4B3C);
-  static const Color _navy = Color(0xFF323F4D);
+      Color(0xFF566670); // DS: lime → clay (high / attention)
+  static const Color _green = Color(0xFF5D737E); // DS: in-progress / info
+  static const Color _greenSurface = Color(0xFFE7EDF0);
+  static const Color _greenBorder = Color(0xFFCBD8DD);
+  static const Color _coral = Color(0xFF566670);
+  static const Color _navy = Color(0xFF29343A);
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
   // ────────────────────────────────────────────────────────────────────
@@ -307,7 +309,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView>
   Color _severityColor(String s) =>
       s == 'critical' ? _live : (s == 'minor' ? _faint : _ink);
   Color _severityTint(String s) =>
-      s == 'critical' ? const Color(0x29CC4B3C) : _surface;
+      s == 'critical' ? const Color(0x29566670) : _surface;
 
   Widget _softPill(String text, {required Color fg, required Color bg}) {
     return Container(
@@ -1081,7 +1083,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView>
             ),
           ),
           const Icon(Icons.chevron_right_rounded,
-              size: 19, color: Color(0xFFC7D0DA)),
+              size: 19, color: Color(0xFFCBD8DD)),
         ],
       ),
     );
@@ -1139,10 +1141,10 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView>
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: has ? _surface : const Color(0x0FCC4B3C),
+        color: has ? _surface : const Color(0x0F566670),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-            color: has ? _hairlineOnSurface : const Color(0x59CC4B3C)),
+            color: has ? _hairlineOnSurface : const Color(0x59566670)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1283,7 +1285,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView>
               fontFamily: _bodyFont,
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: done ? _teal : const Color(0xFFC7D0DA)));
+              color: done ? _teal : const Color(0xFFCBD8DD)));
     }
 
     Widget bar(bool active) => Expanded(
@@ -1300,7 +1302,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView>
             height: 9,
             margin: const EdgeInsets.only(right: 6),
             decoration: BoxDecoration(
-                color: idx >= 0 ? _teal : const Color(0xFFC7D0DA),
+                color: idx >= 0 ? _teal : const Color(0xFFCBD8DD),
                 shape: BoxShape.circle)),
         node('Open', 0),
         bar(idx >= 1),
@@ -1553,7 +1555,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView>
                         color: _paper,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                            color: const Color(0xFFCDD6E2), width: 1.4),
+                            color: const Color(0xFFCBD8DD), width: 1.4),
                       ),
                       child: const Text(
                         'Cancel',
