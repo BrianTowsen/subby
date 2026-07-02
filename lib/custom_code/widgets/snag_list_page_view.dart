@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -760,6 +762,238 @@ class _SnagListPageViewState extends State<SnagListPageView>
     );
   }
 
+  // =========================================================
+  // Hero — dark ink header (matches ProjectTimelinePageView)
+  // =========================================================
+  Widget _hero() {
+    final top = MediaQuery.of(context).padding.top;
+    return Container(
+      width: double.infinity,
+      color: _ink,
+      padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _heroCircle(Icons.arrow_back_ios_new_rounded, _handleBack),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Column(
+                    children: [
+                      _heroName(),
+                      const SizedBox(height: 2),
+                      Text('SNAG LIST',
+                          style: TextStyle(
+                              fontFamily: _bodyFont,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.7,
+                              color: _paper.withOpacity(0.5))),
+                    ],
+                  ),
+                ),
+              ),
+              _heroCountPill(),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _heroStat(),
+        ],
+      ),
+    );
+  }
+
+  Widget _heroCircle(IconData icon, VoidCallback onTap) => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            width: 38,
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+                color: _paper.withOpacity(0.12), shape: BoxShape.circle),
+            child: Icon(icon, size: 16, color: _paper),
+          ),
+        ),
+      );
+
+  Widget _heroName() {
+    const style = TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 15,
+        fontWeight: FontWeight.w800,
+        color: _paper);
+    if (_projectRef == null) {
+      return const Text('Project',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: style);
+    }
+    return StreamBuilder<DocumentSnapshot<Object?>>(
+      stream: _projectRef!.snapshots(),
+      builder: (context, snap) {
+        final raw = snap.data?.data();
+        final data = raw is Map<String, dynamic> ? raw : <String, dynamic>{};
+        final name =
+            (data['name'] ?? data['projectName'] ?? data['title'] ?? 'Project')
+                .toString();
+        return Text(name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: style);
+      },
+    );
+  }
+
+  // One project-snags query → total / active / closed / critical counts.
+  Widget _snagCounts(
+      Widget Function(int total, int active, int closed, int critical) build) {
+    if (_projectRef == null) return build(0, 0, 0, 0);
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('snags')
+          .where('projectRef', isEqualTo: _projectRef)
+          .snapshots(),
+      builder: (context, snap) {
+        final docs = snap.data?.docs ?? const [];
+        int total = docs.length, active = 0, closed = 0, critical = 0;
+        for (final d in docs) {
+          final st = (d.data()['status'] ?? 'open').toString();
+          if (st == 'closed') {
+            closed++;
+          } else {
+            active++;
+            if ((d.data()['severity'] ?? 'minor').toString() == 'critical') {
+              critical++;
+            }
+          }
+        }
+        return build(total, active, closed, critical);
+      },
+    );
+  }
+
+  Widget _heroCountPill() =>
+      _snagCounts((total, active, closed, critical) => Container(
+            height: 38,
+            padding: const EdgeInsets.symmetric(horizontal: 11),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+                color: _paper.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(999)),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.fact_check_outlined, size: 14, color: _paper),
+                const SizedBox(width: 5),
+                Text('$total ${total == 1 ? 'snag' : 'snags'}',
+                    style: const TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: _paper)),
+              ],
+            ),
+          ));
+
+  Widget _heroStat() => _snagCounts((total, active, closed, critical) => Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('OPEN SNAGS',
+                  style: TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1,
+                      color: _paper.withOpacity(0.55))),
+              const SizedBox(height: 4),
+              Text('$active ${active == 1 ? 'snag' : 'snags'}',
+                  style: const TextStyle(
+                      fontFamily: _displayFont,
+                      fontSize: 34,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -1,
+                      color: _paper,
+                      height: 1.0)),
+            ],
+          ),
+          const SizedBox(width: 14),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('$closed closed',
+                    style: TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: _paper.withOpacity(0.6))),
+                const SizedBox(height: 2),
+                Text('$critical critical',
+                    style: TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: _paper.withOpacity(0.45))),
+              ],
+            ),
+          ),
+        ],
+      ));
+
+  // Bright-white elevated footer (matches the Timeline inspector shell).
+  Widget _footerBar() => Container(
+        decoration: const BoxDecoration(
+          color: _paper,
+          border: Border(top: BorderSide(color: _surface, width: 1)),
+          boxShadow: [
+            BoxShadow(
+                color: Color(0x1F19232D),
+                blurRadius: 30,
+                offset: Offset(0, -10)),
+          ],
+        ),
+        padding: const EdgeInsets.fromLTRB(_hPad, 14, _hPad, 14),
+        child: SafeArea(
+          top: false,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: _handleAddSnag,
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                height: 52,
+                decoration: BoxDecoration(
+                    color: _teal, borderRadius: BorderRadius.circular(12)),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(Icons.add_rounded, color: _paper, size: 20),
+                    SizedBox(width: 9),
+                    Text('Add Snag',
+                        style: TextStyle(
+                            fontFamily: _bodyFont,
+                            color: _paper,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
@@ -769,206 +1003,127 @@ class _SnagListPageViewState extends State<SnagListPageView>
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
       color: _paper,
-      child: SafeArea(
-        top: true,
-        bottom: true,
-        child: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: _vPad),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header — minimal back + big title (stays fixed)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: _hPad),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _minBack(),
-                        const SizedBox(height: 18),
-                        Text('Snag List', style: _pageTitle(theme)),
-                        const SizedBox(height: 8),
-                        Text('Capture defects and close them out',
-                            style: _pageSubtitle(theme)),
-                      ],
-                    ),
-                  ),
+      child: Stack(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _hero(),
+              Expanded(
+                child: NestedScrollView(
+                  headerSliverBuilder: (context, inner) {
+                    return [
+                      SliverPersistentHeader(
+                        pinned: true,
+                        delegate: _StickyHeaderDelegate(
+                          minHeight: _stickyTabsHeight,
+                          maxHeight: _stickyTabsHeight,
+                          child: _buildTabs(theme, accent),
+                        ),
+                      ),
+                    ];
+                  },
+                  body: TabBarView(
+                    controller: _tabController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: List.generate(3, (tabIndex) {
+                      final stream = _snagStreamForTab(tabIndex);
 
-                  const SizedBox(height: 18),
+                      if (_projectRef == null) {
+                        return ListView(
+                          padding: const EdgeInsets.fromLTRB(0, 12, 0, 110),
+                          children: [
+                            _buildEmptyState(theme, 'No project selected'),
+                          ],
+                        );
+                      }
 
-                  // Body — project card scrolls away; the pill tabs pin.
-                  Expanded(
-                    child: NestedScrollView(
-                      headerSliverBuilder: (context, inner) {
-                        return [
-                          const SliverToBoxAdapter(
-                            child: SizedBox(height: _sliverTopGap),
-                          ),
-                          SliverToBoxAdapter(
-                            child: Padding(
-                              padding: const EdgeInsets.only(bottom: 4),
-                              child: _buildProjectCard(theme, accent),
-                            ),
-                          ),
-                          SliverPersistentHeader(
-                            pinned: true,
-                            delegate: _StickyHeaderDelegate(
-                              minHeight: _stickyTabsHeight,
-                              maxHeight: _stickyTabsHeight,
-                              child: _buildTabs(theme, accent),
-                            ),
-                          ),
-                        ];
-                      },
-                      body: TabBarView(
-                        controller: _tabController,
-                        physics: const NeverScrollableScrollPhysics(),
-                        children: List.generate(3, (tabIndex) {
-                          final stream = _snagStreamForTab(tabIndex);
-
-                          if (_projectRef == null) {
+                      return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                        stream: stream,
+                        builder: (context, snap) {
+                          if (snap.hasError) {
+                            debugPrint('🔥 Snag list query error: '
+                                '${snap.error}');
                             return ListView(
                               padding: const EdgeInsets.fromLTRB(0, 12, 0, 110),
                               children: [
-                                _buildEmptyState(theme, 'No project selected'),
+                                _buildEmptyState(theme, 'Could not load snags'),
                               ],
                             );
                           }
 
-                          return StreamBuilder<
-                              QuerySnapshot<Map<String, dynamic>>>(
-                            stream: stream,
-                            builder: (context, snap) {
-                              if (snap.hasError) {
-                                debugPrint('🔥 Snag list query error: '
-                                    '${snap.error}');
-                                return ListView(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(0, 12, 0, 110),
-                                  children: [
-                                    _buildEmptyState(
-                                        theme, 'Could not load snags'),
-                                  ],
-                                );
-                              }
+                          final docs =
+                              _sortedByCreatedDesc(snap.data?.docs ?? const []);
 
-                              final docs = _sortedByCreatedDesc(
-                                  snap.data?.docs ?? const []);
-
-                              if (snap.connectionState ==
-                                      ConnectionState.waiting &&
-                                  docs.isEmpty) {
-                                return ListView(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(0, 12, 0, 110),
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: _contentHPad),
-                                      child: _flatCard(
-                                        padding: const EdgeInsets.all(18),
-                                        Row(
-                                          children: [
-                                            const SizedBox(
-                                              width: 18,
-                                              height: 18,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                valueColor:
-                                                    AlwaysStoppedAnimation<
-                                                        Color>(_teal),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Text('Loading snags…',
-                                                style: _rowMetaStyle(theme)),
-                                          ],
+                          if (snap.connectionState == ConnectionState.waiting &&
+                              docs.isEmpty) {
+                            return ListView(
+                              padding: const EdgeInsets.fromLTRB(0, 12, 0, 110),
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: _contentHPad),
+                                  child: _flatCard(
+                                    padding: const EdgeInsets.all(18),
+                                    Row(
+                                      children: [
+                                        const SizedBox(
+                                          width: 18,
+                                          height: 18,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                    _teal),
+                                          ),
                                         ),
-                                      ),
+                                        const SizedBox(width: 12),
+                                        Text('Loading snags…',
+                                            style: _rowMetaStyle(theme)),
+                                      ],
                                     ),
-                                  ],
-                                );
-                              }
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
 
-                              if (docs.isEmpty) {
-                                final label = tabIndex == 0
-                                    ? 'Open snags'
-                                    : tabIndex == 1
-                                        ? 'In progress'
-                                        : 'Closed';
-                                return ListView(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(0, 12, 0, 110),
-                                  children: [_buildEmptyState(theme, label)],
-                                );
-                              }
+                          if (docs.isEmpty) {
+                            final label = tabIndex == 0
+                                ? 'Open snags'
+                                : tabIndex == 1
+                                    ? 'In progress'
+                                    : 'Closed';
+                            return ListView(
+                              padding: const EdgeInsets.fromLTRB(0, 12, 0, 110),
+                              children: [_buildEmptyState(theme, label)],
+                            );
+                          }
 
-                              return ListView.builder(
-                                padding: const EdgeInsets.fromLTRB(
-                                    _contentHPad, 4, _contentHPad, 110),
-                                itemCount: docs.length,
-                                itemBuilder: (context, i) {
-                                  final doc = docs[i];
-                                  return _buildSnagCard(
-                                    theme,
-                                    accent,
-                                    snagRef: doc.reference,
-                                    d: doc.data(),
-                                  );
-                                },
+                          return ListView.builder(
+                            padding: const EdgeInsets.fromLTRB(
+                                _contentHPad, 4, _contentHPad, 110),
+                            itemCount: docs.length,
+                            itemBuilder: (context, i) {
+                              final doc = docs[i];
+                              return _buildSnagCard(
+                                theme,
+                                accent,
+                                snagRef: doc.reference,
+                                d: doc.data(),
                               );
                             },
                           );
-                        }),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Floating Add button — flat slate
-            Positioned(
-              left: _hPad,
-              right: _hPad,
-              bottom: 18,
-              child: SafeArea(
-                top: false,
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: _handleAddSnag,
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: _teal,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.add_rounded,
-                              color: _paper, size: 20),
-                          const SizedBox(width: 9),
-                          Text(
-                            'Add Snag',
-                            style: theme.bodyMedium.override(
-                              fontFamily: _bodyFont,
-                              color: _paper,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                        },
+                      );
+                    }),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+          Positioned(left: 0, right: 0, bottom: 0, child: _footerBar()),
+        ],
       ),
     ));
   }

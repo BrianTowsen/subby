@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -995,6 +997,127 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
       );
   }
 
+  // =========================================================
+  // Hero — dark ink header (matches ProjectTimelinePageView)
+  // =========================================================
+  Widget _heroCircle(IconData icon, VoidCallback onTap) => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            width: 38,
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+                color: _paper.withOpacity(0.12), shape: BoxShape.circle),
+            child: Icon(icon, size: 16, color: _paper),
+          ),
+        ),
+      );
+
+  Widget _addHero(String title, String subtitle) => Container(
+        width: double.infinity,
+        color: _ink,
+        padding: const EdgeInsets.fromLTRB(20, 6, 20, 18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _heroCircle(Icons.arrow_back_ios_new_rounded, _handleBack),
+                Expanded(
+                  child: Center(
+                    child: Text(_isEditing ? 'EDIT SNAG' : 'NEW SNAG',
+                        style: TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.7,
+                            color: _paper.withOpacity(0.5))),
+                  ),
+                ),
+                const SizedBox(width: 38, height: 38),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(title,
+                style: const TextStyle(
+                    fontFamily: _displayFont,
+                    fontSize: 34,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -1,
+                    height: 1.0,
+                    color: _paper)),
+            const SizedBox(height: 8),
+            Text(subtitle,
+                style: TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: _paper.withOpacity(0.6))),
+          ],
+        ),
+      );
+
+  // Bright-white elevated footer (matches the Timeline inspector shell).
+  Widget _footerBar(String ctaLabel, IconData ctaIcon) => Container(
+        decoration: const BoxDecoration(
+          color: _paper,
+          border: Border(top: BorderSide(color: _surface, width: 1)),
+          boxShadow: [
+            BoxShadow(
+                color: Color(0x1F19232D),
+                blurRadius: 30,
+                offset: Offset(0, -10)),
+          ],
+        ),
+        padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
+        child: SafeArea(
+          top: false,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: _save,
+              borderRadius: BorderRadius.circular(_radius),
+              child: Opacity(
+                opacity: (_saving || _uploading) ? 0.7 : 1,
+                child: Container(
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: _teal,
+                    borderRadius: BorderRadius.circular(_radius),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (_saving)
+                        const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2.2,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(_paper)),
+                        )
+                      else
+                        Icon(ctaIcon, color: _paper, size: 20),
+                      const SizedBox(width: 9),
+                      Text(ctaLabel,
+                          style: const TextStyle(
+                              fontFamily: _bodyFont,
+                              color: _paper,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     final headerTitle = _isEditing ? 'Edit Snag' : 'Add Snag';
@@ -1012,108 +1135,58 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
       child: SafeArea(
         top: true,
         bottom: true,
-        child: Stack(
+        child: Column(
           children: [
-            SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(_hPad, 14, _hPad, 96),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _minBack(),
-                    const SizedBox(height: 16),
-                    Text(headerTitle,
-                        style: const TextStyle(
-                            fontFamily: _displayFont,
-                            color: _ink,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 30,
-                            height: 1.05,
-                            letterSpacing: -0.5)),
-                    const SizedBox(height: 8),
-                    Text(headerSubtitle,
-                        style: const TextStyle(
-                            fontFamily: _bodyFont,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: _faint)),
-                    const SizedBox(height: 22),
-                    _mediaSection(),
-                    const SizedBox(height: 6),
-                    _uText(
-                      label: 'Title',
-                      controller: _titleCtrl,
-                      icon: Icons.title_rounded,
-                      hint: 'e.g. Cracked tile in ensuite',
-                      validator: (v) => (v ?? '').trim().isEmpty
-                          ? 'Give the snag a title'
-                          : null,
-                    ),
-                    _uText(
-                      label: 'Description',
-                      controller: _descCtrl,
-                      icon: Icons.notes_rounded,
-                      hint: 'What is wrong, and where exactly…',
-                      maxLines: 3,
-                    ),
-                    _uText(
-                      label: 'Area / Room',
-                      controller: _areaCtrl,
-                      icon: Icons.place_outlined,
-                      hint: 'e.g. Master Ensuite',
-                    ),
-                    _severityField(),
-                    _dueDateField(),
-                    _assignField(),
-                  ],
-                ),
-              ),
-            ),
-            Positioned(
-              left: 18,
-              right: 18,
-              bottom: 18,
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: _save,
-                  borderRadius: BorderRadius.circular(_radius),
-                  child: Opacity(
-                    opacity: (_saving || _uploading) ? 0.7 : 1,
-                    child: Container(
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: _teal,
-                        borderRadius: BorderRadius.circular(_radius),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+            _addHero(headerTitle, headerSubtitle),
+            Expanded(
+              child: Stack(
+                children: [
+                  SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(_hPad, 16, _hPad, 96),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (_saving)
-                            const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2.2,
-                                  valueColor:
-                                      AlwaysStoppedAnimation<Color>(_paper)),
-                            )
-                          else
-                            Icon(ctaIcon, color: _paper, size: 20),
-                          const SizedBox(width: 9),
-                          Text(ctaLabel,
-                              style: const TextStyle(
-                                  fontFamily: _bodyFont,
-                                  color: _paper,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 15)),
+                          _mediaSection(),
+                          const SizedBox(height: 6),
+                          _uText(
+                            label: 'Title',
+                            controller: _titleCtrl,
+                            icon: Icons.title_rounded,
+                            hint: 'e.g. Cracked tile in ensuite',
+                            validator: (v) => (v ?? '').trim().isEmpty
+                                ? 'Give the snag a title'
+                                : null,
+                          ),
+                          _uText(
+                            label: 'Description',
+                            controller: _descCtrl,
+                            icon: Icons.notes_rounded,
+                            hint: 'What is wrong, and where exactly…',
+                            maxLines: 3,
+                          ),
+                          _uText(
+                            label: 'Area / Room',
+                            controller: _areaCtrl,
+                            icon: Icons.place_outlined,
+                            hint: 'e.g. Master Ensuite',
+                          ),
+                          _severityField(),
+                          _dueDateField(),
+                          _assignField(),
                         ],
                       ),
                     ),
                   ),
-                ),
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: _footerBar(ctaLabel, ctaIcon),
+                  ),
+                ],
               ),
             ),
           ],

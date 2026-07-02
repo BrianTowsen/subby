@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -1111,6 +1113,67 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
     );
   }
 
+  Widget _heroCircle(IconData icon, VoidCallback onTap) => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            width: 38,
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+                color: _paper.withOpacity(0.12), shape: BoxShape.circle),
+            child: Icon(icon, size: 16, color: _paper),
+          ),
+        ),
+      );
+
+  // Dark ink hero (matches ProjectTimelinePageView).
+  Widget _hero() => Container(
+        width: double.infinity,
+        color: _ink,
+        padding: const EdgeInsets.fromLTRB(20, 6, 20, 18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _heroCircle(Icons.arrow_back_ios_new_rounded, _goBack),
+                Expanded(
+                  child: Center(
+                    child: Text('DOCUMENTS',
+                        style: TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.7,
+                            color: _paper.withOpacity(0.5))),
+                  ),
+                ),
+                const SizedBox(width: 38, height: 38),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Text('Documents',
+                style: TextStyle(
+                    fontFamily: _displayFont,
+                    fontSize: 34,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -1,
+                    height: 1.0,
+                    color: _paper)),
+            const SizedBox(height: 8),
+            Text('Upload and manage project files.',
+                style: TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: _paper.withOpacity(0.6))),
+          ],
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
@@ -1152,126 +1215,89 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
         child: SafeArea(
           top: true,
           bottom: true,
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, _vPad),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ===== TOP ROW: back =====
-                Row(
-                  children: [
-                    _tapCard(
-                      onTap: _goBack,
-                      radius: BorderRadius.circular(999),
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: _surface,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: _hairline.withOpacity(0.9)),
+          child: Column(
+            children: [
+              _hero(),
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(_hPad, 12, _hPad, _vPad),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ===== NEW-UPLOAD SELECTORS =====
+                      _selectorRow(
+                        theme,
+                        'New file type',
+                        _animatedSegmented(
+                          theme: theme,
+                          iconA: Icons.architecture_rounded,
+                          labelA: 'Drawings',
+                          onA: () => setState(() => _newCat = 'drawing'),
+                          iconB: Icons.description_rounded,
+                          labelB: 'Docs / Images',
+                          onB: () => setState(() => _newCat = 'document'),
+                          firstSelected: _newCat == 'drawing',
                         ),
-                        child: const Icon(Icons.arrow_back_ios_new_rounded,
-                            size: 15, color: _inkMute),
                       ),
-                    ),
-                    const Spacer(),
-                  ],
-                ),
+                      _selectorRow(
+                        theme,
+                        'Visibility',
+                        _animatedSegmented(
+                          theme: theme,
+                          iconA: Icons.visibility_outlined,
+                          labelA: 'Shared',
+                          onA: () => setState(() => _newVis = 'shared'),
+                          iconB: Icons.lock_outline_rounded,
+                          labelB: 'Private',
+                          onB: () => setState(() => _newVis = 'private'),
+                          firstSelected: _newVis == 'shared',
+                        ),
+                      ),
 
-                const SizedBox(height: 20),
+                      // ===== UPLOAD =====
+                      _uploadButton(theme),
+                      const SizedBox(height: 10),
+                      Text(
+                        _newVis == 'shared'
+                            ? 'New files will be visible to listings on this project.'
+                            : 'New files stay private until you choose to share them.',
+                        style: _helperStyle(theme),
+                      ),
 
-                // ===== TITLE =====
-                Text(
-                  'Documents',
-                  style: theme.titleLarge.override(
-                    fontFamily: _displayFont,
-                    color: _ink,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 30,
-                    lineHeight: 1.05,
+                      const SizedBox(height: 34),
+
+                      // ===== DOCUMENT LIST =====
+                      Text('PROJECT DOCUMENTS', style: _uLabelStyle(theme)),
+                      const SizedBox(height: 4),
+
+                      if (_docsErr != null)
+                        _stateRow(
+                          theme,
+                          _coral,
+                          Icons.error_outline,
+                          'Couldn’t load documents',
+                          'This is usually a missing Firestore index or rules issue.',
+                        )
+                      else if (!_docsLoadedOnce)
+                        _stateRow(theme, accent, Icons.hourglass_empty_rounded,
+                            'Loading documents…', null,
+                            spinner: true)
+                      else if (_docRows.isEmpty)
+                        _stateRow(
+                          theme,
+                          accent,
+                          Icons.folder_open_rounded,
+                          'No documents yet.',
+                          'Upload PDFs, images, and files linked to this project.',
+                        )
+                      else
+                        _uDocsByCategory(theme, accent),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Upload and manage project files.',
-                  style: _appSubtitleStyle(theme).copyWith(fontSize: 13),
-                ),
-
-                const SizedBox(height: 30),
-
-                // ===== NEW-UPLOAD SELECTORS =====
-                _selectorRow(
-                  theme,
-                  'New file type',
-                  _animatedSegmented(
-                    theme: theme,
-                    iconA: Icons.architecture_rounded,
-                    labelA: 'Drawings',
-                    onA: () => setState(() => _newCat = 'drawing'),
-                    iconB: Icons.description_rounded,
-                    labelB: 'Docs / Images',
-                    onB: () => setState(() => _newCat = 'document'),
-                    firstSelected: _newCat == 'drawing',
-                  ),
-                ),
-                _selectorRow(
-                  theme,
-                  'Visibility',
-                  _animatedSegmented(
-                    theme: theme,
-                    iconA: Icons.visibility_outlined,
-                    labelA: 'Shared',
-                    onA: () => setState(() => _newVis = 'shared'),
-                    iconB: Icons.lock_outline_rounded,
-                    labelB: 'Private',
-                    onB: () => setState(() => _newVis = 'private'),
-                    firstSelected: _newVis == 'shared',
-                  ),
-                ),
-
-                // ===== UPLOAD =====
-                _uploadButton(theme),
-                const SizedBox(height: 10),
-                Text(
-                  _newVis == 'shared'
-                      ? 'New files will be visible to listings on this project.'
-                      : 'New files stay private until you choose to share them.',
-                  style: _helperStyle(theme),
-                ),
-
-                const SizedBox(height: 34),
-
-                // ===== DOCUMENT LIST =====
-                Text('PROJECT DOCUMENTS', style: _uLabelStyle(theme)),
-                const SizedBox(height: 4),
-
-                if (_docsErr != null)
-                  _stateRow(
-                    theme,
-                    _coral,
-                    Icons.error_outline,
-                    'Couldn’t load documents',
-                    'This is usually a missing Firestore index or rules issue.',
-                  )
-                else if (!_docsLoadedOnce)
-                  _stateRow(theme, accent, Icons.hourglass_empty_rounded,
-                      'Loading documents…', null,
-                      spinner: true)
-                else if (_docRows.isEmpty)
-                  _stateRow(
-                    theme,
-                    accent,
-                    Icons.folder_open_rounded,
-                    'No documents yet.',
-                    'Upload PDFs, images, and files linked to this project.',
-                  )
-                else
-                  _uDocsByCategory(theme, accent),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

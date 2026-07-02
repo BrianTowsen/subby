@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -652,6 +654,89 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView>
         ),
       );
 
+  // =========================================================
+  // Hero — dark ink header (matches ProjectTimelinePageView)
+  // =========================================================
+  Widget _heroCircle(IconData icon, VoidCallback onTap) => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            width: 38,
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+                color: _paper.withOpacity(0.12), shape: BoxShape.circle),
+            child: Icon(icon, size: 16, color: _paper),
+          ),
+        ),
+      );
+
+  Widget _detailHero(
+    DocumentReference ref,
+    String title,
+    String status,
+    String area,
+    DateTime? due,
+    bool isOwner,
+  ) {
+    final dueHint = _dueHint(due, status);
+    final parts = <String>[];
+    if (area.trim().isNotEmpty) parts.add(area.trim());
+    if (dueHint.isNotEmpty) parts.add(dueHint);
+    final meta = parts.join('  ·  ');
+    return Container(
+      width: double.infinity,
+      color: _ink,
+      padding: const EdgeInsets.fromLTRB(20, 6, 20, 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _heroCircle(Icons.arrow_back_ios_new_rounded, _handleBack),
+              Expanded(
+                child: Center(
+                  child: Text('SNAG DETAIL',
+                      style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.7,
+                          color: _paper.withOpacity(0.5))),
+                ),
+              ),
+              if (isOwner)
+                _heroCircle(Icons.delete_outline_rounded,
+                    () => _confirmDelete(ref, title))
+              else
+                const SizedBox(width: 38, height: 38),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(title,
+              style: const TextStyle(
+                  fontFamily: _displayFont,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.6,
+                  height: 1.1,
+                  color: _paper)),
+          if (meta.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(meta,
+                style: TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: _paper.withOpacity(0.55))),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _content(DocumentReference ref, Map<String, dynamic> d) {
     final title = (d['title'] ?? 'Snag').toString();
     final description = (d['description'] ?? '').toString();
@@ -689,92 +774,77 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView>
     final createdAt = _asDate(d['createdAt']);
     final readAt = _asDate(d['readByListingAt']);
 
-    return Stack(
+    return Column(
       children: [
-        SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(_hPad, 6, _hPad, 250),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        _detailHero(ref, title, status, area, due, isOwner),
+        Expanded(
+          child: Stack(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _minBack(),
-                  // ✅ Snags aren't edited — only the creator can delete.
-                  if (isOwner)
-                    _iconBtn(Icons.delete_outline_rounded, _coral,
-                        () => _confirmDelete(ref, title))
-                  else
-                    const SizedBox.shrink(),
-                ],
+              SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(_hPad, 16, _hPad, 250),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _gallery(galleryMedia),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        _softPill(_statusLabel(status),
+                            fg: _statusColor(status), bg: _statusTint(status)),
+                        const SizedBox(width: 8),
+                        _softPill(_severityLabel(severity),
+                            fg: _severityColor(severity),
+                            bg: _severityTint(severity)),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    _metaRow(
+                      leading: const Icon(Icons.place_outlined,
+                          size: 19, color: _faint),
+                      title: area,
+                      trailingLabel: 'Area',
+                    ),
+                    _assignedRow(listingName, readAt),
+                    _metaRow(
+                      leading: const Icon(Icons.calendar_month_outlined,
+                          size: 19, color: _faint),
+                      title: due == null
+                          ? 'No due date'
+                          : dateTimeFormat('d MMM y', due),
+                      trailingLabel: _dueHint(due, status),
+                      trailingColor: _dueColor(due, status),
+                    ),
+                    _metaRow(
+                      leading: const Icon(Icons.person_outline,
+                          size: 19, color: _faint),
+                      title: createdByName.isEmpty ? 'Logged' : createdByName,
+                      trailingLabel: createdAt == null
+                          ? 'Logged'
+                          : dateTimeFormat('d MMM', createdAt),
+                      divider: false,
+                    ),
+                    if (description.trim().isNotEmpty) ...[
+                      const SizedBox(height: 14),
+                      Text(description,
+                          style: const TextStyle(
+                              fontFamily: _bodyFont,
+                              fontSize: 13.5,
+                              height: 1.5,
+                              fontWeight: FontWeight.w500,
+                              color: _inkMute)),
+                    ],
+                  ],
+                ),
               ),
-              const SizedBox(height: 14),
-              _gallery(galleryMedia),
-              const SizedBox(height: 16),
-              Text(title,
-                  style: const TextStyle(
-                      fontFamily: _displayFont,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.4,
-                      height: 1.1,
-                      color: _navy)),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  _softPill(_statusLabel(status),
-                      fg: _statusColor(status), bg: _statusTint(status)),
-                  const SizedBox(width: 8),
-                  _softPill(_severityLabel(severity),
-                      fg: _severityColor(severity),
-                      bg: _severityTint(severity)),
-                ],
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: _closeOutDock(status),
               ),
-              const SizedBox(height: 14),
-              _metaRow(
-                leading:
-                    const Icon(Icons.place_outlined, size: 19, color: _faint),
-                title: area,
-                trailingLabel: 'Area',
-              ),
-              _assignedRow(listingName, readAt),
-              _metaRow(
-                leading: const Icon(Icons.calendar_month_outlined,
-                    size: 19, color: _faint),
-                title: due == null
-                    ? 'No due date'
-                    : dateTimeFormat('d MMM y', due),
-                trailingLabel: _dueHint(due, status),
-                trailingColor: _dueColor(due, status),
-              ),
-              _metaRow(
-                leading:
-                    const Icon(Icons.person_outline, size: 19, color: _faint),
-                title: createdByName.isEmpty ? 'Logged' : createdByName,
-                trailingLabel: createdAt == null
-                    ? 'Logged'
-                    : dateTimeFormat('d MMM', createdAt),
-                divider: false,
-              ),
-              if (description.trim().isNotEmpty) ...[
-                const SizedBox(height: 14),
-                Text(description,
-                    style: const TextStyle(
-                        fontFamily: _bodyFont,
-                        fontSize: 13.5,
-                        height: 1.5,
-                        fontWeight: FontWeight.w500,
-                        color: _inkMute)),
-              ],
             ],
           ),
-        ),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: _closeOutDock(status),
         ),
       ],
     );
@@ -1096,7 +1166,11 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView>
     return Container(
       decoration: const BoxDecoration(
         color: _paper,
-        border: Border(top: BorderSide(color: _hairline, width: 1)),
+        border: Border(top: BorderSide(color: _surface, width: 1)),
+        boxShadow: [
+          BoxShadow(
+              color: Color(0x1F19232D), blurRadius: 30, offset: Offset(0, -10)),
+        ],
       ),
       padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
       child: SafeArea(
