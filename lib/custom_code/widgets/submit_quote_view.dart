@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -50,9 +52,11 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
   static const String _body = 'Inter';
 
   static const String _kActiveProjectPath = 'subby_active_project_path';
+  static const String _kActiveQuotePath = 'subby_active_quote_path';
   static const int _vatPct = 15;
 
   DocumentReference<Map<String, dynamic>>? _projectRef;
+  DocumentReference<Map<String, dynamic>>? _quoteRef;
   String _projectName = 'Project';
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _projSub;
 
@@ -81,9 +85,21 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
 
   Future<void> _loadActiveProject() async {
     final prefs = await SharedPreferences.getInstance();
-    final path = (prefs.getString(_kActiveProjectPath) ?? '').trim();
-    if (path.isEmpty) return;
-    final ref = FirebaseFirestore.instance.doc(path);
+    final quotePath = (prefs.getString(_kActiveQuotePath) ?? '').trim();
+    DocumentReference<Map<String, dynamic>>? ref;
+    if (quotePath.isNotEmpty) {
+      _quoteRef = FirebaseFirestore.instance.doc(quotePath);
+      ref = _quoteRef!.parent.parent;
+    } else {
+      // Legacy fallback: active project + this trade's uid.
+      final path = (prefs.getString(_kActiveProjectPath) ?? '').trim();
+      if (path.isNotEmpty) {
+        ref = FirebaseFirestore.instance.doc(path);
+        final uid = currentUserReference?.id;
+        if (uid != null) _quoteRef = ref.collection('quotes').doc(uid);
+      }
+    }
+    if (ref == null) return;
     _projectRef = ref;
     _projSub = ref.snapshots().listen((snap) {
       final raw = snap.data();
@@ -124,13 +140,13 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
   }
 
   Future<void> _submit() async {
-    final ref = _projectRef;
-    if (ref == null || _saving) return;
-    final uid = currentUserReference?.id ?? 'anon';
+    final qref = _quoteRef;
+    if (qref == null || _saving) return;
     setState(() => _saving = true);
     try {
-      await ref.collection('quotes').doc(uid).set({
-        'listingRef': currentUserReference,
+      // Writes to the SAME doc InviteView created (listing-id keyed) —
+      // listingRef/providerRef set at invite time are preserved by merge.
+      await qref.set({
         'status': 'submitted',
         'amountExcl': _amountExcl,
         'vatIncluded': _vatIncluded,
@@ -156,6 +172,17 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
       final nav = Navigator.of(context);
       if (nav.canPop()) nav.pop();
     } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(const SnackBar(
+              backgroundColor: _ink,
+              content: Text('Couldn\'t submit — check your connection.',
+                  style: TextStyle(
+                      fontFamily: _body,
+                      fontWeight: FontWeight.w700,
+                      color: _paper))));
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }

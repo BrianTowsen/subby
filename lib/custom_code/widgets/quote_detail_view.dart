@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -40,6 +42,7 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
   static const String _body = 'Inter';
   static const String _kActiveProjectPath = 'subby_active_project_path';
   static const String _kActiveQuoteId = 'subby_active_quote_id';
+  static const String _kActiveQuotePath = 'subby_active_quote_path';
 
   DocumentReference<Map<String, dynamic>>? _quoteRef;
   bool _loading = true;
@@ -52,11 +55,17 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    final path = (prefs.getString(_kActiveProjectPath) ?? '').trim();
-    final qid = (prefs.getString(_kActiveQuoteId) ?? '').trim();
-    if (path.isNotEmpty && qid.isNotEmpty) {
-      _quoteRef =
-          FirebaseFirestore.instance.doc(path).collection('quotes').doc(qid);
+    final quotePath = (prefs.getString(_kActiveQuotePath) ?? '').trim();
+    if (quotePath.isNotEmpty) {
+      _quoteRef = FirebaseFirestore.instance.doc(quotePath);
+    } else {
+      // Legacy fallback: active project path + quote id.
+      final path = (prefs.getString(_kActiveProjectPath) ?? '').trim();
+      final qid = (prefs.getString(_kActiveQuoteId) ?? '').trim();
+      if (path.isNotEmpty && qid.isNotEmpty) {
+        _quoteRef =
+            FirebaseFirestore.instance.doc(path).collection('quotes').doc(qid);
+      }
     }
     if (mounted) setState(() => _loading = false);
   }
@@ -65,8 +74,26 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
     final ref = _quoteRef;
     if (ref == null) return;
     try {
-      await ref.update(
-          {'status': status, 'decidedAt': FieldValue.serverTimestamp()});
+      if (status == 'accepted') {
+        // Award this quote and close the tender: decline the other
+        // still-submitted quotes in the same batch.
+        final batch = FirebaseFirestore.instance.batch();
+        batch.update(ref,
+            {'status': 'accepted', 'decidedAt': FieldValue.serverTimestamp()});
+        final others =
+            await ref.parent.where('status', isEqualTo: 'submitted').get();
+        for (final o in others.docs) {
+          if (o.reference.path == ref.path) continue;
+          batch.update(o.reference, {
+            'status': 'declined',
+            'decidedAt': FieldValue.serverTimestamp(),
+          });
+        }
+        await batch.commit();
+      } else {
+        await ref.update(
+            {'status': status, 'decidedAt': FieldValue.serverTimestamp()});
+      }
     } catch (_) {}
     if (!mounted) return;
     final nav = Navigator.of(context);
@@ -111,6 +138,18 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
       stream: _quoteRef!.snapshots(),
       builder: (context, snap) {
         final d = snap.data?.data() ?? const {};
+        if (snap.hasData && !(snap.data!.exists)) {
+          return Container(
+              width: widget.width ?? double.infinity,
+              height: widget.height ?? double.infinity,
+              color: _paper,
+              child: const Center(
+                  child: Text('Quote not found.',
+                      style: TextStyle(
+                          fontFamily: _body,
+                          color: _faint,
+                          fontWeight: FontWeight.w600))));
+        }
         final status = (d['status'] ?? 'submitted').toString();
         final name = (d['listingName'] ?? 'Trade').toString();
         final excl = (d['amountExcl'] ?? 0) as num;
@@ -120,6 +159,7 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
         final dep = (d['depositPct'] ?? 0);
         final notes = (d['notes'] ?? '').toString();
         final hasFile = (d['fileName'] ?? '').toString().isNotEmpty;
+        final vatIncl = d['vatIncluded'] != false;
         final decided = status == 'accepted' || status == 'declined';
 
         return Container(
@@ -169,7 +209,7 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
                               color: _paper,
                               height: 1.0)),
                       const SizedBox(height: 4),
-                      Text('Total incl. VAT',
+                      Text(vatIncl ? 'Total incl. VAT' : 'Total (no VAT)',
                           style: TextStyle(
                               fontFamily: _body,
                               fontSize: 11.5,

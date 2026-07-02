@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,9 +22,13 @@ import '/auth/firebase_auth/auth_util.dart';
 /// QuoteRequestView — the trade opens an invitation: view shared drawings &
 /// documents, pick scope sections, then prepare a quote. Marks status 'viewed'.
 class QuoteRequestView extends StatefulWidget {
-  const QuoteRequestView({super.key, this.width, this.height});
+  const QuoteRequestView(
+      {super.key, this.width, this.height, this.submitQuoteRouteName});
   final double? width;
   final double? height;
+
+  /// FlutterFlow route name of the Submit Quote page (SubmitQuoteView).
+  final String? submitQuoteRouteName;
   @override
   State<QuoteRequestView> createState() => _QuoteRequestViewState();
 }
@@ -39,6 +45,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
   static const Color _cobalt = Color(0xFF5D737E);
   static const String _body = 'Inter';
   static const String _kActiveProjectPath = 'subby_active_project_path';
+  static const String _kActiveQuotePath = 'subby_active_quote_path';
 
   static const List<String> _scopeOptions = [
     'Professional Fees',
@@ -58,6 +65,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
   ];
 
   DocumentReference<Map<String, dynamic>>? _projectRef;
+  DocumentReference<Map<String, dynamic>>? _quoteRef;
   String _projectName = 'Project';
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _projSub;
   final Set<String> _scope = {};
@@ -77,51 +85,75 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    final path = (prefs.getString(_kActiveProjectPath) ?? '').trim();
-    if (path.isEmpty) return;
-    final ref = FirebaseFirestore.instance.doc(path);
-    setState(() => _projectRef = ref);
-    _projSub = ref.snapshots().listen((snap) {
+    final quotePath = (prefs.getString(_kActiveQuotePath) ?? '').trim();
+    DocumentReference<Map<String, dynamic>>? quoteRef;
+    DocumentReference<Map<String, dynamic>>? projectRef;
+    if (quotePath.isNotEmpty) {
+      quoteRef = FirebaseFirestore.instance.doc(quotePath);
+      projectRef = quoteRef.parent.parent;
+    } else {
+      // Legacy fallback: active project + this trade's uid.
+      final path = (prefs.getString(_kActiveProjectPath) ?? '').trim();
+      if (path.isNotEmpty) {
+        projectRef = FirebaseFirestore.instance.doc(path);
+        final uid = currentUserReference?.id;
+        if (uid != null) quoteRef = projectRef.collection('quotes').doc(uid);
+      }
+    }
+    if (projectRef == null) return;
+    setState(() {
+      _projectRef = projectRef;
+      _quoteRef = quoteRef;
+    });
+    _projSub = projectRef.snapshots().listen((snap) {
       final d = snap.data() ?? const {};
       final name =
           (d['name'] ?? d['projectName'] ?? d['title'] ?? 'Project').toString();
       if (mounted) setState(() => _projectName = name);
     });
-    // mark this trade's quote as viewed
-    final uid = currentUserReference?.id;
-    if (uid != null) {
+    // Mark as viewed ONLY if the quote exists and is still 'invited' —
+    // never downgrade a submitted/decided quote, never create orphan docs.
+    final qref = quoteRef;
+    if (qref != null) {
       try {
-        await ref.collection('quotes').doc(uid).set({
-          'status': 'viewed',
-          'viewedAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
+        final snap = await qref.get();
+        final status = (snap.data()?['status'] ?? '').toString();
+        if (snap.exists && (status == 'invited' || status.isEmpty)) {
+          await qref.set({
+            'status': 'viewed',
+            'viewedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+        }
       } catch (_) {}
     }
   }
 
   Future<void> _prepare() async {
-    final ref = _projectRef;
-    final uid = currentUserReference?.id;
-    if (ref == null || uid == null || _saving) return;
+    final qref = _quoteRef;
+    if (qref == null || _saving) return;
     setState(() => _saving = true);
     try {
-      await ref.collection('quotes').doc(uid).set({
+      await qref.set({
         'scope': _scope.toList(),
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } catch (_) {}
     if (!mounted) return;
     setState(() => _saving = false);
-    // In FlutterFlow, wire this button's action to navigate to SubmitQuoteView.
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(
-          backgroundColor: _ink,
-          content: Text('Scope saved — continue to Submit Quote.',
-              style: TextStyle(
-                  fontFamily: _body,
-                  fontWeight: FontWeight.w700,
-                  color: _paper))));
+    final r = widget.submitQuoteRouteName;
+    if (r != null && r.isNotEmpty) {
+      context.pushNamed(r);
+    } else {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(const SnackBar(
+            backgroundColor: _ink,
+            content: Text('Scope saved — continue to Submit Quote.',
+                style: TextStyle(
+                    fontFamily: _body,
+                    fontWeight: FontWeight.w700,
+                    color: _paper))));
+    }
   }
 
   @override
