@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -521,7 +523,7 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
                     style: _subtitleStyle(theme).copyWith(fontSize: 13),
                   ),
 
-                  const SizedBox(height: 26),
+                  const SizedBox(height: 30),
 
                   // ===== FIELDS =====
                   _uField(
@@ -569,7 +571,7 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
                   _errorBanner(theme),
                   _statusBanner(theme),
 
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 30),
 
                   _primaryPillButton(
                     theme,

@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'dart:typed_data';
@@ -512,7 +514,7 @@ class _AddListingPageViewState extends State<AddListingPageView> {
                   Text('Add listing', style: _titleStyle),
                   const SizedBox(height: 8),
                   Text('Create your directory profile.', style: _subtitleStyle),
-                  const SizedBox(height: 26),
+                  const SizedBox(height: 30),
                   _uSelect(
                     label: 'Listing type',
                     icon: Icons.workspace_premium_outlined,
@@ -609,7 +611,7 @@ class _AddListingPageViewState extends State<AddListingPageView> {
                     icon: Icons.place_outlined,
                     hint: 'e.g. Sandton',
                   ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 30),
                   _primaryButton(
                     label: _isSaving ? 'Saving…' : 'Continue',
                     icon: _isSaving

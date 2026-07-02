@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 class MorePageView extends StatefulWidget {
   const MorePageView({
     Key? key,
@@ -292,7 +294,7 @@ class _MorePageViewState extends State<MorePageView> {
                         subtitle: 'Your account details',
                         onTap: () => context.goNamed(_profileRouteName),
                       ),
-                      const SizedBox(height: 26),
+                      const SizedBox(height: 30),
                       _sectionLabelRow('Legal'),
                       _row(
                         icon: Icons.description_outlined,
@@ -304,7 +306,7 @@ class _MorePageViewState extends State<MorePageView> {
                         title: 'Privacy Policy',
                         onTap: () => context.pushNamed(_privacyRouteName),
                       ),
-                      const SizedBox(height: 26),
+                      const SizedBox(height: 30),
                       _sectionLabelRow('Support'),
                       _row(
                         icon: Icons.help_outline_rounded,
