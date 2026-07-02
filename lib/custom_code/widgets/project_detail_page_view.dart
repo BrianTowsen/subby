@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -3584,86 +3586,59 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         ]),
       );
 
+  // Card that wraps a group of document rows — same visual container as the
+  // drawings/documents lists in QuoteRequestView (paper, r12, hairline).
+  Widget _rDocCard(List<Widget> rows) => Container(
+        decoration: BoxDecoration(
+            color: _paper,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: _rDivider)),
+        clipBehavior: Clip.antiAlias,
+        child: Column(children: rows),
+      );
+
   Widget _rDocRow(
-      QueryDocumentSnapshot<Map<String, dynamic>> snap, bool readOnly) {
+      QueryDocumentSnapshot<Map<String, dynamic>> snap, bool readOnly,
+      {bool first = false}) {
     final d = snap.data();
     final title = (d['title'] ?? d['name'] ?? 'Document').toString().trim();
     final cat = _docCategory(d);
     final vis = _docVisibility(d);
-    final u = d['updatedAt'] ?? d['createdAt'];
-    final when = (u is Timestamp)
-        ? 'Updated ${dateTimeFormat('d MMM', u.toDate())}'
-        : 'recently';
-    final ext =
-        (d['type'] ?? d['fileType'] ?? (cat == 'drawing' ? 'PDF' : 'FILE'))
-            .toString()
-            .toUpperCase();
-    final catLabel = cat == 'drawing' ? 'Drawing' : 'Document';
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _openDocumentRow(snap),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _openDocumentRow(snap),
+        child: Container(
+          decoration: BoxDecoration(
+              border: first
+                  ? null
+                  : const Border(top: BorderSide(color: Color(0xFFF2F5F6)))),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
           child: Row(children: [
-            Container(
-              width: 52,
-              height: 52,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: _rThumb,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: _rThumbBorder),
-              ),
-              child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                        cat == 'drawing'
-                            ? Icons.architecture_rounded
-                            : Icons.description_rounded,
-                        size: 18,
-                        color: _inkMute),
-                    const SizedBox(height: 2),
-                    Text(ext,
-                        style: const TextStyle(
-                            fontFamily: _bodyFont,
-                            fontSize: 7,
-                            fontWeight: FontWeight.w700,
-                            color: _rFaint)),
-                  ]),
-            ),
-            const SizedBox(width: 12),
+            Icon(
+                cat == 'drawing'
+                    ? Icons.architecture_rounded
+                    : Icons.description_rounded,
+                size: 22,
+                color: const Color(0xFF5D737E)),
+            const SizedBox(width: 11),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title.isEmpty ? 'Document' : title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontFamily: _bodyFont,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: _ink)),
-                  const SizedBox(height: 2),
-                  Text('$catLabel · $when',
-                      style: const TextStyle(
-                          fontFamily: _bodyFont,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: _rFaint)),
-                ],
-              ),
-            ),
+                child: Text(title.isEmpty ? 'Document' : title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: _ink))),
             if (!readOnly) ...[
               GestureDetector(
                 onTap: () => _toggleDocVis(snap.reference, vis),
                 child: _rVisChip(vis, vis == 'shared' ? _tealTint : _surface),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
             ],
-            const Icon(Icons.chevron_right_rounded, size: 20, color: _rChevron),
+            const Icon(Icons.open_in_new_rounded, size: 19, color: _ink),
           ]),
         ),
       ),
@@ -3728,13 +3703,19 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         if (drawings.isNotEmpty) ...[
           _rDocGroup('Drawings', drawings.length),
           const SizedBox(height: 8),
-          ...drawings.map((s) => _rDocRow(s, readOnly)),
+          _rDocCard([
+            for (var i = 0; i < drawings.length; i++)
+              _rDocRow(drawings[i], readOnly, first: i == 0),
+          ]),
         ],
         if (documents.isNotEmpty) ...[
           const SizedBox(height: 16),
           _rDocGroup('Documents', documents.length),
           const SizedBox(height: 8),
-          ...documents.map((s) => _rDocRow(s, readOnly)),
+          _rDocCard([
+            for (var i = 0; i < documents.length; i++)
+              _rDocRow(documents[i], readOnly, first: i == 0),
+          ]),
         ],
       ],
     ]);

@@ -19,6 +19,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// QuoteDetailView — owner views one quote in full (Accept / Decline).
+///
 /// Reads the active project + active quote id from prefs.
 class QuoteDetailView extends StatefulWidget {
   const QuoteDetailView({super.key, this.width, this.height});

@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -336,6 +338,102 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
       context.pushNamed('loginPage');
       return;
     }
+    await _showProjectPickerSheet(
+      sheetTitle: 'Add to Project',
+      sheetSubtitle: 'Choose which project to add this listing to.',
+      ctaLabel: 'Add to project',
+      ctaIcon: Icons.playlist_add_rounded,
+      onConfirm: (projectRef) => _addListingToProject(
+        projectRef: projectRef,
+        listingRef: listingRef,
+        addedBy: userRef,
+        title: title,
+        subTitle: subTitle,
+        ratingText: ratingText,
+        photoUrl: photoUrl,
+      ),
+    );
+  }
+
+  // ===========================
+  // GET QUOTE (tender invite straight from the directory — the listing is
+  // NOT added to the project team; only projects/{id}/quotes/{listingId}
+  // is written, same shape as InviteView, so it lands in QuotesReceivedView
+  // and — when the listing is claimed — in the trade's InboxView.)
+  // ===========================
+  Future<void> _inviteListingToQuote({
+    required DocumentReference projectRef,
+    required DocumentReference listingRef,
+    required DocumentReference? providerRef,
+    required String title,
+  }) async {
+    try {
+      final qref = projectRef.collection('quotes').doc(listingRef.id);
+      final existing = await qref.get();
+      final status =
+          ((existing.data() as Map<String, dynamic>?)?['status'] ?? '')
+              .toString();
+      if (existing.exists && status != 'declined') {
+        _snack('Already invited to quote on this project.');
+        return;
+      }
+      // Plain set (no merge): a re-invite after a decline starts a fresh
+      // tender round rather than resurrecting the old figures.
+      await qref.set({
+        'listingRef': listingRef,
+        'listingName': title,
+        'providerRef': providerRef,
+        'status': 'invited',
+        'invitedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      _snack(providerRef != null
+          ? 'Quote request sent.'
+          : 'Request logged — this listing isn\'t claimed on Subby yet, '
+              'so contact the trade directly.');
+    } catch (e) {
+      debugPrint('⚠️ inviteListingToQuote failed: $e');
+      _snack('Could not send quote request.');
+    }
+  }
+
+  Future<void> _showGetQuoteSheet({
+    required DocumentReference listingRef,
+    required DocumentReference? providerRef,
+    required String title,
+  }) async {
+    final userRef = _currentUserRefOrNull();
+    if (userRef == null) {
+      context.pushNamed('loginPage');
+      return;
+    }
+    await _showProjectPickerSheet(
+      sheetTitle: 'Get a Quote',
+      sheetSubtitle: 'Choose which project you want this trade to quote on.',
+      ctaLabel: 'Send quote request',
+      ctaIcon: Icons.send_rounded,
+      onConfirm: (projectRef) => _inviteListingToQuote(
+        projectRef: projectRef,
+        listingRef: listingRef,
+        providerRef: providerRef,
+        title: title,
+      ),
+    );
+  }
+
+  // Shared project-picker bottom sheet used by Add to Project and Get Quote.
+  Future<void> _showProjectPickerSheet({
+    required String sheetTitle,
+    required String sheetSubtitle,
+    required String ctaLabel,
+    required IconData ctaIcon,
+    required Future<void> Function(DocumentReference projectRef) onConfirm,
+  }) async {
+    final userRef = _currentUserRefOrNull();
+    if (userRef == null) {
+      context.pushNamed('loginPage');
+      return;
+    }
 
     DocumentReference? selectedRef = _selectedProjectRef;
     String? selectedName = _selectedProjectName;
@@ -363,9 +461,9 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                     children: [
                       Row(
                         children: [
-                          const Expanded(
-                            child: Text('Add to Project',
-                                style: TextStyle(
+                          Expanded(
+                            child: Text(sheetTitle,
+                                style: const TextStyle(
                                   fontFamily: _displayFont,
                                   fontSize: 20,
                                   fontWeight: FontWeight.w900,
@@ -380,8 +478,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Text('Choose which project to add this listing to.',
-                          style: _metaStyle),
+                      Text(sheetSubtitle, style: _metaStyle),
                       const SizedBox(height: 8),
                       StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                         stream: _projectsQuery(userRef).snapshots(),
@@ -479,15 +576,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                     _selectedProjectRef = selectedRef;
                                     _selectedProjectName = selectedName;
                                   });
-                                  await _addListingToProject(
-                                    projectRef: selectedRef!,
-                                    listingRef: listingRef,
-                                    addedBy: userRef,
-                                    title: title,
-                                    subTitle: subTitle,
-                                    ratingText: ratingText,
-                                    photoUrl: photoUrl,
-                                  );
+                                  await onConfirm(selectedRef!);
                                 },
                           borderRadius: BorderRadius.circular(999),
                           child: Opacity(
@@ -499,14 +588,22 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                 color: _amber,
                                 borderRadius: BorderRadius.circular(999),
                               ),
-                              child: const Center(
-                                child: Text('Add to project',
-                                    style: TextStyle(
-                                      fontFamily: _bodyFont,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w900,
-                                      color: Colors.white,
-                                    )),
+                              child: Center(
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(ctaIcon,
+                                        size: 17, color: Colors.white),
+                                    const SizedBox(width: 8),
+                                    Text(ctaLabel,
+                                        style: const TextStyle(
+                                          fontFamily: _bodyFont,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w900,
+                                          color: Colors.white,
+                                        )),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -1175,41 +1272,83 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                       border:
                           Border(top: BorderSide(color: _hairline, width: 1)),
                     ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => _showAddToProjectSheet(
-                          listingRef: listingRef,
-                          title: plTitle,
-                          subTitle: plSubTitle,
-                          ratingText: plRatingText,
-                          photoUrl: heroPhotoUrl,
-                        ),
-                        borderRadius: BorderRadius.circular(999),
-                        child: Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: _amber,
-                            borderRadius: BorderRadius.circular(999),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () => _showGetQuoteSheet(
+                                listingRef: listingRef,
+                                providerRef: ownerRef,
+                                title: plTitle,
+                              ),
+                              borderRadius: BorderRadius.circular(999),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: _paper,
+                                  borderRadius: BorderRadius.circular(999),
+                                  border: Border.all(color: _amber, width: 1.4),
+                                ),
+                                alignment: Alignment.center,
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.request_quote_outlined,
+                                        size: 18, color: _amber),
+                                    SizedBox(width: 8),
+                                    Text('Get Quote',
+                                        style: TextStyle(
+                                          fontFamily: _bodyFont,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w900,
+                                          color: _amber,
+                                        )),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ),
-                          alignment: Alignment.center,
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.playlist_add_rounded,
-                                  size: 18, color: Colors.white),
-                              SizedBox(width: 8),
-                              Text('Add to Project',
-                                  style: TextStyle(
-                                    fontFamily: _bodyFont,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w900,
-                                    color: Colors.white,
-                                  )),
-                            ],
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () => _showAddToProjectSheet(
+                                listingRef: listingRef,
+                                title: plTitle,
+                                subTitle: plSubTitle,
+                                ratingText: plRatingText,
+                                photoUrl: heroPhotoUrl,
+                              ),
+                              borderRadius: BorderRadius.circular(999),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: _amber,
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                alignment: Alignment.center,
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.playlist_add_rounded,
+                                        size: 18, color: Colors.white),
+                                    SizedBox(width: 8),
+                                    Text('Add to Project',
+                                        style: TextStyle(
+                                          fontFamily: _bodyFont,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w900,
+                                          color: Colors.white,
+                                        )),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
