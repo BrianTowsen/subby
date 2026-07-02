@@ -16,7 +16,7 @@ import 'package:flutter/services.dart'; // HapticFeedback (medium impact on tab 
 
 import '/custom_code/widgets/index.dart'; // (kept if FF expects it)
 
-// Subby bottom nav — matches DashboardPageView v4 (Option C).
+// Subby bottom nav — matches DashboardPageView (Option C).
 // Three destinations only — More lives in the top-right menu button, not here.
 // Place at the bottom of your page scaffolds. Set `currentIndex` per page
 // (0 Projects · 1 Directory · 2 Account) so the right tab lights up, and pass
@@ -24,6 +24,12 @@ import '/custom_code/widgets/index.dart'; // (kept if FF expects it)
 //
 // Tapping a tab calls context.goNamed(route) (root switch). Empty routes and
 // taps on the already-active tab are ignored.
+//
+// UPDATE (this revision):
+//   • Active tab pill is now INK (#29343A) with a WHITE icon (was the sage
+//     green pill).
+//   • The bar is a BRIGHT-WHITE ELEVATED shell — hairline top border plus a
+//     soft upward drop shadow — to match the DetailTaskView dock treatment.
 
 class MainBottomNav extends StatefulWidget {
   const MainBottomNav({
@@ -54,19 +60,17 @@ class MainBottomNav extends StatefulWidget {
 
 class _MainBottomNavState extends State<MainBottomNav> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _teal = Color(0xFF29343A); // active (default) — slate/ink
-  static const Color _orange =
-      Color(0xFF29343A); // active (Directory) — slate/ink
+  static const Color _ink = Color(0xFF29343A); // active pill + active label
   static const Color _faint = Color(0xFF93A3AC); // inactive
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _surface = Color(0xFFECF0F2);
-  static const Color _hairline = Color(0xFFEAEEF0);
+  static const Color _surface =
+      Color(0xFFECF0F2); // top hairline (matches dock)
   // ────────────────────────────────────────────────────────────────────
 
   static const double _barHeight = 72;
 
-  // Active accent per tab — all tabs now light up green.
-  Color _activeColorFor(int index) => index == 1 ? _orange : _teal;
+  // Active pill — INK on every tab (icon rendered white inside it).
+  Color _activeColorFor(int index) => _ink;
 
   String? _routeFor(int index) {
     switch (index) {
@@ -110,9 +114,8 @@ class _MainBottomNavState extends State<MainBottomNav> {
     required String label,
   }) {
     final bool selected = index == widget.currentIndex;
-    const Color _slate = Color(0xFF29343A);
-    final Color color = selected ? _slate : _faint;
-    // Active icon sits inside the coloured pill → render it white.
+    final Color color = selected ? _ink : _faint;
+    // Active icon sits inside the ink pill → render it white.
     final Color iconColor = selected ? _paper : _faint;
 
     return Expanded(
@@ -166,12 +169,17 @@ class _MainBottomNavState extends State<MainBottomNav> {
     return Container(
       width: widget.width ?? double.infinity,
       height: (widget.height ?? _barHeight) + bottomInset,
+      // Bright-white ELEVATED shell — hairline top border + soft upward shadow
+      // (matches the DetailTaskView dock).
       decoration: const BoxDecoration(
         color: _paper,
         border: Border(top: BorderSide(color: _surface, width: 1)),
         boxShadow: [
           BoxShadow(
-              color: Color(0x14121A21), blurRadius: 22, offset: Offset(0, -8)),
+            color: Color(0x1F19232D), // rgba(25,35,45,0.12)
+            blurRadius: 30,
+            offset: Offset(0, -10),
+          ),
         ],
       ),
       // Three roomy tabs — a little extra horizontal inset keeps them centred.
