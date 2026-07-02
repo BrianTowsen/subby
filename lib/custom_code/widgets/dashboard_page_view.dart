@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -594,27 +596,36 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     final firstName = hasName ? name.split(RegExp(r'\s+')).first : '';
     final now = DateTime.now();
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(_hPad, topInset + 14, _hPad, 6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Column(
+      children: [
+        Container(height: topInset, color: _paper),
+        Container(
+          width: double.infinity,
+          color: _ink,
+          padding: const EdgeInsets.fromLTRB(_hPad, 14, _hPad, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _logo(),
-              const Spacer(),
-              _menuButton(),
+              Row(
+                children: [
+                  _logo(),
+                  const Spacer(),
+                  _menuButton(),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Text(_eyebrowDate(now),
+                  style:
+                      _eyebrowStyle.copyWith(color: _paper.withOpacity(0.55))),
+              const SizedBox(height: 6),
+              Text(
+                hasName ? '${_greeting()},\n$firstName' : _greeting(),
+                style: _greetingStyle.copyWith(color: _paper),
+              ),
             ],
           ),
-          const SizedBox(height: 18),
-          Text(_eyebrowDate(now), style: _eyebrowStyle),
-          const SizedBox(height: 6),
-          Text(
-            hasName ? '${_greeting()},\n$firstName' : _greeting(),
-            style: _greetingStyle,
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

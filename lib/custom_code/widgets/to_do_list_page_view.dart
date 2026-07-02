@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -752,6 +754,242 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
   }
 
   // =========================================================
+  // Hero — dark ink header (matches ProjectTimelinePageView)
+  // =========================================================
+  Widget _hero() {
+    final top = MediaQuery.of(context).padding.top;
+    return Container(
+      width: double.infinity,
+      color: _ink,
+      padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _heroCircle(Icons.arrow_back_ios_new_rounded, _handleBack),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Column(
+                    children: [
+                      _heroName(),
+                      const SizedBox(height: 2),
+                      Text('TO DO LIST',
+                          style: TextStyle(
+                              fontFamily: _bodyFont,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.7,
+                              color: _paper.withOpacity(0.5))),
+                    ],
+                  ),
+                ),
+              ),
+              _heroCountPill(),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _heroStat(),
+        ],
+      ),
+    );
+  }
+
+  Widget _heroCircle(IconData icon, VoidCallback onTap) => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            width: 38,
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+                color: _paper.withOpacity(0.12), shape: BoxShape.circle),
+            child: Icon(icon, size: 16, color: _paper),
+          ),
+        ),
+      );
+
+  Widget _heroName() {
+    const style = TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 15,
+        fontWeight: FontWeight.w800,
+        color: _paper);
+    if (_projectRef == null) {
+      return const Text('Project',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: style);
+    }
+    return StreamBuilder<DocumentSnapshot<Object?>>(
+      stream: _projectRef!.snapshots(),
+      builder: (context, snap) {
+        final raw = snap.data?.data();
+        final data = raw is Map<String, dynamic> ? raw : <String, dynamic>{};
+        final name =
+            (data['name'] ?? data['projectName'] ?? data['title'] ?? 'Project')
+                .toString();
+        return Text(name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: style);
+      },
+    );
+  }
+
+  // One project-tasks query → total / open / completed / overdue counts.
+  Widget _taskCounts(
+      Widget Function(int total, int open, int done, int overdue) build) {
+    if (_projectRef == null) return build(0, 0, 0, 0);
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('tasks')
+          .where('projectRef', isEqualTo: _projectRef)
+          .snapshots(),
+      builder: (context, snap) {
+        final docs = snap.data?.docs ?? const [];
+        int total = docs.length, open = 0, done = 0, overdue = 0;
+        final now = DateTime.now();
+        final todayStart = DateTime(now.year, now.month, now.day);
+        for (final d in docs) {
+          final st = (d.data()['status'] ?? 'todo').toString();
+          if (st == 'done') {
+            done++;
+          } else {
+            open++;
+            final due = _asDate(d.data()['dueDate']);
+            if (due != null &&
+                DateTime(due.year, due.month, due.day).isBefore(todayStart)) {
+              overdue++;
+            }
+          }
+        }
+        return build(total, open, done, overdue);
+      },
+    );
+  }
+
+  Widget _heroCountPill() =>
+      _taskCounts((total, open, done, overdue) => Container(
+            height: 38,
+            padding: const EdgeInsets.symmetric(horizontal: 11),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+                color: _paper.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(999)),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.checklist_rounded, size: 14, color: _paper),
+                const SizedBox(width: 5),
+                Text('$total ${total == 1 ? 'task' : 'tasks'}',
+                    style: const TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: _paper)),
+              ],
+            ),
+          ));
+
+  Widget _heroStat() => _taskCounts((total, open, done, overdue) => Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('OPEN TASKS',
+                  style: TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1,
+                      color: _paper.withOpacity(0.55))),
+              const SizedBox(height: 4),
+              Text('$open ${open == 1 ? 'task' : 'tasks'}',
+                  style: const TextStyle(
+                      fontFamily: _displayFont,
+                      fontSize: 34,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -1,
+                      color: _paper,
+                      height: 1.0)),
+            ],
+          ),
+          const SizedBox(width: 14),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('$done completed',
+                    style: TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: _paper.withOpacity(0.6))),
+                const SizedBox(height: 2),
+                Text('$overdue overdue',
+                    style: TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: _paper.withOpacity(0.45))),
+              ],
+            ),
+          ),
+        ],
+      ));
+
+  // Bright-white elevated footer (matches the Timeline inspector shell).
+  Widget _footerBar() => Container(
+        decoration: const BoxDecoration(
+          color: _paper,
+          border: Border(top: BorderSide(color: _surface, width: 1)),
+          boxShadow: [
+            BoxShadow(
+                color: Color(0x1F19232D),
+                blurRadius: 30,
+                offset: Offset(0, -10)),
+          ],
+        ),
+        padding: const EdgeInsets.fromLTRB(_hPad, 14, _hPad, 14),
+        child: SafeArea(
+          top: false,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: _handleAdd,
+              borderRadius: BorderRadius.circular(_radius),
+              child: Container(
+                height: 52,
+                decoration: BoxDecoration(
+                    color: _teal, borderRadius: BorderRadius.circular(_radius)),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(Icons.add_rounded, color: _paper, size: 20),
+                    SizedBox(width: 9),
+                    Text('Add Task',
+                        style: TextStyle(
+                            fontFamily: _bodyFont,
+                            color: _paper,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+  // =========================================================
   // Build
   // =========================================================
   @override
@@ -760,111 +998,41 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
       color: _paper,
-      child: SafeArea(
-        top: true,
-        bottom: true,
-        child: Stack(
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header — minimal back + big title (stays fixed)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(_hPad, 14, _hPad, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _hero(),
+              // Body — pill tabs pin under the hero.
+              Expanded(
+                child: NestedScrollView(
+                  headerSliverBuilder: (context, inner) {
+                    return [
+                      SliverPersistentHeader(
+                        pinned: true,
+                        delegate: _StickyHeaderDelegate(
+                          minHeight: _stickyTabsHeight,
+                          maxHeight: _stickyTabsHeight,
+                          child: _tabsBar(),
+                        ),
+                      ),
+                    ];
+                  },
+                  body: TabBarView(
+                    controller: _tabController,
                     children: [
-                      _minBack(),
-                      const SizedBox(height: 18),
-                      const Text('To Do List',
-                          style: TextStyle(
-                              fontFamily: _displayFont,
-                              color: _ink,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 30,
-                              height: 1.05,
-                              letterSpacing: -0.5)),
-                      const SizedBox(height: 8),
-                      const Text('Plan work, assign and track it',
-                          style: TextStyle(
-                              fontFamily: _bodyFont,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: _faint)),
+                      _taskList(0),
+                      _taskList(1),
+                      _taskList(2),
                     ],
                   ),
                 ),
-                const SizedBox(height: 18),
-                // Body — project card scrolls away; the pill tabs pin.
-                Expanded(
-                  child: NestedScrollView(
-                    headerSliverBuilder: (context, inner) {
-                      return [
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 4),
-                            child: _projectCard(),
-                          ),
-                        ),
-                        SliverPersistentHeader(
-                          pinned: true,
-                          delegate: _StickyHeaderDelegate(
-                            minHeight: _stickyTabsHeight,
-                            maxHeight: _stickyTabsHeight,
-                            child: _tabsBar(),
-                          ),
-                        ),
-                      ];
-                    },
-                    body: TabBarView(
-                      controller: _tabController,
-                      children: [
-                        _taskList(0),
-                        _taskList(1),
-                        _taskList(2),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            Positioned(
-              left: _hPad,
-              right: _hPad,
-              bottom: 18,
-              child: SafeArea(
-                top: false,
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: _handleAdd,
-                    borderRadius: BorderRadius.circular(_radius),
-                    child: Container(
-                      height: 52,
-                      decoration: BoxDecoration(
-                          color: _teal,
-                          borderRadius: BorderRadius.circular(_radius)),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Icon(Icons.add_rounded, color: _paper, size: 20),
-                          SizedBox(width: 9),
-                          Text('Add Task',
-                              style: TextStyle(
-                                  fontFamily: _bodyFont,
-                                  color: _paper,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 15)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+          Positioned(left: 0, right: 0, bottom: 0, child: _footerBar()),
+        ],
       ),
     );
   }

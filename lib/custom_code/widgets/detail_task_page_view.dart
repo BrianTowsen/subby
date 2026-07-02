@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/auth/firebase_auth/auth_util.dart';
@@ -655,6 +657,89 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
         ),
       );
 
+  // =========================================================
+  // Hero — dark ink header (matches ProjectTimelinePageView)
+  // =========================================================
+  Widget _heroCircle(IconData icon, VoidCallback onTap) => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            width: 38,
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+                color: _paper.withOpacity(0.12), shape: BoxShape.circle),
+            child: Icon(icon, size: 16, color: _paper),
+          ),
+        ),
+      );
+
+  Widget _detailHero(
+    DocumentReference ref,
+    String title,
+    String status,
+    String listingName,
+    DateTime? due,
+    bool isOwner,
+  ) {
+    final dueHint = _dueHint(due, status);
+    final parts = <String>[];
+    if (listingName.trim().isNotEmpty) parts.add(listingName.trim());
+    if (dueHint.isNotEmpty) parts.add(dueHint);
+    final meta = parts.join('  ·  ');
+    return Container(
+      width: double.infinity,
+      color: _ink,
+      padding: const EdgeInsets.fromLTRB(20, 6, 20, 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _heroCircle(Icons.arrow_back_ios_new_rounded, _handleBack),
+              Expanded(
+                child: Center(
+                  child: Text('TASK DETAIL',
+                      style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.7,
+                          color: _paper.withOpacity(0.5))),
+                ),
+              ),
+              if (isOwner)
+                _heroCircle(Icons.delete_outline_rounded,
+                    () => _confirmDelete(ref, title))
+              else
+                const SizedBox(width: 38, height: 38),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(title,
+              style: const TextStyle(
+                  fontFamily: _displayFont,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.6,
+                  height: 1.1,
+                  color: _paper)),
+          if (meta.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(meta,
+                style: TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: _paper.withOpacity(0.55))),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _content(DocumentReference ref, Map<String, dynamic> d) {
     final title = (d['title'] ?? 'Task').toString();
     final description = (d['description'] ?? '').toString();
@@ -686,171 +771,161 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
     final createdAt = _asDate(d['createdAt']);
     final completionNote = (d['completionNote'] ?? '').toString();
 
-    return Stack(
+    return Column(
       children: [
-        SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(_hPad, 6, _hPad, 150),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        _detailHero(ref, title, status, listingName, due, isOwner),
+        Expanded(
+          child: Stack(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _minBack(),
-                  // ✅ Only the task's creator can delete it. (Edit removed.)
-                  if (isOwner)
-                    _iconBtn(Icons.delete_outline_rounded, _coral,
-                        () => _confirmDelete(ref, title))
-                  else
-                    const SizedBox.shrink(),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Text(title,
-                  style: const TextStyle(
-                      fontFamily: _displayFont,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.4,
-                      height: 1.15,
-                      color: _navy)),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  _softPill(_statusLabel(status),
-                      fg: _statusColor(status),
-                      bg: _statusTint(status),
-                      icon: status == 'in_progress'
-                          ? Icons.play_arrow_rounded
-                          : (status == 'done'
-                              ? Icons.check_circle
-                              : Icons.radio_button_unchecked)),
-                  const SizedBox(width: 8),
-                  _softPill(_priorityLabel(priority),
-                      fg: _priorityColor(priority),
-                      bg: _priorityTint(priority)),
-                ],
-              ),
-              const SizedBox(height: 14),
-              // Due
-              _metaRow(
-                leading: const Icon(Icons.calendar_month_outlined,
-                    size: 19, color: _faint),
-                title: due == null
-                    ? 'No due date'
-                    : dateTimeFormat('d MMM y', due),
-                trailingLabel: _dueHint(due, status),
-                trailingColor: _dueColor(due, status),
-              ),
-              // Team member + read receipt
-              if (listingName.trim().isNotEmpty)
-                _assignedListingRow(listingName, readAt),
-              // Checklist
-              if (checklist.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(_hPad, 16, _hPad, 150),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('CHECKLIST',
-                        style: const TextStyle(
-                            fontFamily: _bodyFont,
-                            color: _inkMute,
-                            letterSpacing: 0.6,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 11)),
-                    Text('$doneCount of ${checklist.length}',
-                        style: const TextStyle(
-                            fontFamily: _bodyFont,
-                            color: _teal,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 11)),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
-                  child: LinearProgressIndicator(
-                    value: checklist.isEmpty ? 0 : doneCount / checklist.length,
-                    minHeight: 6,
-                    backgroundColor: _surface,
-                    valueColor: const AlwaysStoppedAnimation<Color>(_teal),
-                  ),
-                ),
-                for (int i = 0; i < checklist.length; i++)
-                  _checklistRow(checklist, i),
-              ],
-              // Attachments
-              if (attachments.isNotEmpty) ...[
-                const SizedBox(height: 18),
-                const Text('ATTACHMENTS',
-                    style: TextStyle(
-                        fontFamily: _bodyFont,
-                        color: _inkMute,
-                        letterSpacing: 0.6,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 11)),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [for (final a in attachments) _attachThumb(a)],
-                ),
-              ],
-              // Description
-              if (description.trim().isNotEmpty) ...[
-                const SizedBox(height: 16),
-                Text(description,
-                    style: const TextStyle(
-                        fontFamily: _bodyFont,
-                        fontSize: 13.5,
-                        height: 1.5,
-                        fontWeight: FontWeight.w500,
-                        color: _inkMute)),
-              ],
-              // Footer meta
-              const SizedBox(height: 12),
-              Text(
-                createdByName.isEmpty
-                    ? 'Added ${createdAt == null ? '' : dateTimeFormat('d MMM', createdAt)}'
-                    : 'Added by $createdByName${createdAt == null ? '' : ' · ${dateTimeFormat('d MMM', createdAt)}'}',
-                style: const TextStyle(
-                    fontFamily: _bodyFont,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: _faint),
-              ),
-              if (status == 'done' && completionNote.isNotEmpty) ...[
-                const SizedBox(height: 10),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: _surface,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.check_circle_rounded,
-                          size: 16, color: _green),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(completionNote,
-                            style: const TextStyle(
-                                fontFamily: _bodyFont,
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w600,
-                                color: _inkMute)),
+                    Row(
+                      children: [
+                        _softPill(_statusLabel(status),
+                            fg: _statusColor(status),
+                            bg: _statusTint(status),
+                            icon: status == 'in_progress'
+                                ? Icons.play_arrow_rounded
+                                : (status == 'done'
+                                    ? Icons.check_circle
+                                    : Icons.radio_button_unchecked)),
+                        const SizedBox(width: 8),
+                        _softPill(_priorityLabel(priority),
+                            fg: _priorityColor(priority),
+                            bg: _priorityTint(priority)),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    // Due
+                    _metaRow(
+                      leading: const Icon(Icons.calendar_month_outlined,
+                          size: 19, color: _faint),
+                      title: due == null
+                          ? 'No due date'
+                          : dateTimeFormat('d MMM y', due),
+                      trailingLabel: _dueHint(due, status),
+                      trailingColor: _dueColor(due, status),
+                    ),
+                    // Team member + read receipt
+                    if (listingName.trim().isNotEmpty)
+                      _assignedListingRow(listingName, readAt),
+                    // Checklist
+                    if (checklist.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('CHECKLIST',
+                              style: const TextStyle(
+                                  fontFamily: _bodyFont,
+                                  color: _inkMute,
+                                  letterSpacing: 0.6,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 11)),
+                          Text('$doneCount of ${checklist.length}',
+                              style: const TextStyle(
+                                  fontFamily: _bodyFont,
+                                  color: _teal,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 11)),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(999),
+                        child: LinearProgressIndicator(
+                          value: checklist.isEmpty
+                              ? 0
+                              : doneCount / checklist.length,
+                          minHeight: 6,
+                          backgroundColor: _surface,
+                          valueColor:
+                              const AlwaysStoppedAnimation<Color>(_teal),
+                        ),
+                      ),
+                      for (int i = 0; i < checklist.length; i++)
+                        _checklistRow(checklist, i),
+                    ],
+                    // Attachments
+                    if (attachments.isNotEmpty) ...[
+                      const SizedBox(height: 18),
+                      const Text('ATTACHMENTS',
+                          style: TextStyle(
+                              fontFamily: _bodyFont,
+                              color: _inkMute,
+                              letterSpacing: 0.6,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 11)),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final a in attachments) _attachThumb(a)
+                        ],
                       ),
                     ],
-                  ),
+                    // Description
+                    if (description.trim().isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      Text(description,
+                          style: const TextStyle(
+                              fontFamily: _bodyFont,
+                              fontSize: 13.5,
+                              height: 1.5,
+                              fontWeight: FontWeight.w500,
+                              color: _inkMute)),
+                    ],
+                    // Footer meta
+                    const SizedBox(height: 12),
+                    Text(
+                      createdByName.isEmpty
+                          ? 'Added ${createdAt == null ? '' : dateTimeFormat('d MMM', createdAt)}'
+                          : 'Added by $createdByName${createdAt == null ? '' : ' · ${dateTimeFormat('d MMM', createdAt)}'}',
+                      style: const TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: _faint),
+                    ),
+                    if (status == 'done' && completionNote.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: _surface,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.check_circle_rounded,
+                                size: 16, color: _green),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(completionNote,
+                                  style: const TextStyle(
+                                      fontFamily: _bodyFont,
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: _inkMute)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-              ],
+              ),
+              Positioned(left: 0, right: 0, bottom: 0, child: _dock(status)),
             ],
           ),
         ),
-        Positioned(left: 0, right: 0, bottom: 0, child: _dock(status)),
       ],
     );
   }
@@ -1103,7 +1178,11 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
     return Container(
       decoration: const BoxDecoration(
         color: _paper,
-        border: Border(top: BorderSide(color: _hairline, width: 1)),
+        border: Border(top: BorderSide(color: _surface, width: 1)),
+        boxShadow: [
+          BoxShadow(
+              color: Color(0x1F19232D), blurRadius: 30, offset: Offset(0, -10)),
+        ],
       ),
       padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
       child: SafeArea(
