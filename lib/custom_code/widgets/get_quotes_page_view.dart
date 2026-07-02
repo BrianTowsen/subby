@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -35,19 +37,19 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF323F4D); // text, chrome, accent
-  static const Color _inkMute = Color(0xFF5A6675);
-  static const Color _faint = Color(0xFF93A0B0);
+  static const Color _ink = Color(0xFF29343A); // text, chrome, accent
+  static const Color _inkMute = Color(0xFF566670);
+  static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _hairline = Color(0xFFEEF1F2);
-  static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
+  static const Color _surface = Color(0xFFECF0F2);
+  static const Color _hairline = Color(0xFFEAEEF0);
+  static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
   // Brand accent — TEAL.
-  static const Color _teal = Color(0xFF323F4D);
-  static const Color _tealTint = Color(0xFFEEF7D6);
+  static const Color _teal = Color(0xFF29343A);
+  static const Color _tealTint = Color(0xFFE7EDF0);
   // Status
-  static const Color _live = Color(0xFFC7E87A); // orange
-  static const Color _coral = Color(0xFFC7E87A);
+  static const Color _live = Color(0xFF5D737E); // orange
+  static const Color _coral = Color(0xFF5D737E);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -378,7 +380,7 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
                 ),
               const SizedBox(height: _gap),
               _flatCard(
-                fill: const Color(0xFFF6F8FA),
+                fill: const Color(0xFFF2F5F6),
                 Text(
                   'Get Quotes content coming next.',
                   style: _metaStyle(theme),

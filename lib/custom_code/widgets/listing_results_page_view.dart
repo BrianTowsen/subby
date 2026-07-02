@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -49,17 +51,17 @@ class ListingResultsPageView extends StatefulWidget {
 
 class _ListingResultsPageViewState extends State<ListingResultsPageView> {
   // ─── SUBBY PALETTE — DIRECTORY (amber / sunshine) ──────────────────
-  static const Color _amber = Color(0xFF323F4D); // accent: title, value, rating
-  static const Color _inkMute = Color(0xFF5A6675); // labels
-  static const Color _faint = Color(0xFF93A0B0); // meta
+  static const Color _amber = Color(0xFF29343A); // accent: title, value, rating
+  static const Color _inkMute = Color(0xFF566670); // labels
+  static const Color _faint = Color(0xFF93A3AC); // meta
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _surface = Color(0xFFEEF1F4);
+  static const Color _surface = Color(0xFFECF0F2);
   static const Color _orange = Color(
-      0xFF1F8A5B); // DS green: leading icons / active bookmark (was orange #EB7A02)
-  static const Color _green = Color(0xFF1F8A5B); // DS: verified / info
-  static const Color _gold = Color(0xFFFBB12A); // DS: rating stars
-  static const Color _hairline = Color(0xFFEEF1F2);
-  static const Color _rule = Color(0xFFE2E7EE);
+      0xFF5D737E); // DS green: leading icons / active bookmark (was orange #EB7A02)
+  static const Color _green = Color(0xFF5D737E); // DS: verified / info
+  static const Color _gold = Color(0xFF5D737E); // DS: rating stars
+  static const Color _hairline = Color(0xFFEAEEF0);
+  static const Color _rule = Color(0xFFDCE3E6);
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
   static const double _hPad = 24;

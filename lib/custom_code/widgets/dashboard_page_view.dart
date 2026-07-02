@@ -135,22 +135,22 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   //
   // Neutrals
   static const Color _ink =
-      Color(0xFF39454B); // text, chrome, dark surfaces (slate)
-  static const Color _inkMute = Color(0xFF5A6675);
-  static const Color _faint = Color(0xFF93A0B0); // muted labels, chevrons
+      Color(0xFF29343A); // text, chrome, dark surfaces (slate)
+  static const Color _inkMute = Color(0xFF566670);
+  static const Color _faint = Color(0xFF93A3AC); // muted labels, chevrons
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _hairline = Color(0xFFEEF1F2);
+  static const Color _surface = Color(0xFFECF0F2);
+  static const Color _hairline = Color(0xFFEAEEF0);
 
   // Accents
-  static const Color _yellow = Color(0xFF166341); // sage — "on site" / on track
-  static const Color _teal = Color(0xFF166341); // info / shared / "needs you"
-  static const Color _ringTrack = Color(0xFFEEF2F7);
-  static const Color _orange = Color(0xFFCC4B3C); // attention / snagging (clay)
-  static const Color _orangeTint = Color(0xFFF3E7E2);
-  static const Color _orangeBorder = Color(0xFFE8CFC7);
-  static const Color _orangeText = Color(0xFFCC4B3C);
-  static const Color _projTint = Color(0xFFEEF1F4); // add / empty card fill
+  static const Color _yellow = Color(0xFF5D737E); // sage — "on site" / on track
+  static const Color _teal = Color(0xFF5D737E); // info / shared / "needs you"
+  static const Color _ringTrack = Color(0xFFECF0F2);
+  static const Color _orange = Color(0xFF566670); // attention / snagging (clay)
+  static const Color _orangeTint = Color(0xFFE7EDF0);
+  static const Color _orangeBorder = Color(0xFFCBD8DD);
+  static const Color _orangeText = Color(0xFF566670);
+  static const Color _projTint = Color(0xFFECF0F2); // add / empty card fill
 
   // Geometry
   static const double _rSmall = 6;
@@ -637,8 +637,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           errorBuilder: (context, error, stackTrace) => CustomPaint(
             size: const Size(44, 44),
             painter: const _SubbyMarkPainter(
-              peak: Color(0xFF166341), // Subby brand green
-              base: Color(0xFF166341),
+              peak: Color(0xFF5D737E), // Subby brand green
+              base: Color(0xFF5D737E),
             ),
           ),
         ),
@@ -887,8 +887,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       child: Container(
         decoration: BoxDecoration(
           // SHARED hero — fade-yellow tint (matches owner cards).
-          color: const Color(0xFFE7F3EC),
-          border: Border.all(color: const Color(0xFFC9E4D6)),
+          color: const Color(0xFFE7EDF0),
+          border: Border.all(color: const Color(0xFFCBD8DD)),
           borderRadius: BorderRadius.circular(16),
         ),
         padding: const EdgeInsets.all(18),
@@ -1026,9 +1026,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         child: Container(
           decoration: BoxDecoration(
             // SHARED primary row — fade-yellow tint (matches owner cards).
-            color: const Color(0xFFE7F3EC),
+            color: const Color(0xFFE7EDF0),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFC9E4D6)),
+            border: Border.all(color: const Color(0xFFCBD8DD)),
           ),
           padding: const EdgeInsets.all(14),
           child: Column(
@@ -1366,7 +1366,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         decoration: BoxDecoration(
           color: _paper,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE2E7EE)),
+          border: Border.all(color: const Color(0xFFDCE3E6)),
         ),
         padding: const EdgeInsets.all(12),
         child: Row(
@@ -1422,7 +1422,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             ),
             const SizedBox(width: 8),
             const Icon(Icons.chevron_right_rounded,
-                size: 20, color: Color(0xFFCDD6E2)),
+                size: 20, color: Color(0xFFCBD8DD)),
           ],
         ),
       ),
@@ -1503,7 +1503,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             ),
             const SizedBox(width: 8),
             const Icon(Icons.chevron_right_rounded,
-                size: 20, color: Color(0xFFCDD6E2)),
+                size: 20, color: Color(0xFFCBD8DD)),
           ],
         ),
       ),
@@ -1547,7 +1547,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     // On track     → YELLOW fill (white text).
     // Needs you    → surface fill, teal (amber) number.
     final Color bg = dark ? _yellow : (attention ? _surface : _teal);
-    final Color numColor = attention ? const Color(0xFFCC4B3C) : _paper;
+    final Color numColor = attention ? const Color(0xFF566670) : _paper;
     final Color labelColor =
         attention ? _inkMute : Colors.white.withOpacity(0.85);
 
@@ -1556,7 +1556,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(11),
-        border: attention ? Border.all(color: const Color(0xFFE2E7EE)) : null,
+        border: attention ? Border.all(color: const Color(0xFFDCE3E6)) : null,
         boxShadow: null,
       ),
       child: Column(
@@ -1633,8 +1633,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     final progress = _progress(data);
     final pct = (progress * 100).round();
 
-    final Color bg = featured ? _teal : const Color(0xFFE7F3EC);
-    final Color border = featured ? _teal : const Color(0xFFC9E4D6);
+    final Color bg = featured ? _teal : const Color(0xFFE7EDF0);
+    final Color border = featured ? _teal : const Color(0xFFCBD8DD);
     final Color numColor = featured ? _paper : _ink;
     final Color subColor = featured ? Colors.white.withOpacity(0.85) : _inkMute;
 
@@ -1709,14 +1709,14 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           height: 132,
           decoration: BoxDecoration(
             color: _surface,
-            border: Border.all(color: const Color(0xFFCDD6E2), width: 1.4),
+            border: Border.all(color: const Color(0xFFCBD8DD), width: 1.4),
             borderRadius: BorderRadius.circular(16),
           ),
           padding: const EdgeInsets.all(15),
           child: const Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.add_rounded, size: 28, color: Color(0xFF4B555D)),
+              Icon(Icons.add_rounded, size: 28, color: Color(0xFF55656E)),
               SizedBox(height: 8),
               Text('New home build',
                   textAlign: TextAlign.center,
@@ -1724,7 +1724,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                     fontFamily: _bodyFont,
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF4B555D),
+                    color: Color(0xFF55656E),
                   )),
             ],
           ),
@@ -1762,20 +1762,20 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF166341).withOpacity(0.12),
+                  color: const Color(0xFF5D737E).withOpacity(0.12),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.bolt, size: 13, color: Color(0xFF166341)),
+                    const Icon(Icons.bolt, size: 13, color: Color(0xFF5D737E)),
                     const SizedBox(width: 4),
                     Text('$count today',
                         style: const TextStyle(
                           fontFamily: _bodyFont,
                           fontSize: 11,
                           fontWeight: FontWeight.w900,
-                          color: Color(0xFF166341),
+                          color: Color(0xFF5D737E),
                         )),
                   ],
                 ),
@@ -1803,7 +1803,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                 left: 14,
                 top: 8,
                 bottom: 8,
-                child: Container(width: 2, color: const Color(0xFFE2E7EE)),
+                child: Container(width: 2, color: const Color(0xFFDCE3E6)),
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1832,11 +1832,11 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             height: 30,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: const Color(0xFFE7F3EC),
+              color: const Color(0xFFE7EDF0),
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFC9E4D6), width: 1.5),
+              border: Border.all(color: const Color(0xFFCBD8DD), width: 1.5),
             ),
-            child: const Icon(Icons.bolt, size: 16, color: Color(0xFF166341)),
+            child: const Icon(Icons.bolt, size: 16, color: Color(0xFF5D737E)),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -2013,20 +2013,20 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFF166341).withOpacity(0.12),
+              color: const Color(0xFF5D737E).withOpacity(0.12),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.bolt, size: 13, color: Color(0xFF166341)),
+                const Icon(Icons.bolt, size: 13, color: Color(0xFF5D737E)),
                 const SizedBox(width: 4),
                 Text('$count recent',
                     style: const TextStyle(
                       fontFamily: _bodyFont,
                       fontSize: 11,
                       fontWeight: FontWeight.w900,
-                      color: Color(0xFF166341),
+                      color: Color(0xFF5D737E),
                     )),
               ],
             ),
@@ -2065,13 +2065,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                 height: 30,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE7F3EC),
+                  color: const Color(0xFFE7EDF0),
                   shape: BoxShape.circle,
                   border:
-                      Border.all(color: const Color(0xFFC9E4D6), width: 1.5),
+                      Border.all(color: const Color(0xFFCBD8DD), width: 1.5),
                 ),
                 child: Icon(_activityIcon(r.type),
-                    size: 16, color: const Color(0xFF166341)),
+                    size: 16, color: const Color(0xFF5D737E)),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -2226,8 +2226,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         decoration: BoxDecoration(
           // MOST RECENT card — sage-yellow tint (matches the ProjectDetail
           // "Manage" module tiles + the rest of the project cards).
-          color: const Color(0xFFE7F3EC),
-          border: Border.all(color: const Color(0xFFC9E4D6)),
+          color: const Color(0xFFE7EDF0),
+          border: Border.all(color: const Color(0xFFCBD8DD)),
           borderRadius: BorderRadius.circular(16),
         ),
         padding: const EdgeInsets.all(18),
@@ -2372,9 +2372,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         child: Container(
           decoration: BoxDecoration(
             // Owned project rows — sage-yellow tint (matches the Manage tiles).
-            color: const Color(0xFFE7F3EC),
+            color: const Color(0xFFE7EDF0),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFC9E4D6)),
+            border: Border.all(color: const Color(0xFFCBD8DD)),
           ),
           padding: const EdgeInsets.all(14),
           child: Column(
@@ -2505,12 +2505,12 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           decoration: BoxDecoration(
             color: _surface,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: const Color(0xFFCDD6E2), width: 1.4),
+            border: Border.all(color: const Color(0xFFCBD8DD), width: 1.4),
           ),
           child: const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.add_rounded, size: 18, color: Color(0xFF4B555D)),
+              Icon(Icons.add_rounded, size: 18, color: Color(0xFF55656E)),
               SizedBox(width: 8),
               Text(
                 'New home build',
@@ -2518,7 +2518,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                   fontFamily: _bodyFont,
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF4B555D),
+                  color: Color(0xFF55656E),
                 ),
               ),
             ],
@@ -2709,7 +2709,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         decoration: BoxDecoration(
           color: _surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE2E7EE)),
+          border: Border.all(color: const Color(0xFFDCE3E6)),
         ),
         child: Row(
           children: [
@@ -2753,7 +2753,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             ),
             const SizedBox(width: 8),
             const Icon(Icons.chevron_right_rounded,
-                size: 20, color: Color(0xFFCDD6E2)),
+                size: 20, color: Color(0xFFCBD8DD)),
           ],
         ),
       ),
@@ -2808,7 +2808,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           decoration: BoxDecoration(
             color: _paper,
             borderRadius: BorderRadius.circular(_rLarge),
-            border: Border.all(color: const Color(0xFFCDD6E2), width: 1.4),
+            border: Border.all(color: const Color(0xFFCBD8DD), width: 1.4),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -2947,8 +2947,8 @@ class _CapabilityChip extends StatelessWidget {
 
   final String label;
 
-  static const Color _tealTint = Color(0xFFE7F3EC);
-  static const Color _tealText = Color(0xFF39454B);
+  static const Color _tealTint = Color(0xFFE7EDF0);
+  static const Color _tealText = Color(0xFF29343A);
 
   @override
   Widget build(BuildContext context) {

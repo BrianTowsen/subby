@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -37,17 +39,17 @@ class ProjectCostView extends StatefulWidget {
 class _ProjectCostViewState extends State<ProjectCostView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
   // Ported from the estimate template · ink + sage-green system.
-  static const Color _ink = Color(0xFF39454B);
-  static const Color _inkMute = Color(0xFF5A6675);
-  static const Color _faint = Color(0xFF93A0B0);
+  static const Color _ink = Color(0xFF29343A);
+  static const Color _inkMute = Color(0xFF566670);
+  static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _band = Color(0xFFF4F6F8); // section header band
-  static const Color _border = Color(0xFFE7EBEF); // sheet outline
-  static const Color _line = Color(0xFFF2F4F6); // row separators
-  static const Color _green = Color(0xFF166341); // accent / filled subtotal
-  static const Color _danger = Color(0xFFC6A29B); // delete
-  static const Color _dash = Color(0xFFCDD6E2); // add-section border
+  static const Color _surface = Color(0xFFECF0F2);
+  static const Color _band = Color(0xFFF2F5F6); // section header band
+  static const Color _border = Color(0xFFEAEEF0); // sheet outline
+  static const Color _line = Color(0xFFF2F5F6); // row separators
+  static const Color _green = Color(0xFF5D737E); // accent / filled subtotal
+  static const Color _danger = Color(0xFF93A3AC); // delete
+  static const Color _dash = Color(0xFFCBD8DD); // add-section border
   static const String _display = 'Inter Tight';
   static const String _body = 'Inter';
   // ────────────────────────────────────────────────────────────────────
@@ -636,7 +638,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                 fontFamily: _display,
                 fontSize: 13,
                 fontWeight: FontWeight.w800,
-                color: sub > 0 ? _green : const Color(0xFFB4BDC7),
+                color: sub > 0 ? _green : const Color(0xFFB7C2C7),
               )),
           AnimatedRotation(
             turns: s.expanded ? 0.5 : 0,
@@ -767,7 +769,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                         fontFamily: _body,
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFFB4BDC7),
+                        color: Color(0xFFB7C2C7),
                       )),
                 ),
               ),
@@ -818,7 +820,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                         fontFamily: _body,
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFFB4BDC7))),
+                        color: Color(0xFFB7C2C7))),
                 const SizedBox(width: 6),
                 Expanded(
                     child: _numPill(label: 'R', ctl: l.rate, expand: true)),

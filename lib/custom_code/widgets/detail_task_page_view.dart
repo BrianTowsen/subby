@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/auth/firebase_auth/auth_util.dart';
@@ -50,23 +52,23 @@ class DetailTaskPageView extends StatefulWidget {
 
 class _DetailTaskPageViewState extends State<DetailTaskPageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _ink = Color(0xFF323F4D);
-  static const Color _inkMute = Color(0xFF5A6675);
-  static const Color _faint = Color(0xFF93A0B0);
+  static const Color _ink = Color(0xFF29343A);
+  static const Color _inkMute = Color(0xFF566670);
+  static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _hairline = Color(0xFFEEF1F2);
-  static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
-  static const Color _teal = Color(0xFF323F4D);
+  static const Color _surface = Color(0xFFECF0F2);
+  static const Color _hairline = Color(0xFFEAEEF0);
+  static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
+  static const Color _teal = Color(0xFF29343A);
   static const Color _tealTint =
-      Color(0xFFEEF1F4); // DS: lime tint → neutral surface
+      Color(0xFFECF0F2); // DS: lime tint → neutral surface
   static const Color _live =
-      Color(0xFFCC4B3C); // DS: lime → clay (high/attention)
+      Color(0xFF566670); // DS: lime → clay (high/attention)
   static const Color _coral =
-      Color(0xFFCC4B3C); // DS: → clay (destructive/error)
-  static const Color _navy = Color(0xFF323F4D);
+      Color(0xFF566670); // DS: → clay (destructive/error)
+  static const Color _navy = Color(0xFF29343A);
   static const Color _green =
-      Color(0xFF166341); // DS: to-do / in-progress / info / mark-done
+      Color(0xFF5D737E); // DS: to-do / in-progress / info / mark-done
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
   // ────────────────────────────────────────────────────────────────────
@@ -280,7 +282,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
   Color _priorityColor(String s) =>
       s == 'high' ? _live : (s == 'low' ? _faint : _teal);
   Color _priorityTint(String s) => s == 'high'
-      ? const Color(0x33CC4B3C)
+      ? const Color(0x33566670)
       : (s == 'low' ? _surface : _tealTint);
 
   Widget _softPill(String text,
@@ -503,7 +505,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
                         color: _paper,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                            color: const Color(0xFFCDD6E2), width: 1.4),
+                            color: const Color(0xFFCBD8DD), width: 1.4),
                       ),
                       child: const Text(
                         'Cancel',
@@ -1034,7 +1036,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
             Icon(
               done ? Icons.check_circle_rounded : Icons.radio_button_unchecked,
               size: 20,
-              color: done ? _teal : const Color(0xFFC7D0DA),
+              color: done ? _teal : const Color(0xFFCBD8DD),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -1069,7 +1071,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
         width: 52,
         height: 52,
         decoration: BoxDecoration(
-          color: const Color(0xFFF7FAFA),
+          color: const Color(0xFFF2F5F6),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: _hairlineOnSurface),
           image: (isImage && url.isNotEmpty)
@@ -1136,7 +1138,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
               fontFamily: _bodyFont,
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: active ? _teal : const Color(0xFFC7D0DA)));
+              color: active ? _teal : const Color(0xFFCBD8DD)));
     }
 
     Widget bar(bool active) => Expanded(
@@ -1377,7 +1379,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
                         color: _paper,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                            color: const Color(0xFFCDD6E2), width: 1.4),
+                            color: const Color(0xFFCBD8DD), width: 1.4),
                       ),
                       child: const Text(
                         'Cancel',

@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -51,21 +53,21 @@ class ToDoListPageView extends StatefulWidget {
 class _ToDoListPageViewState extends State<ToDoListPageView>
     with SingleTickerProviderStateMixin {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _ink = Color(0xFF323F4D);
-  static const Color _inkMute = Color(0xFF5A6675);
-  static const Color _faint = Color(0xFF93A0B0);
+  static const Color _ink = Color(0xFF29343A);
+  static const Color _inkMute = Color(0xFF566670);
+  static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _hairline = Color(0xFFEEF1F2);
-  static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
-  static const Color _teal = Color(0xFF323F4D);
+  static const Color _surface = Color(0xFFECF0F2);
+  static const Color _hairline = Color(0xFFEAEEF0);
+  static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
+  static const Color _teal = Color(0xFF29343A);
   static const Color _tealTint =
-      Color(0xFFEEF1F4); // DS: lime tint → neutral surface
+      Color(0xFFECF0F2); // DS: lime tint → neutral surface
   static const Color _live =
-      Color(0xFFCC4B3C); // DS: lime → clay (high/attention)
-  static const Color _navy = Color(0xFF323F4D);
+      Color(0xFF566670); // DS: lime → clay (high/attention)
+  static const Color _navy = Color(0xFF29343A);
   static const Color _green =
-      Color(0xFF166341); // DS: to-do / in-progress / info
+      Color(0xFF5D737E); // DS: to-do / in-progress / info
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
   // ────────────────────────────────────────────────────────────────────
@@ -195,7 +197,7 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
   Color _priorityColor(String s) =>
       s == 'high' ? _live : (s == 'low' ? _faint : _teal);
   Color _priorityTint(String s) => s == 'high'
-      ? const Color(0x33CC4B3C)
+      ? const Color(0x33566670)
       : (s == 'low' ? _surface : _tealTint);
 
   Widget _softPill(String text,
@@ -590,7 +592,7 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
           }
         }
 
-        section('Overdue', _live, const Color(0x33CC4B3C), overdue);
+        section('Overdue', _live, const Color(0x33566670), overdue);
         section('Due Today', _teal, _tealTint, today);
         section('Upcoming', _faint, _surface, upcoming);
 
@@ -654,7 +656,7 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                              color: const Color(0xFFC7D0DA), width: 2),
+                              color: const Color(0xFFCBD8DD), width: 2),
                         ),
                       ),
               ),

@@ -10,18 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/services.dart'; // SystemChrome / SystemUiOverlayStyle (dark status bar over white form)
@@ -59,18 +47,18 @@ class _EditProjectViewState extends State<EditProjectView>
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF39454B);
-  static const Color _inkMute = Color(0xFF5A6675);
+  static const Color _ink = Color(0xFF29343A);
+  static const Color _inkMute = Color(0xFF566670);
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _hairline = Color(0xFFEEF1F4);
-  static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
+  static const Color _surface = Color(0xFFECF0F2);
+  static const Color _hairline = Color(0xFFECF0F2);
+  static const Color _hairlineOnSurface = Color(0xFFCBD8DD);
   // Brand accent — TEAL.
-  static const Color _teal = Color(0xFF39454B);
+  static const Color _teal = Color(0xFF29343A);
   // Status
   static const Color _live =
-      Color(0xFFCC4B3C); // clay — live / open-now / warning
-  static const Color _coral = Color(0xFFCC4B3C);
+      Color(0xFF566670); // clay — live / open-now / warning
+  static const Color _coral = Color(0xFF566670);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -1067,7 +1055,7 @@ class _EditProjectViewState extends State<EditProjectView>
                         color: _paper,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                            color: const Color(0xFFCDD6E2), width: 1.4),
+                            color: const Color(0xFFCBD8DD), width: 1.4),
                       ),
                       child: Text(
                         'Cancel',

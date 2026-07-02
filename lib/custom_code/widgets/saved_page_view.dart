@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -33,19 +35,19 @@ class _SavedPageViewState extends State<SavedPageView> {
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF16202E);
-  static const Color _inkMute = Color(0xFF5A6675);
+  static const Color _ink = Color(0xFF1D2529);
+  static const Color _inkMute = Color(0xFF566670);
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _hairline = Color(0xFFEEF1F4);
-  static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
+  static const Color _surface = Color(0xFFECF0F2);
+  static const Color _hairline = Color(0xFFECF0F2);
+  static const Color _hairlineOnSurface = Color(0xFFCBD8DD);
   // Brand accent — YELLOW. Always ink foreground, never white.
-  static const Color _spark = Color(0xFFAEE03F); // primary CTA / ranked accent
-  static const Color _sparkInk = Color(0xFF16202E);
+  static const Color _spark = Color(0xFF5D737E); // primary CTA / ranked accent
+  static const Color _sparkInk = Color(0xFF1D2529);
   // Status
   static const Color _live =
-      Color(0xFFFF6A2B); // orange — live / open-now / warning
-  static const Color _coral = Color(0xFFE0531C);
+      Color(0xFF566670); // orange — live / open-now / warning
+  static const Color _coral = Color(0xFF566670);
   // Geometry
   static const double _rSmall = 6;
   static const double _rMed = 8;

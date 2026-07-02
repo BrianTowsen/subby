@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,15 +28,15 @@ class QuoteRequestView extends StatefulWidget {
 }
 
 class _QuoteRequestViewState extends State<QuoteRequestView> {
-  static const Color _ink = Color(0xFF39454B);
-  static const Color _inkMute = Color(0xFF5A6675);
-  static const Color _faint = Color(0xFF93A0B0);
+  static const Color _ink = Color(0xFF29343A);
+  static const Color _inkMute = Color(0xFF566670);
+  static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _border = Color(0xFFE7EBEF);
-  static const Color _line = Color(0xFFF2F4F6);
-  static const Color _green = Color(0xFF166341);
-  static const Color _cobalt = Color(0xFF2A6FDB);
+  static const Color _surface = Color(0xFFECF0F2);
+  static const Color _border = Color(0xFFEAEEF0);
+  static const Color _line = Color(0xFFF2F5F6);
+  static const Color _green = Color(0xFF5D737E);
+  static const Color _cobalt = Color(0xFF5D737E);
   static const String _body = 'Inter';
   static const String _kActiveProjectPath = 'subby_active_project_path';
 
@@ -172,7 +174,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
                             fontFamily: _body,
                             fontSize: 10,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF9DC0F5)))),
+                            color: Color(0xFFCBD8DD)))),
               ]),
               const SizedBox(height: 14),
               Container(
@@ -259,7 +261,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
                 height: 52,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                    color: _scope.isEmpty ? const Color(0xFFB6C3BC) : _green,
+                    color: _scope.isEmpty ? const Color(0xFFB7C2C7) : _green,
                     borderRadius: BorderRadius.circular(14)),
                 child: Row(mainAxisSize: MainAxisSize.min, children: const [
                   Icon(Icons.edit_document, size: 19, color: _paper),
@@ -308,7 +310,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
           if (rows.isEmpty) {
             return Container(
               decoration: BoxDecoration(
-                  color: const Color(0xFFF7F8FA),
+                  color: const Color(0xFFF2F5F6),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: _border)),
               padding: const EdgeInsets.all(13),
@@ -370,7 +372,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
         decoration: BoxDecoration(
           color: on ? _ink : _surface,
           borderRadius: BorderRadius.circular(999),
-          border: on ? null : Border.all(color: const Color(0xFFE2E7EE)),
+          border: on ? null : Border.all(color: const Color(0xFFDCE3E6)),
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           if (on) ...[

@@ -10,14 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -65,18 +57,18 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF39454B);
-  static const Color _inkMute = Color(0xFF5A6675);
+  static const Color _ink = Color(0xFF29343A);
+  static const Color _inkMute = Color(0xFF566670);
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _hairline = Color(0xFFEEF1F4);
-  static const Color _hairlineOnSurface = Color(0xFFD7DCE3);
+  static const Color _surface = Color(0xFFECF0F2);
+  static const Color _hairline = Color(0xFFECF0F2);
+  static const Color _hairlineOnSurface = Color(0xFFCBD8DD);
   // Brand accent — TEAL.
-  static const Color _teal = Color(0xFF39454B);
+  static const Color _teal = Color(0xFF29343A);
   // Status
   static const Color _live =
-      Color(0xFFCC4B3C); // clay — live / paid / done / warning
-  static const Color _coral = Color(0xFFCC4B3C);
+      Color(0xFF566670); // clay — live / paid / done / warning
+  static const Color _coral = Color(0xFF566670);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -495,7 +487,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
                         color: _paper,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                            color: const Color(0xFFCDD6E2), width: 1.4),
+                            color: const Color(0xFFCBD8DD), width: 1.4),
                       ),
                       child: Text(
                         'Cancel',
@@ -830,7 +822,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
                     'UPDATED',
                     style: theme.labelSmall.override(
                       fontFamily: _bodyFont,
-                      color: const Color(0xFF93A0B0),
+                      color: const Color(0xFF93A3AC),
                       letterSpacing: 0.5,
                       fontWeight: FontWeight.w800,
                       fontSize: 10,
@@ -861,7 +853,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: visibility == 'shared'
-                        ? const Color(0xFFE7F3EC)
+                        ? const Color(0xFFE7EDF0)
                         : _surface,
                     borderRadius: BorderRadius.circular(999),
                   ),

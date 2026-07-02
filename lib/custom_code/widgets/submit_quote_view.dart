@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -33,17 +35,17 @@ class SubmitQuoteView extends StatefulWidget {
 }
 
 class _SubmitQuoteViewState extends State<SubmitQuoteView> {
-  static const Color _ink = Color(0xFF39454B);
-  static const Color _inkMute = Color(0xFF5A6675);
-  static const Color _faint = Color(0xFF93A0B0);
+  static const Color _ink = Color(0xFF29343A);
+  static const Color _inkMute = Color(0xFF566670);
+  static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _border = Color(0xFFE7EBEF);
-  static const Color _line = Color(0xFFF2F4F6);
-  static const Color _green = Color(0xFF166341);
-  static const Color _sage = Color(0xFFF3FAF6);
-  static const Color _sageBorder = Color(0xFFC9E4D6);
-  static const Color _coral = Color(0xFFCC4B3C);
+  static const Color _surface = Color(0xFFECF0F2);
+  static const Color _border = Color(0xFFEAEEF0);
+  static const Color _line = Color(0xFFF2F5F6);
+  static const Color _green = Color(0xFF5D737E);
+  static const Color _sage = Color(0xFFF2F5F6);
+  static const Color _sageBorder = Color(0xFFCBD8DD);
+  static const Color _coral = Color(0xFF566670);
   static const String _display = 'Inter Tight';
   static const String _body = 'Inter';
 
@@ -279,7 +281,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
                     height: 52,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: canSubmit ? _green : const Color(0xFFB6C3BC),
+                      color: canSubmit ? _green : const Color(0xFFB7C2C7),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: _saving
@@ -583,7 +585,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
           padding: const EdgeInsets.all(3),
           alignment: on ? Alignment.centerRight : Alignment.centerLeft,
           decoration: BoxDecoration(
-              color: on ? _green : const Color(0xFFCBD3DB),
+              color: on ? _green : const Color(0xFFCBD8DD),
               borderRadius: BorderRadius.circular(999)),
           child: Container(
             width: 21,
@@ -634,7 +636,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
           decoration: BoxDecoration(
             color: solid ? _ink : _paper,
             shape: BoxShape.circle,
-            border: solid ? null : Border.all(color: const Color(0xFFE2E7EE)),
+            border: solid ? null : Border.all(color: const Color(0xFFDCE3E6)),
           ),
           child: Icon(icon, size: 16, color: solid ? _paper : _ink),
         ),

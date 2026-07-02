@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -47,20 +49,20 @@ class AddSnagPageView extends StatefulWidget {
 
 class _AddSnagPageViewState extends State<AddSnagPageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _ink = Color(0xFF323F4D);
-  static const Color _inkMute = Color(0xFF5A6675);
-  static const Color _faint = Color(0xFF93A0B0);
+  static const Color _ink = Color(0xFF29343A);
+  static const Color _inkMute = Color(0xFF566670);
+  static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _surface = Color(0xFFEEF1F4);
-  static const Color _hairline = Color(0xFFEEF1F2);
-  static const Color _hairlineOnSurface = Color(0xFFE2E7EE);
-  static const Color _teal = Color(0xFF323F4D);
+  static const Color _surface = Color(0xFFECF0F2);
+  static const Color _hairline = Color(0xFFEAEEF0);
+  static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
+  static const Color _teal = Color(0xFF29343A);
   static const Color _tealTint =
-      Color(0xFFEEF1F4); // DS: lime tint → neutral surface
+      Color(0xFFECF0F2); // DS: lime tint → neutral surface
   static const Color _live =
-      Color(0xFFCC4B3C); // DS: lime → clay (high / attention)
-  static const Color _green = Color(0xFF1F8A5B); // DS: in-progress / info
-  static const Color _coral = Color(0xFFCC4B3C);
+      Color(0xFF566670); // DS: lime → clay (high / attention)
+  static const Color _green = Color(0xFF5D737E); // DS: in-progress / info
+  static const Color _coral = Color(0xFF566670);
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
   // ────────────────────────────────────────────────────────────────────
@@ -325,7 +327,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(_radius),
                     border:
-                        Border.all(color: const Color(0xFFC7D0DA), width: 1.5),
+                        Border.all(color: const Color(0xFFCBD8DD), width: 1.5),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -455,7 +457,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                     hintText: hint,
                     hintStyle: const TextStyle(
                         fontFamily: _bodyFont,
-                        color: Color(0xCC5A6675),
+                        color: Color(0xCC566670),
                         fontWeight: FontWeight.w600,
                         fontSize: 16),
                     errorStyle: const TextStyle(
@@ -486,7 +488,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
           decoration: BoxDecoration(
             color:
-                sel && key == 'critical' ? const Color(0x29CC4B3C) : _surface,
+                sel && key == 'critical' ? const Color(0x29566670) : _surface,
             borderRadius: BorderRadius.circular(999),
             border: sel ? Border.all(color: c, width: 1.5) : null,
           ),
@@ -551,7 +553,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                   ),
                 ),
                 const Icon(Icons.chevron_right_rounded,
-                    color: Color(0xFFC7D0DA)),
+                    color: Color(0xFFCBD8DD)),
               ],
             ),
           ],
@@ -607,7 +609,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                                     fontFamily: _displayFont,
                                     fontSize: 15,
                                     fontWeight: FontWeight.w700,
-                                    color: Color(0xFF323F4D))),
+                                    color: Color(0xFF29343A))),
                             const SizedBox(height: 2),
                             Text(
                                 _assignedListingSubtitle.isEmpty
@@ -630,7 +632,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                               color: _inkMute)),
                 ),
                 const Icon(Icons.chevron_right_rounded,
-                    color: Color(0xFFC7D0DA)),
+                    color: Color(0xFFCBD8DD)),
               ],
             ),
           ],
@@ -813,7 +815,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                                                 fontFamily: _displayFont,
                                                 fontSize: 15,
                                                 fontWeight: FontWeight.w700,
-                                                color: Color(0xFF323F4D))),
+                                                color: Color(0xFF29343A))),
                                         const SizedBox(height: 2),
                                         Text(subtitle,
                                             maxLines: 1,
