@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 // ✅ Auth helpers (currentUserReference, currentUserEmail, etc.)
 import '/auth/firebase_auth/auth_util.dart';
 
@@ -494,7 +496,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                               style:
                                   _subtitleStyle(theme).copyWith(fontSize: 13)),
 
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 30),
 
                           // ===== AVATAR + IDENTITY =====
                           Row(
@@ -553,7 +555,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                             ],
                           ),
 
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 30),
 
                           // ===== FORM =====
                           Text('DETAILS', style: _uLabelStyle(theme)),
@@ -608,7 +610,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                             ),
                           ),
 
-                          const SizedBox(height: 28),
+                          const SizedBox(height: 30),
 
                           _primarySave(theme),
 

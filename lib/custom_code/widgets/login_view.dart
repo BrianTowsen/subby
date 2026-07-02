@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -949,7 +951,7 @@ class _LoginViewState extends State<LoginView> {
                   style: _subtitleStyle(theme).copyWith(fontSize: 13),
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 30),
 
                 // Toggle
                 _slidingToggle(theme),
@@ -972,7 +974,7 @@ class _LoginViewState extends State<LoginView> {
                 ),
 
                 _errorBanner(theme),
-                const SizedBox(height: 24),
+                const SizedBox(height: 30),
 
                 // Create account (outline)
                 _outlineButton(

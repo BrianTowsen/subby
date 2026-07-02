@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 class LocationSelectPageView extends StatefulWidget {
@@ -224,7 +226,7 @@ class _LocationSelectPageViewState extends State<LocationSelectPageView> {
                     const SizedBox(height: 8),
                     Text(_descriptionForCategory(_category),
                         style: _subtitleStyle),
-                    const SizedBox(height: 26),
+                    const SizedBox(height: 30),
                     _uSelect(
                       label: 'Province',
                       icon: Icons.map_outlined,

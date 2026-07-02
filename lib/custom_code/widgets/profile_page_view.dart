@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 // ✅ provides currentUserReference, currentUserEmail, etc.
 import '/auth/firebase_auth/auth_util.dart';
 
@@ -802,7 +804,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
                           const SizedBox(height: 8),
                           ...mgmtPerks.map(_perkRow),
 
-                          const SizedBox(height: 26),
+                          const SizedBox(height: 30),
 
                           // ===== DIRECTORY =====
                           _sectionLabel(theme, 'Directory'),
@@ -848,7 +850,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
                             },
                           ),
 
-                          const SizedBox(height: 26),
+                          const SizedBox(height: 30),
 
                           // ===== SETTINGS =====
                           _sectionLabel(theme, 'Settings'),
@@ -867,7 +869,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
                             onTap: _goNotifications,
                           ),
 
-                          const SizedBox(height: 28),
+                          const SizedBox(height: 30),
 
                           // ===== Logout / Delete =====
                           Row(

@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'dart:typed_data';
@@ -701,7 +703,7 @@ class _EditListingPageViewState extends State<EditListingPageView> {
                       const SizedBox(height: 8),
                       Text('Update your directory profile.',
                           style: _subtitleStyle),
-                      const SizedBox(height: 26),
+                      const SizedBox(height: 30),
                       _uSelect(
                         label: 'Listing type',
                         icon: Icons.workspace_premium_outlined,
@@ -793,7 +795,7 @@ class _EditListingPageViewState extends State<EditListingPageView> {
                         items: _currentRegions,
                         onChanged: (v) => setState(() => _selectedRegion = v),
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 30),
                       _primaryButton(
                         label: _saving ? 'Saving…' : 'Save changes',
                         icon: _saving
