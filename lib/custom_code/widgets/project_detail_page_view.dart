@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -1010,14 +1012,13 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   }) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       // Dark status-bar icons over the light header.
-      value: SystemUiOverlayStyle.dark,
+      value: SystemUiOverlayStyle.light,
       child: Container(
         width: double.infinity,
         decoration: const BoxDecoration(
-          color: _paper,
-          border: Border(bottom: BorderSide(color: _hairline)),
+          color: _ink,
         ),
-        padding: EdgeInsets.fromLTRB(_hPad, topInset + 8, _hPad, 22),
+        padding: EdgeInsets.fromLTRB(20, topInset + 6, 20, 18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1027,20 +1028,33 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                   onTap: () => context.safePop(),
                   radius: BorderRadius.circular(999),
                   child: Container(
-                    width: 40,
-                    height: 40,
+                    width: 38,
+                    height: 38,
                     alignment: Alignment.center,
-                    decoration: const BoxDecoration(
-                      color: _surface,
+                    decoration: BoxDecoration(
+                      color: _paper.withOpacity(0.12),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.arrow_back_ios_new_rounded,
-                        size: 16, color: _ink),
+                        size: 16, color: _paper),
                   ),
                 ),
-                const Spacer(),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      readOnly ? 'SHARED PROJECT' : 'PROJECT',
+                      style: theme.labelSmall.override(
+                        fontFamily: _bodyFont,
+                        color: _paper.withOpacity(0.5),
+                        letterSpacing: 0.7,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ),
+                ),
                 readOnly
-                    ? const SizedBox.shrink()
+                    ? const SizedBox(width: 38, height: 38)
                     : _tapCard(
                         onTap: () => _safeNavigate(
                           widget.editProjectRouteName,
@@ -1048,127 +1062,45 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                         ),
                         radius: BorderRadius.circular(12),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 10),
+                          width: 38,
+                          height: 38,
+                          alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF5D737E),
-                            borderRadius: BorderRadius.circular(12),
+                            color: _paper.withOpacity(0.12),
+                            shape: BoxShape.circle,
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.edit_outlined,
-                                  size: 18, color: _paper),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Edit',
-                                style: theme.bodySmall.override(
-                                  fontFamily: _bodyFont,
-                                  color: _paper,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                            ],
-                          ),
+                          child: const Icon(Icons.edit_rounded,
+                              size: 16, color: _paper),
                         ),
                       ),
               ],
             ),
-            const SizedBox(height: 18),
-            Text(
-              readOnly ? 'SHARED PROJECT' : 'PROJECT',
-              style: theme.labelSmall.override(
-                fontFamily: _bodyFont,
-                color: const Color(0xFF93A3AC),
-                letterSpacing: 1.2,
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
-              ),
-            ),
-            const SizedBox(height: 7),
+            const SizedBox(height: 16),
             Text(
               name,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: theme.titleLarge.override(
                 fontFamily: _displayFont,
-                color: _ink,
+                color: _paper,
                 fontWeight: FontWeight.w900,
                 fontSize: 26,
-                lineHeight: 1.08,
+                letterSpacing: -0.6,
+                lineHeight: 1.1,
               ),
             ),
-            const SizedBox(height: 16),
-            // Overall completion bar (replaces the stage/status pill).
-            Row(
-              children: [
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(999),
-                    child: Container(
-                      height: 8,
-                      color: _tealTint,
-                      child: FractionallySizedBox(
-                        alignment: Alignment.centerLeft,
-                        widthFactor: progress,
-                        child: Container(color: const Color(0xFF5D737E)),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  '${(progress * 100).round()}%',
-                  style: theme.titleMedium.override(
-                    fontFamily: _displayFont,
-                    color: _ink,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 14,
-                    letterSpacing: 0.0,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'COMPLETE',
-                  style: theme.labelSmall.override(
-                    fontFamily: _bodyFont,
-                    color: const Color(0xFF93A3AC),
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
-                    fontSize: 10,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Icon(Icons.location_on_outlined,
-                    size: 16, color: const Color(0xFF93A3AC)),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    address,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.bodySmall.override(
-                      fontFamily: _bodyFont,
-                      color: _inkMute,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 7),
+            const SizedBox(height: 8),
             Text(
-              dates,
-              maxLines: 1,
+              [address, dates]
+                  .where((s) => s.trim().isNotEmpty)
+                  .join('   ·   '),
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: theme.labelSmall.override(
+              style: theme.bodySmall.override(
                 fontFamily: _bodyFont,
-                color: const Color(0xFF93A3AC),
-                fontWeight: FontWeight.w700,
+                color: _paper.withOpacity(0.55),
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
               ),
             ),
           ],
@@ -3229,434 +3161,22 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // ============================================================
-                      // 0) SHARED-BY CARD (read-only / provider view)
-                      // ============================================================
-                      if (readOnly && ownerProfileRef != null) ...[
-                        _sharedByCard(theme, ownerProfileRef),
-                        const SizedBox(height: 28),
-                      ],
-
-                      // ============================================================
-                      // 1) STAT STRIP — shared / read-only view only
-                      // ============================================================
+                      // -- Redesigned body (matches DetailTask / DetailSnag) --
+                      _rPills(theme),
+                      const SizedBox(height: 18),
+                      _rCompletion(theme),
                       if (readOnly) ...[
-                        _statStripShared(
-                          theme: theme,
-                          days: daysLeftLabel,
-                          snags: snagLabel,
-                          files:
-                              '${_docRows.where((s) => _docVisibility(s.data()) == 'shared').length}',
-                        ),
-                        const SizedBox(height: 28),
+                        const SizedBox(height: 18),
+                        _rOwnerCard(theme, ownerProfileRef),
                       ],
-
-                      // ============================================================
-                      // 2) PROJECT MODULES — 2-up Sage grid (Manage)
-                      // ============================================================
-                      if (readOnly) _sharedManage(theme),
-                      if (!readOnly)
-                        Column(
-                          children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: _moduleGridCell(
-                                    theme: theme,
-                                    featured: true,
-                                    icon: Icons.timeline_rounded,
-                                    title: 'Timeline',
-                                    subtitle: 'Programme & phases',
-                                    visibility: _moduleVisFor('timeline'),
-                                    onToggleVisibility: () =>
-                                        _toggleModuleVis('timeline'),
-                                    onTap: () => _safeNavigate(
-                                      widget.timelineRouteName,
-                                      fallbackRoute: _fallbackTimelineRoute,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: _moduleGridCell(
-                                    theme: theme,
-                                    icon: Icons.checklist_rounded,
-                                    title: 'To-Do List',
-                                    subtitle: 'Tasks & reminders',
-                                    visibility: _moduleVisFor('toDo'),
-                                    onToggleVisibility: () =>
-                                        _toggleModuleVis('toDo'),
-                                    onTap: () => _safeNavigate(
-                                      widget.toDoListRouteName,
-                                      fallbackRoute: _fallbackToDoRoute,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: _moduleGridCell(
-                                    theme: theme,
-                                    icon: Icons.fact_check_outlined,
-                                    title: 'Snag List',
-                                    subtitle: 'Defects & fixes',
-                                    visibility: _moduleVisFor('snagList'),
-                                    onToggleVisibility: () =>
-                                        _toggleModuleVis('snagList'),
-                                    onTap: () => _safeNavigate(
-                                      widget.snagListRouteName,
-                                      fallbackRoute: _fallbackSnagRoute,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: _moduleGridCell(
-                                    theme: theme,
-                                    icon: Icons.calculate_outlined,
-                                    title: 'Project Cost',
-                                    subtitle: 'Budget & estimates',
-                                    visibility: _moduleVisFor('projectCost'),
-                                    onToggleVisibility: () =>
-                                        _toggleModuleVis('projectCost'),
-                                    onTap: () => _safeNavigate(
-                                      widget.projectCostRouteName,
-                                      fallbackRoute: _fallbackCostRoute,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            _wideModuleCell(
-                              theme: theme,
-                              icon: Icons.request_quote_outlined,
-                              title: 'Get Quotes',
-                              subtitle: 'Compare trades',
-                              visibility: _moduleVisFor('getQuotes'),
-                              onToggleVisibility: () =>
-                                  _toggleModuleVis('getQuotes'),
-                              onTap: () => _safeNavigate(
-                                widget.getQuotesRouteName,
-                                fallbackRoute: _fallbackQuotesRoute,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                      const SizedBox(height: 28),
-
-                      // ============================================================
-                      // 3) DOCUMENTS (collapsible)
-                      // ============================================================
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _collapsibleHeader(
-                              theme,
-                              'Documents',
-                              _docsOpen,
-                              () => setState(() => _docsOpen = !_docsOpen),
-                              count: _docRows.length,
-                              countUnit: 'files',
-                              alwaysShowCount: true,
-                            ),
-                          ),
-                          if (!readOnly)
-                            _uploadDocButton(theme, projectsAccent),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      _sectionDescription(theme,
-                          'Drawings, certificates and shared project files.'),
-                      if (_docsOpen && !readOnly) _visLegend(theme),
-
-                      if (_docsOpen)
-                        if (_docsErr != null)
-                          _errorCard(
-                            theme,
-                            projectsAccent,
-                            'Couldn’t load documents',
-                            'This is usually a missing Firestore index or rules issue.',
-                          )
-                        else if (!_docsLoadedOnce)
-                          _loadingCard(
-                              theme, projectsAccent, 'Loading documents…')
-                        else if (_docRows.isEmpty)
-                          _cardShell(
-                            theme: theme,
-                            colorOverride: _surface,
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 44,
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: projectsAccent.withOpacity(0.12),
-                                    borderRadius:
-                                        BorderRadius.circular(_radius),
-                                  ),
-                                  child: Icon(Icons.folder_open_rounded,
-                                      color: projectsAccent, size: 22),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'No documents yet.',
-                                        style: theme.bodyMedium.override(
-                                          fontFamily: _bodyFont,
-                                          color: _ink,
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        'Upload PDFs, images, and files linked to this project.',
-                                        style: theme.bodySmall.override(
-                                          fontFamily: _bodyFont,
-                                          color: _inkMute,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                if (!readOnly) const SizedBox(width: 10),
-                                if (!readOnly)
-                                  _tapCard(
-                                    onTap: _navigateToUploadDocument,
-                                    radius: BorderRadius.circular(12),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 10),
-                                      decoration: BoxDecoration(
-                                        color: projectsAccent,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: const Icon(Icons.add_rounded,
-                                          color: _paper, size: 18),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          )
-                        else
-                          _docsByCategory(theme, projectsAccent,
-                              readOnly: readOnly),
-
-                      const SizedBox(height: 28),
-
-                      // ============================================================
-                      // 4) LISTINGS / PROJECT TEAM (collapsible)
-                      // ============================================================
-                      _collapsibleHeader(
-                        theme,
-                        'Project Team',
-                        _teamOpen,
-                        () => setState(() => _teamOpen = !_teamOpen),
-                        count: _listingRows.length,
-                        countUnit: 'members',
-                        alwaysShowCount: true,
-                      ),
-                      const SizedBox(height: 4),
-                      _sectionDescription(
-                          theme, 'Trades and suppliers added to this build.'),
-
-                      if (_teamOpen)
-                        if (_listingsErr != null)
-                          _errorCard(
-                            theme,
-                            projectsAccent,
-                            'Couldn’t load listings',
-                            'This is usually a missing Firestore index or rules issue.',
-                          )
-                        else if (!_listingsLoadedOnce)
-                          _loadingCard(
-                              theme, projectsAccent, 'Loading listings…')
-                        else if (_listingRows.isEmpty)
-                          _cardShell(
-                            theme: theme,
-                            colorOverride: _surface,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      width: 48,
-                                      height: 48,
-                                      alignment: Alignment.center,
-                                      decoration: BoxDecoration(
-                                        color: _ink.withOpacity(0.10),
-                                        borderRadius: BorderRadius.circular(14),
-                                      ),
-                                      child: const Icon(Icons.groups_rounded,
-                                          color: _ink, size: 24),
-                                    ),
-                                    const SizedBox(width: 14),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'No team members yet',
-                                            style: theme.bodyMedium.override(
-                                              fontFamily: _bodyFont,
-                                              color: _ink,
-                                              fontWeight: FontWeight.w900,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            'Add the trades and suppliers working on this build so everyone stays in sync.',
-                                            style: theme.bodySmall.override(
-                                              fontFamily: _bodyFont,
-                                              color: _inkMute,
-                                              fontWeight: FontWeight.w600,
-                                              lineHeight: 1.45,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-                                _tapCard(
-                                  onTap: _navigateToDirectory,
-                                  radius: BorderRadius.circular(12),
-                                  child: Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 14),
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                      color: _ink,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Icon(Icons.person_add_alt_1,
-                                            size: 18, color: _paper),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          'Add team member',
-                                          style: theme.bodyMedium.override(
-                                            fontFamily: _bodyFont,
-                                            color: _paper,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                _tapCard(
-                                  onTap: _navigateToDirectory,
-                                  radius: BorderRadius.circular(12),
-                                  child: Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 14),
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                      color: _paper,
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                          color: const Color(0xFFCBD8DD),
-                                          width: 1.4),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Icon(Icons.contacts_rounded,
-                                            size: 18, color: _ink),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          'Find trades in the Directory',
-                                          style: theme.bodyMedium.override(
-                                            fontFamily: _bodyFont,
-                                            color: _ink,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        else
-                          Column(
-                            children: List.generate(_listingRows.length, (i) {
-                              final rowDoc = _listingRows[i];
-                              final d = rowDoc.data();
-                              final title =
-                                  (d['title'] ?? 'Listing').toString();
-
-                              // ✅ FIX: support BOTH keys (subtitle + legacy subTitle)
-                              final subtitle =
-                                  (d['subtitle'] ?? d['subTitle'] ?? '')
-                                      .toString();
-
-                              final rating = (d['ratingText'] ?? '').toString();
-
-                              final listingRef = _extractListingRef(d);
-
-                              return Padding(
-                                padding: EdgeInsets.only(
-                                    bottom: i == _listingRows.length - 1
-                                        ? 0
-                                        : _gap),
-                                child: _listingRow(
-                                  theme: theme,
-                                  accent: projectsAccent,
-                                  readOnly: readOnly,
-                                  title: title,
-                                  subtitle: subtitle.trim().isNotEmpty
-                                      ? subtitle
-                                      : '—',
-                                  ratingText: rating,
-                                  onTap: () {
-                                    if (listingRef == null) {
-                                      debugPrint(
-                                          '⚠️ Missing listingRef. project_listings doc: ${rowDoc.id} data=$d');
-                                      ScaffoldMessenger.of(context)
-                                        ..hideCurrentSnackBar()
-                                        ..showSnackBar(
-                                          _inkSnack(
-                                              'This listing link is missing. Please re-add the listing.'),
-                                        );
-                                      return;
-                                    }
-                                    _navigateToListing(listingRef);
-                                  },
-                                  onDelete: () {
-                                    FocusScope.of(context).unfocus();
-                                    _showRemoveListingSheet(
-                                      theme: theme,
-                                      accent: projectsAccent,
-                                      listingTitle: title,
-                                      projectListingDocRef: rowDoc.reference,
-                                    );
-                                  },
-                                ),
-                              );
-                            }),
-                          ),
+                      const SizedBox(height: 20),
+                      _rSectionLabel('MODULES'),
+                      const SizedBox(height: 10),
+                      _rModules(readOnly),
+                      const SizedBox(height: 24),
+                      _rDocuments(readOnly),
+                      const SizedBox(height: 24),
+                      _rTeam(),
                     ],
                   ),
                 ),
@@ -3666,6 +3186,646 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         ),
       ),
     );
+  }
+
+  // ===================================================================
+  // REDESIGN HELPERS — layout ported 1:1 from the approved mock.
+  // ===================================================================
+  static const Color _rFaint = Color(0xFF93A3AC);
+  static const Color _rDivider = Color(0xFFEAEEF0);
+  static const Color _rThumb = Color(0xFFF2F5F6);
+  static const Color _rChevron = Color(0xFFCBD8DD);
+  static const Color _rThumbBorder = Color(0xFFDCE3E6);
+
+  String _rInitials(String name) {
+    final parts =
+        name.trim().split(RegExp(r'\s+')).where((s) => s.isNotEmpty).toList();
+    if (parts.isEmpty) return '–';
+    if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
+    return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
+  }
+
+  Widget _rSectionLabel(String s) => Text(s,
+      style: const TextStyle(
+          fontFamily: _bodyFont,
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.6,
+          color: _inkMute));
+
+  Widget _rPill(String text,
+      {required Color fg, required Color bg, IconData? icon}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration:
+          BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        if (icon != null) ...[
+          Icon(icon, size: 12, color: fg),
+          const SizedBox(width: 5),
+        ],
+        Text(text,
+            style: TextStyle(
+                fontFamily: _bodyFont,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: fg)),
+      ]),
+    );
+  }
+
+  Widget _rPills(FlutterFlowTheme theme) {
+    final status = (_projectData['status'] ?? 'Active').toString().trim();
+    final category = (_projectData['category'] ?? _projectData['type'] ?? '')
+        .toString()
+        .trim();
+    return Row(children: [
+      _rPill(status.isEmpty ? 'Active' : status,
+          fg: _paper, bg: _inkMute, icon: Icons.bolt_rounded),
+      if (category.isNotEmpty) ...[
+        const SizedBox(width: 8),
+        _rPill(category, fg: _ink, bg: _surface),
+      ],
+    ]);
+  }
+
+  double _rProgress() {
+    final pr = _projectData['progress'];
+    double p = 0;
+    if (pr is num) {
+      p = pr.toDouble();
+      if (p > 1) p = p / 100.0;
+    }
+    return p.clamp(0.0, 1.0);
+  }
+
+  Widget _rCompletion(FlutterFlowTheme theme) {
+    final p = _rProgress();
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        const Text('COMPLETION',
+            style: TextStyle(
+                fontFamily: _bodyFont,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.6,
+                color: _inkMute)),
+        Text('${(p * 100).round()}%',
+            style: const TextStyle(
+                fontFamily: _bodyFont,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: _ink)),
+      ]),
+      const SizedBox(height: 8),
+      ClipRRect(
+        borderRadius: BorderRadius.circular(999),
+        child: LinearProgressIndicator(
+          value: p,
+          minHeight: 6,
+          backgroundColor: _surface,
+          valueColor: const AlwaysStoppedAnimation<Color>(_ink),
+        ),
+      ),
+    ]);
+  }
+
+  Widget _rRound(IconData icon, Color bg, Color fg, VoidCallback onTap) =>
+      Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            width: 44,
+            height: 44,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
+            child: Icon(icon, size: 19, color: fg),
+          ),
+        ),
+      );
+
+  Widget _rOwnerCard(FlutterFlowTheme theme, DocumentReference? ownerRef) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+          color: _surface, borderRadius: BorderRadius.circular(14)),
+      child: FutureBuilder<DocumentSnapshot<Object?>>(
+        future: ownerRef?.get(),
+        builder: (context, snap) {
+          final od = (snap.data?.data() as Map<String, dynamic>?) ?? {};
+          final nm = (od['display_name'] ?? 'Project owner').toString().trim();
+          final phone = (od['phone_number'] ?? '').toString().trim();
+          return Row(children: [
+            Container(
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                  color: _paper, borderRadius: BorderRadius.circular(12)),
+              child: Text(_rInitials(nm),
+                  style: const TextStyle(
+                      fontFamily: _displayFont,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: _ink)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('PROJECT OWNER',
+                      style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.6,
+                          color: _rFaint)),
+                  const SizedBox(height: 3),
+                  Row(children: [
+                    Flexible(
+                      child: Text(nm.isEmpty ? 'Project owner' : nm,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontFamily: _bodyFont,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: _ink)),
+                    ),
+                    const SizedBox(width: 5),
+                    const Icon(Icons.verified_rounded, size: 14, color: _ink),
+                  ]),
+                  if (phone.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Row(children: [
+                      const Icon(Icons.call_rounded, size: 13, color: _rFaint),
+                      const SizedBox(width: 5),
+                      Text(phone,
+                          style: const TextStyle(
+                              fontFamily: _bodyFont,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: _inkMute)),
+                    ]),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            _rRound(Icons.call_rounded, _paper, _ink, () {
+              if (phone.isNotEmpty) launchURL('tel:$phone');
+            }),
+            const SizedBox(width: 8),
+            _rRound(Icons.chat_bubble_rounded, _ink, _paper, () {
+              if (phone.isNotEmpty) launchURL('sms:$phone');
+            }),
+          ]);
+        },
+      ),
+    );
+  }
+
+  Widget _rModIcon(IconData icon) => Container(
+        width: 40,
+        height: 40,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+            color: _paper, borderRadius: BorderRadius.circular(11)),
+        child: Icon(icon, size: 21, color: _ink),
+      );
+
+  Widget _rVisChip(String vis, Color bg) {
+    final shared = vis == 'shared';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration:
+          BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(shared ? Icons.group_rounded : Icons.lock_rounded,
+            size: 11, color: shared ? _ink : _rFaint),
+        const SizedBox(width: 4),
+        Text(shared ? 'Shared' : 'Private',
+            style: TextStyle(
+                fontFamily: _bodyFont,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: shared ? _ink : _rFaint)),
+      ]),
+    );
+  }
+
+  Widget _rModTile(IconData icon, String title, String sub, String visKey,
+      bool readOnly, VoidCallback onTap) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          height: 118,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+              color: _surface, borderRadius: BorderRadius.circular(14)),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              _rModIcon(icon),
+              const Spacer(),
+              if (!readOnly) _rVisChip(_moduleVisFor(visKey), _paper),
+            ]),
+            const Spacer(),
+            Text(title,
+                style: const TextStyle(
+                    fontFamily: _displayFont,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.2,
+                    color: _ink)),
+            const SizedBox(height: 2),
+            Text(sub,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: _rFaint)),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  Widget _rModWide(IconData icon, String title, String sub, String visKey,
+      bool readOnly, VoidCallback onTap) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+              color: _surface, borderRadius: BorderRadius.circular(14)),
+          child: Row(children: [
+            _rModIcon(icon),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: const TextStyle(
+                          fontFamily: _displayFont,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.2,
+                          color: _ink)),
+                  const SizedBox(height: 2),
+                  Text(sub,
+                      style: const TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: _rFaint)),
+                ],
+              ),
+            ),
+            if (!readOnly) ...[
+              _rVisChip(_moduleVisFor(visKey), _paper),
+              const SizedBox(width: 8),
+            ],
+            const Icon(Icons.chevron_right_rounded, size: 20, color: _rChevron),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  Widget _rModules(bool readOnly) {
+    return Column(children: [
+      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Expanded(
+            child: _rModTile(
+                Icons.timeline_rounded,
+                'Timeline',
+                'Programme & phases',
+                'timeline',
+                readOnly,
+                () => _safeNavigate(widget.timelineRouteName,
+                    fallbackRoute: _fallbackTimelineRoute))),
+        const SizedBox(width: 10),
+        Expanded(
+            child: _rModTile(
+                Icons.checklist_rounded,
+                'To-Do List',
+                'Tasks & reminders',
+                'toDo',
+                readOnly,
+                () => _safeNavigate(widget.toDoListRouteName,
+                    fallbackRoute: _fallbackToDoRoute))),
+      ]),
+      const SizedBox(height: 10),
+      _rModWide(
+          Icons.fact_check_outlined,
+          'Snag List',
+          'Defects & fixes',
+          'snagList',
+          readOnly,
+          () => _safeNavigate(widget.snagListRouteName,
+              fallbackRoute: _fallbackSnagRoute)),
+      if (!readOnly) ...[
+        const SizedBox(height: 10),
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(
+              child: _rModTile(
+                  Icons.calculate_outlined,
+                  'Project Cost',
+                  'Budget & estimates',
+                  'projectCost',
+                  readOnly,
+                  () => _safeNavigate(widget.projectCostRouteName,
+                      fallbackRoute: _fallbackCostRoute))),
+          const SizedBox(width: 10),
+          Expanded(
+              child: _rModTile(
+                  Icons.request_quote_outlined,
+                  'Get Quotes',
+                  'Compare trades',
+                  'getQuotes',
+                  readOnly,
+                  () => _safeNavigate(widget.getQuotesRouteName,
+                      fallbackRoute: _fallbackQuotesRoute))),
+        ]),
+      ],
+    ]);
+  }
+
+  Widget _rDocGroup(String label, int count) => Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+          Text(label,
+              style: const TextStyle(
+                  fontFamily: _bodyFont,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.3,
+                  color: _rFaint)),
+          const SizedBox(width: 6),
+          Text('$count',
+              style: const TextStyle(
+                  fontFamily: _bodyFont,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: _rChevron)),
+        ]),
+      );
+
+  Widget _rDocRow(
+      QueryDocumentSnapshot<Map<String, dynamic>> snap, bool readOnly) {
+    final d = snap.data();
+    final title = (d['title'] ?? d['name'] ?? 'Document').toString().trim();
+    final cat = _docCategory(d);
+    final vis = _docVisibility(d);
+    final u = d['updatedAt'] ?? d['createdAt'];
+    final when = (u is Timestamp)
+        ? 'Updated ${dateTimeFormat('d MMM', u.toDate())}'
+        : 'recently';
+    final ext =
+        (d['type'] ?? d['fileType'] ?? (cat == 'drawing' ? 'PDF' : 'FILE'))
+            .toString()
+            .toUpperCase();
+    final catLabel = cat == 'drawing' ? 'Drawing' : 'Document';
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _openDocumentRow(snap),
+          child: Row(children: [
+            Container(
+              width: 52,
+              height: 52,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: _rThumb,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: _rThumbBorder),
+              ),
+              child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                        cat == 'drawing'
+                            ? Icons.architecture_rounded
+                            : Icons.description_rounded,
+                        size: 18,
+                        color: _inkMute),
+                    const SizedBox(height: 2),
+                    Text(ext,
+                        style: const TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 7,
+                            fontWeight: FontWeight.w700,
+                            color: _rFaint)),
+                  ]),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title.isEmpty ? 'Document' : title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: _ink)),
+                  const SizedBox(height: 2),
+                  Text('$catLabel · $when',
+                      style: const TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: _rFaint)),
+                ],
+              ),
+            ),
+            if (!readOnly) ...[
+              GestureDetector(
+                onTap: () => _toggleDocVis(snap.reference, vis),
+                child: _rVisChip(vis, vis == 'shared' ? _tealTint : _surface),
+              ),
+              const SizedBox(width: 8),
+            ],
+            const Icon(Icons.chevron_right_rounded, size: 20, color: _rChevron),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  Widget _rDocuments(bool readOnly) {
+    final visible = readOnly
+        ? _docRows.where((s) => _docVisibility(s.data()) == 'shared').toList()
+        : _docRows;
+    final drawings =
+        visible.where((s) => _docCategory(s.data()) == 'drawing').toList();
+    final documents =
+        visible.where((s) => _docCategory(s.data()) == 'document').toList();
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+          _rSectionLabel('DOCUMENTS'),
+          const SizedBox(width: 8),
+          Text('${visible.length} files',
+              style: const TextStyle(
+                  fontFamily: _bodyFont,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: _rFaint)),
+        ]),
+        if (!readOnly)
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: _navigateToUploadDocument,
+              borderRadius: BorderRadius.circular(9),
+              child: Container(
+                width: 30,
+                height: 30,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                    color: _ink, borderRadius: BorderRadius.circular(9)),
+                child: const Icon(Icons.add_rounded, size: 18, color: _paper),
+              ),
+            ),
+          ),
+      ]),
+      if (!_docsLoadedOnce)
+        const Padding(
+          padding: EdgeInsets.only(top: 16),
+          child: Text('Loading documents…',
+              style: TextStyle(
+                  fontFamily: _bodyFont, fontSize: 12, color: _rFaint)),
+        )
+      else if (visible.isEmpty)
+        const Padding(
+          padding: EdgeInsets.only(top: 12),
+          child: Text('No documents yet.',
+              style: TextStyle(
+                  fontFamily: _bodyFont,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: _rFaint)),
+        )
+      else ...[
+        if (drawings.isNotEmpty) ...[
+          _rDocGroup('Drawings', drawings.length),
+          const SizedBox(height: 8),
+          ...drawings.map((s) => _rDocRow(s, readOnly)),
+        ],
+        if (documents.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          _rDocGroup('Documents', documents.length),
+          const SizedBox(height: 8),
+          ...documents.map((s) => _rDocRow(s, readOnly)),
+        ],
+      ],
+    ]);
+  }
+
+  Widget _rTeam() {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+        _rSectionLabel('PROJECT TEAM'),
+        const SizedBox(width: 8),
+        Text('${_listingRows.length} members',
+            style: const TextStyle(
+                fontFamily: _bodyFont,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: _rFaint)),
+      ]),
+      const SizedBox(height: 6),
+      if (!_listingsLoadedOnce)
+        const Padding(
+          padding: EdgeInsets.only(top: 10),
+          child: Text('Loading team…',
+              style: TextStyle(
+                  fontFamily: _bodyFont, fontSize: 12, color: _rFaint)),
+        )
+      else if (_listingRows.isEmpty)
+        const Padding(
+          padding: EdgeInsets.only(top: 8),
+          child: Text('No trades or suppliers added yet.',
+              style: TextStyle(
+                  fontFamily: _bodyFont,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: _rFaint)),
+        )
+      else
+        ..._listingRows.map((s) {
+          final d = s.data();
+          final title = (d['title'] ?? 'Listing').toString();
+          final trade =
+              (d['subtitle'] ?? d['subTitle'] ?? '').toString().trim();
+          final ref = _extractListingRef(d);
+          return Container(
+            padding: const EdgeInsets.symmetric(vertical: 11),
+            decoration: const BoxDecoration(
+                border: Border(bottom: BorderSide(color: _rDivider, width: 1))),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  if (ref != null) _navigateToListing(ref);
+                },
+                child: Row(children: [
+                  Container(
+                    width: 34,
+                    height: 34,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                        color: _tealTint,
+                        borderRadius: BorderRadius.circular(9)),
+                    child: Text(_rInitials(title),
+                        style: const TextStyle(
+                            fontFamily: _displayFont,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: _ink)),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: _ink)),
+                  ),
+                  if (trade.isNotEmpty)
+                    Text(trade,
+                        style: const TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: _rFaint)),
+                ]),
+              ),
+            ),
+          );
+        }),
+    ]);
   }
 }
 
