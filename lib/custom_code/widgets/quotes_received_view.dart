@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,12 +22,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Streams projects/{id}/quotes. Accept / Decline updates status.
 class QuotesReceivedView extends StatefulWidget {
   const QuotesReceivedView(
-      {super.key, this.width, this.height, this.inviteRouteName});
+      {super.key,
+      this.width,
+      this.height,
+      this.inviteRouteName,
+      this.quoteDetailRouteName});
   final double? width;
   final double? height;
 
   /// Optional FlutterFlow route name for the "Invite trades" button.
   final String? inviteRouteName;
+
+  /// FlutterFlow route name of the Quote Detail page (QuoteDetailView).
+  final String? quoteDetailRouteName;
   @override
   State<QuotesReceivedView> createState() => _QuotesReceivedViewState();
 }
@@ -44,7 +53,7 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
   static const String _display = 'Inter Tight';
   static const String _body = 'Inter';
   static const String _kActiveProjectPath = 'subby_active_project_path';
-  static const String _kActiveQuoteId = 'subby_active_quote_id';
+  static const String _kActiveQuotePath = 'subby_active_quote_path';
 
   DocumentReference<Map<String, dynamic>>? _projectRef;
   String _projectName = 'Project';
@@ -78,24 +87,48 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
 
   Future<void> _setStatus(DocumentReference ref, String status) async {
     try {
-      await ref.update(
-          {'status': status, 'decidedAt': FieldValue.serverTimestamp()});
+      if (status == 'accepted') {
+        // Award this quote and close the tender: decline the other
+        // still-submitted quotes in the same batch.
+        final batch = FirebaseFirestore.instance.batch();
+        batch.update(ref,
+            {'status': 'accepted', 'decidedAt': FieldValue.serverTimestamp()});
+        final others =
+            await ref.parent.where('status', isEqualTo: 'submitted').get();
+        for (final o in others.docs) {
+          if (o.reference.path == ref.path) continue;
+          batch.update(o.reference, {
+            'status': 'declined',
+            'decidedAt': FieldValue.serverTimestamp(),
+          });
+        }
+        await batch.commit();
+      } else {
+        await ref.update(
+            {'status': status, 'decidedAt': FieldValue.serverTimestamp()});
+      }
     } catch (_) {}
   }
 
-  Future<void> _openDetail(String id) async {
+  Future<void> _openDetail(DocumentReference ref) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kActiveQuoteId, id);
+    await prefs.setString(_kActiveQuotePath, ref.path);
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(
-          backgroundColor: _ink,
-          content: Text('Opening quote…',
-              style: TextStyle(
-                  fontFamily: _body,
-                  fontWeight: FontWeight.w700,
-                  color: _paper))));
+    final r = widget.quoteDetailRouteName;
+    if (r != null && r.isNotEmpty) {
+      context.pushNamed(r);
+    } else {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(const SnackBar(
+            backgroundColor: _ink,
+            content: Text(
+                'Set quoteDetailRouteName on QuotesReceivedView to open quotes.',
+                style: TextStyle(
+                    fontFamily: _body,
+                    fontWeight: FontWeight.w700,
+                    color: _paper))));
+    }
   }
 
   String _fmt(num v) {
@@ -198,7 +231,7 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
           children: [
             Text(
-                '${docs.length} invited · $submitted submitted · $viewed viewed',
+                '${docs.length} quote${docs.length == 1 ? '' : 's'} · $submitted submitted · $viewed viewed',
                 style: const TextStyle(
                     fontFamily: 'Roboto Mono',
                     fontSize: 12,
@@ -238,6 +271,7 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
     final lead = (d['leadWeeks'] ?? 0);
     final dep = (d['depositPct'] ?? 0);
     final hasFile = (d['fileName'] ?? '').toString().isNotEmpty;
+    final vatIncl = d['vatIncluded'] != false;
     final submitted = status == 'submitted' || status == 'accepted';
     final accepted = status == 'accepted';
 
@@ -295,7 +329,7 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
             Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
               Expanded(
                 child: GestureDetector(
-                  onTap: () => _openDetail(doc.id),
+                  onTap: () => _openDetail(doc.reference),
                   child: Row(children: [
                     Text('R ${_fmt(total)}',
                         style: const TextStyle(
@@ -304,8 +338,8 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
                             fontWeight: FontWeight.w800,
                             color: _green)),
                     const SizedBox(width: 4),
-                    const Text('incl. VAT',
-                        style: TextStyle(
+                    Text(vatIncl ? 'incl. VAT' : 'no VAT',
+                        style: const TextStyle(
                             fontFamily: _body, fontSize: 11, color: _faint)),
                   ]),
                 ),

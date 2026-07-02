@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/auth/firebase_auth/auth_util.dart';
@@ -20,9 +22,13 @@ import '/auth/firebase_auth/auth_util.dart';
 /// collectionGroup('quotes') where listingRef == current user. Tapping a row
 /// sets the active project so the Quote Request page can open it.
 class InboxView extends StatefulWidget {
-  const InboxView({super.key, this.width, this.height});
+  const InboxView(
+      {super.key, this.width, this.height, this.quoteRequestRouteName});
   final double? width;
   final double? height;
+
+  /// FlutterFlow route name of the Quote Request page (QuoteRequestView).
+  final String? quoteRequestRouteName;
   @override
   State<InboxView> createState() => _InboxViewState();
 }
@@ -38,24 +44,30 @@ class _InboxViewState extends State<InboxView> {
   static const Color _coral = Color(0xFF566670);
   static const Color _cobalt = Color(0xFF5D737E);
   static const String _body = 'Inter';
-  static const String _kActiveProjectPath = 'subby_active_project_path';
+  static const String _kActiveQuotePath = 'subby_active_quote_path';
 
   Future<void> _open(DocumentReference<Map<String, dynamic>> quoteRef) async {
-    // parent of quotes/{id} is the quotes collection; its parent is the project doc
-    final projectRef = quoteRef.parent.parent;
-    if (projectRef == null) return;
+    // Store the full quote path — QuoteRequestView / SubmitQuoteView derive
+    // the project from it. Deliberately does NOT touch the owner-side
+    // active-project pref, so checking the inbox never switches projects.
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kActiveProjectPath, projectRef.path);
+    await prefs.setString(_kActiveQuotePath, quoteRef.path);
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(
-          backgroundColor: _ink,
-          content: Text('Opening request…',
-              style: TextStyle(
-                  fontFamily: _body,
-                  fontWeight: FontWeight.w700,
-                  color: _paper))));
+    final r = widget.quoteRequestRouteName;
+    if (r != null && r.isNotEmpty) {
+      context.pushNamed(r);
+    } else {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(const SnackBar(
+            backgroundColor: _ink,
+            content: Text(
+                'Set quoteRequestRouteName on InboxView to open requests.',
+                style: TextStyle(
+                    fontFamily: _body,
+                    fontWeight: FontWeight.w700,
+                    color: _paper))));
+    }
   }
 
   @override
@@ -106,7 +118,7 @@ class _InboxViewState extends State<InboxView> {
                 : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                     stream: FirebaseFirestore.instance
                         .collectionGroup('quotes')
-                        .where('listingRef', isEqualTo: me)
+                        .where('providerRef', isEqualTo: me)
                         .snapshots(),
                     builder: (context, snap) {
                       if (snap.hasError) {
@@ -114,7 +126,7 @@ class _InboxViewState extends State<InboxView> {
                             child: Padding(
                                 padding: EdgeInsets.all(24),
                                 child: Text(
-                                    'Couldn\'t load requests.\nA collectionGroup index on "quotes" may be required.',
+                                    'Couldn\'t load requests.\nCheck the collection-group rule and\nproviderRef index on "quotes".',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                         fontFamily: _body,
@@ -217,7 +229,7 @@ class _InboxViewState extends State<InboxView> {
       case 'declined':
         return 'Not selected';
       case 'viewed':
-        return 'Draft in progress';
+        return 'Viewed · continue your quote';
       default:
         return 'New request · tap to view';
     }

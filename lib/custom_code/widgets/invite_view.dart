@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -78,6 +80,25 @@ class _InviteViewState extends State<InviteView> {
     return null;
   }
 
+  /// Resolve the trade's user ref for a project_listings row: prefer the
+  /// denormalized field on the row, else follow listingRef and read its owner.
+  Future<DocumentReference?> _providerRefOf(
+      Map<String, dynamic> d, DocumentReference? lref) async {
+    final direct =
+        d['assignedListingOwnerRef'] ?? d['ownerRef'] ?? d['providerRef'];
+    if (direct is DocumentReference) return direct;
+    if (lref == null) return null;
+    try {
+      final snap = await lref.get();
+      final raw = snap.data();
+      if (raw is Map<String, dynamic>) {
+        final o = raw['ownerRef'] ?? raw['providerRef'] ?? raw['claimedByRef'];
+        if (o is DocumentReference) return o;
+      }
+    } catch (_) {}
+    return null;
+  }
+
   Future<void> _send(
       List<QueryDocumentSnapshot<Map<String, dynamic>>> rows) async {
     final ref = _projectRef;
@@ -90,11 +111,15 @@ class _InviteViewState extends State<InviteView> {
         final lref = _listingRefOf(d);
         final id = lref?.id ?? row.id;
         if (!_selected.contains(id)) continue;
+        // Denormalize the provider (trade's user ref) onto the quote so
+        // InboxView can find it via collectionGroup('quotes') on providerRef.
+        final providerRef = await _providerRefOf(d, lref);
         batch.set(
             ref.collection('quotes').doc(id),
             {
               'listingRef': lref,
               'listingName': (d['title'] ?? 'Trade').toString(),
+              'providerRef': providerRef,
               'status': 'invited',
               'invitedAt': FieldValue.serverTimestamp(),
               'updatedAt': FieldValue.serverTimestamp(),
@@ -116,6 +141,17 @@ class _InviteViewState extends State<InviteView> {
       final nav = Navigator.of(context);
       if (nav.canPop()) nav.pop();
     } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(const SnackBar(
+              backgroundColor: _ink,
+              content: Text('Couldn\'t send invites — check your connection.',
+                  style: TextStyle(
+                      fontFamily: _body,
+                      fontWeight: FontWeight.w700,
+                      color: _paper))));
+      }
     } finally {
       if (mounted) setState(() => _sending = false);
     }
