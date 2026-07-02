@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -2932,18 +2934,27 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         width: widget.width ?? double.infinity,
         height: widget.height ?? double.infinity,
         color: _paper,
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              _buildWelcomeHeader(),
-              _buildBody(),
-              // Archived builds — collapsed, pinned to the bottom.
-              _buildArchivedCollapsible(),
-              // Clear the overlaid MainBottomNav (72) + breathing room (28)
-              // + system gesture inset.
-              SizedBox(height: 72 + 28 + MediaQuery.of(context).padding.bottom),
-            ],
-          ),
+        // Welcome header is PINNED (fixed) — only the body below it scrolls.
+        child: Column(
+          children: [
+            _buildWelcomeHeader(),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    _buildBody(),
+                    // Archived builds — collapsed, pinned to the bottom.
+                    _buildArchivedCollapsible(),
+                    // Clear the overlaid MainBottomNav (72) + breathing room
+                    // (28) + system gesture inset.
+                    SizedBox(
+                        height:
+                            72 + 28 + MediaQuery.of(context).padding.bottom),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
