@@ -126,6 +126,10 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   String _screen = 'start';
   bool _showBanner = false;
 
+  // 'days' | 'weeks' | 'months'  — horizontal axis density
+  String _zoom = 'weeks';
+  Timer? _progressTimer;
+
   final TextEditingController _nameCtl = TextEditingController();
   final ScrollController _vCtl = ScrollController();
 
@@ -143,6 +147,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
     _projSub?.cancel();
     _progSub?.cancel();
     _saveTimer?.cancel();
+    _progressTimer?.cancel();
     _nameCtl.dispose();
     _vCtl.dispose();
     super.dispose();
@@ -167,12 +172,20 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
       final isOwner = ownerRef is DocumentReference &&
           currentUserReference != null &&
           ownerRef.path == currentUserReference!.path;
+      // Timeline privacy lives on projects.moduleVisibility['timeline'] so it
+      // stays in sync with ProjectDetailPageView.
+      String vis = 'shared';
+      final mv = data['moduleVisibility'];
+      if (mv is Map && mv['timeline'] != null) {
+        vis = mv['timeline'].toString() == 'private' ? 'private' : 'shared';
+      }
       if (!mounted) return;
       setState(() {
         _projectName = name;
         if (sd is Timestamp) _start = sd.toDate();
         _isOwner = isOwner;
         _readOnly = !isOwner;
+        _visibility = vis;
       });
     });
 
@@ -232,7 +245,6 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
       return;
     }
     if (_saveTimer?.isActive ?? false) return; // don't clobber pending edits
-    final vis = (data['visibility'] ?? 'private').toString();
     final list = data['sections'];
     if (!mounted) return;
     setState(() {
@@ -248,7 +260,6 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
           if (_screen == 'start') _screen = 'view';
         }
       }
-      _visibility = vis == 'shared' ? 'shared' : 'private';
       _remoteLoaded = true;
       if (_selSi >= _sections.length) {
         _selSi = _sections.isEmpty ? 0 : _sections.length - 1;
@@ -256,6 +267,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
       }
     });
     _syncNameCtl();
+    _syncProgress();
   }
 
   Map<String, dynamic> _sectionToMap(_Section s) => {
@@ -264,7 +276,8 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
         'mode': s.mode,
         'buffer': s.buffer,
         'overlapPct': s.overlapPct,
-        'weeks': s.weeks,
+        'days': s.days,
+        'done': s.done,
         'expanded': s.expanded,
         'children': s.children
             .map((c) => {
@@ -273,6 +286,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                   'buffer': c.buffer,
                   'overlapPct': c.overlapPct,
                   'days': c.days,
+                  'done': c.done,
                 })
             .toList(),
       };
@@ -288,6 +302,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
               buffer: gi(c['buffer'], 0),
               overlapPct: gi(c['overlapPct'], 50),
               days: gi(c['days'], 3),
+              done: c['done'] == true,
             );
           }).toList()
         : <_Child>[];
@@ -297,8 +312,10 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
       mode: (m['mode'] ?? 'after').toString(),
       buffer: gi(m['buffer'], 0),
       overlapPct: gi(m['overlapPct'], 50),
-      weeks: gi(m['weeks'], 2),
+      days: gi(m['days'],
+          (m['weeks'] is num ? (m['weeks'] as num).toInt() * 5 : 10)),
       expanded: m['expanded'] == true,
+      done: m['done'] == true,
       children: kids,
     );
   }
@@ -316,17 +333,101 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
     if (ref == null || _readOnly) return;
     try {
       await ref.set({
-        'visibility': _visibility,
         'updatedAt': FieldValue.serverTimestamp(),
         'sections': _sections.map(_sectionToMap).toList(),
       }, SetOptions(merge: true));
     } catch (_) {}
+    _syncProgress();
   }
 
+  // Timeline privacy → projects.moduleVisibility['timeline'] (shared with
+  // ProjectDetailPageView; the project-doc listener flips our icon back).
   void _toggleVisibility() {
-    setState(
-        () => _visibility = _visibility == 'shared' ? 'private' : 'shared');
-    _saveNow();
+    final ref = _projectRef;
+    final next = _visibility == 'shared' ? 'private' : 'shared';
+    setState(() => _visibility = next); // optimistic
+    if (ref == null || _readOnly) return;
+    ref.set(<String, dynamic>{
+      'moduleVisibility': <String, dynamic>{'timeline': next},
+    }, SetOptions(merge: true)).catchError((_) {});
+  }
+
+  // Chart-derived progress → projects.progress (drives Completion on the
+  // detail page). Progress = share of working-days actually marked done.
+  void _syncProgress() {
+    _progressTimer?.cancel();
+    _progressTimer = Timer(const Duration(milliseconds: 800), () async {
+      final ref = _projectRef;
+      if (ref == null || _readOnly) return;
+      final p = _completionFrac();
+      try {
+        await ref.set(<String, dynamic>{
+          'progress': p,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      } catch (_) {}
+    });
+  }
+
+  // Completion = done working-days / total working-days.
+  double _completionFrac() {
+    double totalW = 0, doneW = 0;
+    for (final sec in _sections) {
+      if (sec.children.isNotEmpty) {
+        for (final c in sec.children) {
+          totalW += c.days;
+          if (c.done) doneW += c.days;
+        }
+      } else {
+        totalW += sec.days;
+        if (sec.done) doneW += sec.days;
+      }
+    }
+    return totalW > 0 ? (doneW / totalW).clamp(0.0, 1.0) : 0.0;
+  }
+
+  int _completionPct() => (_completionFrac() * 100).round();
+  bool _hasWork() {
+    for (final sec in _sections) {
+      if (sec.children.isNotEmpty) return true;
+      if (sec.days > 0) return true;
+    }
+    return false;
+  }
+
+  void _toggleDone() {
+    setState(() {
+      if (_selIsChild) {
+        final c = _selSec.children[_selCi];
+        c.done = !c.done;
+      } else if (_selSec.children.isEmpty) {
+        _selSec.done = !_selSec.done;
+      }
+    });
+    _persist();
+  }
+
+  void _toggleChildDone(int ci) {
+    setState(() {
+      final c = _selSec.children[ci];
+      c.done = !c.done;
+    });
+    _persist();
+  }
+
+  // Working-day index of the real current date, relative to _start.
+  int _todayIndex(int total) {
+    final now = DateTime.now();
+    final s = DateTime(_start.year, _start.month, _start.day);
+    final n = DateTime(now.year, now.month, now.day);
+    if (n.isBefore(s)) return 0;
+    int wd = 0;
+    var d = s;
+    while (d.isBefore(n)) {
+      if (d.weekday <= 5) wd++;
+      d = d.add(const Duration(days: 1));
+    }
+    return wd > total ? total : wd;
   }
 
   // =================================================================
@@ -340,14 +441,15 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
             name: name,
             group: group,
             mode: mode,
-            weeks: weeks,
+            days:
+                weeks * 5, // template written in weeks; stored as working days
             buffer: buffer,
             overlapPct: overlapPct);
     _Section plumbing() => _Section(
           name: 'Plumbing & Drainage',
           group: 'services',
           mode: 'with',
-          weeks: 3,
+          days: 15,
           expanded: false,
           children: [
             _Child(name: 'First fix (rough-in)', mode: 'start', days: 6),
@@ -442,6 +544,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   }
 
   void _dismissBanner() => setState(() => _showBanner = false);
+  void _setZoom(String z) => setState(() => _zoom = z);
 
   // =================================================================
   // Schedule (working days)
@@ -454,23 +557,23 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
       final sec = _sections[si];
       double ss;
       if (si == 0) {
-        ss = sec.buffer * 5.0;
+        ss = sec.buffer.toDouble();
       } else {
         final pS = secStart[si - 1];
         final pE = secEnd[si - 1];
         final pDur = pE - pS;
         switch (sec.mode) {
           case 'start':
-            ss = sec.buffer * 5.0;
+            ss = sec.buffer.toDouble();
             break;
           case 'with':
-            ss = pS + sec.buffer * 5.0;
+            ss = pS + sec.buffer.toDouble();
             break;
           case 'overlap':
             ss = pS + pDur * (sec.overlapPct / 100.0);
             break;
           default:
-            ss = pE + sec.buffer * 5.0;
+            ss = pE + sec.buffer.toDouble();
         }
       }
       if (ss < 0) ss = 0;
@@ -508,7 +611,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
         secEnd.add(e);
       } else {
         kidStarts.add(null);
-        secEnd.add(ss + sec.weeks * 5.0);
+        secEnd.add(ss + sec.days);
       }
     }
     return _Schedule(secStart, secEnd, kidStarts);
@@ -601,7 +704,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
         final c = _selSec.children[_selCi];
         c.days = (c.days + d).clamp(1, 999);
       } else if (_selSec.children.isEmpty) {
-        _selSec.weeks = (_selSec.weeks + d).clamp(1, 999);
+        _selSec.days = (_selSec.days + d).clamp(1, 999);
       }
     });
     _persist();
@@ -634,7 +737,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   void _addSection() {
     setState(() {
       _sections.add(_Section(
-          name: 'New section', group: 'external', mode: 'after', weeks: 2));
+          name: 'New section', group: 'external', mode: 'after', days: 10));
       _selSi = _sections.length - 1;
       _selCi = -1;
       _screen = 'edit';
@@ -703,7 +806,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                 name: 'New section',
                 group: 'external',
                 mode: at == 0 ? 'start' : 'after',
-                weeks: 2));
+                days: 10));
         _selSi = at;
         _selCi = -1;
       }
@@ -1276,7 +1379,80 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
               ),
             ],
           ),
+          if (_hasWork()) ...[
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(999),
+                    child: Container(
+                      height: 6,
+                      color: _paper.withOpacity(0.16),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: FractionallySizedBox(
+                          widthFactor: _completionFrac(),
+                          child: Container(
+                            decoration: BoxDecoration(
+                                color: _paper,
+                                borderRadius: BorderRadius.circular(999)),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 11),
+                Text('${_completionPct()}% done',
+                    style: const TextStyle(
+                        fontFamily: _display,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                        color: _paper)),
+              ],
+            ),
+          ],
+          if (_sections.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                    color: _paper.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(999)),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _zoomSeg('days', 'Day'),
+                    _zoomSeg('weeks', 'Week'),
+                    _zoomSeg('months', 'Month'),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ],
+      ),
+    );
+  }
+
+  Widget _zoomSeg(String k, String label) {
+    final active = _zoom == k;
+    return GestureDetector(
+      onTap: () => _setZoom(k),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+            color: active ? _paper : Colors.transparent,
+            borderRadius: BorderRadius.circular(999)),
+        child: Text(label,
+            style: TextStyle(
+                fontFamily: _body,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: active ? _ink : _paper.withOpacity(0.7))),
       ),
     );
   }
@@ -1351,7 +1527,55 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
 
   // ----------------------------------------------------------------- board
   Widget _board(_Schedule sch, int weeksCount) {
-    final timelineW = weeksCount * _weekPx;
+    double totalDays = 0;
+    for (final e in sch.secEnd) {
+      if (e > totalDays) totalDays = e;
+    }
+    final totalCeil = totalDays.ceil() < 1 ? 1 : totalDays.ceil();
+    final pxPerDay = _zoom == 'days' ? 16.0 : (_zoom == 'months' ? 3.2 : 7.0);
+    final timelineW = totalCeil * pxPerDay;
+
+    // Month bands measured in WORKING DAYS (so they align at any zoom).
+    final monthSegs = <_DaySeg>[];
+    {
+      String? curKey;
+      int curMonth = _start.month - 1, count = 0;
+      for (var i = 0; i < totalCeil; i++) {
+        final d = _wd(i.toDouble());
+        final key = '${d.year}-${d.month}';
+        if (key != curKey) {
+          if (curKey != null) monthSegs.add(_DaySeg(_months[curMonth], count));
+          curKey = key;
+          curMonth = d.month - 1;
+          count = 0;
+        }
+        count++;
+      }
+      monthSegs.add(_DaySeg(_months[curMonth], count));
+    }
+
+    // Vertical gridlines (granularity follows the zoom).
+    final gridXs = <double>[];
+    if (_zoom == 'days') {
+      for (var i = 1; i < totalCeil; i++) {
+        gridXs.add(i * pxPerDay);
+      }
+    } else if (_zoom == 'months') {
+      double acc = 0;
+      for (var m = 0; m < monthSegs.length - 1; m++) {
+        acc += monthSegs[m].days * pxPerDay;
+        gridXs.add(acc);
+      }
+    } else {
+      for (var i = 5; i < totalCeil; i += 5) {
+        gridXs.add(i * pxPerDay);
+      }
+    }
+
+    // TODAY marker.
+    final todayIdx = _todayIndex(totalCeil);
+    final todayShow = todayIdx >= 0 && todayIdx <= totalCeil;
+    final todayX = todayIdx * pxPerDay;
 
     final leftCells = <Widget>[];
     final lanes = <Widget>[];
@@ -1376,13 +1600,13 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
       ));
       lanes.add(_lane(
         height: _secRowH,
-        weeksCount: weeksCount,
-        barLeft: ss * _dayPx,
-        barWidth: (dur * _dayPx).clamp(_dayPx, 99999).toDouble(),
+        barLeft: ss * pxPerDay,
+        barWidth: (dur * pxPerDay).clamp(pxPerDay, 99999).toDouble(),
         color: _phaseColor,
         barH: isParent ? 8 : 20,
-        barText: isParent ? '' : '${sec.weeks}w',
+        barText: isParent ? '' : '${sec.days}d',
         opacity: isParent ? 0.85 : 1,
+        done: !isParent && sec.done,
       ));
 
       if (isParent && sec.expanded) {
@@ -1403,17 +1627,120 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
           ));
           lanes.add(_lane(
             height: _childRowH,
-            weeksCount: weeksCount,
-            barLeft: cs * _dayPx,
-            barWidth: (c.days * _dayPx).clamp(_dayPx, 99999).toDouble(),
+            barLeft: cs * pxPerDay,
+            barWidth: (c.days * pxPerDay).clamp(pxPerDay, 99999).toDouble(),
             color: _subColor,
             barH: 18,
             barText: '${c.days}d',
             opacity: 1,
+            done: c.done,
           ));
         }
       }
     }
+
+    final timeline = SizedBox(
+      width: timelineW,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // month header + TODAY pill
+          SizedBox(
+            height: _headH,
+            child: Stack(
+              children: [
+                Row(
+                  children: [
+                    for (var i = 0; i < monthSegs.length; i++)
+                      Container(
+                        width: monthSegs[i].days * pxPerDay,
+                        height: _headH,
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.only(left: 8),
+                        decoration: BoxDecoration(
+                          color: i.isEven ? _paper : const Color(0xFFFAFBFC),
+                          border: const Border(
+                            right: BorderSide(color: _line),
+                            bottom: BorderSide(color: _border),
+                          ),
+                        ),
+                        child: Text(monthSegs[i].label,
+                            style: const TextStyle(
+                                fontFamily: _body,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.5,
+                                color: _inkMute)),
+                      ),
+                  ],
+                ),
+                if (todayShow)
+                  Positioned(
+                    left: todayX,
+                    top: 5,
+                    child: FractionalTranslation(
+                      translation: const Offset(-0.5, 0),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                            color: _green,
+                            borderRadius: BorderRadius.circular(999)),
+                        child: const Text('TODAY',
+                            style: TextStyle(
+                                fontFamily: _body,
+                                fontSize: 8,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.4,
+                                color: _paper)),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          // lanes with gridlines behind + today line on top
+          Stack(
+            children: [
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: Stack(
+                    children: [
+                      for (final gx in gridXs)
+                        Positioned(
+                          left: gx,
+                          top: 0,
+                          bottom: 0,
+                          child: Container(width: 1, color: _line),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: lanes),
+              if (todayShow)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          left: todayX - 1,
+                          top: 0,
+                          bottom: 0,
+                          child: Container(
+                              width: 2, color: _green.withOpacity(0.85)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
 
     return Container(
       decoration: BoxDecoration(
@@ -1440,16 +1767,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                 Expanded(
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
-                    child: SizedBox(
-                      width: timelineW,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _monthHeader(weeksCount),
-                          ...lanes,
-                        ],
-                      ),
-                    ),
+                    child: timeline,
                   ),
                 ),
               ],
@@ -1593,33 +1911,23 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
 
   Widget _lane({
     required double height,
-    required int weeksCount,
     required double barLeft,
     required double barWidth,
     required Color color,
     required double barH,
     required String barText,
     required double opacity,
+    bool done = false,
   }) {
+    final showCheck = done && barH >= 18;
     return Container(
       height: height,
+      width: double.infinity,
       decoration: const BoxDecoration(
         border: Border(top: BorderSide(color: _line)),
       ),
       child: Stack(
         children: [
-          Row(
-            children: [
-              for (var w = 0; w < weeksCount; w++)
-                Container(
-                  width: _weekPx,
-                  height: height,
-                  decoration: const BoxDecoration(
-                    border: Border(right: BorderSide(color: _line)),
-                  ),
-                ),
-            ],
-          ),
           Positioned(
             left: barLeft,
             top: (height - barH) / 2,
@@ -1634,15 +1942,23 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                   color: color,
                   borderRadius: BorderRadius.circular(barH >= 18 ? 6 : 4),
                 ),
-                child: barText.isEmpty
-                    ? null
-                    : Text(barText,
-                        maxLines: 1,
-                        style: TextStyle(
-                            fontFamily: _display,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w800,
-                            color: _paper.withOpacity(0.92))),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (showCheck) ...[
+                      const Icon(Icons.check_rounded, size: 12, color: _paper),
+                      const SizedBox(width: 3),
+                    ],
+                    if (barText.isNotEmpty)
+                      Text(barText,
+                          maxLines: 1,
+                          style: TextStyle(
+                              fontFamily: _display,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              color: _paper.withOpacity(0.92))),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1707,7 +2023,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
         ? node!.days.toDouble()
         : (isParent
             ? (sch.secEnd[_selSi] - sch.secStart[_selSi])
-            : sec.weeks * 5.0);
+            : sec.days.toDouble());
     final nEnd = nStart + nDur;
 
     List<String> modeKeys;
@@ -1779,9 +2095,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
 
     final durChip = isChild
         ? '${node!.days} working days'
-        : (isParent
-            ? '${_fmtDur(nDur)} span'
-            : '${sec.weeks} week${sec.weeks == 1 ? '' : 's'}');
+        : (isParent ? '${_fmtDur(nDur)} span' : '${sec.days} working days');
 
     return Container(
       color: _startBg,
@@ -1898,11 +2212,11 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                     Text(
                         isChild
                             ? 'DURATION (WORKING DAYS)'
-                            : 'DURATION (WEEKS)',
+                            : 'DURATION (WORKING DAYS)',
                         style: _capLabel),
                     const SizedBox(height: 8),
                     _bigStepper(
-                      value: isChild ? '${node!.days}d' : '${sec.weeks}w',
+                      value: isChild ? '${node!.days}d' : '${sec.days}d',
                       onMinus: () => _durStep(-1),
                       onPlus: () => _durStep(1),
                     ),
@@ -1925,7 +2239,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                               const Text('SUMMARY TASK', style: _capLabel),
                               const SizedBox(height: 2),
                               Text(
-                                  'Spans ${((sch.secEnd[_selSi] - sch.secStart[_selSi]) / 5).toStringAsFixed(1)}w · ${sec.children.length} sub-tasks',
+                                  'Spans ${((sch.secEnd[_selSi] - sch.secStart[_selSi]) / 5).toStringAsFixed(1)}w · ${sec.children.where((c) => c.done).length}/${sec.children.length} sub-tasks done',
                                   style: const TextStyle(
                                       fontFamily: _display,
                                       fontSize: 13,
@@ -1936,6 +2250,11 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 16),
+                  ],
+                  // mark complete (leaf phase or sub-task)
+                  if (!isParent) ...[
+                    _doneToggle(isChild ? node!.done : sec.done),
                     const SizedBox(height: 16),
                   ],
                   // linking
@@ -1954,7 +2273,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                     _linkStepper(
                       title: 'BUFFER BEFORE START',
                       sub: 'Gap after the linked phase',
-                      value: '+$buffer${isChild ? 'd' : 'w'}',
+                      value: '+${buffer}d',
                       onMinus: () => _bufStep(-1),
                       onPlus: () => _bufStep(1),
                     ),
@@ -2395,12 +2714,18 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
             border: Border.all(color: _border)),
         child: Row(
           children: [
-            Container(
-              width: 9,
-              height: 9,
-              margin: const EdgeInsets.only(right: 10),
-              decoration: BoxDecoration(
-                  color: _subColor, borderRadius: BorderRadius.circular(3)),
+            GestureDetector(
+              onTap: () => _toggleChildDone(ci),
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: Icon(
+                    c.done
+                        ? Icons.check_circle_rounded
+                        : Icons.radio_button_unchecked,
+                    size: 22,
+                    color: c.done ? _green : _dash),
+              ),
             ),
             Expanded(
               child: Text(c.name,
@@ -2425,6 +2750,52 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
       ),
     );
   }
+
+  Widget _doneToggle(bool done) {
+    return InkWell(
+      onTap: _toggleDone,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        decoration: BoxDecoration(
+          color: done ? const Color(0xFFEAEFF1) : _paper,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: done ? const Color(0xFF9FB2BA) : _border),
+        ),
+        child: Row(
+          children: [
+            Icon(
+                done
+                    ? Icons.check_circle_rounded
+                    : Icons.radio_button_unchecked,
+                size: 24,
+                color: done ? _green : _faint),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(done ? 'Marked complete' : 'Mark complete',
+                      style: const TextStyle(
+                          fontFamily: _body,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: _ink)),
+                  const SizedBox(height: 2),
+                  const Text('Counts toward project completion',
+                      style: TextStyle(
+                          fontFamily: _body,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w600,
+                          color: _faint)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 // ============================================================================
@@ -2441,6 +2812,12 @@ class _MonthSeg {
   final String label;
   final int weeks;
   const _MonthSeg(this.label, this.weeks);
+}
+
+class _DaySeg {
+  final String label;
+  final int days;
+  const _DaySeg(this.label, this.days);
 }
 
 class _TrackSeg {
@@ -2464,12 +2841,14 @@ class _Child {
   int buffer; // working days
   int overlapPct;
   int days;
+  bool done;
   _Child({
     required this.name,
     this.mode = 'after',
     this.buffer = 0,
     this.overlapPct = 50,
     this.days = 3,
+    this.done = false,
   });
 }
 
@@ -2477,10 +2856,11 @@ class _Section {
   String name;
   String group; // struct | services | finish | external
   String mode;
-  int buffer; // weeks
+  int buffer; // working days
   int overlapPct;
-  int weeks;
+  int days;
   bool expanded;
+  bool done;
   List<_Child> children;
   _Section({
     required this.name,
@@ -2488,8 +2868,9 @@ class _Section {
     this.mode = 'after',
     this.buffer = 0,
     this.overlapPct = 50,
-    this.weeks = 2,
+    this.days = 10,
     this.expanded = false,
+    this.done = false,
     List<_Child>? children,
   }) : children = children ?? [];
 }
