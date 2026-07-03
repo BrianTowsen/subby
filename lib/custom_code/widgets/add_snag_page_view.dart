@@ -10,11 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:typed_data';
+import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -1019,7 +1016,8 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
   Widget _addHero(String title, String subtitle) => Container(
         width: double.infinity,
         color: _ink,
-        padding: const EdgeInsets.fromLTRB(20, 6, 20, 18),
+        padding: EdgeInsets.fromLTRB(
+            20, 6 + MediaQuery.of(context).padding.top, 20, 18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1128,12 +1126,14 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
         _saving ? 'Saving…' : (_isEditing ? 'Save Changes' : 'Add Snag');
     final ctaIcon = _isEditing ? Icons.check_rounded : Icons.add_rounded;
 
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
+
     return Container(
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
       color: _paper,
       child: SafeArea(
-        top: true,
+        top: false,
         bottom: true,
         child: Column(
           children: [

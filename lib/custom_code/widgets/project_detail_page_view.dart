@@ -3435,7 +3435,12 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               _rModIcon(icon),
               const Spacer(),
-              if (!readOnly) _rVisChip(_moduleVisFor(visKey), _paper),
+              if (!readOnly)
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => _toggleModuleVis(visKey),
+                  child: _rVisChip(_moduleVisFor(visKey), _paper),
+                ),
             ]),
             const Spacer(),
             Text(title,
@@ -3496,7 +3501,11 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
               ),
             ),
             if (!readOnly) ...[
-              _rVisChip(_moduleVisFor(visKey), _paper),
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _toggleModuleVis(visKey),
+                child: _rVisChip(_moduleVisFor(visKey), _paper),
+              ),
               const SizedBox(width: 8),
             ],
             const Icon(Icons.chevron_right_rounded, size: 20, color: _rChevron),
