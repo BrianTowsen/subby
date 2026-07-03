@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (dark status bar over white form)
@@ -645,7 +647,8 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
   Widget _hero() => Container(
         width: double.infinity,
         color: _ink,
-        padding: const EdgeInsets.fromLTRB(20, 6, 20, 18),
+        padding: EdgeInsets.fromLTRB(
+            20, MediaQuery.of(context).padding.top + 6, 20, 18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -722,7 +725,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
             height: widget.height ?? double.infinity,
             color: _paper,
             child: SafeArea(
-              top: true,
+              top: false,
               bottom: true,
               child: Column(
                 children: [

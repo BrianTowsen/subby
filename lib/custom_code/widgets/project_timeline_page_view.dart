@@ -133,6 +133,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
 
   final TextEditingController _nameCtl = TextEditingController();
   final ScrollController _vCtl = ScrollController();
+  final ScrollController _editScrollCtl = ScrollController();
 
   @override
   void initState() {
@@ -151,6 +152,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
     _progressTimer?.cancel();
     _nameCtl.dispose();
     _vCtl.dispose();
+    _editScrollCtl.dispose();
     super.dispose();
   }
 
@@ -284,7 +286,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
         'buffer': s.buffer,
         'overlapPct': s.overlapPct,
         'days': s.days,
-        'done': s.done,
+        'pct': s.pct,
         'expanded': s.expanded,
         'children': s.children
             .map((c) => {
@@ -293,7 +295,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                   'buffer': c.buffer,
                   'overlapPct': c.overlapPct,
                   'days': c.days,
-                  'done': c.done,
+                  'pct': c.pct,
                 })
             .toList(),
       };
@@ -309,7 +311,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
               buffer: gi(c['buffer'], 0),
               overlapPct: gi(c['overlapPct'], 50),
               days: gi(c['days'], 3),
-              done: c['done'] == true,
+              pct: gi(c['pct'], c['done'] == true ? 100 : 0),
             );
           }).toList()
         : <_Child>[];
@@ -322,7 +324,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
       days: gi(m['days'],
           (m['weeks'] is num ? (m['weeks'] as num).toInt() * 5 : 10)),
       expanded: m['expanded'] == true,
-      done: m['done'] == true,
+      pct: gi(m['pct'], m['done'] == true ? 100 : 0),
       children: kids,
     );
   }
@@ -376,21 +378,32 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
     });
   }
 
-  // Completion = done working-days / total working-days.
+  // Completion = working-days weighted by each task's % complete.
   double _completionFrac() {
     double totalW = 0, doneW = 0;
     for (final sec in _sections) {
       if (sec.children.isNotEmpty) {
         for (final c in sec.children) {
           totalW += c.days;
-          if (c.done) doneW += c.days;
+          doneW += c.days * (c.pct / 100.0);
         }
       } else {
         totalW += sec.days;
-        if (sec.done) doneW += sec.days;
+        doneW += sec.days * (sec.pct / 100.0);
       }
     }
     return totalW > 0 ? (doneW / totalW).clamp(0.0, 1.0) : 0.0;
+  }
+
+  // % complete of a section (leaf: own pct; parent: day-weighted child avg).
+  int _pctOf(_Section sec) {
+    if (sec.children.isEmpty) return sec.pct;
+    double t = 0, d = 0;
+    for (final c in sec.children) {
+      t += c.days;
+      d += c.days * (c.pct / 100.0);
+    }
+    return t > 0 ? (d / t * 100).round() : 0;
   }
 
   int _completionPct() => (_completionFrac() * 100).round();
@@ -402,23 +415,20 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
     return false;
   }
 
-  void _toggleDone() {
+  void _setPct(int v) {
+    final p = v.clamp(0, 100);
     setState(() {
       if (_selIsChild) {
-        final c = _selSec.children[_selCi];
-        c.done = !c.done;
+        _selSec.children[_selCi].pct = p;
       } else if (_selSec.children.isEmpty) {
-        _selSec.done = !_selSec.done;
+        _selSec.pct = p;
       }
     });
     _persist();
   }
 
-  void _toggleChildDone(int ci) {
-    setState(() {
-      final c = _selSec.children[ci];
-      c.done = !c.done;
-    });
+  void _setChildPct(int ci, int v) {
+    setState(() => _selSec.children[ci].pct = v.clamp(0, 100));
     _persist();
   }
 
@@ -668,6 +678,10 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
       _screen = 'edit';
     });
     _syncNameCtl();
+    // Always open the editor scrolled to the top.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_editScrollCtl.hasClients) _editScrollCtl.jumpTo(0);
+    });
   }
 
   void _back() {
@@ -1613,7 +1627,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
         barH: isParent ? 8 : 20,
         barText: isParent ? '' : '${sec.days}d',
         opacity: isParent ? 0.85 : 1,
-        done: !isParent && sec.done,
+        fillFrac: _pctOf(sec) / 100.0,
       ));
 
       if (isParent && sec.expanded) {
@@ -1640,7 +1654,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
             barH: 18,
             barText: '${c.days}d',
             opacity: 1,
-            done: c.done,
+            fillFrac: c.pct / 100.0,
           ));
         }
       }
@@ -1924,9 +1938,9 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
     required double barH,
     required String barText,
     required double opacity,
-    bool done = false,
+    double fillFrac = 0,
   }) {
-    final showCheck = done && barH >= 18;
+    final showCheck = fillFrac >= 1.0 && barH >= 18;
     return Container(
       height: height,
       width: double.infinity,
@@ -1943,27 +1957,42 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
               child: Container(
                 width: barWidth,
                 height: barH,
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.symmetric(horizontal: 6),
                 decoration: BoxDecoration(
                   color: color,
                   borderRadius: BorderRadius.circular(barH >= 18 ? 6 : 4),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                clipBehavior: Clip.antiAlias,
+                child: Stack(
                   children: [
-                    if (showCheck) ...[
-                      const Icon(Icons.check_rounded, size: 12, color: _paper),
-                      const SizedBox(width: 3),
-                    ],
-                    if (barText.isNotEmpty)
-                      Text(barText,
-                          maxLines: 1,
-                          style: TextStyle(
-                              fontFamily: _display,
-                              fontSize: 9,
-                              fontWeight: FontWeight.w800,
-                              color: _paper.withOpacity(0.92))),
+                    if (fillFrac > 0)
+                      Positioned.fill(
+                        child: FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: fillFrac.clamp(0.0, 1.0),
+                          child: Container(color: _paper.withOpacity(0.28)),
+                        ),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (showCheck) ...[
+                            const Icon(Icons.check_rounded,
+                                size: 12, color: _paper),
+                            const SizedBox(width: 3),
+                          ],
+                          if (barText.isNotEmpty)
+                            Text(barText,
+                                maxLines: 1,
+                                style: TextStyle(
+                                    fontFamily: _display,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w800,
+                                    color: _paper.withOpacity(0.92))),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -2170,6 +2199,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
           // body
           Expanded(
             child: SingleChildScrollView(
+              controller: _editScrollCtl,
               padding: EdgeInsets.fromLTRB(18, 16, 18, bottom + 28),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -2246,7 +2276,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                               const Text('SUMMARY TASK', style: _capLabel),
                               const SizedBox(height: 2),
                               Text(
-                                  'Spans ${((sch.secEnd[_selSi] - sch.secStart[_selSi]) / 5).toStringAsFixed(1)}w · ${sec.children.where((c) => c.done).length}/${sec.children.length} sub-tasks done',
+                                  'Spans ${((sch.secEnd[_selSi] - sch.secStart[_selSi]) / 5).toStringAsFixed(1)}w · ${sec.children.length} sub-tasks · ${_pctOf(sec)}% done',
                                   style: const TextStyle(
                                       fontFamily: _display,
                                       fontSize: 13,
@@ -2259,9 +2289,9 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                     ),
                     const SizedBox(height: 16),
                   ],
-                  // mark complete (leaf phase or sub-task)
+                  // completion slider (leaf phase or sub-task)
                   if (!isParent) ...[
-                    _doneToggle(isChild ? node!.done : sec.done),
+                    _pctSlider(isChild ? node!.pct : sec.pct),
                     const SizedBox(height: 16),
                   ],
                   // linking
@@ -2721,19 +2751,6 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
             border: Border.all(color: _border)),
         child: Row(
           children: [
-            GestureDetector(
-              onTap: () => _toggleChildDone(ci),
-              behavior: HitTestBehavior.opaque,
-              child: Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: Icon(
-                    c.done
-                        ? Icons.check_circle_rounded
-                        : Icons.radio_button_unchecked,
-                    size: 22,
-                    color: c.done ? _green : _dash),
-              ),
-            ),
             Expanded(
               child: Text(c.name,
                   maxLines: 1,
@@ -2747,9 +2764,22 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
             Text('${c.days}d',
                 style: const TextStyle(
                     fontFamily: _display,
-                    fontSize: 11,
+                    fontSize: 10,
                     fontWeight: FontWeight.w800,
-                    color: _inkMute)),
+                    color: _faint)),
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 36,
+              child: Text('${c.pct}%',
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                      fontFamily: _display,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      color: c.pct >= 100
+                          ? _green
+                          : (c.pct > 0 ? _inkMute : _faint))),
+            ),
             const SizedBox(width: 4),
             const Icon(Icons.chevron_right_rounded, size: 16, color: _dash),
           ],
@@ -2758,48 +2788,68 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
     );
   }
 
-  Widget _doneToggle(bool done) {
-    return InkWell(
-      onTap: _toggleDone,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-        decoration: BoxDecoration(
-          color: done ? const Color(0xFFEAEFF1) : _paper,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: done ? const Color(0xFF9FB2BA) : _border),
-        ),
-        child: Row(
-          children: [
-            Icon(
-                done
-                    ? Icons.check_circle_rounded
-                    : Icons.radio_button_unchecked,
-                size: 24,
-                color: done ? _green : _faint),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(done ? 'Marked complete' : 'Mark complete',
-                      style: const TextStyle(
-                          fontFamily: _body,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: _ink)),
-                  const SizedBox(height: 2),
-                  const Text('Counts toward project completion',
-                      style: TextStyle(
-                          fontFamily: _body,
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w600,
-                          color: _faint)),
-                ],
-              ),
+  Widget _pctSlider(int pct) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+      decoration: BoxDecoration(
+        color: _paper,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('COMPLETION', style: _capLabel),
+              Text('$pct%',
+                  style: const TextStyle(
+                      fontFamily: _display,
+                      fontSize: 19,
+                      fontWeight: FontWeight.w900,
+                      color: _ink)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              trackHeight: 5,
+              activeTrackColor: _green,
+              inactiveTrackColor: _band,
+              thumbColor: _green,
+              overlayColor: _green.withOpacity(0.14),
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9),
             ),
-          ],
-        ),
+            child: Slider(
+              value: pct.toDouble(),
+              min: 0,
+              max: 100,
+              divisions: 20,
+              onChanged: (v) => _setPct(v.round()),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: const [
+                Text('Not started',
+                    style: TextStyle(
+                        fontFamily: _body,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        color: _ruleIdle)),
+                Text('Complete',
+                    style: TextStyle(
+                        fontFamily: _body,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        color: _ruleIdle)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -2848,14 +2898,14 @@ class _Child {
   int buffer; // working days
   int overlapPct;
   int days;
-  bool done;
+  int pct; // % complete 0..100
   _Child({
     required this.name,
     this.mode = 'after',
     this.buffer = 0,
     this.overlapPct = 50,
     this.days = 3,
-    this.done = false,
+    this.pct = 0,
   });
 }
 
@@ -2867,7 +2917,7 @@ class _Section {
   int overlapPct;
   int days;
   bool expanded;
-  bool done;
+  int pct; // % complete 0..100 (leaf phases)
   List<_Child> children;
   _Section({
     required this.name,
@@ -2877,7 +2927,7 @@ class _Section {
     this.overlapPct = 50,
     this.days = 10,
     this.expanded = false,
-    this.done = false,
+    this.pct = 0,
     List<_Child>? children,
   }) : children = children ?? [];
 }
