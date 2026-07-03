@@ -10,12 +10,7 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
+import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/auth/firebase_auth/auth_util.dart';
@@ -548,6 +543,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
   // =========================================================
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
     if (_refLoading) {
       return _shell(
         child: const Center(
@@ -623,7 +619,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
         width: widget.width ?? double.infinity,
         height: widget.height ?? double.infinity,
         color: _paper,
-        child: SafeArea(top: true, bottom: true, child: child),
+        child: SafeArea(top: false, bottom: true, child: child),
       );
 
   Widget _minBack() => Material(
@@ -692,7 +688,8 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
     return Container(
       width: double.infinity,
       color: _ink,
-      padding: const EdgeInsets.fromLTRB(20, 6, 20, 18),
+      padding: EdgeInsets.fromLTRB(
+          20, 6 + MediaQuery.of(context).padding.top, 20, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
