@@ -10,6 +10,10 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -632,7 +636,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // the painted _SubbyMarkPainter if the network image fails (offline / cold
   // start) so the logo never renders blank.
   static const String _logoUrl =
-      'https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/winston-9dy48u/assets/qy1ehft1zjiu/subby-mark-green-on-white-cropped.png';
+      'https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/winston-9dy48u/assets/vkvx0d5tvzte/subby_logo_white.png';
 
   // Non-square mark: anchor on height (44) and leave width unconstrained so
   // the image renders at its natural aspect ratio rather than being squeezed
@@ -716,7 +720,14 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             FutureBuilder<List<_SharedProject>>(
               future: _loadSharedProjects(),
               builder: (context, sharedSnap) {
-                final shared = sharedSnap.data ?? const <_SharedProject>[];
+                final rawShared = sharedSnap.data ?? const <_SharedProject>[];
+                // De-dupe: a build the viewer OWNS can also come back as a
+                // shared build (they have a listing added to their own build).
+                // Drop those so each project renders exactly one tile.
+                final ownedPaths = docs.map((d) => d.reference.path).toSet();
+                final shared = rawShared
+                    .where((sp) => !ownedPaths.contains(sp.ref.path))
+                    .toList();
                 if (_sharedCount != shared.length) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     if (mounted) setState(() => _sharedCount = shared.length);
