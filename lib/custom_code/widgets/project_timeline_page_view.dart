@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'index.dart'; // Imports other custom widgets
 
 import 'dart:async';
+import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -71,6 +72,9 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   // ────────────────────────────────────────────────────────────────────
 
   static const String _kActiveProjectPath = 'subby_active_project_path';
+  static const String _kLocalProgramme = 'subby_local_programme';
+  static const String _kLocalStarted = 'subby_local_started';
+  static const String _kLocalStart = 'subby_local_start_date';
 
   static const double _leftW = 150;
   static const double _dayPx = 7; // px per working day
@@ -130,6 +134,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
     super.initState();
     _sections = buildProgramme('gf'); // harmless placeholder behind START
     _syncNameCtl();
+    _loadLocal();
     _loadActiveProject();
   }
 
@@ -172,6 +177,50 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
     });
 
     _progSub = _programmeRef!.snapshots().listen(_onRemoteProgramme);
+  }
+
+  // ── Local device persistence (fallback + instant restore) ──
+  // Keeps the chosen programme on the device so a relaunch restores it even
+  // when no cloud project is active. Firestore overrides this when present.
+  Future<void> _loadLocal() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final started = prefs.getBool(_kLocalStarted) ?? false;
+      if (!started) return;
+      final raw = prefs.getString(_kLocalProgramme);
+      final startMs = prefs.getInt(_kLocalStart);
+      if (!mounted) return;
+      setState(() {
+        if (raw != null && raw.isNotEmpty) {
+          final decoded = jsonDecode(raw);
+          if (decoded is List) {
+            _sections = decoded
+                .whereType<Map>()
+                .map<_Section>((e) =>
+                    _sectionFromMap(e.map((k, v) => MapEntry(k.toString(), v))))
+                .toList();
+          }
+        }
+        if (startMs != null)
+          _start = DateTime.fromMillisecondsSinceEpoch(startMs);
+        _screen = 'view'; // already started → skip the chooser
+        if (_selSi >= _sections.length) {
+          _selSi = _sections.isEmpty ? 0 : _sections.length - 1;
+          _selCi = -1;
+        }
+      });
+      _syncNameCtl();
+    } catch (_) {}
+  }
+
+  Future<void> _saveLocal() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_kLocalStarted, true);
+      await prefs.setInt(_kLocalStart, _start.millisecondsSinceEpoch);
+      await prefs.setString(
+          _kLocalProgramme, jsonEncode(_sections.map(_sectionToMap).toList()));
+    } catch (_) {}
   }
 
   // Apply a remote programme snapshot (real-time sync across devices).
@@ -256,6 +305,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
 
   // Debounced save so stepping a value doesn't spam Firestore.
   void _persist() {
+    _saveLocal(); // local mirror is instant + always on
     if (_readOnly || _programmeRef == null) return;
     _saveTimer?.cancel();
     _saveTimer = Timer(const Duration(milliseconds: 700), _saveNow);
@@ -375,6 +425,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
       _showBanner = true;
     });
     _syncNameCtl();
+    _saveLocal();
     _saveNow();
   }
 
@@ -386,6 +437,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
       _screen = 'view';
       _showBanner = false;
     });
+    _saveLocal();
     _saveNow();
   }
 
@@ -686,30 +738,48 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   // =================================================================
   @override
   Widget build(BuildContext context) {
-    Widget screen;
-    if (_screen == 'start') {
-      screen = _startScreen();
-    } else if (_screen == 'edit') {
-      screen = _editScreen();
-    } else {
-      screen = _viewScreen();
-    }
+    // Layered navigation: the VIEW screen always sits underneath; EDIT slides
+    // in over it from the right, START sits on top and slides off to the left.
+    // Because the view never leaves, there is never a blank gap between pages.
+    const dur = Duration(milliseconds: 300);
+    const curve = Curves.easeOutCubic;
 
     return Container(
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
       color: _paper,
-      child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 320),
-        switchInCurve: Curves.easeOutCubic,
-        switchOutCurve: Curves.easeInCubic,
-        transitionBuilder: (child, anim) {
-          final slide =
-              Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
-                  .animate(anim);
-          return SlideTransition(position: slide, child: child);
-        },
-        child: KeyedSubtree(key: ValueKey(_screen), child: screen),
+      child: ClipRect(
+        child: Stack(
+          children: [
+            // bottom layer — always present
+            Positioned.fill(child: _viewScreen()),
+            // edit — slides over from the right
+            Positioned.fill(
+              child: IgnorePointer(
+                ignoring: _screen != 'edit',
+                child: AnimatedSlide(
+                  duration: dur,
+                  curve: curve,
+                  offset: _screen == 'edit' ? Offset.zero : const Offset(1, 0),
+                  child: _editScreen(),
+                ),
+              ),
+            ),
+            // start — on top, slides off to the left once a choice is made
+            Positioned.fill(
+              child: IgnorePointer(
+                ignoring: _screen != 'start',
+                child: AnimatedSlide(
+                  duration: dur,
+                  curve: curve,
+                  offset:
+                      _screen == 'start' ? Offset.zero : const Offset(-1, 0),
+                  child: _startScreen(),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
