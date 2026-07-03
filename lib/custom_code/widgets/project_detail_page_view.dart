@@ -10,14 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -1424,14 +1416,21 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
 
   Future<void> _toggleDocVis(
     DocumentReference<Map<String, dynamic>> ref,
-    String current,
-  ) async {
+    String current, [
+    String title = 'Document',
+  ]) async {
     final next = current == 'shared' ? 'private' : 'shared';
     try {
       await ref.update(<String, dynamic>{
         'visibility': next,
         'updatedAt': Timestamp.now(),
       });
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(_inkSnack(
+              '“$title” is now ${next == 'shared' ? 'shared.' : 'private.'}'));
+      }
     } catch (e) {
       debugPrint('🔥 Failed to update document visibility: $e');
     }
@@ -3508,6 +3507,91 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   }
 
   Widget _rModules(bool readOnly) {
+    // Shared (read-only) view: show ONLY the modules the owner shared, laid out
+    // 2-up, with no visibility chips.
+    if (readOnly) {
+      final mods = <List<dynamic>>[
+        [
+          Icons.timeline_rounded,
+          'Timeline',
+          'Programme & phases',
+          'timeline',
+          widget.timelineRouteName,
+          _fallbackTimelineRoute
+        ],
+        [
+          Icons.checklist_rounded,
+          'To-Do List',
+          'Tasks & reminders',
+          'toDo',
+          widget.toDoListRouteName,
+          _fallbackToDoRoute
+        ],
+        [
+          Icons.fact_check_outlined,
+          'Snag List',
+          'Defects & fixes',
+          'snagList',
+          widget.snagListRouteName,
+          _fallbackSnagRoute
+        ],
+        [
+          Icons.calculate_outlined,
+          'Project Cost',
+          'Budget & estimates',
+          'projectCost',
+          widget.projectCostRouteName,
+          _fallbackCostRoute
+        ],
+        [
+          Icons.request_quote_outlined,
+          'Get Quotes',
+          'Compare trades',
+          'getQuotes',
+          widget.getQuotesRouteName,
+          _fallbackQuotesRoute
+        ],
+      ].where((m) => _moduleVisFor(m[3] as String) == 'shared').toList();
+
+      if (mods.isEmpty) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+          decoration: BoxDecoration(
+            color: _surface,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: const Text('No modules shared with you yet.',
+              style: TextStyle(
+                  fontFamily: _bodyFont,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: _rFaint)),
+        );
+      }
+
+      Widget tileFor(List<dynamic> m) => _rModTile(
+            m[0] as IconData,
+            m[1] as String,
+            m[2] as String,
+            m[3] as String,
+            true,
+            () => _safeNavigate(m[4] as String?, fallbackRoute: m[5] as String),
+          );
+
+      final rows = <Widget>[];
+      for (var i = 0; i < mods.length; i += 2) {
+        final right = (i + 1 < mods.length) ? mods[i + 1] : null;
+        rows.add(Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(child: tileFor(mods[i])),
+          const SizedBox(width: 10),
+          Expanded(
+              child: right == null ? const SizedBox.shrink() : tileFor(right)),
+        ]));
+        if (i + 2 < mods.length) rows.add(const SizedBox(height: 10));
+      }
+      return Column(children: rows);
+    }
+
     return Column(children: [
       Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Expanded(
@@ -3633,7 +3717,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                         color: _ink))),
             if (!readOnly) ...[
               GestureDetector(
-                onTap: () => _toggleDocVis(snap.reference, vis),
+                onTap: () => _toggleDocVis(snap.reference, vis, title),
                 child: _rVisChip(vis, vis == 'shared' ? _tealTint : _surface),
               ),
               const SizedBox(width: 10),

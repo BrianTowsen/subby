@@ -10,10 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -600,7 +596,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
     return Column(
       children: [
-        Container(height: topInset, color: _paper),
+        Container(height: topInset, color: _ink),
         Container(
           width: double.infinity,
           color: _ink,
@@ -2929,7 +2925,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       // Dark (black) status-bar icons over the white dashboard. Because the
       // visible route's AnnotatedRegion wins, this reasserts dark icons the
       // moment ProjectDetailPageView (which forces light) is popped.
-      value: SystemUiOverlayStyle.dark,
+      value: SystemUiOverlayStyle.light,
       child: Container(
         width: widget.width ?? double.infinity,
         height: widget.height ?? double.infinity,
