@@ -10,8 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -1133,7 +1131,8 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
   Widget _hero() => Container(
         width: double.infinity,
         color: _ink,
-        padding: const EdgeInsets.fromLTRB(20, 6, 20, 18),
+        padding: EdgeInsets.fromLTRB(
+            20, 6 + MediaQuery.of(context).padding.top, 20, 18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1181,7 +1180,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
 
     // White-background screen: keep dark (black) status-bar icons. Reasserts
     // dark after arriving from the ink ProjectDetail hero (which forces light).
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
 
     if (widget.projectRef == null) {
       return Container(
@@ -1213,7 +1212,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
         height: widget.height ?? double.infinity,
         color: _paper,
         child: SafeArea(
-          top: true,
+          top: false,
           bottom: true,
           child: Column(
             children: [
