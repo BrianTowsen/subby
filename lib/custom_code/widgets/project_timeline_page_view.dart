@@ -34,10 +34,12 @@ class ProjectTimelinePageView extends StatefulWidget {
     super.key,
     this.width,
     this.height,
+    this.projectRef,
   });
 
   final double? width;
   final double? height;
+  final DocumentReference? projectRef;
 
   @override
   State<ProjectTimelinePageView> createState() =>
@@ -157,11 +159,18 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   }
 
   Future<void> _loadActiveProject() async {
-    final prefs = await SharedPreferences.getInstance();
-    final path = (prefs.getString(_kActiveProjectPath) ?? '').trim();
-    if (path.isEmpty) return;
-    _activePath = path;
-    final ref = FirebaseFirestore.instance.doc(path);
+    // Prefer the project reference passed into the widget; fall back to the
+    // shared-prefs "active project" path only when none was provided.
+    DocumentReference<Map<String, dynamic>>? ref;
+    if (widget.projectRef != null) {
+      ref = FirebaseFirestore.instance.doc(widget.projectRef!.path);
+    } else {
+      final prefs = await SharedPreferences.getInstance();
+      final path = (prefs.getString(_kActiveProjectPath) ?? '').trim();
+      if (path.isEmpty) return;
+      ref = FirebaseFirestore.instance.doc(path);
+    }
+    _activePath = ref.path;
     _projectRef = ref;
     _programmeRef = ref.collection('programme').doc('plan');
 
@@ -202,7 +211,9 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   Future<void> _loadLocal() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final path = (prefs.getString(_kActiveProjectPath) ?? '').trim();
+      final path = widget.projectRef != null
+          ? widget.projectRef!.path
+          : (prefs.getString(_kActiveProjectPath) ?? '').trim();
       _activePath = path;
       final scope = path.isEmpty ? 'standalone' : path;
       final started = prefs.getBool('$_kLocalStarted::$scope') ?? false;
