@@ -117,6 +117,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   bool _readOnly = false;
   String _visibility = 'private';
   bool _remoteLoaded = false;
+  String _activePath = ''; // active project doc path — scopes the local cache
 
   late List<_Section> _sections;
   int _selSi = 0;
@@ -157,6 +158,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
     final prefs = await SharedPreferences.getInstance();
     final path = (prefs.getString(_kActiveProjectPath) ?? '').trim();
     if (path.isEmpty) return;
+    _activePath = path;
     final ref = FirebaseFirestore.instance.doc(path);
     _projectRef = ref;
     _programmeRef = ref.collection('programme').doc('plan');
@@ -198,10 +200,13 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   Future<void> _loadLocal() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final started = prefs.getBool(_kLocalStarted) ?? false;
-      if (!started) return;
-      final raw = prefs.getString(_kLocalProgramme);
-      final startMs = prefs.getInt(_kLocalStart);
+      final path = (prefs.getString(_kActiveProjectPath) ?? '').trim();
+      _activePath = path;
+      final scope = path.isEmpty ? 'standalone' : path;
+      final started = prefs.getBool('$_kLocalStarted::$scope') ?? false;
+      if (!started) return; // brand-new project → keep the START chooser
+      final raw = prefs.getString('$_kLocalProgramme::$scope');
+      final startMs = prefs.getInt('$_kLocalStart::$scope');
       if (!mounted) return;
       setState(() {
         if (raw != null && raw.isNotEmpty) {
@@ -229,10 +234,12 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   Future<void> _saveLocal() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(_kLocalStarted, true);
-      await prefs.setInt(_kLocalStart, _start.millisecondsSinceEpoch);
-      await prefs.setString(
-          _kLocalProgramme, jsonEncode(_sections.map(_sectionToMap).toList()));
+      final scope = _activePath.isEmpty ? 'standalone' : _activePath;
+      await prefs.setBool('$_kLocalStarted::$scope', true);
+      await prefs.setInt(
+          '$_kLocalStart::$scope', _start.millisecondsSinceEpoch);
+      await prefs.setString('$_kLocalProgramme::$scope',
+          jsonEncode(_sections.map(_sectionToMap).toList()));
     } catch (_) {}
   }
 
