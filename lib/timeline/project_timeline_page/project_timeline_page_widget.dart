@@ -6,7 +6,12 @@ import 'project_timeline_page_model.dart';
 export 'project_timeline_page_model.dart';
 
 class ProjectTimelinePageWidget extends StatefulWidget {
-  const ProjectTimelinePageWidget({super.key});
+  const ProjectTimelinePageWidget({
+    super.key,
+    this.projectRef,
+  });
+
+  final DocumentReference? projectRef;
 
   static String routeName = 'projectTimelinePage';
   static String routePath = '/projectTimelinePage';

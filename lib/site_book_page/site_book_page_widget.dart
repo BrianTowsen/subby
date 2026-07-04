@@ -6,7 +6,12 @@ import 'site_book_page_model.dart';
 export 'site_book_page_model.dart';
 
 class SiteBookPageWidget extends StatefulWidget {
-  const SiteBookPageWidget({super.key});
+  const SiteBookPageWidget({
+    super.key,
+    this.projectRef,
+  });
+
+  final DocumentReference? projectRef;
 
   static String routeName = 'SiteBookPage';
   static String routePath = '/siteBookPage';
@@ -50,6 +55,7 @@ class _SiteBookPageWidgetState extends State<SiteBookPageWidget> {
           child: custom_widgets.SiteBookPageView(
             width: MediaQuery.sizeOf(context).width * 1.0,
             height: MediaQuery.sizeOf(context).height * 1.0,
+            projectRef: widget.projectRef,
           ),
         ),
       ),
