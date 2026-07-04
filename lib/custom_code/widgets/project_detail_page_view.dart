@@ -1354,6 +1354,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   // =========================================================
   static const Map<String, String> _defaultModuleVis = {
     'timeline': 'shared',
+    'siteBook': 'private',
     'snagList': 'shared',
     'toDo': 'shared',
     'projectCost': 'private',
@@ -1379,6 +1380,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     switch (key) {
       case 'timeline':
         return 'Timeline';
+      case 'siteBook':
+        return 'Site Book';
       case 'toDo':
         return 'To-Do List';
       case 'snagList':

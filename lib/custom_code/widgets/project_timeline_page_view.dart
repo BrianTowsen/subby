@@ -1547,7 +1547,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
             alignment: Alignment.center,
             decoration: BoxDecoration(
                 color: _paper.withOpacity(0.12), shape: BoxShape.circle),
-            child: Icon(icon, size: 16, color: _paper),
+            child: Icon(icon, size: 22, color: _paper),
           ),
         ),
       );
