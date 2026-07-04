@@ -52,3 +52,47 @@ class ActivityOnTaskCompletedCloudFunctionCallResponse {
   bool? succeeded;
   dynamic jsonBody;
 }
+
+class ActivityOnQuoteChangedCloudFunctionCallResponse {
+  ActivityOnQuoteChangedCloudFunctionCallResponse({
+    this.errorCode,
+    this.succeeded,
+    this.jsonBody,
+  });
+  String? errorCode;
+  bool? succeeded;
+  dynamic jsonBody;
+}
+
+class ActivityOnCostPlanUpdatedCloudFunctionCallResponse {
+  ActivityOnCostPlanUpdatedCloudFunctionCallResponse({
+    this.errorCode,
+    this.succeeded,
+    this.jsonBody,
+  });
+  String? errorCode;
+  bool? succeeded;
+  dynamic jsonBody;
+}
+
+class ActivityOnProgrammeUpdatedCloudFunctionCallResponse {
+  ActivityOnProgrammeUpdatedCloudFunctionCallResponse({
+    this.errorCode,
+    this.succeeded,
+    this.jsonBody,
+  });
+  String? errorCode;
+  bool? succeeded;
+  dynamic jsonBody;
+}
+
+class ActivityOnSiteBookEntryCloudFunctionCallResponse {
+  ActivityOnSiteBookEntryCloudFunctionCallResponse({
+    this.errorCode,
+    this.succeeded,
+    this.jsonBody,
+  });
+  String? errorCode;
+  bool? succeeded;
+  dynamic jsonBody;
+}

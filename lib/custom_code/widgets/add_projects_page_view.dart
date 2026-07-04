@@ -14,9 +14,11 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
-import 'package:flutter/services.dart'; // SystemUiOverlayStyle (dark status bar over white form)
+import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status bar icons over ink hero)
 
 class AddProjectsPageView extends StatefulWidget {
   const AddProjectsPageView({
@@ -713,7 +715,11 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
     final theme = FlutterFlowTheme.of(context);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.dark,
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light, // white icons (Android)
+        statusBarBrightness: Brightness.dark, // white icons (iOS)
+      ),
       child: GestureDetector(
         behavior: HitTestBehavior.deferToChild,
         onHorizontalDragUpdate: _onDragUpdate,
