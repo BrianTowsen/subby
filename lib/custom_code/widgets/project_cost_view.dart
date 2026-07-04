@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,10 +29,15 @@ class ProjectCostView extends StatefulWidget {
     super.key,
     this.width,
     this.height,
+
+    /// ✅ Project reference (passed by ProjectDetailPageView / FF page param)
+    this.projectRef,
   });
 
   final double? width;
   final double? height;
+
+  final DocumentReference? projectRef;
 
   @override
   State<ProjectCostView> createState() => _ProjectCostViewState();
@@ -132,7 +139,50 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       }
       _sections.add(sec);
     }
-    _loadActiveProject();
+    // NOTE: project resolution happens in didChangeDependencies (route
+    // reading needs context).
+  }
+
+  bool _resolvedRef = false; // resolve projectRef once
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_resolvedRef) return;
+    _resolvedRef = true;
+
+    // Resolution order: widget param, then route query param
+    // passed by ProjectDetailPageView, then shared-prefs fallback.
+    final fromRoute =
+        widget.projectRef ?? _readRefFromRoute('projectRef', 'projects');
+    if (fromRoute != null) {
+      // Persist so downstream views inherit it and survive cold start.
+      SharedPreferences.getInstance()
+          .then((p) => p.setString(_kActiveProjectPath, fromRoute.path));
+      _bindProject(FirebaseFirestore.instance.doc(fromRoute.path));
+    } else {
+      _loadActiveProject();
+    }
+  }
+
+  // Reads a serialized DocumentReference query param — same logic as
+  // SnagListPageView — and turns it into a DocumentReference.
+  DocumentReference? _readRefFromRoute(String key, String fallbackCollection) {
+    try {
+      final qp = GoRouterState.of(context).uri.queryParameters;
+      var s = (qp[key] ?? '').trim();
+      if (s.isEmpty) return null;
+      s = s.replaceAll('"', '');
+      if (s.startsWith('{')) {
+        final m = RegExp(r'([A-Za-z0-9_]+/[A-Za-z0-9_]+(?:/[A-Za-z0-9_]+)*)')
+            .firstMatch(s);
+        if (m != null) s = m.group(1)!;
+      }
+      if (s.contains('/')) return FirebaseFirestore.instance.doc(s);
+      return FirebaseFirestore.instance.collection(fallbackCollection).doc(s);
+    } catch (_) {
+      return null;
+    }
   }
 
   @override
@@ -150,7 +200,10 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     final prefs = await SharedPreferences.getInstance();
     final path = (prefs.getString(_kActiveProjectPath) ?? '').trim();
     if (path.isEmpty) return;
-    final ref = FirebaseFirestore.instance.doc(path);
+    _bindProject(FirebaseFirestore.instance.doc(path));
+  }
+
+  void _bindProject(DocumentReference<Map<String, dynamic>> ref) {
     _projectRef = ref;
     _estimateRef = ref.collection('estimate').doc('plan');
 
