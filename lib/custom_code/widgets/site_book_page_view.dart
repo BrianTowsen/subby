@@ -10,35 +10,52 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
+import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 
+import 'package:file_picker/file_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:mime/mime.dart';
+import 'package:path/path.dart' as p;
+
 // ======================= SiteBookPageView (FULL FILE) =======================
 //
-// A project-linked site journal. Team members log dated site entries — a note,
-// the weather, tags and (optionally) photos — that read newest-first, grouped
-// by calendar day. Mirrors the Subby "less-is-more" system (ink hero, sage
-// accent, Inter Tight / Inter) used by DashboardPageView & ProjectDetailPageView.
+// UPDATE (this revision) — three fixes + polish:
+//   1. SAVING WORKS. A new entry now saves whenever there is a note OR at least
+//      one photo/video (previously an empty-note tap silently discarded the
+//      entry). A toast confirms the save; failures surface an error toast.
+//   2. PHOTO / VIDEO UPLOAD. The editor picks images and videos (FilePicker,
+//      FileType.media), uploads each to Firebase Storage under
+//      projects/{id}/site_book/, and stores them on the entry as `media`
+//      ([{url,type,storagePath}]). Cards + detail render images inline and
+//      videos with a play badge. `photoUrls` is still written (image URLs only)
+//      for backward compatibility with anything reading the old field.
+//   3. USER-DEFINED TAGS. The hard-coded suggestion list is gone. Users type
+//      any tag (Enter / comma / Add). Tags previously used on THIS project's
+//      entries are offered as tap-to-add chips ("Previously used").
 //
-// LAYOUT
-//   • Pinned ink hero masthead (back · SITE BOOK · add) + project name + count.
-//   • Search field (filters note / author / tags client-side).
-//   • Day-grouped entry cards (TODAY / YESTERDAY / 'WED 2 JUL').
-//   • Pinned bottom composer ("Add today's site note…").
-//   • Tapping the composer / add button slides the New-Entry editor in from the
-//     RIGHT (matches ProjectTimelinePageView's edit page), which writes a new
-//     doc to `site_book_entries` on Save.
+//   Visual polish to match ToDoListPageView / AddTaskPageView:
+//     • Editor content background is white (_paper), like To Do content.
+//     • Bottom bars use the app's bright-white elevated footer (top hairline +
+//       upward shadow) — see _footerShadow.
+//     • Scroll bodies clear the pinned bottom bar (extra bottom padding).
+//     • Tapping a card opens an in-widget entry DETAIL screen with an ink
+//       masthead header (eyebrow + weather chip + avatar + author + date +
+//       contents strip).
 //
-// FIRESTORE — collection `site_book_entries` (all fields optional on read):
-//   projectRef : DocumentReference   (scopes the query)
+// FIRESTORE — collection `site_book_entries`:
+//   projectRef : DocumentReference
 //   authorRef  : DocumentReference
 //   authorName : String
 //   note       : String
 //   weather    : String  ('sunny' | 'cloudy' | 'rain')
-//   temp       : num?     (°C)
-//   tags       : List<String>
-//   photoUrls  : List<String>
+//   tags       : List<String>            (free-form, user-defined)
+//   media      : List<Map>  [{url,type('image'|'video'),storagePath}]
+//   photoUrls  : List<String>            (image URLs only — legacy compat)
 //   visibility : String  ('shared' | 'private')
 //   createdAt  : Timestamp (serverTimestamp)
 
@@ -47,22 +64,12 @@ class SiteBookPageView extends StatefulWidget {
     super.key,
     this.width,
     this.height,
-
-    /// Project this journal belongs to.
     this.projectRef,
-
-    /// Optional: open a single entry (tap a card). If empty, cards are inert.
-    this.entryDetailRouteName,
-
-    /// Param name used when passing the entry ref to the detail page.
-    this.entryParamName,
   });
 
   final double? width;
   final double? height;
   final DocumentReference? projectRef;
-  final String? entryDetailRouteName;
-  final String? entryParamName;
 
   @override
   State<SiteBookPageView> createState() => _SiteBookPageViewState();
@@ -77,33 +84,44 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _hairline = Color(0xFFEAEEF0);
+  static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
   static const Color _sage = Color(0xFF5D737E);
   static const Color _tint = Color(0xFFE7EDF0);
   static const Color _tintBorder = Color(0xFFCBD8DD);
   static const Color _fieldBorder = Color(0xFFE1E7EA);
-  static const Color _editorBg = Color(0xFFF4F6F7);
 
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
+
+  // App-standard bright-white elevated footer shadow (matches _footerBar in
+  // ToDoListPageView / AddTaskPageView).
+  static const List<BoxShadow> _footerShadow = [
+    BoxShadow(color: Color(0x1F19232D), blurRadius: 30, offset: Offset(0, -10)),
+  ];
   // ────────────────────────────────────────────────────────────────────
 
   static const double _hPad = 20;
+  static const double _radius = 12;
 
   static const List<String> _weekdays = [
-    'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT',
-    'SUN' // ignore: require_trailing_commas
+    'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN' //
   ];
   static const List<String> _months = [
     'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', //
     'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'
   ];
-  static const List<String> _suggestedTags = [
-    'Foundations',
-    'Milestone',
-    'Inspection',
-    'Electrical',
-    'Plumbing',
-    'Structural',
+  static const List<String> _weekdaysFull = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday'
+  ];
+  static const List<String> _monthsFull = [
+    'January', 'February', 'March', 'April', 'May', 'June', //
+    'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
   // Search
@@ -113,11 +131,21 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
   // Composer / editor slide-in
   bool _compose = false;
   final TextEditingController _noteCtl = TextEditingController();
+  final TextEditingController _tagCtl = TextEditingController();
   String _weather = 'sunny';
-  final Set<String> _tags = <String>{};
+  final List<String> _tags = <String>[];
+  // media: [{ 'url', 'type' ('image'|'video'), 'storagePath' }]
+  final List<Map<String, dynamic>> _media = <Map<String, dynamic>>[];
+  bool _uploading = false;
   bool _saving = false;
 
-  // Editor scroll
+  // Detail slide-in
+  QueryDocumentSnapshot<Map<String, dynamic>>? _detailDoc;
+
+  // Tags previously used on this project (for tap-to-reuse). Kept fresh from
+  // the entries stream in _viewScreen.
+  final List<String> _knownTags = <String>[];
+
   final ScrollController _editorScroll = ScrollController();
 
   @override
@@ -133,6 +161,7 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
   void dispose() {
     _searchCtl.dispose();
     _noteCtl.dispose();
+    _tagCtl.dispose();
     _editorScroll.dispose();
     super.dispose();
   }
@@ -151,45 +180,142 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
   }
 
   // -----------------------------
+  // Media upload
+  // -----------------------------
+  Future<void> _pickMedia() async {
+    if (_uploading || _saving) return;
+    final projectRef = widget.projectRef;
+    if (projectRef == null) {
+      _snack('No project selected.');
+      return;
+    }
+    FocusScope.of(context).unfocus();
+
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.media, // images + videos
+        allowMultiple: true,
+        withData: true,
+      );
+      if (result == null || result.files.isEmpty) return;
+
+      setState(() => _uploading = true);
+
+      for (final f in result.files) {
+        final Uint8List? bytes = f.bytes;
+        if (bytes == null || bytes.isEmpty) continue;
+
+        final fileName = p.basename(f.name.isNotEmpty ? f.name : 'file');
+        final safeName = fileName.replaceAll(RegExp(r'[^\w\.\- ]+'), '_');
+        final ts = DateTime.now().millisecondsSinceEpoch;
+        final storagePath =
+            'projects/${projectRef.id}/site_book/${ts}_$safeName';
+        final contentType = lookupMimeType(fileName, headerBytes: bytes) ??
+            'application/octet-stream';
+        final kind = contentType.startsWith('video') ? 'video' : 'image';
+
+        final ref = FirebaseStorage.instance.ref().child(storagePath);
+        await ref.putData(bytes, SettableMetadata(contentType: contentType));
+        final url = await ref.getDownloadURL();
+
+        _media.add({'url': url, 'type': kind, 'storagePath': storagePath});
+        if (mounted) setState(() {});
+      }
+    } catch (e) {
+      debugPrint('🔥 Site book media upload failed: $e');
+      _snack('Upload failed. Please try again.');
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
+  }
+
+  void _removeMedia(int i) {
+    final sp = (_media[i]['storagePath'] ?? '').toString();
+    if (sp.isNotEmpty) {
+      FirebaseStorage.instance
+          .ref()
+          .child(sp)
+          .delete()
+          .catchError((e) => debugPrint('⚠️ media delete skipped: $e'));
+    }
+    setState(() => _media.removeAt(i));
+  }
+
+  // -----------------------------
+  // Tags (user-defined)
+  // -----------------------------
+  void _commitTag() {
+    var raw = _tagCtl.text.trim();
+    raw = raw.replaceAll(RegExp(r',+$'), '').trim();
+    if (raw.isEmpty) return;
+    final exists = _tags.any((t) => t.toLowerCase() == raw.toLowerCase());
+    if (!exists) _tags.add(raw);
+    setState(() => _tagCtl.clear());
+  }
+
+  void _addExistingTag(String t) {
+    if (_tags.any((x) => x.toLowerCase() == t.toLowerCase())) return;
+    setState(() => _tags.add(t));
+  }
+
+  void _removeTag(String t) => setState(() => _tags.remove(t));
+
+  // Tags used on existing entries, minus ones already on the draft.
+  List<String> _reuseTags() {
+    final seen = _tags.map((t) => t.toLowerCase()).toSet();
+    final out = <String>[];
+    for (final t in _knownTags) {
+      final k = t.toLowerCase();
+      if (k.isEmpty || seen.contains(k)) continue;
+      seen.add(k);
+      out.add(t);
+    }
+    return out;
+  }
+
+  // -----------------------------
   // Save a new entry
   // -----------------------------
   Future<void> _saveEntry() async {
-    if (_saving) return;
+    if (_saving || _uploading) return;
     final note = _noteCtl.text.trim();
-    if (note.isEmpty || widget.projectRef == null) {
-      _closeComposer();
+    // ✅ Save when there's a note OR media (was: note required).
+    if (note.isEmpty && _media.isEmpty) {
+      _snack('Add a note or a photo first.');
       return;
     }
+    if (widget.projectRef == null) {
+      _snack('No project selected.');
+      return;
+    }
+
     setState(() => _saving = true);
     try {
+      final photoUrls = _media
+          .where((m) => (m['type'] ?? 'image') == 'image')
+          .map((m) => (m['url'] ?? '').toString())
+          .where((u) => u.isNotEmpty)
+          .toList();
+
       await FirebaseFirestore.instance.collection('site_book_entries').add({
         'projectRef': widget.projectRef,
         'authorRef': currentUserReference,
         'authorName': currentUserDisplayName,
         'note': note,
         'weather': _weather,
-        'tags': _tags.toList(),
-        'photoUrls': <String>[],
+        'tags': List<String>.from(_tags),
+        'media': List<Map<String, dynamic>>.from(_media),
+        'photoUrls': photoUrls, // legacy compat (images only)
         'visibility': 'shared',
         'createdAt': FieldValue.serverTimestamp(),
       });
+      if (mounted) _snack('Entry saved.');
+      _closeComposer();
     } catch (e) {
       debugPrint('🔥 Failed to save site book entry: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(
-            backgroundColor: _ink,
-            content: const Text('Could not save entry.',
-                style: TextStyle(
-                    color: _paper,
-                    fontFamily: _bodyFont,
-                    fontWeight: FontWeight.w700)),
-          ));
-      }
+      if (mounted) _snack('Could not save entry.');
     } finally {
       if (mounted) setState(() => _saving = false);
-      _closeComposer();
     }
   }
 
@@ -200,24 +326,29 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
     setState(() {
       _compose = false;
       _noteCtl.clear();
+      _tagCtl.clear();
       _tags.clear();
+      _media.clear();
       _weather = 'sunny';
     });
   }
 
-  void _openEntry(DocumentReference ref) {
-    final route = (widget.entryDetailRouteName ?? '').trim();
-    if (route.isEmpty) return;
-    final param = (widget.entryParamName ?? 'entryRef').trim().isEmpty
-        ? 'entryRef'
-        : widget.entryParamName!.trim();
-    context.pushNamed(
-      route,
-      queryParameters: <String, dynamic>{
-        param: serializeParam(ref, ParamType.DocumentReference),
-      }.withoutNulls,
-      extra: <String, dynamic>{param: ref},
-    );
+  void _openEntry(QueryDocumentSnapshot<Map<String, dynamic>> doc) =>
+      setState(() => _detailDoc = doc);
+  void _closeEntry() => setState(() => _detailDoc = null);
+
+  void _snack(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        backgroundColor: _ink,
+        content: Text(msg,
+            style: const TextStyle(
+                color: _paper,
+                fontFamily: _bodyFont,
+                fontWeight: FontWeight.w700)),
+      ));
   }
 
   // -----------------------------
@@ -258,6 +389,14 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
     return '$h:$m';
   }
 
+  String _fullDate(DateTime dt) {
+    final l = dt.toLocal();
+    return '${_weekdaysFull[l.weekday - 1]} ${l.day} ${_monthsFull[l.month - 1]} · ${_timeLabel(l)}';
+  }
+
+  String _weatherLabelOf(String w) =>
+      w == 'cloudy' ? 'Cloudy' : (w == 'rain' ? 'Rain' : 'Sunny');
+
   IconData _weatherIcon(String w) {
     switch (w) {
       case 'cloudy':
@@ -267,6 +406,21 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
       default:
         return Icons.wb_sunny_outlined;
     }
+  }
+
+  // media list off a doc (falls back to legacy photoUrls as images).
+  List<Map<String, dynamic>> _mediaOf(Map<String, dynamic> d) {
+    final raw = d['media'];
+    if (raw is List && raw.isNotEmpty) {
+      return raw
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
+    }
+    final photos = (d['photoUrls'] as List?)?.whereType<String>() ?? const [];
+    return [
+      for (final u in photos) {'url': u, 'type': 'image'}
+    ];
   }
 
   bool _matches(Map<String, dynamic> d) {
@@ -295,9 +449,20 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
         color: _paper,
         child: Stack(
           children: [
-            // bottom layer — the journal
             Positioned.fill(child: _viewScreen()),
-            // editor — slides over from the right
+            // detail — slides over from the right
+            Positioned.fill(
+              child: IgnorePointer(
+                ignoring: _detailDoc == null,
+                child: AnimatedSlide(
+                  duration: dur,
+                  curve: curve,
+                  offset: _detailDoc != null ? Offset.zero : const Offset(1, 0),
+                  child: _detailScreen(),
+                ),
+              ),
+            ),
+            // editor — slides over from the right (top-most)
             Positioned.fill(
               child: IgnorePointer(
                 ignoring: !_compose,
@@ -325,9 +490,7 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
 
     return Column(
       children: [
-        // pinned ink hero
         _hero(topInset),
-        // scrollable journal
         Expanded(
           child: q == null
               ? _noProject()
@@ -338,11 +501,12 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
                         !snap.hasData) {
                       return _loading();
                     }
-                    final docs = (snap.data?.docs ?? const [])
-                        .where((d) => _matches(d.data()))
-                        .toList();
+                    final all = snap.data?.docs ?? const [];
+                    // Refresh the reuse-tag pool from every entry.
+                    _refreshKnownTags(all);
+                    final docs = all.where((d) => _matches(d.data())).toList();
                     return SingleChildScrollView(
-                      padding: EdgeInsets.fromLTRB(_hPad, 18, _hPad, 24),
+                      padding: EdgeInsets.fromLTRB(_hPad, 18, _hPad, 40),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -357,10 +521,27 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
                   },
                 ),
         ),
-        // pinned bottom composer
         _bottomComposer(bottomInset),
       ],
     );
+  }
+
+  void _refreshKnownTags(
+      List<QueryDocumentSnapshot<Map<String, dynamic>>> docs) {
+    final seen = <String>{};
+    final out = <String>[];
+    for (final d in docs) {
+      final tags = (d.data()['tags'] as List?)?.whereType<String>() ?? const [];
+      for (final t in tags) {
+        final k = t.toLowerCase();
+        if (k.isEmpty || seen.contains(k)) continue;
+        seen.add(k);
+        out.add(t);
+      }
+    }
+    _knownTags
+      ..clear()
+      ..addAll(out);
   }
 
   Widget _hero(double topInset) => Container(
@@ -548,10 +729,8 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
     final author = (d['authorName'] as String?)?.trim() ?? 'Team member';
     final note = (d['note'] as String?)?.trim() ?? '';
     final weather = (d['weather'] as String?) ?? '';
-    final temp = d['temp'];
     final tags = (d['tags'] as List?)?.whereType<String>().toList() ?? const [];
-    final photos =
-        (d['photoUrls'] as List?)?.whereType<String>().toList() ?? const [];
+    final media = _mediaOf(d);
     final ts = d['createdAt'];
     final time = ts is Timestamp ? _timeLabel(ts.toDate()) : '';
 
@@ -566,7 +745,7 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => _openEntry(doc.reference),
+          onTap: () => _openEntry(doc),
           borderRadius: BorderRadius.circular(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -604,22 +783,8 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
                       decoration: BoxDecoration(
                           color: _tint,
                           borderRadius: BorderRadius.circular(999)),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(_weatherIcon(weather),
-                              size: 12, color: _inkMute),
-                          if (temp is num) ...[
-                            const SizedBox(width: 4),
-                            Text('${temp.round()}°',
-                                style: const TextStyle(
-                                    fontFamily: _bodyFont,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: _ink)),
-                          ],
-                        ],
-                      ),
+                      child: Icon(_weatherIcon(weather),
+                          size: 12, color: _inkMute),
                     ),
                     const SizedBox(width: 8),
                   ],
@@ -641,25 +806,15 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
                         height: 1.5,
                         color: _ink)),
               ],
-              if (photos.isNotEmpty) ...[
+              if (media.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 SizedBox(
-                  height: 72,
+                  height: 84,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
-                    itemCount: photos.length,
+                    itemCount: media.length,
                     separatorBuilder: (_, __) => const SizedBox(width: 8),
-                    itemBuilder: (context, i) => ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.network(
-                        photos[i],
-                        width: 72,
-                        height: 72,
-                        fit: BoxFit.cover,
-                        errorBuilder: (c, e, s) =>
-                            Container(width: 72, height: 72, color: _surface),
-                      ),
-                    ),
+                    itemBuilder: (context, i) => _thumb(media[i], 84),
                   ),
                 ),
               ],
@@ -693,12 +848,55 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
     );
   }
 
+  // Media thumbnail (image or video-with-play-badge).
+  Widget _thumb(Map<String, dynamic> m, double size) {
+    final url = (m['url'] ?? '').toString();
+    final isVideo = (m['type'] ?? 'image') == 'video';
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: Stack(
+        children: [
+          Container(
+            width: size,
+            height: size,
+            color: _surface,
+            child: isVideo
+                ? const SizedBox.shrink()
+                : Image.network(url,
+                    width: size,
+                    height: size,
+                    fit: BoxFit.cover,
+                    errorBuilder: (c, e, s) =>
+                        Container(width: size, height: size, color: _surface)),
+          ),
+          if (isVideo)
+            Positioned.fill(
+              child: Container(
+                color: const Color(0x4714202B),
+                alignment: Alignment.center,
+                child: Container(
+                  width: 26,
+                  height: 26,
+                  decoration: const BoxDecoration(
+                      color: Color(0xEBFFFFFF), shape: BoxShape.circle),
+                  child: const Icon(Icons.play_arrow_rounded,
+                      size: 18, color: _ink),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // Bright-white elevated bottom composer (matches _footerBar shell).
   Widget _bottomComposer(double bottomInset) => Container(
         decoration: const BoxDecoration(
           color: _paper,
-          border: Border(top: BorderSide(color: _hairline)),
+          border: Border(top: BorderSide(color: _surface)),
+          boxShadow: _footerShadow,
         ),
-        padding: EdgeInsets.fromLTRB(_hPad, 12, _hPad, 12 + bottomInset + 8),
+        padding: EdgeInsets.fromLTRB(_hPad, 14, _hPad, 14 + bottomInset + 8),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
@@ -750,9 +948,10 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
   Widget _editorScreen() {
     final topInset = MediaQuery.of(context).padding.top;
     final bottomInset = MediaQuery.of(context).padding.bottom;
+    final reuse = _reuseTags();
 
     return Container(
-      color: _editorBg,
+      color: _paper, // ✅ white content (matches To Do List content)
       child: Column(
         children: [
           // header
@@ -765,15 +964,13 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
                 _circleBtn(Icons.arrow_back_ios_new_rounded, _closeComposer,
                     size: 16),
                 const Expanded(
-                  child: Column(
-                    children: [
-                      Text('New site entry',
-                          style: TextStyle(
-                              fontFamily: _displayFont,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                              color: _paper)),
-                    ],
+                  child: Center(
+                    child: Text('New site entry',
+                        style: TextStyle(
+                            fontFamily: _displayFont,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: _paper)),
                   ),
                 ),
                 Material(
@@ -809,7 +1006,7 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
           Expanded(
             child: SingleChildScrollView(
               controller: _editorScroll,
-              padding: EdgeInsets.fromLTRB(18, 16, 18, bottomInset + 24),
+              padding: EdgeInsets.fromLTRB(18, 16, 18, bottomInset + 44),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -888,42 +1085,52 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
                   const SizedBox(height: 8),
                   _weatherSelector(),
                   const SizedBox(height: 18),
+                  _label('PHOTOS & VIDEOS'),
+                  const SizedBox(height: 8),
+                  _mediaSelector(),
+                  const SizedBox(height: 18),
                   _label('TAGS'),
                   const SizedBox(height: 8),
-                  _tagSelector(),
+                  _tagEditor(reuse),
                 ],
               ),
             ),
           ),
-          // save bar
+          // save bar — bright-white elevated footer
           Container(
             decoration: const BoxDecoration(
               color: _paper,
-              border: Border(top: BorderSide(color: _fieldBorder)),
+              border: Border(top: BorderSide(color: _surface)),
+              boxShadow: _footerShadow,
             ),
-            padding: EdgeInsets.fromLTRB(18, 12, 18, bottomInset + 14),
+            padding: EdgeInsets.fromLTRB(18, 14, 18, bottomInset + 14),
             child: Material(
               color: Colors.transparent,
               child: InkWell(
                 onTap: _saveEntry,
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(15),
-                  decoration: BoxDecoration(
-                      color: _ink, borderRadius: BorderRadius.circular(12)),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.check_rounded, size: 18, color: _paper),
-                      SizedBox(width: 8),
-                      Text('Save entry',
-                          style: TextStyle(
-                              fontFamily: _bodyFont,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: _paper)),
-                    ],
+                borderRadius: BorderRadius.circular(_radius),
+                child: Opacity(
+                  opacity: (_saving || _uploading) ? 0.7 : 1,
+                  child: Container(
+                    width: double.infinity,
+                    height: 52,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                        color: _ink,
+                        borderRadius: BorderRadius.circular(_radius)),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.check_rounded, size: 18, color: _paper),
+                        SizedBox(width: 8),
+                        Text('Save entry',
+                            style: TextStyle(
+                                fontFamily: _bodyFont,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: _paper)),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -998,40 +1205,461 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
     );
   }
 
-  Widget _tagSelector() => Wrap(
-        spacing: 6,
-        runSpacing: 6,
+  Widget _mediaSelector() => Wrap(
+        spacing: 8,
+        runSpacing: 8,
         children: [
-          for (final t in _suggestedTags)
-            GestureDetector(
-              onTap: () => setState(() {
-                if (_tags.contains(t)) {
-                  _tags.remove(t);
-                } else {
-                  _tags.add(t);
-                }
-              }),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: _tags.contains(t) ? _ink : _paper,
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(
-                      color: _tags.contains(t) ? _ink : _fieldBorder),
-                ),
-                child: Text(t,
-                    style: TextStyle(
-                        fontFamily: _bodyFont,
-                        fontSize: 11,
-                        fontWeight: _tags.contains(t)
-                            ? FontWeight.w700
-                            : FontWeight.w600,
-                        color: _tags.contains(t) ? _paper : _inkMute)),
+          // add tile
+          GestureDetector(
+            onTap: _pickMedia,
+            child: Container(
+              width: 84,
+              height: 84,
+              decoration: BoxDecoration(
+                color: _paper,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _tintBorder, width: 1.5),
               ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _uploading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(_sage)),
+                        )
+                      : const Icon(Icons.photo_camera_outlined,
+                          size: 20, color: _sage),
+                  const SizedBox(height: 5),
+                  Text(_uploading ? '…' : 'Add',
+                      style: const TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: _sage)),
+                ],
+              ),
+            ),
+          ),
+          // thumbnails
+          for (int i = 0; i < _media.length; i++)
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                _thumb(_media[i], 84),
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: GestureDetector(
+                    onTap: () => _removeMedia(i),
+                    child: Container(
+                      width: 20,
+                      height: 20,
+                      decoration: const BoxDecoration(
+                          color: Color(0xB814202B), shape: BoxShape.circle),
+                      child: const Icon(Icons.close_rounded,
+                          size: 13, color: _paper),
+                    ),
+                  ),
+                ),
+              ],
             ),
         ],
       );
+
+  Widget _tagEditor(List<String> reuse) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // entered tags
+        if (_tags.isNotEmpty) ...[
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final t in _tags)
+                Container(
+                  padding: const EdgeInsets.fromLTRB(12, 5, 8, 5),
+                  decoration: BoxDecoration(
+                      color: _ink, borderRadius: BorderRadius.circular(999)),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(t,
+                          style: const TextStyle(
+                              fontFamily: _bodyFont,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: _paper)),
+                      const SizedBox(width: 6),
+                      GestureDetector(
+                        onTap: () => _removeTag(t),
+                        child: Icon(Icons.close_rounded,
+                            size: 13, color: _paper.withOpacity(0.75)),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+        ],
+        // tag input
+        Container(
+          decoration: BoxDecoration(
+            color: _paper,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: _fieldBorder),
+          ),
+          padding: const EdgeInsets.fromLTRB(14, 4, 4, 4),
+          child: Row(
+            children: [
+              const Icon(Icons.sell_outlined, size: 15, color: _faint),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _tagCtl,
+                  onSubmitted: (_) => _commitTag(),
+                  style: const TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: _ink),
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    border: InputBorder.none,
+                    hintText: 'Add a tag, press Enter',
+                    hintStyle: TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: _faint),
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: _commitTag,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                      color: _sage, borderRadius: BorderRadius.circular(9)),
+                  child: const Text('Add',
+                      style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: _paper)),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 6),
+        const Text('Type any tag your team uses — no fixed list.',
+            style: TextStyle(
+                fontFamily: _bodyFont,
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: _faint)),
+        // previously used (tap to reuse)
+        if (reuse.isNotEmpty) ...[
+          const SizedBox(height: 14),
+          Text('PREVIOUSLY USED · TAP TO ADD',
+              style: TextStyle(
+                  fontFamily: _bodyFont,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.6,
+                  color: _faint)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final t in reuse)
+                GestureDetector(
+                  onTap: () => _addExistingTag(t),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: _surface,
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: _hairlineOnSurface),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.add_rounded,
+                            size: 12, color: Color(0xFF7C8B93)),
+                        const SizedBox(width: 5),
+                        Text(t,
+                            style: const TextStyle(
+                                fontFamily: _bodyFont,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: _inkMute)),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  // =====================================================================
+  // DETAIL SCREEN (slide-in) — ink masthead header
+  // =====================================================================
+  Widget _detailScreen() {
+    final topInset = MediaQuery.of(context).padding.top;
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+
+    final d = _detailDoc?.data() ?? const {};
+    final author = (d['authorName'] as String?)?.trim() ?? 'Team member';
+    final note = (d['note'] as String?)?.trim() ?? '';
+    final weather = (d['weather'] as String?) ?? '';
+    final tags = (d['tags'] as List?)?.whereType<String>().toList() ?? const [];
+    final media = _mediaOf(d);
+    final ts = d['createdAt'];
+    final dateLabel = ts is Timestamp ? _fullDate(ts.toDate()) : '';
+
+    final photos = media.where((m) => (m['type'] ?? 'image') != 'video').length;
+    final videos = media.length - photos;
+    final metaParts = <String>[];
+    if (photos > 0)
+      metaParts.add('$photos ${photos == 1 ? 'photo' : 'photos'}');
+    if (videos > 0)
+      metaParts.add('$videos ${videos == 1 ? 'video' : 'videos'}');
+    if (tags.isNotEmpty) {
+      metaParts.add('${tags.length} ${tags.length == 1 ? 'tag' : 'tags'}');
+    }
+    final metaLabel = metaParts.join('  ·  ');
+
+    return Container(
+      color: _paper,
+      child: Column(
+        children: [
+          // ink masthead
+          Container(
+            width: double.infinity,
+            color: _ink,
+            padding: EdgeInsets.fromLTRB(_hPad, topInset + 10, _hPad, 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    _circleBtn(Icons.arrow_back_ios_new_rounded, _closeEntry,
+                        size: 16),
+                    Expanded(
+                      child: Center(
+                        child: Text('SITE ENTRY',
+                            style: TextStyle(
+                                fontFamily: _bodyFont,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.7,
+                                color: _paper.withOpacity(0.5))),
+                      ),
+                    ),
+                    if (weather.isNotEmpty)
+                      Container(
+                        height: 38,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                            color: _paper.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(999)),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(_weatherIcon(weather),
+                                size: 13, color: _paper.withOpacity(0.85)),
+                            const SizedBox(width: 5),
+                            Text(_weatherLabelOf(weather),
+                                style: const TextStyle(
+                                    fontFamily: _bodyFont,
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: _paper)),
+                          ],
+                        ),
+                      )
+                    else
+                      const SizedBox(width: 38, height: 38),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                          color: _paper.withOpacity(0.14),
+                          shape: BoxShape.circle),
+                      child: Text(_initials(author),
+                          style: const TextStyle(
+                              fontFamily: _displayFont,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                              color: _paper)),
+                    ),
+                    const SizedBox(width: 13),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(author,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontFamily: _displayFont,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -0.5,
+                                  height: 1.1,
+                                  color: _paper)),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(Icons.calendar_today_rounded,
+                                  size: 12, color: _paper.withOpacity(0.55)),
+                              const SizedBox(width: 6),
+                              Flexible(
+                                child: Text(dateLabel,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                        fontFamily: _bodyFont,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: _paper.withOpacity(0.55))),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                if (metaLabel.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.only(top: 14),
+                    decoration: BoxDecoration(
+                      border: Border(
+                          top: BorderSide(color: _paper.withOpacity(0.1))),
+                    ),
+                    child: Text(metaLabel,
+                        style: TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.3,
+                            color: _paper.withOpacity(0.5))),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          // body
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(_hPad, 20, _hPad, bottomInset + 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (note.isNotEmpty)
+                    Text(note,
+                        style: const TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            height: 1.6,
+                            color: _ink)),
+                  if (media.isNotEmpty) ...[
+                    const SizedBox(height: 18),
+                    for (final m in media) ...[
+                      _detailMedia(m),
+                      const SizedBox(height: 10),
+                    ],
+                  ],
+                  if (tags.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        for (final t in tags)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 5),
+                            decoration: BoxDecoration(
+                                color: _surface,
+                                borderRadius: BorderRadius.circular(999)),
+                            child: Text(t,
+                                style: const TextStyle(
+                                    fontFamily: _bodyFont,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: _inkMute)),
+                          ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Full-width media in the detail gallery. Videos show a large play badge
+  // (wire a video player / route on tap as needed).
+  Widget _detailMedia(Map<String, dynamic> m) {
+    final url = (m['url'] ?? '').toString();
+    final isVideo = (m['type'] ?? 'image') == 'video';
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: Stack(
+        children: [
+          if (!isVideo)
+            Image.network(url,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (c, e, s) =>
+                    Container(height: 200, color: _surface))
+          else
+            Container(height: 200, width: double.infinity, color: _ink),
+          if (isVideo)
+            Positioned.fill(
+              child: Container(
+                alignment: Alignment.center,
+                child: Container(
+                  width: 54,
+                  height: 54,
+                  decoration: const BoxDecoration(
+                      color: Color(0xEBFFFFFF), shape: BoxShape.circle),
+                  child: const Icon(Icons.play_arrow_rounded,
+                      size: 30, color: _ink),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 
   // -----------------------------
   // Placeholder states
