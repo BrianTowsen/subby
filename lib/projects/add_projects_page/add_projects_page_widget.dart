@@ -42,6 +42,7 @@ class _AddProjectsPageWidgetState extends State<AddProjectsPageWidget> {
       },
       child: Scaffold(
         key: scaffoldKey,
+        resizeToAvoidBottomInset: false,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
         body: Container(
           width: double.infinity,
