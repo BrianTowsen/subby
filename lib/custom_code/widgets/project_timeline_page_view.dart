@@ -752,6 +752,19 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
     });
   }
 
+  // Left-to-right swipe closes the in-widget EDIT layer (the native iOS
+  // edge-swipe can't animate this state-driven layer, so we handle the fling).
+  Widget _swipeToClose({required Widget child, required VoidCallback onClose}) {
+    return GestureDetector(
+      behavior: HitTestBehavior.deferToChild,
+      onHorizontalDragEnd: (details) {
+        final v = details.primaryVelocity ?? 0;
+        if (v > 250) onClose(); // fling right → dismiss
+      },
+      child: child,
+    );
+  }
+
   void _toggleExpand(int si) {
     setState(() => _sections[si].expanded = !_sections[si].expanded);
     _persist();
@@ -959,7 +972,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                     curve: curve,
                     offset:
                         _screen == 'edit' ? Offset.zero : const Offset(1, 0),
-                    child: _editScreen(),
+                    child: _swipeToClose(onClose: _back, child: _editScreen()),
                   ),
                 ),
               ),
@@ -987,7 +1000,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   // START / FIRST-RUN SCREEN
   // =================================================================
   Widget _startScreen() {
-    final top = MediaQuery.of(context).padding.top;
+    final top = MediaQuery.of(context).viewPadding.top;
     final defs = <List<String>>[
       ['gf', 'Ground Floor', 'Single-storey new build'],
       ['gf1', 'Ground Floor + First Floor', 'Two-storey new build'],
@@ -1382,7 +1395,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
 
   // ----------------------------------------------------------------- hero
   Widget _hero(int totalCeil) {
-    final top = MediaQuery.of(context).padding.top;
+    final top = MediaQuery.of(context).viewPadding.top;
     return Container(
       width: double.infinity,
       color: _ink,
@@ -2112,7 +2125,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   // EDIT SCREEN (slide-in)
   // =================================================================
   Widget _editScreen() {
-    final top = MediaQuery.of(context).padding.top;
+    final top = MediaQuery.of(context).viewPadding.top;
     final bottom = MediaQuery.of(context).padding.bottom;
     if (_sections.isEmpty) {
       // safety — nothing to edit
