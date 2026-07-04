@@ -486,7 +486,8 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
                     curve: curve,
                     offset:
                         _detailDoc != null ? Offset.zero : const Offset(1, 0),
-                    child: _detailScreen(),
+                    child: _swipeToClose(
+                        onClose: _closeEntry, child: _detailScreen()),
                   ),
                 ),
               ),
@@ -498,7 +499,8 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
                     duration: dur,
                     curve: curve,
                     offset: _compose ? Offset.zero : const Offset(1, 0),
-                    child: _editorScreen(),
+                    child: _swipeToClose(
+                        onClose: _closeComposer, child: _editorScreen()),
                   ),
                 ),
               ),
@@ -509,11 +511,24 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
     );
   }
 
+  // Left-to-right swipe closes an in-widget overlay (the native iOS edge-swipe
+  // can't animate these state-driven layers, so we handle the fling ourselves).
+  Widget _swipeToClose({required Widget child, required VoidCallback onClose}) {
+    return GestureDetector(
+      behavior: HitTestBehavior.deferToChild,
+      onHorizontalDragEnd: (details) {
+        final v = details.primaryVelocity ?? 0;
+        if (v > 250) onClose(); // fling right → dismiss
+      },
+      child: child,
+    );
+  }
+
   // =====================================================================
   // VIEW SCREEN
   // =====================================================================
   Widget _viewScreen() {
-    final topInset = MediaQuery.of(context).padding.top;
+    final topInset = MediaQuery.of(context).viewPadding.top;
     final bottomInset = MediaQuery.of(context).padding.bottom;
     final q = _entriesQuery();
 
@@ -1063,7 +1078,7 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
   // EDITOR SCREEN (slide-in)
   // =====================================================================
   Widget _editorScreen() {
-    final topInset = MediaQuery.of(context).padding.top;
+    final topInset = MediaQuery.of(context).viewPadding.top;
     final bottomInset = MediaQuery.of(context).padding.bottom;
     final reuse = _reuseTags();
 
@@ -1535,7 +1550,7 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
   // DETAIL SCREEN (slide-in) — ink masthead header
   // =====================================================================
   Widget _detailScreen() {
-    final topInset = MediaQuery.of(context).padding.top;
+    final topInset = MediaQuery.of(context).viewPadding.top;
     final bottomInset = MediaQuery.of(context).padding.bottom;
 
     final d = _detailDoc?.data() ?? const {};
