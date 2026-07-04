@@ -382,6 +382,12 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
     return full;
   }
 
+  // A doc's createdAt as a DateTime. While a serverTimestamp() write is
+  // pending, Firestore returns createdAt == null — treat that as "now" so the
+  // freshly-added entry stays visible instead of flickering out.
+  DateTime _dateOf(dynamic ts) =>
+      ts is Timestamp ? ts.toDate() : DateTime.now();
+
   String _timeLabel(DateTime dt) {
     final l = dt.toLocal();
     final h = l.hour.toString().padLeft(2, '0');
@@ -696,9 +702,7 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
     final groups =
         <String, List<QueryDocumentSnapshot<Map<String, dynamic>>>>{};
     for (final d in docs) {
-      final ts = d.data()['createdAt'];
-      if (ts is! Timestamp) continue; // pending serverTimestamp
-      final key = _dayKey(ts.toDate());
+      final key = _dayKey(_dateOf(d.data()['createdAt']));
       if (!groups.containsKey(key)) {
         groups[key] = [];
         order.add(key);
@@ -731,8 +735,7 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
     final weather = (d['weather'] as String?) ?? '';
     final tags = (d['tags'] as List?)?.whereType<String>().toList() ?? const [];
     final media = _mediaOf(d);
-    final ts = d['createdAt'];
-    final time = ts is Timestamp ? _timeLabel(ts.toDate()) : '';
+    final time = _timeLabel(_dateOf(d['createdAt']));
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -1427,8 +1430,7 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
     final weather = (d['weather'] as String?) ?? '';
     final tags = (d['tags'] as List?)?.whereType<String>().toList() ?? const [];
     final media = _mediaOf(d);
-    final ts = d['createdAt'];
-    final dateLabel = ts is Timestamp ? _fullDate(ts.toDate()) : '';
+    final dateLabel = _fullDate(_dateOf(d['createdAt']));
 
     final photos = media.where((m) => (m['type'] ?? 'image') != 'video').length;
     final videos = media.length - photos;
