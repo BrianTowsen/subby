@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:intl/intl.dart';
@@ -926,41 +928,56 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
     const dur = Duration(milliseconds: 300);
     const curve = Curves.easeOutCubic;
 
-    return Container(
-      width: widget.width ?? double.infinity,
-      height: widget.height ?? double.infinity,
-      color: _paper,
-      child: ClipRect(
-        child: Stack(
-          children: [
-            // bottom layer — always present
-            Positioned.fill(child: _viewScreen()),
-            // edit — slides over from the right
-            Positioned.fill(
-              child: IgnorePointer(
-                ignoring: _screen != 'edit',
-                child: AnimatedSlide(
-                  duration: dur,
-                  curve: curve,
-                  offset: _screen == 'edit' ? Offset.zero : const Offset(1, 0),
-                  child: _editScreen(),
+    // The EDIT screen is an in-widget layer (driven by _screen), not a pushed
+    // route. Without this, a system back / edge-swipe from EDIT pops the whole
+    // ProjectTimeline route (back to the Project page) instead of returning to
+    // the VIEW screen. PopScope intercepts back while EDIT is open and routes
+    // it to _back() (EDIT → VIEW); otherwise the route pops normally.
+    final bool _editOpen = _screen == 'edit';
+
+    return PopScope(
+      canPop: !_editOpen,
+      onPopInvoked: (didPop) {
+        if (didPop) return; // route already popped (EDIT wasn't open)
+        if (_screen == 'edit') _back(); // back = return to the VIEW screen
+      },
+      child: Container(
+        width: widget.width ?? double.infinity,
+        height: widget.height ?? double.infinity,
+        color: _paper,
+        child: ClipRect(
+          child: Stack(
+            children: [
+              // bottom layer — always present
+              Positioned.fill(child: _viewScreen()),
+              // edit — slides over from the right
+              Positioned.fill(
+                child: IgnorePointer(
+                  ignoring: _screen != 'edit',
+                  child: AnimatedSlide(
+                    duration: dur,
+                    curve: curve,
+                    offset:
+                        _screen == 'edit' ? Offset.zero : const Offset(1, 0),
+                    child: _editScreen(),
+                  ),
                 ),
               ),
-            ),
-            // start — on top, slides off to the left once a choice is made
-            Positioned.fill(
-              child: IgnorePointer(
-                ignoring: _screen != 'start',
-                child: AnimatedSlide(
-                  duration: dur,
-                  curve: curve,
-                  offset:
-                      _screen == 'start' ? Offset.zero : const Offset(-1, 0),
-                  child: _startScreen(),
+              // start — on top, slides off to the left once a choice is made
+              Positioned.fill(
+                child: IgnorePointer(
+                  ignoring: _screen != 'start',
+                  child: AnimatedSlide(
+                    duration: dur,
+                    curve: curve,
+                    offset:
+                        _screen == 'start' ? Offset.zero : const Offset(-1, 0),
+                    child: _startScreen(),
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
