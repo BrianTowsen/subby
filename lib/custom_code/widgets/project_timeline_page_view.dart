@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:intl/intl.dart';
@@ -996,7 +998,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _circleBtn(Icons.arrow_back_rounded, () {
+                _circleBtn(Icons.chevron_left_rounded, () {
                   final nav = Navigator.of(context);
                   if (nav.canPop()) nav.pop();
                 }),
@@ -1373,7 +1375,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
         children: [
           Row(
             children: [
-              _circleBtn(Icons.arrow_back_ios_new_rounded, () {
+              _circleBtn(Icons.chevron_left_rounded, () {
                 final nav = Navigator.of(context);
                 if (nav.canPop()) nav.pop();
               }),
@@ -2200,7 +2202,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
             padding: EdgeInsets.fromLTRB(14, top + 14, 14, 16),
             child: Row(
               children: [
-                _circleBtn(Icons.arrow_back_rounded, _back),
+                _circleBtn(Icons.chevron_left_rounded, _back),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -2881,7 +2883,6 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
               value: pct.toDouble(),
               min: 0,
               max: 100,
-              divisions: 20,
               onChanged: (v) => _setPct(v.round()),
             ),
           ),
