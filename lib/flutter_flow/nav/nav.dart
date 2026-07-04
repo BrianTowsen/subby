@@ -413,12 +413,26 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         FFRoute(
           name: EditProjectTimelinePageWidget.routeName,
           path: EditProjectTimelinePageWidget.routePath,
-          builder: (context, params) => EditProjectTimelinePageWidget(),
+          builder: (context, params) => EditProjectTimelinePageWidget(
+            projectRef: params.getParam(
+              'projectRef',
+              ParamType.DocumentReference,
+              isList: false,
+              collectionNamePath: ['projects'],
+            ),
+          ),
         ),
         FFRoute(
           name: DetailSiteBookPageWidget.routeName,
           path: DetailSiteBookPageWidget.routePath,
-          builder: (context, params) => DetailSiteBookPageWidget(),
+          builder: (context, params) => DetailSiteBookPageWidget(
+            entryRef: params.getParam(
+              'entryRef',
+              ParamType.DocumentReference,
+              isList: false,
+              collectionNamePath: ['site_book_entries'],
+            ),
+          ),
         )
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );
