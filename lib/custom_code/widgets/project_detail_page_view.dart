@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -32,6 +34,9 @@ class ProjectDetailPageView extends StatefulWidget {
     this.getQuotesRouteName,
     this.snagListRouteName,
     this.toDoListRouteName,
+
+    /// ✅ NEW: Site Book route (journal site entries linked to the project)
+    this.siteBookRouteName,
 
     /// ✅ NEW: Directory route (empty Project Team → find/add trades)
     this.directoryRouteName,
@@ -69,6 +74,7 @@ class ProjectDetailPageView extends StatefulWidget {
   final String? getQuotesRouteName;
   final String? snagListRouteName;
   final String? toDoListRouteName;
+  final String? siteBookRouteName;
 
   /// Directory (HomePageView) — opened from the empty Project Team state.
   final String? directoryRouteName;
@@ -239,6 +245,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   static const String _fallbackQuotesRoute = 'quotesPage';
   static const String _fallbackSnagRoute = 'snagListPage';
   static const String _fallbackToDoRoute = 'toDoListPage';
+  static const String _fallbackSiteBookRoute = 'siteBookPage';
   static const String _fallbackListingDetailRoute = 'listingDetailPage';
 
   // ✅ NEW fallbacks for documents
@@ -3529,6 +3536,14 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
           _fallbackTimelineRoute
         ],
         [
+          Icons.menu_book_rounded,
+          'Site Book',
+          'Journal site entries',
+          'siteBook',
+          widget.siteBookRouteName,
+          _fallbackSiteBookRoute
+        ],
+        [
           Icons.checklist_rounded,
           'To-Do List',
           'Tasks & reminders',
@@ -3615,6 +3630,18 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         const SizedBox(width: 10),
         Expanded(
             child: _rModTile(
+                Icons.menu_book_rounded,
+                'Site Book',
+                'Journal site entries',
+                'siteBook',
+                readOnly,
+                () => _safeNavigate(widget.siteBookRouteName,
+                    fallbackRoute: _fallbackSiteBookRoute))),
+      ]),
+      const SizedBox(height: 10),
+      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Expanded(
+            child: _rModTile(
                 Icons.checklist_rounded,
                 'To-Do List',
                 'Tasks & reminders',
@@ -3622,16 +3649,17 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                 readOnly,
                 () => _safeNavigate(widget.toDoListRouteName,
                     fallbackRoute: _fallbackToDoRoute))),
+        const SizedBox(width: 10),
+        Expanded(
+            child: _rModTile(
+                Icons.fact_check_outlined,
+                'Snag List',
+                'Defects & fixes',
+                'snagList',
+                readOnly,
+                () => _safeNavigate(widget.snagListRouteName,
+                    fallbackRoute: _fallbackSnagRoute))),
       ]),
-      const SizedBox(height: 10),
-      _rModWide(
-          Icons.fact_check_outlined,
-          'Snag List',
-          'Defects & fixes',
-          'snagList',
-          readOnly,
-          () => _safeNavigate(widget.snagListRouteName,
-              fallbackRoute: _fallbackSnagRoute)),
       if (!readOnly) ...[
         const SizedBox(height: 10),
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
