@@ -36,3 +36,4 @@ export 'quote_detail_view.dart' show QuoteDetailView;
 export 'invite_view.dart' show InviteView;
 export 'quote_request_view.dart' show QuoteRequestView;
 export 'inbox_view.dart' show InboxView;
+export 'site_book_page_view.dart' show SiteBookPageView;

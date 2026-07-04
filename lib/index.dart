@@ -57,3 +57,4 @@ export '/quote_detail/quote_detail_widget.dart' show QuoteDetailWidget;
 export '/invite/invite_widget.dart' show InviteWidget;
 export '/quote_request/quote_request_widget.dart' show QuoteRequestWidget;
 export '/inbox/inbox_widget.dart' show InboxWidget;
+export '/site_book_page/site_book_page_widget.dart' show SiteBookPageWidget;
