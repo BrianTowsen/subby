@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -503,6 +505,12 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
               : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                   stream: q.snapshots(),
                   builder: (context, snap) {
+                    if (snap.hasError) {
+                      // Server rejected the listen AFTER cache rendered —
+                      // this is why entries flash and then vanish.
+                      debugPrint('SiteBook stream error: ${snap.error}');
+                      return _streamError(snap.error);
+                    }
                     if (snap.connectionState == ConnectionState.waiting &&
                         !snap.hasData) {
                       return _loading();
@@ -1714,6 +1722,59 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
           ],
         ),
       );
+
+  Widget _streamError(Object? error) {
+    final msg = error.toString();
+    final isIndex = msg.contains('failed-precondition') ||
+        msg.contains('requires an index');
+    final isDenied = msg.contains('permission-denied');
+    final title = isIndex
+        ? 'Missing Firestore index'
+        : isDenied
+            ? 'Permission denied'
+            : 'Couldn\u2019t load entries';
+    final detail = isIndex
+        ? 'The site_book_entries query needs a composite index '
+            '(projectRef ASC, createdAt DESC). Create it in the Firebase '
+            'console, then reopen this page.'
+        : isDenied
+            ? 'Firestore security rules are blocking reads on '
+                'site_book_entries. Add a rules block for this collection '
+                'in the Firebase console.'
+            : msg;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(_hPad, 40, _hPad, 40),
+      child: Column(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+                color: _tint, borderRadius: BorderRadius.circular(16)),
+            child: const Icon(Icons.cloud_off_rounded, size: 28, color: _sage),
+          ),
+          const SizedBox(height: 16),
+          Text(title,
+              style: const TextStyle(
+                  fontFamily: _displayFont,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.3,
+                  color: _ink)),
+          const SizedBox(height: 6),
+          Text(detail,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  fontFamily: _bodyFont,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  height: 1.5,
+                  color: _inkMute)),
+        ],
+      ),
+    );
+  }
 
   Widget _noProject() => const Center(
         child: Padding(
