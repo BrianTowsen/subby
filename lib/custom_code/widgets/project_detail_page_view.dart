@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -1090,20 +1092,34 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                 lineHeight: 1.1,
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              [address, dates]
-                  .where((s) => s.trim().isNotEmpty)
-                  .join('   ·   '),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.bodySmall.override(
-                fontFamily: _bodyFont,
-                color: _paper.withOpacity(0.55),
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
+            if (address.trim().isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                address,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.bodySmall.override(
+                  fontFamily: _bodyFont,
+                  color: _paper.withOpacity(0.55),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
               ),
-            ),
+            ],
+            if (dates.trim().isNotEmpty) ...[
+              const SizedBox(height: 3),
+              Text(
+                dates,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.bodySmall.override(
+                  fontFamily: _bodyFont,
+                  color: _paper.withOpacity(0.55),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+              ),
+            ],
           ],
         ),
       ),
