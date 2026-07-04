@@ -307,7 +307,14 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         FFRoute(
           name: ProjectTimelinePageWidget.routeName,
           path: ProjectTimelinePageWidget.routePath,
-          builder: (context, params) => ProjectTimelinePageWidget(),
+          builder: (context, params) => ProjectTimelinePageWidget(
+            projectRef: params.getParam(
+              'projectRef',
+              ParamType.DocumentReference,
+              isList: false,
+              collectionNamePath: ['projects'],
+            ),
+          ),
         ),
         FFRoute(
           name: ProjectCostPageWidget.routeName,
@@ -394,7 +401,14 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         FFRoute(
           name: SiteBookPageWidget.routeName,
           path: SiteBookPageWidget.routePath,
-          builder: (context, params) => SiteBookPageWidget(),
+          builder: (context, params) => SiteBookPageWidget(
+            projectRef: params.getParam(
+              'projectRef',
+              ParamType.DocumentReference,
+              isList: false,
+              collectionNamePath: ['projects'],
+            ),
+          ),
         )
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );
