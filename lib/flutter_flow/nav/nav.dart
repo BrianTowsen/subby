@@ -390,6 +390,11 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           name: InboxWidget.routeName,
           path: InboxWidget.routePath,
           builder: (context, params) => InboxWidget(),
+        ),
+        FFRoute(
+          name: SiteBookPageWidget.routeName,
+          path: SiteBookPageWidget.routePath,
+          builder: (context, params) => SiteBookPageWidget(),
         )
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );
