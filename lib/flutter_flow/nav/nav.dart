@@ -409,6 +409,16 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
               collectionNamePath: ['projects'],
             ),
           ),
+        ),
+        FFRoute(
+          name: EditProjectTimelinePageWidget.routeName,
+          path: EditProjectTimelinePageWidget.routePath,
+          builder: (context, params) => EditProjectTimelinePageWidget(),
+        ),
+        FFRoute(
+          name: DetailSiteBookPageWidget.routeName,
+          path: DetailSiteBookPageWidget.routePath,
+          builder: (context, params) => DetailSiteBookPageWidget(),
         )
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );

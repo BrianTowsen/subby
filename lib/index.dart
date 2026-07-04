@@ -58,3 +58,7 @@ export '/invite/invite_widget.dart' show InviteWidget;
 export '/quote_request/quote_request_widget.dart' show QuoteRequestWidget;
 export '/inbox/inbox_widget.dart' show InboxWidget;
 export '/site_book_page/site_book_page_widget.dart' show SiteBookPageWidget;
+export '/edit_project_timeline_page/edit_project_timeline_page_widget.dart'
+    show EditProjectTimelinePageWidget;
+export '/detail_site_book_page/detail_site_book_page_widget.dart'
+    show DetailSiteBookPageWidget;
