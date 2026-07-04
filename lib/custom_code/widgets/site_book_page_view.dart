@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -449,40 +451,59 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
     const dur = Duration(milliseconds: 300);
     const curve = Curves.easeOutCubic;
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
-      child: Container(
-        width: widget.width ?? double.infinity,
-        height: widget.height ?? double.infinity,
-        color: _paper,
-        child: Stack(
-          children: [
-            Positioned.fill(child: _viewScreen()),
-            // detail — slides over from the right
-            Positioned.fill(
-              child: IgnorePointer(
-                ignoring: _detailDoc == null,
-                child: AnimatedSlide(
-                  duration: dur,
-                  curve: curve,
-                  offset: _detailDoc != null ? Offset.zero : const Offset(1, 0),
-                  child: _detailScreen(),
+    // In-widget overlays (entry detail + composer) are driven by state, not by
+    // pushed routes. Without this, a system back / edge-swipe pops the whole
+    // SiteBookPage route (dropping the user back to the Project page) instead
+    // of closing the overlay. PopScope intercepts back while an overlay is open
+    // and closes it — detail returns to the entry list, editor returns to view.
+    final bool _overlayOpen = _compose || _detailDoc != null;
+
+    return PopScope(
+      canPop: !_overlayOpen,
+      onPopInvoked: (didPop) {
+        if (didPop) return; // route already popped (nothing was open)
+        if (_compose) {
+          _closeComposer(); // back = close the New site entry editor
+        } else if (_detailDoc != null) {
+          _closeEntry(); // back = return to the entry list
+        }
+      },
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle.light,
+        child: Container(
+          width: widget.width ?? double.infinity,
+          height: widget.height ?? double.infinity,
+          color: _paper,
+          child: Stack(
+            children: [
+              Positioned.fill(child: _viewScreen()),
+              // detail — slides over from the right
+              Positioned.fill(
+                child: IgnorePointer(
+                  ignoring: _detailDoc == null,
+                  child: AnimatedSlide(
+                    duration: dur,
+                    curve: curve,
+                    offset:
+                        _detailDoc != null ? Offset.zero : const Offset(1, 0),
+                    child: _detailScreen(),
+                  ),
                 ),
               ),
-            ),
-            // editor — slides over from the right (top-most)
-            Positioned.fill(
-              child: IgnorePointer(
-                ignoring: !_compose,
-                child: AnimatedSlide(
-                  duration: dur,
-                  curve: curve,
-                  offset: _compose ? Offset.zero : const Offset(1, 0),
-                  child: _editorScreen(),
+              // editor — slides over from the right (top-most)
+              Positioned.fill(
+                child: IgnorePointer(
+                  ignoring: !_compose,
+                  child: AnimatedSlide(
+                    duration: dur,
+                    curve: curve,
+                    offset: _compose ? Offset.zero : const Offset(1, 0),
+                    child: _editorScreen(),
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -558,10 +579,13 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
       ..addAll(out);
   }
 
+  // Hero — dark ink header (matches ToDoListPageView / ProjectTimelinePageView):
+  // back circle · centered project name + SITE BOOK eyebrow · count pill, then
+  // a large stat block (today's entries) with with-photos / contributors.
   Widget _hero(double topInset) => Container(
         width: double.infinity,
         color: _ink,
-        padding: EdgeInsets.fromLTRB(_hPad, topInset + 10, _hPad, 18),
+        padding: EdgeInsets.fromLTRB(_hPad, topInset + 14, _hPad, 18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -571,80 +595,162 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
                     Icons.arrow_back_ios_new_rounded, () => context.safePop(),
                     size: 16),
                 Expanded(
-                  child: Center(
-                    child: Text('SITE BOOK',
-                        style: TextStyle(
-                          fontFamily: _bodyFont,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.7,
-                          color: _paper.withOpacity(0.5),
-                        )),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Column(
+                      children: [
+                        _heroName(),
+                        const SizedBox(height: 2),
+                        Text('SITE BOOK',
+                            style: TextStyle(
+                              fontFamily: _bodyFont,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.7,
+                              color: _paper.withOpacity(0.5),
+                            )),
+                      ],
+                    ),
                   ),
                 ),
-                _circleBtn(Icons.add_rounded, _openComposer, size: 18),
+                _heroCountPill(),
               ],
             ),
             const SizedBox(height: 16),
-            _projectTitle(),
+            _heroStat(),
           ],
         ),
       );
 
-  Widget _projectTitle() {
+  // Centered project name (streamed from the project doc).
+  Widget _heroName() {
+    const style = TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 15,
+        fontWeight: FontWeight.w800,
+        color: _paper);
     final ref = widget.projectRef;
     if (ref == null) {
       return const Text('Site Book',
-          style: TextStyle(
-              fontFamily: _displayFont,
-              fontSize: 26,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.6,
-              color: _paper));
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: style);
     }
     return StreamBuilder<DocumentSnapshot<Object?>>(
       stream: ref.snapshots(),
       builder: (context, snap) {
         final data = (snap.data?.data() as Map<String, dynamic>?) ?? {};
         final name = (data['name'] as String?)?.trim() ?? 'Site Book';
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(name.isEmpty ? 'Site Book' : name,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                    fontFamily: _displayFont,
-                    fontSize: 26,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.6,
-                    height: 1.1,
-                    color: _paper)),
-            const SizedBox(height: 8),
-            StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: _entriesQuery()?.snapshots(),
-              builder: (context, s) {
-                final n = s.data?.docs.length ?? 0;
-                return Row(
-                  children: [
-                    Icon(Icons.menu_book_rounded,
-                        size: 13, color: _paper.withOpacity(0.55)),
-                    const SizedBox(width: 6),
-                    Text('Site journal · $n entries',
-                        style: TextStyle(
-                            fontFamily: _bodyFont,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: _paper.withOpacity(0.55))),
-                  ],
-                );
-              },
-            ),
-          ],
-        );
+        return Text(name.isEmpty ? 'Site Book' : name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: style);
       },
     );
   }
+
+  // One entries query → total / today / with-photos / contributor counts.
+  Widget _entryCounts(
+      Widget Function(int total, int today, int withPhotos, int contributors)
+          build) {
+    final q = _entriesQuery();
+    if (q == null) return build(0, 0, 0, 0);
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: q.snapshots(),
+      builder: (context, snap) {
+        final docs = snap.data?.docs ?? const [];
+        final todayKey = _dayKey(DateTime.now());
+        var today = 0, withPhotos = 0;
+        final authors = <String>{};
+        for (final d in docs) {
+          final data = d.data();
+          if (_dayKey(_dateOf(data['createdAt'])) == todayKey) today++;
+          if (_mediaOf(data).isNotEmpty) withPhotos++;
+          final a = (data['authorName'] as String?)?.trim() ?? '';
+          if (a.isNotEmpty) authors.add(a.toLowerCase());
+        }
+        return build(docs.length, today, withPhotos, authors.length);
+      },
+    );
+  }
+
+  // Translucent count pill on the right of the top row.
+  Widget _heroCountPill() =>
+      _entryCounts((total, today, withPhotos, contributors) => Container(
+            height: 38,
+            padding: const EdgeInsets.symmetric(horizontal: 11),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+                color: _paper.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(999)),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.menu_book_rounded, size: 14, color: _paper),
+                const SizedBox(width: 5),
+                Text('$total ${total == 1 ? 'entry' : 'entries'}',
+                    style: const TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: _paper)),
+              ],
+            ),
+          ));
+
+  // Large stat block: today's entries + with-photos / contributors.
+  Widget _heroStat() =>
+      _entryCounts((total, today, withPhotos, contributors) => Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('TODAY',
+                      style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 1,
+                          color: _paper.withOpacity(0.55))),
+                  const SizedBox(height: 4),
+                  Text('$today ${today == 1 ? 'entry' : 'entries'}',
+                      style: const TextStyle(
+                          fontFamily: _displayFont,
+                          fontSize: 34,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -1,
+                          color: _paper,
+                          height: 1.0)),
+                ],
+              ),
+              const SizedBox(width: 14),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('$withPhotos with photos',
+                        style: TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: _paper.withOpacity(0.6))),
+                    const SizedBox(height: 2),
+                    Text(
+                        '$contributors ${contributors == 1 ? 'contributor' : 'contributors'}',
+                        style: TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: _paper.withOpacity(0.45))),
+                  ],
+                ),
+              ),
+            ],
+          ));
 
   Widget _circleBtn(IconData icon, VoidCallback onTap, {double size = 16}) =>
       Material(
