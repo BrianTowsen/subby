@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -638,17 +640,17 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   static const String _logoUrl =
       'https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/winston-9dy48u/assets/vkvx0d5tvzte/subby_logo_white.png';
 
-  // Non-square mark: anchor on height (44) and leave width unconstrained so
+  // Non-square mark: anchor on height (36) and leave width unconstrained so
   // the image renders at its natural aspect ratio rather than being squeezed
-  // into a square box. The 44px height keeps the header's vertical rhythm.
+  // into a square box. The 36px height keeps the header's vertical rhythm.
   Widget _logo() => SizedBox(
-        height: 44,
+        height: 36,
         child: Image.network(
           _logoUrl,
-          height: 44,
+          height: 36,
           fit: BoxFit.contain,
           errorBuilder: (context, error, stackTrace) => CustomPaint(
-            size: const Size(44, 44),
+            size: const Size(36, 36),
             painter: const _SubbyMarkPainter(
               peak: Color(0xFF5D737E), // Subby brand green
               base: Color(0xFF5D737E),
@@ -2168,6 +2170,20 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         return 'Snag updated';
       case 'document_uploaded':
         return 'Document uploaded';
+      case 'quote_requested':
+        return 'Quote requested';
+      case 'quote_submitted':
+        return 'Quote received';
+      case 'quote_accepted':
+        return 'Quote accepted';
+      case 'quote_declined':
+        return 'Quote declined';
+      case 'cost_updated':
+        return 'Costs updated';
+      case 'programme_updated':
+        return 'Timeline updated';
+      case 'site_note_added':
+        return 'Site note';
       default:
         return 'Activity';
     }
@@ -2185,6 +2201,20 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         return Icons.sync;
       case 'document_uploaded':
         return Icons.description_outlined;
+      case 'quote_requested':
+        return Icons.outgoing_mail;
+      case 'quote_submitted':
+        return Icons.request_quote_outlined;
+      case 'quote_accepted':
+        return Icons.verified_outlined;
+      case 'quote_declined':
+        return Icons.do_not_disturb_on_outlined;
+      case 'cost_updated':
+        return Icons.payments_outlined;
+      case 'programme_updated':
+        return Icons.timeline;
+      case 'site_note_added':
+        return Icons.menu_book_outlined;
       default:
         return Icons.bolt;
     }
