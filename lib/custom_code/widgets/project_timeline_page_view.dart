@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:intl/intl.dart';
@@ -142,8 +144,51 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
     super.initState();
     _sections = buildProgramme('gf'); // harmless placeholder behind START
     _syncNameCtl();
+    // NOTE: project resolution happens in didChangeDependencies (route
+    // reading needs context).
+  }
+
+  bool _resolvedRef = false; // resolve projectRef once
+  DocumentReference? _incomingRef; // widget param, else route query param
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_resolvedRef) return;
+    _resolvedRef = true;
+
+    // Resolution order: widget param, then route query param
+    // passed by ProjectDetailPageView, then shared-prefs fallback
+    // (handled inside _loadLocal / _loadActiveProject).
+    _incomingRef =
+        widget.projectRef ?? _readRefFromRoute('projectRef', 'projects');
+    if (_incomingRef != null) {
+      // Persist so downstream views inherit it and survive cold start.
+      SharedPreferences.getInstance()
+          .then((p) => p.setString(_kActiveProjectPath, _incomingRef!.path));
+    }
     _loadLocal();
     _loadActiveProject();
+  }
+
+  // Reads a serialized DocumentReference query param — same logic as
+  // SnagListPageView — and turns it into a DocumentReference.
+  DocumentReference? _readRefFromRoute(String key, String fallbackCollection) {
+    try {
+      final qp = GoRouterState.of(context).uri.queryParameters;
+      var s = (qp[key] ?? '').trim();
+      if (s.isEmpty) return null;
+      s = s.replaceAll('"', '');
+      if (s.startsWith('{')) {
+        final m = RegExp(r'([A-Za-z0-9_]+/[A-Za-z0-9_]+(?:/[A-Za-z0-9_]+)*)')
+            .firstMatch(s);
+        if (m != null) s = m.group(1)!;
+      }
+      if (s.contains('/')) return FirebaseFirestore.instance.doc(s);
+      return FirebaseFirestore.instance.collection(fallbackCollection).doc(s);
+    } catch (_) {
+      return null;
+    }
   }
 
   @override
@@ -162,8 +207,8 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
     // Prefer the project reference passed into the widget; fall back to the
     // shared-prefs "active project" path only when none was provided.
     DocumentReference<Map<String, dynamic>>? ref;
-    if (widget.projectRef != null) {
-      ref = FirebaseFirestore.instance.doc(widget.projectRef!.path);
+    if (_incomingRef != null) {
+      ref = FirebaseFirestore.instance.doc(_incomingRef!.path);
     } else {
       final prefs = await SharedPreferences.getInstance();
       final path = (prefs.getString(_kActiveProjectPath) ?? '').trim();
@@ -211,8 +256,8 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   Future<void> _loadLocal() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final path = widget.projectRef != null
-          ? widget.projectRef!.path
+      final path = _incomingRef != null
+          ? _incomingRef!.path
           : (prefs.getString(_kActiveProjectPath) ?? '').trim();
       _activePath = path;
       final scope = path.isEmpty ? 'standalone' : path;
