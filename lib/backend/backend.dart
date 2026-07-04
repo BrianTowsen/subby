@@ -14,6 +14,7 @@ import 'schema/project_documents_record.dart';
 import 'schema/project_listings_record.dart';
 import 'schema/ui_record.dart';
 import 'schema/project_members_record.dart';
+import 'schema/site_book_entries_record.dart';
 
 export 'dart:async' show StreamSubscription;
 export 'package:cloud_firestore/cloud_firestore.dart' hide Order;
@@ -31,6 +32,7 @@ export 'schema/project_documents_record.dart';
 export 'schema/project_listings_record.dart';
 export 'schema/ui_record.dart';
 export 'schema/project_members_record.dart';
+export 'schema/site_book_entries_record.dart';
 
 /// Functions to query UsersRecords (as a Stream and as a Future).
 Future<int> queryUsersRecordCount({
@@ -360,6 +362,43 @@ Future<List<ProjectMembersRecord>> queryProjectMembersRecordOnce({
     queryCollectionOnce(
       ProjectMembersRecord.collection,
       ProjectMembersRecord.fromSnapshot,
+      queryBuilder: queryBuilder,
+      limit: limit,
+      singleRecord: singleRecord,
+    );
+
+/// Functions to query SiteBookEntriesRecords (as a Stream and as a Future).
+Future<int> querySiteBookEntriesRecordCount({
+  Query Function(Query)? queryBuilder,
+  int limit = -1,
+}) =>
+    queryCollectionCount(
+      SiteBookEntriesRecord.collection,
+      queryBuilder: queryBuilder,
+      limit: limit,
+    );
+
+Stream<List<SiteBookEntriesRecord>> querySiteBookEntriesRecord({
+  Query Function(Query)? queryBuilder,
+  int limit = -1,
+  bool singleRecord = false,
+}) =>
+    queryCollection(
+      SiteBookEntriesRecord.collection,
+      SiteBookEntriesRecord.fromSnapshot,
+      queryBuilder: queryBuilder,
+      limit: limit,
+      singleRecord: singleRecord,
+    );
+
+Future<List<SiteBookEntriesRecord>> querySiteBookEntriesRecordOnce({
+  Query Function(Query)? queryBuilder,
+  int limit = -1,
+  bool singleRecord = false,
+}) =>
+    queryCollectionOnce(
+      SiteBookEntriesRecord.collection,
+      SiteBookEntriesRecord.fromSnapshot,
       queryBuilder: queryBuilder,
       limit: limit,
       singleRecord: singleRecord,

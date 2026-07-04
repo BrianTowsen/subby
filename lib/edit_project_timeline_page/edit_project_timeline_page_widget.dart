@@ -1,11 +1,17 @@
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/custom_code/widgets/index.dart' as custom_widgets;
 import 'package:flutter/material.dart';
 import 'edit_project_timeline_page_model.dart';
 export 'edit_project_timeline_page_model.dart';
 
 class EditProjectTimelinePageWidget extends StatefulWidget {
-  const EditProjectTimelinePageWidget({super.key});
+  const EditProjectTimelinePageWidget({
+    super.key,
+    this.projectRef,
+  });
+
+  final DocumentReference? projectRef;
 
   static String routeName = 'EditProjectTimelinePage';
   static String routePath = '/editProjectTimelinePage';
@@ -45,6 +51,15 @@ class _EditProjectTimelinePageWidgetState
         key: scaffoldKey,
         resizeToAvoidBottomInset: false,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        body: Container(
+          width: MediaQuery.sizeOf(context).width * 1.0,
+          height: MediaQuery.sizeOf(context).height * 1.0,
+          child: custom_widgets.EditTimelinePageView(
+            width: MediaQuery.sizeOf(context).width * 1.0,
+            height: MediaQuery.sizeOf(context).height * 1.0,
+            projectRef: widget.projectRef,
+          ),
+        ),
       ),
     );
   }

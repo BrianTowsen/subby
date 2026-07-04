@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -114,19 +116,6 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
     'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', //
     'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'
   ];
-  static const List<String> _weekdaysFull = [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday'
-  ];
-  static const List<String> _monthsFull = [
-    'January', 'February', 'March', 'April', 'May', 'June', //
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
 
   // Search
   final TextEditingController _searchCtl = TextEditingController();
@@ -142,9 +131,6 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
   final List<Map<String, dynamic>> _media = <Map<String, dynamic>>[];
   bool _uploading = false;
   bool _saving = false;
-
-  // Detail slide-in
-  QueryDocumentSnapshot<Map<String, dynamic>>? _detailDoc;
 
   // Tags previously used on this project (for tap-to-reuse). Kept fresh from
   // the entries stream in _viewScreen.
@@ -337,9 +323,16 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
     });
   }
 
-  void _openEntry(QueryDocumentSnapshot<Map<String, dynamic>> doc) =>
-      setState(() => _detailDoc = doc);
-  void _closeEntry() => setState(() => _detailDoc = null);
+  void _openEntry(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+    // The entry detail is its own route now (DetailSiteBookPage) — push it with
+    // the tapped entry's reference so it gets native push/pop + swipe-back.
+    context.pushNamed(
+      'DetailSiteBookPage',
+      queryParameters: {
+        'entryRef': serializeParam(doc.reference, ParamType.DocumentReference),
+      }.withoutNulls,
+    );
+  }
 
   void _snack(String msg) {
     if (!mounted) return;
@@ -399,14 +392,6 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
     return '$h:$m';
   }
 
-  String _fullDate(DateTime dt) {
-    final l = dt.toLocal();
-    return '${_weekdaysFull[l.weekday - 1]} ${l.day} ${_monthsFull[l.month - 1]} · ${_timeLabel(l)}';
-  }
-
-  String _weatherLabelOf(String w) =>
-      w == 'cloudy' ? 'Cloudy' : (w == 'rain' ? 'Rain' : 'Sunny');
-
   IconData _weatherIcon(String w) {
     switch (w) {
       case 'cloudy':
@@ -451,21 +436,18 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
     const dur = Duration(milliseconds: 300);
     const curve = Curves.easeOutCubic;
 
-    // In-widget overlays (entry detail + composer) are driven by state, not by
-    // pushed routes. Without this, a system back / edge-swipe pops the whole
-    // SiteBookPage route (dropping the user back to the Project page) instead
-    // of closing the overlay. PopScope intercepts back while an overlay is open
-    // and closes it — detail returns to the entry list, editor returns to view.
-    final bool _overlayOpen = _compose || _detailDoc != null;
+    // The composer is an in-widget overlay driven by state, not a pushed route.
+    // PopScope intercepts the system back / edge-swipe while it is open so it
+    // closes the composer instead of popping the whole SiteBookPage route.
+    // (The entry detail is now its own route — DetailSiteBookPage.)
+    final bool _overlayOpen = _compose;
 
     return PopScope(
       canPop: !_overlayOpen,
       onPopInvoked: (didPop) {
-        if (didPop) return; // route already popped (nothing was open)
+        if (didPop) return; // route already popped (composer wasn't open)
         if (_compose) {
           _closeComposer(); // back = close the New site entry editor
-        } else if (_detailDoc != null) {
-          _closeEntry(); // back = return to the entry list
         }
       },
       child: AnnotatedRegion<SystemUiOverlayStyle>(
@@ -477,20 +459,6 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
           child: Stack(
             children: [
               Positioned.fill(child: _viewScreen()),
-              // detail — slides over from the right
-              Positioned.fill(
-                child: IgnorePointer(
-                  ignoring: _detailDoc == null,
-                  child: AnimatedSlide(
-                    duration: dur,
-                    curve: curve,
-                    offset:
-                        _detailDoc != null ? Offset.zero : const Offset(1, 0),
-                    child: _swipeToClose(
-                        onClose: _closeEntry, child: _detailScreen()),
-                  ),
-                ),
-              ),
               // editor — slides over from the right (top-most)
               Positioned.fill(
                 child: IgnorePointer(
@@ -1543,252 +1511,6 @@ class _SiteBookPageViewState extends State<SiteBookPageView>
           ),
         ],
       ],
-    );
-  }
-
-  // =====================================================================
-  // DETAIL SCREEN (slide-in) — ink masthead header
-  // =====================================================================
-  Widget _detailScreen() {
-    final topInset = MediaQuery.of(context).viewPadding.top;
-    final bottomInset = MediaQuery.of(context).padding.bottom;
-
-    final d = _detailDoc?.data() ?? const {};
-    final author = (d['authorName'] as String?)?.trim() ?? 'Team member';
-    final note = (d['note'] as String?)?.trim() ?? '';
-    final weather = (d['weather'] as String?) ?? '';
-    final tags = (d['tags'] as List?)?.whereType<String>().toList() ?? const [];
-    final media = _mediaOf(d);
-    final dateLabel = _fullDate(_dateOf(d['createdAt']));
-
-    final photos = media.where((m) => (m['type'] ?? 'image') != 'video').length;
-    final videos = media.length - photos;
-    final metaParts = <String>[];
-    if (photos > 0)
-      metaParts.add('$photos ${photos == 1 ? 'photo' : 'photos'}');
-    if (videos > 0)
-      metaParts.add('$videos ${videos == 1 ? 'video' : 'videos'}');
-    if (tags.isNotEmpty) {
-      metaParts.add('${tags.length} ${tags.length == 1 ? 'tag' : 'tags'}');
-    }
-    final metaLabel = metaParts.join('  ·  ');
-
-    return Container(
-      color: _paper,
-      child: Column(
-        children: [
-          // ink masthead
-          Container(
-            width: double.infinity,
-            color: _ink,
-            padding: EdgeInsets.fromLTRB(_hPad, topInset + 10, _hPad, 18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    _circleBtn(Icons.arrow_back_ios_new_rounded, _closeEntry,
-                        size: 16),
-                    Expanded(
-                      child: Center(
-                        child: Text('SITE ENTRY',
-                            style: TextStyle(
-                                fontFamily: _bodyFont,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.7,
-                                color: _paper.withOpacity(0.5))),
-                      ),
-                    ),
-                    if (weather.isNotEmpty)
-                      Container(
-                        height: 38,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                            color: _paper.withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(999)),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(_weatherIcon(weather),
-                                size: 13, color: _paper.withOpacity(0.85)),
-                            const SizedBox(width: 5),
-                            Text(_weatherLabelOf(weather),
-                                style: const TextStyle(
-                                    fontFamily: _bodyFont,
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: _paper)),
-                          ],
-                        ),
-                      )
-                    else
-                      const SizedBox(width: 38, height: 38),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                          color: _paper.withOpacity(0.14),
-                          shape: BoxShape.circle),
-                      child: Text(_initials(author),
-                          style: const TextStyle(
-                              fontFamily: _displayFont,
-                              fontSize: 17,
-                              fontWeight: FontWeight.w800,
-                              color: _paper)),
-                    ),
-                    const SizedBox(width: 13),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(author,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                  fontFamily: _displayFont,
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: -0.5,
-                                  height: 1.1,
-                                  color: _paper)),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Icon(Icons.calendar_today_rounded,
-                                  size: 12, color: _paper.withOpacity(0.55)),
-                              const SizedBox(width: 6),
-                              Flexible(
-                                child: Text(dateLabel,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                        fontFamily: _bodyFont,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: _paper.withOpacity(0.55))),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                if (metaLabel.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.only(top: 14),
-                    decoration: BoxDecoration(
-                      border: Border(
-                          top: BorderSide(color: _paper.withOpacity(0.1))),
-                    ),
-                    child: Text(metaLabel,
-                        style: TextStyle(
-                            fontFamily: _bodyFont,
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.3,
-                            color: _paper.withOpacity(0.5))),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          // body
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(_hPad, 20, _hPad, bottomInset + 32),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (note.isNotEmpty)
-                    Text(note,
-                        style: const TextStyle(
-                            fontFamily: _bodyFont,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                            height: 1.6,
-                            color: _ink)),
-                  if (media.isNotEmpty) ...[
-                    const SizedBox(height: 18),
-                    for (final m in media) ...[
-                      _detailMedia(m),
-                      const SizedBox(height: 10),
-                    ],
-                  ],
-                  if (tags.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: [
-                        for (final t in tags)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 5),
-                            decoration: BoxDecoration(
-                                color: _surface,
-                                borderRadius: BorderRadius.circular(999)),
-                            child: Text(t,
-                                style: const TextStyle(
-                                    fontFamily: _bodyFont,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: _inkMute)),
-                          ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Full-width media in the detail gallery. Videos show a large play badge
-  // (wire a video player / route on tap as needed).
-  Widget _detailMedia(Map<String, dynamic> m) {
-    final url = (m['url'] ?? '').toString();
-    final isVideo = (m['type'] ?? 'image') == 'video';
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
-      child: Stack(
-        children: [
-          if (!isVideo)
-            Image.network(url,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (c, e, s) =>
-                    Container(height: 200, color: _surface))
-          else
-            Container(height: 200, width: double.infinity, color: _ink),
-          if (isVideo)
-            Positioned.fill(
-              child: Container(
-                alignment: Alignment.center,
-                child: Container(
-                  width: 54,
-                  height: 54,
-                  decoration: const BoxDecoration(
-                      color: Color(0xEBFFFFFF), shape: BoxShape.circle),
-                  child: const Icon(Icons.play_arrow_rounded,
-                      size: 30, color: _ink),
-                ),
-              ),
-            ),
-        ],
-      ),
     );
   }
 

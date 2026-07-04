@@ -55,6 +55,7 @@ class _ProjectTimelinePageWidgetState extends State<ProjectTimelinePageWidget> {
           child: custom_widgets.ProjectTimelinePageView(
             width: double.infinity,
             height: double.infinity,
+            projectRef: widget.projectRef,
           ),
         ),
       ),
