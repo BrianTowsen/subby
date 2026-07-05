@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -819,25 +821,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       return bd.compareTo(ad);
     });
 
-    final active = shared.length;
-    int needs = 0;
-    for (final sp in shared) {
-      final s = (sp.data['status'] as String?)?.trim() ?? '';
-      if (_needsAttention(s)) needs++;
-    }
-    final onTrack = active - needs;
-
     final feat = shared.first;
     final rest = shared.skip(1).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(_hPad, 18, _hPad, 0),
-          child: _statStrip(active, onTrack, needs, activeLabel: 'On builds'),
-        ),
-        const SizedBox(height: 28),
+        const SizedBox(height: 18),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: _hPad),
           child: _sharedSectionHeader(),
@@ -910,9 +900,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       borderRadius: BorderRadius.circular(16),
       child: Container(
         decoration: BoxDecoration(
-          // SHARED hero — fade-yellow tint (matches owner cards).
-          color: const Color(0xFFE7EDF0),
-          border: Border.all(color: const Color(0xFFCBD8DD)),
+          // SHARED hero — featured yellow (matches the owner featured tile).
+          color: const Color(0xFFDEDE54),
+          border: Border.all(color: const Color(0xFFD4D44A)),
           borderRadius: BorderRadius.circular(16),
         ),
         padding: const EdgeInsets.all(18),
@@ -1049,10 +1039,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         borderRadius: BorderRadius.circular(14),
         child: Container(
           decoration: BoxDecoration(
-            // SHARED primary row — fade-yellow tint (matches owner cards).
-            color: const Color(0xFFE7EDF0),
+            // SHARED primary row — muted yellow (matches owner tint tiles).
+            color: const Color(0xFFECECC9),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFCBD8DD)),
+            border: Border.all(color: const Color(0xFFD9D99E)),
           ),
           padding: const EdgeInsets.all(14),
           child: Column(
@@ -1657,10 +1647,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     final progress = _progress(data);
     final pct = (progress * 100).round();
 
-    final Color bg = featured ? _teal : const Color(0xFFE7EDF0);
-    final Color border = featured ? _teal : const Color(0xFFCBD8DD);
-    final Color numColor = featured ? _paper : _ink;
-    final Color subColor = featured ? Colors.white.withOpacity(0.85) : _inkMute;
+    // Yellow featured tile + muted-yellow tint tiles; all tile text = ink.
+    final Color bg =
+        featured ? const Color(0xFFDEDE54) : const Color(0xFFECECC9);
+    final Color border =
+        featured ? const Color(0xFFD4D44A) : const Color(0xFFD9D99E);
+    final Color numColor = _ink;
+    final Color subColor = _ink;
 
     final String sub = shared
         ? (sharedBy!.isNotEmpty ? 'Shared by $sharedBy' : 'Shared with you')
@@ -2590,10 +2583,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           height: 64,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: _yellow,
+            color: const Color(0xFFDEDE54),
             borderRadius: BorderRadius.circular(18),
           ),
-          child: const Icon(Icons.lock_open_rounded, size: 32, color: _paper),
+          child: const Icon(Icons.lock_open_rounded, size: 32, color: _ink),
         ),
         const SizedBox(height: 20),
         const Text(
@@ -2664,10 +2657,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           height: 64,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: _yellow,
+            color: const Color(0xFFDEDE54),
             borderRadius: BorderRadius.circular(18),
           ),
-          child: const Icon(Icons.construction, size: 32, color: _paper),
+          child: const Icon(Icons.construction, size: 32, color: _ink),
         ),
         const SizedBox(height: 20),
         const Text(

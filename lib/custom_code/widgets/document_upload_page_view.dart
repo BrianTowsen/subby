@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -71,6 +73,8 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
   static const Color _live =
       Color(0xFF566670); // clay — live / paid / done / warning
   static const Color _coral = Color(0xFF566670);
+  // Warning / destructive accent — brown.
+  static const Color _warn = Color(0xFFA44200);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -418,12 +422,12 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
                   height: 62,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: _coral.withOpacity(0.12),
+                    color: _warn.withOpacity(0.12),
                     shape: BoxShape.circle,
                     border:
-                        Border.all(color: _coral.withOpacity(0.22), width: 1),
+                        Border.all(color: _warn.withOpacity(0.22), width: 1),
                   ),
-                  child: Icon(icon, color: _coral, size: 30),
+                  child: Icon(icon, color: _warn, size: 30),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -461,7 +465,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: _coral,
+                        color: _warn,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -894,7 +898,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
                   child: Icon(
                     Icons.delete_outline_rounded,
                     size: 20,
-                    color: _inkMute,
+                    color: _warn,
                   ),
                 ),
               ),

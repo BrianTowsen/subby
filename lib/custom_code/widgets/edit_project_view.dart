@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/services.dart'; // SystemChrome / SystemUiOverlayStyle (dark status bar over white form)
@@ -61,6 +63,8 @@ class _EditProjectViewState extends State<EditProjectView>
   static const Color _live =
       Color(0xFF566670); // clay — live / open-now / warning
   static const Color _coral = Color(0xFF566670);
+  // Warning / destructive accent — brown.
+  static const Color _warn = Color(0xFFA44200);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -82,6 +86,7 @@ class _EditProjectViewState extends State<EditProjectView>
 
   String _status = 'Active';
   String _province = 'Western Cape';
+  String _scope = 'New build';
 
   DateTime? _startDate;
   DateTime? _endDate;
@@ -392,6 +397,53 @@ class _EditProjectViewState extends State<EditProjectView>
     );
   }
 
+  // ✅ Project Scope — segmented chip selector (saved as `category`).
+  static const List<String> _scopeOptions = <String>[
+    'New build',
+    'Building addition',
+    'Home Renovation',
+  ];
+
+  Widget _uScope(FlutterFlowTheme theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 19),
+      decoration: _uRule,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('PROJECT SCOPE', style: _uLabelStyle(theme)),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _scopeOptions.map((o) {
+              final sel = _scope == o;
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _saving ? null : () => setState(() => _scope = o),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: sel ? _ink : _surface,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(o,
+                      style: TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: sel ? _paper : _inkMute,
+                      )),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _uArchiveRow(FlutterFlowTheme theme, Color accent) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20),
@@ -648,6 +700,10 @@ class _EditProjectViewState extends State<EditProjectView>
         _province =
             _provinceOptions.contains(province) ? province : 'Western Cape';
 
+        final scope =
+            (data['category'] ?? data['type'] ?? 'New build').toString();
+        _scope = _scopeOptions.contains(scope) ? scope : 'New build';
+
         _startDate = _dateFrom(data['startDate']);
         _endDate = _dateFrom(data['endDate']);
 
@@ -684,6 +740,7 @@ class _EditProjectViewState extends State<EditProjectView>
     return <String, dynamic>{
       'name': name,
       'status': _status,
+      'category': _scope,
       'province': _province,
       'city': city,
       'address': address,
@@ -986,12 +1043,12 @@ class _EditProjectViewState extends State<EditProjectView>
                   height: 62,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: _coral.withOpacity(0.12),
+                    color: _warn.withOpacity(0.12),
                     shape: BoxShape.circle,
                     border:
-                        Border.all(color: _coral.withOpacity(0.22), width: 1),
+                        Border.all(color: _warn.withOpacity(0.22), width: 1),
                   ),
-                  child: Icon(icon, color: _coral, size: 30),
+                  child: Icon(icon, color: _warn, size: 30),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -1029,7 +1086,7 @@ class _EditProjectViewState extends State<EditProjectView>
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: _coral,
+                        color: _warn,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -1278,6 +1335,7 @@ class _EditProjectViewState extends State<EditProjectView>
                             return null;
                           },
                         ),
+                        _uScope(theme),
                         _uSelect(
                           theme: theme,
                           label: 'Status',
