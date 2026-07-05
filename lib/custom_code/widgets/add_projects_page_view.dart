@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status bar icons over ink hero)
@@ -77,6 +79,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
 
   String _status = 'Planning';
   String _province = 'Western Cape';
+  String _scope = 'New build';
 
   DateTime? _startDate;
   DateTime? _endDate;
@@ -354,6 +357,53 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
     );
   }
 
+  // ✅ Project Scope — segmented chip selector (saved as `category`).
+  static const List<String> _scopeOptions = <String>[
+    'New build',
+    'Building addition',
+    'Home Renovation',
+  ];
+
+  Widget _uScope(FlutterFlowTheme theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 19),
+      decoration: _uRule,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('PROJECT SCOPE', style: _uLabelStyle(theme)),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _scopeOptions.map((o) {
+              final sel = _scope == o;
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _saving ? null : () => setState(() => _scope = o),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: sel ? _ink : _surface,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(o,
+                      style: TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: sel ? _paper : _inkMute,
+                      )),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _uArchiveRow(FlutterFlowTheme theme) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20),
@@ -576,6 +626,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
         'ownerRef': currentUserReference,
         'name': _nameCtrl.text.trim(),
         'status': _status,
+        'category': _scope,
         'province': _province,
         'city': _cityCtrl.text.trim(),
         'address': _addressCtrl.text.trim(),
@@ -760,6 +811,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
                                 return null;
                               },
                             ),
+                            _uScope(theme),
                             _uSelect(
                               theme: theme,
                               label: 'Status',

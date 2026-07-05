@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -3270,7 +3272,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         .trim();
     return Row(children: [
       _rPill(status.isEmpty ? 'Active' : status,
-          fg: _paper, bg: _inkMute, icon: Icons.bolt_rounded),
+          fg: _paper, bg: const Color(0xFFA44200), icon: Icons.bolt_rounded),
       if (category.isNotEmpty) ...[
         const SizedBox(width: 8),
         _rPill(category, fg: _ink, bg: _surface),
@@ -3447,7 +3449,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   }
 
   Widget _rModTile(IconData icon, String title, String sub, String visKey,
-      bool readOnly, VoidCallback onTap) {
+      bool readOnly, VoidCallback onTap,
+      {bool featured = false}) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -3457,7 +3460,10 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
           height: 118,
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-              color: _surface, borderRadius: BorderRadius.circular(14)),
+              // Featured (first) tile = yellow; the rest = muted yellow.
+              color:
+                  featured ? const Color(0xFFDEDE54) : const Color(0xFFECECC9),
+              borderRadius: BorderRadius.circular(14)),
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -3647,7 +3653,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                 'timeline',
                 readOnly,
                 () => _safeNavigate(widget.timelineRouteName,
-                    fallbackRoute: _fallbackTimelineRoute))),
+                    fallbackRoute: _fallbackTimelineRoute),
+                featured: true)),
         const SizedBox(width: 10),
         Expanded(
             child: _rModTile(
@@ -3818,8 +3825,9 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                 height: 30,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                    color: _ink, borderRadius: BorderRadius.circular(9)),
-                child: const Icon(Icons.add_rounded, size: 18, color: _paper),
+                    color: const Color(0xFFDEDE54),
+                    borderRadius: BorderRadius.circular(9)),
+                child: const Icon(Icons.add_rounded, size: 18, color: _ink),
               ),
             ),
           ),
