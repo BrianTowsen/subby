@@ -1101,14 +1101,14 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
     final active = current == u;
     return InkWell(
       onTap: _readOnly ? null : () => _setUnit(u),
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(999),
       child: Container(
         constraints: const BoxConstraints(minWidth: 44),
         alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: active ? _ink : _paper,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(999),
           border: Border.all(color: active ? _ink : _hairlineOnSurface),
         ),
         child: Text(u,
