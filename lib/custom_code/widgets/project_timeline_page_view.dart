@@ -20,6 +20,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:intl/intl.dart';
@@ -1781,7 +1783,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                            color: _green,
+                            color: const Color(0xFFB53F1A),
                             borderRadius: BorderRadius.circular(999)),
                         child: const Text('TODAY',
                             style: TextStyle(
@@ -1827,7 +1829,8 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                           top: 0,
                           bottom: 0,
                           child: Container(
-                              width: 2, color: _green.withOpacity(0.85)),
+                              width: 2,
+                              color: const Color(0xFFB53F1A).withOpacity(0.85)),
                         ),
                       ],
                     ),
