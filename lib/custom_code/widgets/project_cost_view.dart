@@ -124,6 +124,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
   bool _readOnly = false;
   String _visibility = 'private';
   bool _remoteLoaded = false;
+  int _lastSaveMs = 0; // when we last wrote — used to ignore our own echo
   String _projectName = 'Project';
 
   @override
@@ -244,9 +245,9 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       return;
     }
     if (_saveTimer?.isActive ?? false) return; // don't clobber pending edits
-    // Don't rebuild controllers (and steal focus) while the user is typing.
-    final focused = FocusManager.instance.primaryFocus;
-    if (focused != null && focused.hasFocus) {
+    // Ignore the Firestore echo of our own recent write so it can't rebuild
+    // controllers (and drop focus / revert keystrokes) mid-edit.
+    if (DateTime.now().millisecondsSinceEpoch - _lastSaveMs < 2000) {
       _remoteLoaded = true;
       return;
     }
@@ -347,6 +348,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
   Future<void> _saveNow() async {
     final ref = _estimateRef;
     if (ref == null || _readOnly) return;
+    _lastSaveMs = DateTime.now().millisecondsSinceEpoch;
     try {
       await ref.set({
         'updatedAt': FieldValue.serverTimestamp(),

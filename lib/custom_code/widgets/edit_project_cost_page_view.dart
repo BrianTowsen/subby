@@ -127,6 +127,7 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
   int _selLi = 0;
   bool _ready = false;
   bool _leaving = false; // guards against a second pop after delete/back
+  int _lastSaveMs = 0; // when we last wrote — used to ignore our own echo
 
   DocumentReference<Map<String, dynamic>>? _projectRef;
   DocumentReference<Map<String, dynamic>>? _estimateRef;
@@ -259,10 +260,11 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
       return;
     }
     if (_saveTimer?.isActive ?? false) return; // don't clobber pending edits
-    // Don't rebuild controllers (and drop focus / lose keystrokes) while the
-    // user is actively editing this line.
-    final focused = FocusManager.instance.primaryFocus;
-    if (_ready && focused != null && focused.hasFocus) return;
+    // Ignore the Firestore echo of our own recent write so it can't rebuild
+    // controllers (and drop focus / lose keystrokes) mid-edit.
+    if (_ready && DateTime.now().millisecondsSinceEpoch - _lastSaveMs < 2000) {
+      return;
+    }
     final list = data['sections'];
     if (!mounted) return;
     if (list is List) {
@@ -396,6 +398,7 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
   Future<void> _saveNow() async {
     final ref = _estimateRef;
     if (ref == null || _readOnly) return;
+    _lastSaveMs = DateTime.now().millisecondsSinceEpoch;
     try {
       await ref.set({
         'updatedAt': FieldValue.serverTimestamp(),
@@ -858,9 +861,6 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
-                // amount preview card
-                _amountCard(l, amount, subtotal, share),
                 const SizedBox(height: 16),
                 // unit
                 const Text('UNIT OF MEASURE', style: _capLabel),
@@ -880,6 +880,9 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
                 Text('RATE (PER ${l.unit.toUpperCase()})', style: _capLabel),
                 const SizedBox(height: 8),
                 _rateCard(l),
+                const SizedBox(height: 16),
+                // amount preview card (below rate)
+                _amountCard(l, amount, subtotal, share),
                 // position & order
                 const SizedBox(height: 20),
                 const Text('POSITION & ORDER', style: _capLabel),
