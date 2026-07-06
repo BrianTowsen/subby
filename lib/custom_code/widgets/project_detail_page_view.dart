@@ -3810,14 +3810,14 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-                color: const Color(0xFFB15218).withOpacity(0.12),
+                color: const Color(0xFFB53F1A).withOpacity(0.12),
                 borderRadius: BorderRadius.circular(999)),
             child: Text('${visible.length} files',
                 style: const TextStyle(
                     fontFamily: _bodyFont,
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFFB15218))),
+                    color: Color(0xFFB53F1A))),
           ),
         ]),
         if (!readOnly)
@@ -3831,7 +3831,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                 height: 30,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                    color: const Color(0xFFB15218),
+                    color: const Color(0xFFB53F1A),
                     borderRadius: BorderRadius.circular(9)),
                 child: const Icon(Icons.add_rounded,
                     size: 18, color: Colors.white),
