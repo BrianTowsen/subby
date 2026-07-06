@@ -2032,20 +2032,20 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFFB15218).withOpacity(0.12),
+              color: const Color(0xFFB53F1A).withOpacity(0.12),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.bolt, size: 13, color: Color(0xFFB15218)),
+                const Icon(Icons.bolt, size: 13, color: Color(0xFFB53F1A)),
                 const SizedBox(width: 4),
                 Text('$count recent',
                     style: const TextStyle(
                       fontFamily: _bodyFont,
                       fontSize: 11,
                       fontWeight: FontWeight.w900,
-                      color: Color(0xFFB15218),
+                      color: Color(0xFFB53F1A),
                     )),
               ],
             ),

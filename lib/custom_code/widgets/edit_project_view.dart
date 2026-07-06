@@ -66,7 +66,7 @@ class _EditProjectViewState extends State<EditProjectView>
       Color(0xFF566670); // clay — live / open-now / warning
   static const Color _coral = Color(0xFF566670);
   // Warning / destructive accent — brown.
-  static const Color _warn = Color(0xFFB15218);
+  static const Color _warn = Color(0xFFB53F1A);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
