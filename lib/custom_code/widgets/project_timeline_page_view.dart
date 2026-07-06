@@ -22,6 +22,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:intl/intl.dart';
@@ -518,87 +520,53 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   // =================================================================
   List<_Section> buildProgramme(String key) {
     if (key == 'scratch') return <_Section>[];
-    _Section s(String name, String group, String mode, int weeks,
+
+    // Standard trade sequence — durations are in WORKING DAYS.
+    // All floor configs (gf / gf1 / lgfgf / lgfgf1) currently share this one
+    // programme; branch on `key` here if they ever need to diverge.
+    _Section p(String name, String group, String mode, int days,
             {int buffer = 0, int overlapPct = 50}) =>
         _Section(
             name: name,
             group: group,
             mode: mode,
-            days:
-                weeks * 5, // template written in weeks; stored as working days
+            days: days,
             buffer: buffer,
             overlapPct: overlapPct);
-    _Section plumbing() => _Section(
-          name: 'Plumbing & Drainage',
-          group: 'services',
-          mode: 'with',
-          days: 15,
-          expanded: false,
-          children: [
-            _Child(name: 'First fix (rough-in)', mode: 'start', days: 6),
-            _Child(
-                name: 'Drainage & sewer connections', mode: 'after', days: 4),
-            _Child(name: 'Second fix', mode: 'after', days: 5),
-            _Child(name: 'Testing & commissioning', mode: 'after', days: 2),
-          ],
-        );
 
-    const floorsMap = {
-      'gf': ['GF'],
-      'gf1': ['GF', '1F'],
-      'lgfgf': ['LGF', 'GF'],
-      'lgfgf1': ['LGF', 'GF', '1F'],
-    };
-    final floors = floorsMap[key] ?? const ['GF'];
-    final hasLGF = floors.contains('LGF');
-    final out = <_Section>[];
-
-    // preliminaries & site
-    out.add(s('Professional Fees', 'external', 'start', 2));
-    out.add(s('Preliminaries & General', 'external', 'after', 1));
-    out.add(s('Site Preparation', 'external', 'after', 1));
-    out.add(s('Site Establishment', 'external', 'after', 1));
-    // substructure
-    out.add(s('Earthworks & Excavation', 'struct', 'after', hasLGF ? 3 : 2));
-    if (hasLGF) {
-      out.add(s('Shoring & Retaining Walls', 'struct', 'after', 2));
-      out.add(s('Tanking & Waterproofing', 'struct', 'after', 1));
-    }
-    out.add(s('Concrete Works (Foundations)', 'struct', 'after', 2));
-    // structure per floor (bottom-up)
-    for (var i = 0; i < floors.length; i++) {
-      final f = floors[i];
-      if (i > 0) out.add(s('Suspended Floor Slab — $f', 'struct', 'after', 1));
-      out.add(s(
-          'Brickwork & Blockwork — $f', 'struct', 'after', f == 'LGF' ? 3 : 4));
-    }
-    out.add(s('Structural Steel Works', 'struct', 'with', 1));
-    out.add(s('Roofing & Trusses', 'struct', 'after', 3));
-    out.add(s('Windows & Door Frames', 'struct', 'overlap', 1));
-    out.add(s('Glazing', 'struct', 'after', 1));
-    // building-wide services
-    out.add(plumbing());
-    out.add(s('Sanitary Fittings', 'services', 'after', 1));
-    out.add(s('Electrical Works', 'services', 'with', 2));
-    out.add(s('Electrical Fittings', 'services', 'after', 1));
-    // finishes per floor (bottom-up)
-    for (final f in floors) {
-      out.add(s('Plastering & Screeds — $f', 'finish', 'after', 2));
-      out.add(s('Ceilings & Partitioning — $f', 'finish', 'overlap', 1));
-      out.add(s('Joinery & Carpentry — $f', 'finish', 'after', 1));
-      out.add(s('Tiling — $f', 'finish', 'after', 1));
-      out.add(s('Painting & Decorating — $f', 'finish', 'overlap', 2,
-          overlapPct: 60));
-    }
-    // common fit-out
-    out.add(s('Kitchen (Built-in Units)', 'finish', 'after', 1));
-    out.add(s('Built-in Cupboards', 'finish', 'with', 1));
-    out.add(s('Floor Covering', 'finish', 'after', 1));
-    // external & handover
-    out.add(s('External Site Works', 'external', 'after', 2));
-    out.add(s('Landscaping', 'external', 'with', 2));
-    out.add(s('Cleaning & Handover', 'external', 'after', 1));
-    return out;
+    return <_Section>[
+      p('Professional Services', 'external', 'start', 20),
+      p('Site Preparation', 'external', 'after', 2),
+      p('Site Establishment', 'external', 'after', 2),
+      p('Earthworks & Excavation', 'struct', 'after', 5),
+      p('Shoring & Retaining Walls', 'struct', 'after', 8),
+      p('Brickwork & Concrete', 'struct', 'after', 5),
+      p('Structural Steel Works', 'external', 'with', 5),
+      p('Suspended Floor Slab 1', 'struct', 'after', 10),
+      p('Brickwork & Concrete', 'external', 'after', 10),
+      p('Structural Steel Works', 'external', 'after', 5),
+      p('Suspended Floor Slab 2', 'struct', 'with', 10),
+      p('Brickwork & Concrete', 'external', 'after', 10),
+      p('Structural Steel Works', 'struct', 'after', 5),
+      p('Suspended Roof Slab', 'external', 'with', 10),
+      p('Roofing', 'external', 'after', 10),
+      p('Plumbing & Drainage', 'external', 'with', 10),
+      p('Electrical Works', 'external', 'with', 10),
+      p('Plastering & Screeds', 'finish', 'overlap', 10),
+      p('Windows & Door Frames', 'struct', 'overlap', 5),
+      p('Waterproofing', 'external', 'after', 5),
+      p('Ceilings & Partitioning', 'finish', 'overlap', 5),
+      p('Joinery & Carpentry', 'finish', 'after', 5),
+      p('Painting & Wall Covering', 'finish', 'overlap', 21, overlapPct: 60),
+      p('Tiling', 'finish', 'with', 10),
+      p('Kitchen (Built-in Units)', 'finish', 'overlap', 5, overlapPct: 30),
+      p('Built-in Cupboards', 'finish', 'with', 5),
+      p('Sanitary Fittings', 'services', 'after', 5),
+      p('Floor Covering', 'finish', 'after', 10),
+      p('Electrical Fittings', 'services', 'overlap', 5),
+      p('External Site Works', 'external', 'overlap', 10),
+      p('Cleaning & Handover', 'external', 'overlap', 5),
+    ];
   }
 
   void _pickTemplate(String key) {
