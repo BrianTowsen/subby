@@ -922,15 +922,30 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                       )),
                 ),
                 Expanded(
-                  child: Text(
-                    sb.name.trim().isEmpty ? 'Sub-section' : sb.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontFamily: _body,
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w800,
-                      color: _ink,
+                  child: InkWell(
+                    onTap: _readOnly
+                        ? null
+                        : () => setState(() => sb.pick = !sb.pick),
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            sb.name.trim().isEmpty ? 'Sub-section' : sb.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontFamily: _body,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w800,
+                              color: _ink,
+                            ),
+                          ),
+                        ),
+                        if (!_readOnly) const SizedBox(width: 4),
+                        if (!_readOnly)
+                          const Icon(Icons.expand_more_rounded,
+                              size: 16, color: _faint),
+                      ],
                     ),
                   ),
                 ),
@@ -962,6 +977,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
               ],
             ),
           ),
+          if (sb.pick && !_readOnly) _subTypePicker(s, sb),
           if (sb.expanded) ...[
             for (var li = 0; li < sb.lines.length; li++)
               _lineRow('$subNum.${li + 1}', sb.lines[li],
@@ -972,44 +988,25 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                 decoration: const BoxDecoration(
                   border: Border(top: BorderSide(color: _line)),
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: InkWell(
-                        onTap: () => _addSubLine(s, sb),
-                        child: const Padding(
-                          padding: EdgeInsets.fromLTRB(20, 10, 12, 10),
-                          child: Row(
-                            children: [
-                              Icon(Icons.add_circle_outline_rounded,
-                                  size: 16, color: _green),
-                              SizedBox(width: 7),
-                              Text('Add line item',
-                                  style: TextStyle(
-                                    fontFamily: _body,
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w800,
-                                    color: _green,
-                                  )),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    InkWell(
-                      onTap: () => _removeSub(s, sb),
-                      child: const Padding(
-                        padding: EdgeInsets.fromLTRB(14, 10, 14, 10),
-                        child: Text('Remove',
+                child: InkWell(
+                  onTap: () => _addSubLine(s, sb),
+                  child: const Padding(
+                    padding: EdgeInsets.fromLTRB(20, 10, 12, 10),
+                    child: Row(
+                      children: [
+                        Icon(Icons.add_circle_outline_rounded,
+                            size: 16, color: _green),
+                        SizedBox(width: 7),
+                        Text('Add line item',
                             style: TextStyle(
                               fontFamily: _body,
                               fontSize: 11.5,
-                              fontWeight: FontWeight.w700,
-                              color: _danger,
+                              fontWeight: FontWeight.w800,
+                              color: _green,
                             )),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
           ],
@@ -1072,6 +1069,93 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                   ),
                 ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Inline editor for a sub-section: change its preset type or delete it.
+  Widget _subTypePicker(_EstSection s, _EstSub sb) {
+    final usedByOthers =
+        s.subs.where((x) => x != sb).map((x) => x.name).toSet();
+    final opts = _subTypes.where((n) => !usedByOthers.contains(n)).toList();
+    return Container(
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: _line)),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 10, 12, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('CHANGE TYPE',
+              style: TextStyle(
+                fontFamily: _body,
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.5,
+                color: _faint,
+              )),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 7,
+            runSpacing: 7,
+            children: [
+              for (final n in opts)
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      sb.name = n;
+                      sb.pick = false;
+                    });
+                    _persist();
+                  },
+                  borderRadius: BorderRadius.circular(999),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: sb.name == n ? _ink : _paper,
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(
+                          color: sb.name == n ? _ink : _dash, width: 1.2),
+                    ),
+                    child: Text(n,
+                        style: TextStyle(
+                          fontFamily: _body,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800,
+                          color: sb.name == n ? _paper : _inkMute,
+                        )),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          InkWell(
+            onTap: () => _removeSub(s, sb),
+            borderRadius: BorderRadius.circular(999),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: _border),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(Icons.delete_outline_rounded, size: 15, color: _danger),
+                  SizedBox(width: 6),
+                  Text('Delete sub-section',
+                      style: TextStyle(
+                        fontFamily: _body,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w800,
+                        color: _danger,
+                      )),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -1403,6 +1487,7 @@ class _EstSection {
 class _EstSub {
   String name;
   bool expanded;
+  bool pick = false; // transient: change-type/delete picker open
   final List<_EstLine> lines;
 
   _EstSub({required this.name, this.expanded = true, List<_EstLine>? lines})
