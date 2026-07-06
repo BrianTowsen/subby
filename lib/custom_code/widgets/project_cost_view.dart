@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -98,23 +100,17 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     'Cleaning & Handover',
   ];
 
-  static const List<String> _units = [
-    'Sum',
-    'no',
-    'm',
-    'm²',
-    'm³',
-    'ton',
-    'point',
-    'load',
-    'month',
-    'item',
-    'lot',
-    '%',
-  ];
-
   static const int _contingencyPct = 10;
   static const int _vatPct = 15;
+
+  // Fixed sub-section vocabulary (a standard cost breakdown of a trade).
+  static const List<String> _subTypes = [
+    'Supply and Fit',
+    'Material',
+    'Labour',
+    'Equipment',
+    'Specialist',
+  ];
 
   final List<_EstSection> _sections = [];
   bool _breakdownOpen = false;
@@ -266,30 +262,56 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     });
   }
 
+  Map<String, dynamic> _lineToMap(_EstLine l) => {
+        'desc': l.desc.text,
+        'unit': l.unit,
+        'qty': l.qty.text,
+        'rate': l.rate.text,
+      };
+
   Map<String, dynamic> _sectionToMap(_EstSection s) => {
         'name': s.name,
         'custom': s.custom,
         'expanded': s.expanded,
-        'lines': s.lines
-            .map((l) => {
-                  'desc': l.desc.text,
-                  'unit': l.unit,
-                  'qty': l.qty.text,
-                  'rate': l.rate.text,
+        'lines': s.lines.map(_lineToMap).toList(),
+        'subs': s.subs
+            .map((sb) => {
+                  'name': sb.name,
+                  'expanded': sb.expanded,
+                  'lines': sb.lines.map(_lineToMap).toList(),
                 })
             .toList(),
       };
+
+  _EstLine _lineFromMap(Map m) => _EstLine(
+        d: (m['desc'] ?? '').toString(),
+        q: (m['qty'] ?? '').toString(),
+        r: (m['rate'] ?? '').toString(),
+        unit: (m['unit'] ?? 'Sum').toString(),
+      );
 
   _EstSection _sectionFromMap(Map<String, dynamic> m) {
     final lines = <_EstLine>[];
     if (m['lines'] is List) {
       for (final e in (m['lines'] as List)) {
+        if (e is Map) lines.add(_lineFromMap(e));
+      }
+    }
+    final subs = <_EstSub>[];
+    if (m['subs'] is List) {
+      for (final e in (m['subs'] as List)) {
         if (e is Map) {
-          lines.add(_EstLine(
-            d: (e['desc'] ?? '').toString(),
-            q: (e['qty'] ?? '').toString(),
-            r: (e['rate'] ?? '').toString(),
-            unit: (e['unit'] ?? 'Sum').toString(),
+          final sm = e.map((k, v) => MapEntry(k.toString(), v));
+          final sl = <_EstLine>[];
+          if (sm['lines'] is List) {
+            for (final le in (sm['lines'] as List)) {
+              if (le is Map) sl.add(_lineFromMap(le));
+            }
+          }
+          subs.add(_EstSub(
+            name: (sm['name'] ?? '').toString(),
+            expanded: sm['expanded'] == true,
+            lines: sl,
           ));
         }
       }
@@ -299,6 +321,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       custom: m['custom'] == true,
       expanded: m['expanded'] == true,
       lines: lines,
+      subs: subs,
     );
   }
 
@@ -327,11 +350,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     _saveNow();
   }
 
-  void _edited() {
-    setState(() {});
-    _persist();
-  }
-
   void _handleBack() {
     final nav = Navigator.of(context);
     if (nav.canPop()) nav.pop();
@@ -357,20 +375,68 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     _persist();
   }
 
-  void _addLine(_EstSection s) {
+  // A new direct line is created, saved, then opened on the edit page.
+  Future<void> _addLine(_EstSection s) async {
+    if (_readOnly) return;
     setState(() {
       s.expanded = true;
       s.lines.add(_EstLine());
     });
+    await _saveNow(); // land it in the shared doc before editing
+    final si = _sections.indexOf(s);
+    if (!mounted || si < 0) return;
+    _openEditLine(si, -1, s.lines.length - 1);
+  }
+
+  // A new line inside a sub-section.
+  Future<void> _addSubLine(_EstSection s, _EstSub sb) async {
+    if (_readOnly) return;
+    setState(() {
+      s.expanded = true;
+      sb.expanded = true;
+      sb.lines.add(_EstLine());
+    });
+    await _saveNow();
+    final si = _sections.indexOf(s);
+    final subI = s.subs.indexOf(sb);
+    if (!mounted || si < 0 || subI < 0) return;
+    _openEditLine(si, subI, sb.lines.length - 1);
+  }
+
+  // Add a preset sub-section (a standard breakdown heading) to a section.
+  void _addSub(_EstSection s, String name) {
+    setState(() {
+      s.expanded = true;
+      s.subs.add(_EstSub(name: name));
+    });
     _persist();
   }
 
-  void _removeLine(_EstSection s, _EstLine l) {
+  void _removeSub(_EstSection s, _EstSub sb) {
     setState(() {
-      s.lines.remove(l);
-      l.dispose();
+      s.subs.remove(sb);
+      sb.dispose();
     });
     _persist();
+  }
+
+  // The line editor is its own route (EditProjectCostPage) so it gets native
+  // push/pop + swipe-back. subIndex == -1 addresses a direct line of the
+  // section; >= 0 addresses a line inside that sub-section.
+  void _openEditLine(int si, int subIndex, int li) {
+    final ref = _projectRef;
+    if (ref == null) return;
+    _saveTimer?.cancel();
+    _saveNow(); // flush any pending edit before we leave
+    context.pushNamed(
+      'EditProjectCostPage',
+      queryParameters: {
+        'projectRef': serializeParam(ref, ParamType.DocumentReference),
+        'secIndex': si.toString(),
+        'subIndex': subIndex.toString(),
+        'lineIndex': li.toString(),
+      }.withoutNulls,
+    );
   }
 
   void _addSection() {
@@ -426,6 +492,13 @@ class _ProjectCostViewState extends State<ProjectCostView> {
         net += l.amount;
         items++;
         if (l.hasData) filled = true;
+      }
+      for (final sb in sec.subs) {
+        for (final l in sb.lines) {
+          net += l.amount;
+          items++;
+          if (l.hasData) filled = true;
+        }
       }
       if (filled) started++;
     }
@@ -682,6 +755,11 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     for (final l in s.lines) {
       sub += l.amount;
     }
+    for (final sb in s.subs) {
+      for (final l in sb.lines) {
+        sub += l.amount;
+      }
+    }
 
     final trailing = InkWell(
       onTap: () => _toggleSection(s),
@@ -779,7 +857,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
         ),
         // body
         if (s.expanded) ...[
-          if (s.lines.isEmpty)
+          if (s.lines.isEmpty && s.subs.isEmpty)
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(14, 14, 14, 4),
@@ -796,198 +874,285 @@ class _ProjectCostViewState extends State<ProjectCostView> {
               ),
             ),
           for (var j = 0; j < s.lines.length; j++)
-            _lineRow(index, j, s, s.lines[j]),
+            _lineRow('${index + 1}.${j + 1}', s.lines[j],
+                () => _openEditLine(index, -1, j)),
+          for (var k = 0; k < s.subs.length; k++)
+            _subBlock(index, s, k, s.subs[k], s.lines.length),
           if (!_readOnly) _addLineRow(s),
+          if (!_readOnly) _addSubRow(s),
         ],
       ],
     );
   }
 
-  Widget _lineRow(int si, int li, _EstSection s, _EstLine l) {
+  // A sub-section: a heading that groups line items inside a section.
+  Widget _subBlock(
+      int si, _EstSection s, int subIdx, _EstSub sb, int directCount) {
+    final subNum = '${si + 1}.${directCount + subIdx + 1}';
+    double ss = 0;
+    for (final l in sb.lines) {
+      ss += l.amount;
+    }
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 9, 12, 11),
       decoration: const BoxDecoration(
+        color: Color(0xFFFBFCFD),
         border: Border(top: BorderSide(color: _line)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: 28,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 3),
-                  child: Text('${si + 1}.${li + 1}',
-                      style: const TextStyle(
-                        fontFamily: _body,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFFB7C2C7),
-                      )),
-                ),
-              ),
-              Expanded(
-                child: TextField(
-                  controller: l.desc,
-                  readOnly: _readOnly,
-                  onChanged: (_) => _edited(),
-                  style: const TextStyle(
-                    fontFamily: _body,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: _ink,
-                    height: 1.35,
-                  ),
-                  decoration: const InputDecoration(
-                    isCollapsed: true,
-                    border: InputBorder.none,
-                    hintText: 'Item description',
-                    hintStyle: TextStyle(color: _faint),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Padding(
-                padding: const EdgeInsets.only(top: 1),
-                child: Text(_money(l.amount),
-                    style: const TextStyle(
-                      fontFamily: _display,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: _ink,
-                    )),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
+          // sub-section header
           Padding(
-            padding: const EdgeInsets.only(left: 28),
+            padding: const EdgeInsets.fromLTRB(20, 8, 10, 8),
             child: Row(
               children: [
-                _unitPicker(l),
-                const SizedBox(width: 6),
-                _numPill(label: 'QTY', ctl: l.qty, fieldWidth: 40),
-                const SizedBox(width: 6),
-                const Text('×',
-                    style: TextStyle(
+                Container(
+                  constraints: const BoxConstraints(minWidth: 32),
+                  height: 18,
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.symmetric(horizontal: 5),
+                  margin: const EdgeInsets.only(right: 9),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE7EDF0),
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: Text(subNum,
+                      style: const TextStyle(
                         fontFamily: _body,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFFB7C2C7))),
-                const SizedBox(width: 6),
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                        color: _inkMute,
+                      )),
+                ),
                 Expanded(
-                    child: _numPill(label: 'R', ctl: l.rate, expand: true)),
-                if (!_readOnly) const SizedBox(width: 2),
-                if (!_readOnly)
-                  InkWell(
-                    onTap: () => _removeLine(s, l),
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      width: 32,
-                      height: 32,
-                      alignment: Alignment.center,
-                      child: const Icon(Icons.delete_outline_rounded,
-                          size: 19, color: _danger),
+                  child: Text(
+                    sb.name.trim().isEmpty ? 'Sub-section' : sb.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: _body,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w800,
+                      color: _ink,
                     ),
                   ),
+                ),
+                const SizedBox(width: 8),
+                InkWell(
+                  onTap: () {
+                    setState(() => sb.expanded = !sb.expanded);
+                    _persist();
+                  },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(_money(ss),
+                          style: TextStyle(
+                            fontFamily: _display,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: ss > 0 ? _green : const Color(0xFFB7C2C7),
+                          )),
+                      AnimatedRotation(
+                        turns: sb.expanded ? 0.5 : 0,
+                        duration: const Duration(milliseconds: 180),
+                        child: const Icon(Icons.expand_more_rounded,
+                            size: 20, color: _faint),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
+          if (sb.expanded) ...[
+            for (var li = 0; li < sb.lines.length; li++)
+              _lineRow('$subNum.${li + 1}', sb.lines[li],
+                  () => _openEditLine(si, subIdx, li),
+                  leftPad: 20),
+            if (!_readOnly)
+              Container(
+                decoration: const BoxDecoration(
+                  border: Border(top: BorderSide(color: _line)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => _addSubLine(s, sb),
+                        child: const Padding(
+                          padding: EdgeInsets.fromLTRB(20, 10, 12, 10),
+                          child: Row(
+                            children: [
+                              Icon(Icons.add_circle_outline_rounded,
+                                  size: 16, color: _green),
+                              SizedBox(width: 7),
+                              Text('Add line item',
+                                  style: TextStyle(
+                                    fontFamily: _body,
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: _green,
+                                  )),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    InkWell(
+                      onTap: () => _removeSub(s, sb),
+                      child: const Padding(
+                        padding: EdgeInsets.fromLTRB(14, 10, 14, 10),
+                        child: Text('Remove',
+                            style: TextStyle(
+                              fontFamily: _body,
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              color: _danger,
+                            )),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _unitPicker(_EstLine l) {
-    return PopupMenuButton<String>(
-      enabled: !_readOnly,
-      onSelected: (v) {
-        setState(() => l.unit = v);
-        _persist();
-      },
-      padding: EdgeInsets.zero,
-      itemBuilder: (_) => _units
-          .map((u) => PopupMenuItem<String>(
-                value: u,
-                height: 40,
-                child: Text(u,
-                    style: const TextStyle(
-                        fontFamily: _body, fontSize: 13, color: _ink)),
-              ))
-          .toList(),
-      child: Container(
-        height: 34,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        decoration: BoxDecoration(
-          color: _surface,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(l.unit,
-                style: const TextStyle(
-                    fontFamily: _body,
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w700,
-                    color: _inkMute)),
-            const Icon(Icons.arrow_drop_down_rounded, size: 18, color: _faint),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _numPill({
-    required String label,
-    required TextEditingController ctl,
-    double? fieldWidth,
-    bool expand = false,
-  }) {
-    final field = TextField(
-      controller: ctl,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      textAlign: TextAlign.right,
-      readOnly: _readOnly,
-      onChanged: (_) => _edited(),
-      style: const TextStyle(
-        fontFamily: _display,
-        fontSize: 14,
-        fontWeight: FontWeight.w700,
-        color: _ink,
-      ),
-      decoration: const InputDecoration(
-        isCollapsed: true,
-        border: InputBorder.none,
-        hintText: '0',
-        hintStyle: TextStyle(color: _faint),
-      ),
-    );
+  Widget _addSubRow(_EstSection s) {
+    final used = s.subs.map((x) => x.name).toSet();
+    final avail = _subTypes.where((n) => !used.contains(n)).toList();
+    if (avail.isEmpty) return const SizedBox.shrink();
     return Container(
-      height: 34,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: BoxDecoration(
-        color: _surface,
-        borderRadius: BorderRadius.circular(8),
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: _line)),
       ),
-      child: Row(
-        mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
+      padding: const EdgeInsets.fromLTRB(12, 11, 12, 11),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style: const TextStyle(
+          const Text('ADD SUB-SECTION',
+              style: TextStyle(
                 fontFamily: _body,
                 fontSize: 9,
                 fontWeight: FontWeight.w800,
-                letterSpacing: 0.4,
+                letterSpacing: 0.5,
                 color: _faint,
               )),
-          const SizedBox(width: 5),
-          expand
-              ? Expanded(child: field)
-              : SizedBox(width: fieldWidth ?? 40, child: field),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 7,
+            runSpacing: 7,
+            children: [
+              for (final n in avail)
+                InkWell(
+                  onTap: () => _addSub(s, n),
+                  borderRadius: BorderRadius.circular(999),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: _dash, width: 1.2),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.add_rounded,
+                            size: 14, color: _inkMute),
+                        const SizedBox(width: 5),
+                        Text(n,
+                            style: const TextStyle(
+                              fontFamily: _body,
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w800,
+                              color: _inkMute,
+                            )),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ],
+      ),
+    );
+  }
+
+  // Read-only summary row — tap opens the line on its own edit page.
+  Widget _lineRow(String numLabel, _EstLine l, VoidCallback onTap,
+      {double leftPad = 12}) {
+    final desc = l.desc.text.trim();
+    final qty = l.qty.text.trim();
+    final rate = l.rate.text.trim();
+    final hasNums = qty.isNotEmpty || rate.isNotEmpty;
+    final sub = hasNums
+        ? '${qty.isEmpty ? '0' : qty} ${l.unit} × ${rate.isEmpty ? 'R 0' : 'R ${_fmt(double.tryParse(rate) ?? 0)}'}'
+        : 'Tap to add quantity & rate';
+
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.fromLTRB(leftPad, 10, 12, 10),
+        decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: _line)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: leftPad > 12 ? 36 : 28,
+              child: Text(numLabel,
+                  style: const TextStyle(
+                    fontFamily: _body,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFFB7C2C7),
+                  )),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    desc.isEmpty ? 'Item description' : desc,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: _body,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: desc.isEmpty ? _faint : _ink,
+                      height: 1.3,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    sub,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: _body,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: _faint,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(_money(l.amount),
+                style: TextStyle(
+                  fontFamily: _display,
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w800,
+                  color: l.amount > 0 ? _ink : const Color(0xFFB7C2C7),
+                )),
+            const Icon(Icons.chevron_right_rounded, size: 20, color: _faint),
+          ],
+        ),
       ),
     );
   }
@@ -1212,17 +1377,40 @@ class _EstSection {
   final TextEditingController? nameCtl;
   bool expanded;
   final List<_EstLine> lines;
+  final List<_EstSub> subs;
 
   _EstSection({
     required this.name,
     this.custom = false,
     this.expanded = false,
     List<_EstLine>? lines,
+    List<_EstSub>? subs,
   })  : lines = lines ?? [],
+        subs = subs ?? [],
         nameCtl = custom ? TextEditingController(text: name) : null;
 
   void dispose() {
     nameCtl?.dispose();
+    for (final l in lines) {
+      l.dispose();
+    }
+    for (final s in subs) {
+      s.dispose();
+    }
+  }
+}
+
+// A sub-section: a preset breakdown heading inside a section (e.g. Material,
+// Labour) that groups line items.
+class _EstSub {
+  String name;
+  bool expanded;
+  final List<_EstLine> lines;
+
+  _EstSub({required this.name, this.expanded = true, List<_EstLine>? lines})
+      : lines = lines ?? [];
+
+  void dispose() {
     for (final l in lines) {
       l.dispose();
     }
