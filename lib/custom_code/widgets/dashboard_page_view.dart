@@ -902,9 +902,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       borderRadius: BorderRadius.circular(16),
       child: Container(
         decoration: BoxDecoration(
-          // SHARED hero — featured yellow (matches the owner featured tile).
-          color: const Color(0xFF91B766),
-          border: Border.all(color: const Color(0xFF7EA451)),
+          // SHARED hero — tint surface (matches the tint project tiles).
+          color: const Color(0xFFE3E7EA),
+          border: Border.all(color: const Color(0xFFCCD2D7)),
           borderRadius: BorderRadius.circular(16),
         ),
         padding: const EdgeInsets.all(18),
@@ -1042,9 +1042,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         child: Container(
           decoration: BoxDecoration(
             // SHARED primary row — muted yellow (matches owner tint tiles).
-            color: const Color(0xFFD8E6C9),
+            color: const Color(0xFFE3E7EA),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFC3D7AB)),
+            border: Border.all(color: const Color(0xFFCCD2D7)),
           ),
           padding: const EdgeInsets.all(14),
           child: Column(
@@ -1649,13 +1649,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     final progress = _progress(data);
     final pct = (progress * 100).round();
 
-    // Yellow featured tile + muted-yellow tint tiles; all tile text = ink.
+    // Slate featured tile (white text) + tint tiles (ink text).
     final Color bg =
-        featured ? const Color(0xFF91B766) : const Color(0xFFD8E6C9);
+        featured ? const Color(0xFF58707D) : const Color(0xFFE3E7EA);
     final Color border =
-        featured ? const Color(0xFF7EA451) : const Color(0xFFC3D7AB);
-    final Color numColor = _ink;
-    final Color subColor = _ink;
+        featured ? const Color(0xFF445C69) : const Color(0xFFCCD2D7);
+    final Color numColor = featured ? Colors.white : _ink;
+    final Color subColor = featured ? Colors.white70 : _ink;
 
     final String sub = shared
         ? (sharedBy!.isNotEmpty ? 'Shared by $sharedBy' : 'Shared with you')
@@ -1727,8 +1727,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         child: Container(
           height: 132,
           decoration: BoxDecoration(
-            color: _surface,
-            border: Border.all(color: const Color(0xFFCBD8DD), width: 1.4),
+            color: const Color(0xFFE3E7EA),
+            border: Border.all(color: const Color(0xFFCCD2D7), width: 1.4),
             borderRadius: BorderRadius.circular(16),
           ),
           padding: const EdgeInsets.all(15),
@@ -2032,20 +2032,20 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFF5D737E).withOpacity(0.12),
+              color: const Color(0xFFB15218).withOpacity(0.12),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.bolt, size: 13, color: Color(0xFF5D737E)),
+                const Icon(Icons.bolt, size: 13, color: Color(0xFFB15218)),
                 const SizedBox(width: 4),
                 Text('$count recent',
                     style: const TextStyle(
                       fontFamily: _bodyFont,
                       fontSize: 11,
                       fontWeight: FontWeight.w900,
-                      color: Color(0xFF5D737E),
+                      color: Color(0xFFB15218),
                     )),
               ],
             ),
@@ -2585,7 +2585,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           height: 64,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: const Color(0xFF91B766),
+            color: const Color(0xFF58707D),
             borderRadius: BorderRadius.circular(18),
           ),
           child: const Icon(Icons.lock_open_rounded, size: 32, color: _ink),
@@ -2659,7 +2659,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           height: 64,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: const Color(0xFF91B766),
+            color: const Color(0xFF58707D),
             borderRadius: BorderRadius.circular(18),
           ),
           child: const Icon(Icons.construction, size: 32, color: _ink),
