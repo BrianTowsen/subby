@@ -22,6 +22,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -2585,10 +2587,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           height: 64,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: const Color(0xFF58707D),
+            color: const Color(0xFFB53F1A),
             borderRadius: BorderRadius.circular(18),
           ),
-          child: const Icon(Icons.lock_open_rounded, size: 32, color: _ink),
+          child: const Icon(Icons.lock_open_rounded, size: 32, color: _paper),
         ),
         const SizedBox(height: 20),
         const Text(
@@ -2659,10 +2661,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           height: 64,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: const Color(0xFF58707D),
+            color: const Color(0xFFB53F1A),
             borderRadius: BorderRadius.circular(18),
           ),
-          child: const Icon(Icons.construction, size: 32, color: _ink),
+          child: const Icon(Icons.construction, size: 32, color: _paper),
         ),
         const SizedBox(height: 20),
         const Text(
