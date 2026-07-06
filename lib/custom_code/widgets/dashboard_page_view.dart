@@ -20,6 +20,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -901,8 +903,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       child: Container(
         decoration: BoxDecoration(
           // SHARED hero — featured yellow (matches the owner featured tile).
-          color: const Color(0xFFDEDE54),
-          border: Border.all(color: const Color(0xFFD4D44A)),
+          color: const Color(0xFF91B766),
+          border: Border.all(color: const Color(0xFF7EA451)),
           borderRadius: BorderRadius.circular(16),
         ),
         padding: const EdgeInsets.all(18),
@@ -1040,9 +1042,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         child: Container(
           decoration: BoxDecoration(
             // SHARED primary row — muted yellow (matches owner tint tiles).
-            color: const Color(0xFFECECC9),
+            color: const Color(0xFFD8E6C9),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFD9D99E)),
+            border: Border.all(color: const Color(0xFFC3D7AB)),
           ),
           padding: const EdgeInsets.all(14),
           child: Column(
@@ -1649,9 +1651,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
     // Yellow featured tile + muted-yellow tint tiles; all tile text = ink.
     final Color bg =
-        featured ? const Color(0xFFDEDE54) : const Color(0xFFECECC9);
+        featured ? const Color(0xFF91B766) : const Color(0xFFD8E6C9);
     final Color border =
-        featured ? const Color(0xFFD4D44A) : const Color(0xFFD9D99E);
+        featured ? const Color(0xFF7EA451) : const Color(0xFFC3D7AB);
     final Color numColor = _ink;
     final Color subColor = _ink;
 
@@ -2583,7 +2585,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           height: 64,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: const Color(0xFFDEDE54),
+            color: const Color(0xFF91B766),
             borderRadius: BorderRadius.circular(18),
           ),
           child: const Icon(Icons.lock_open_rounded, size: 32, color: _ink),
@@ -2657,7 +2659,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           height: 64,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: const Color(0xFFDEDE54),
+            color: const Color(0xFF91B766),
             borderRadius: BorderRadius.circular(18),
           ),
           child: const Icon(Icons.construction, size: 32, color: _ink),
