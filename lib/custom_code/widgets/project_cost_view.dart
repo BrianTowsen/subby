@@ -443,7 +443,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     setState(() {
       final s = _EstSection(name: '', custom: true);
       s.expanded = true;
-      s.lines.add(_EstLine());
       _sections.add(s);
     });
     _persist();
@@ -873,11 +872,11 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                     color: _faint),
               ),
             ),
-          for (var j = 0; j < s.lines.length; j++)
-            _lineRow('${index + 1}.${j + 1}', s.lines[j],
-                () => _openEditLine(index, -1, j)),
           for (var k = 0; k < s.subs.length; k++)
-            _subBlock(index, s, k, s.subs[k], s.lines.length),
+            _subBlock(index, s, k, s.subs[k]),
+          for (var j = 0; j < s.lines.length; j++)
+            _lineRow('${index + 1}.${s.subs.length + j + 1}', s.lines[j],
+                () => _openEditLine(index, -1, j)),
           if (!_readOnly) _addLineRow(s),
           if (!_readOnly) _addSubRow(s),
         ],
@@ -886,9 +885,8 @@ class _ProjectCostViewState extends State<ProjectCostView> {
   }
 
   // A sub-section: a heading that groups line items inside a section.
-  Widget _subBlock(
-      int si, _EstSection s, int subIdx, _EstSub sb, int directCount) {
-    final subNum = '${si + 1}.${directCount + subIdx + 1}';
+  Widget _subBlock(int si, _EstSection s, int subIdx, _EstSub sb) {
+    final subNum = '${si + 1}.${subIdx + 1}';
     double ss = 0;
     for (final l in sb.lines) {
       ss += l.amount;
