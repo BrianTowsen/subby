@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/services.dart'; // SystemChrome / SystemUiOverlayStyle (dark status bar over white form)
@@ -64,7 +66,7 @@ class _EditProjectViewState extends State<EditProjectView>
       Color(0xFF566670); // clay — live / open-now / warning
   static const Color _coral = Color(0xFF566670);
   // Warning / destructive accent — brown.
-  static const Color _warn = Color(0xFFA44200);
+  static const Color _warn = Color(0xFFB15218);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';

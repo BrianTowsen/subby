@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -185,6 +187,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   );
   Animation<double>? _snapAnim;
 
+  // ignore: unused_element
   void _onDragUpdate(DragUpdateDetails d) {
     if (_snapCtrl.isAnimating) _snapCtrl.stop();
     setState(() {
@@ -192,6 +195,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     });
   }
 
+  // ignore: unused_element
   void _onDragEnd(DragEndDetails d) {
     final double width = MediaQuery.sizeOf(context).width;
     final double v = d.primaryVelocity ?? 0;
@@ -206,6 +210,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     }
   }
 
+  // ignore: unused_element
   void _animateDragTo(double target, {VoidCallback? then}) {
     _snapAnim = Tween<double>(begin: _dragX, end: target).animate(
       CurvedAnimation(parent: _snapCtrl, curve: Curves.easeOutCubic),
@@ -221,17 +226,12 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
 
   // Wraps the page in the right-to-go-back swipe gesture. deferToChild lets the
   // vertical scroll view keep vertical drags; horizontal drags pop the page.
-  Widget _swipeBack(Widget child) {
-    return GestureDetector(
-      behavior: HitTestBehavior.deferToChild,
-      onHorizontalDragUpdate: _onDragUpdate,
-      onHorizontalDragEnd: _onDragEnd,
-      child: Transform.translate(
-        offset: Offset(_dragX, 0),
-        child: child,
-      ),
-    );
-  }
+  // Custom swipe-back REMOVED. It duplicated the platform's native edge-swipe
+  // (two back gestures firing on one swipe) and its Transform.translate slid
+  // the whole page sideways, exposing a blank white "extra page" behind it.
+  // We now rely on the OS back-swipe only, so this is a pass-through.
+  // ignore: unused_element
+  Widget _swipeBack(Widget child) => child;
 
   // Collapsible sections (default CLOSED) — Manage stays fixed.
   bool _feedOpen = false;
@@ -3462,7 +3462,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
           decoration: BoxDecoration(
               // Featured (first) tile = yellow; the rest = muted yellow.
               color:
-                  featured ? const Color(0xFFDEDE54) : const Color(0xFFECECC9),
+                  featured ? const Color(0xFF91B766) : const Color(0xFFD8E6C9),
               borderRadius: BorderRadius.circular(14)),
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -3825,7 +3825,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                 height: 30,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                    color: const Color(0xFFDEDE54),
+                    color: const Color(0xFF91B766),
                     borderRadius: BorderRadius.circular(9)),
                 child: const Icon(Icons.add_rounded, size: 18, color: _ink),
               ),
