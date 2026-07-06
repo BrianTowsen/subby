@@ -3460,9 +3460,9 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
           height: 118,
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-              // Featured (first) tile = yellow; the rest = muted yellow.
+              // Featured (first) tile = slate (white text); the rest = tint.
               color:
-                  featured ? const Color(0xFF91B766) : const Color(0xFFD8E6C9),
+                  featured ? const Color(0xFF58707D) : const Color(0xFFE3E7EA),
               borderRadius: BorderRadius.circular(14)),
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -3478,21 +3478,21 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             ]),
             const Spacer(),
             Text(title,
-                style: const TextStyle(
+                style: TextStyle(
                     fontFamily: _displayFont,
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.2,
-                    color: _ink)),
+                    color: featured ? Colors.white : _ink)),
             const SizedBox(height: 2),
             Text(sub,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                     fontFamily: _bodyFont,
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: FontWeight.w500,
-                    color: _rFaint)),
+                    color: featured ? Colors.white.withOpacity(0.7) : _ink)),
           ]),
         ),
       ),
@@ -3807,12 +3807,18 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
           _rSectionLabel('DOCUMENTS'),
           const SizedBox(width: 8),
-          Text('${visible.length} files',
-              style: const TextStyle(
-                  fontFamily: _bodyFont,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: _rFaint)),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+                color: const Color(0xFFB15218).withOpacity(0.12),
+                borderRadius: BorderRadius.circular(999)),
+            child: Text('${visible.length} files',
+                style: const TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFFB15218))),
+          ),
         ]),
         if (!readOnly)
           Material(
@@ -3825,9 +3831,10 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                 height: 30,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                    color: const Color(0xFF91B766),
+                    color: const Color(0xFFB15218),
                     borderRadius: BorderRadius.circular(9)),
-                child: const Icon(Icons.add_rounded, size: 18, color: _ink),
+                child: const Icon(Icons.add_rounded,
+                    size: 18, color: Colors.white),
               ),
             ),
           ),
