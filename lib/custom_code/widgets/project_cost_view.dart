@@ -244,6 +244,12 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       return;
     }
     if (_saveTimer?.isActive ?? false) return; // don't clobber pending edits
+    // Don't rebuild controllers (and steal focus) while the user is typing.
+    final focused = FocusManager.instance.primaryFocus;
+    if (focused != null && focused.hasFocus) {
+      _remoteLoaded = true;
+      return;
+    }
     final list = data['sections'];
     if (!mounted) return;
     if (list is List) {
@@ -889,8 +895,8 @@ class _ProjectCostViewState extends State<ProjectCostView> {
           for (var j = 0; j < s.lines.length; j++)
             _lineRow('${index + 1}.${s.subs.length + j + 1}', s.lines[j],
                 () => _openEditLine(index, -1, j)),
-          if (!_readOnly) _addLineRow(s),
           if (!_readOnly) _addSubRow(s),
+          if (!_readOnly) _addLineRow(s),
         ],
       ],
     );
@@ -1039,7 +1045,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('ADD SUB-SECTION',
+          const Text('SUB-TITLE',
               style: TextStyle(
                 fontFamily: _body,
                 fontSize: 9,
