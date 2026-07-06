@@ -433,6 +433,11 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
               collectionNamePath: ['site_book_entries'],
             ),
           ),
+        ),
+        FFRoute(
+          name: EditProjectCostPageWidget.routeName,
+          path: EditProjectCostPageWidget.routePath,
+          builder: (context, params) => EditProjectCostPageWidget(),
         )
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );
