@@ -259,6 +259,10 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
       return;
     }
     if (_saveTimer?.isActive ?? false) return; // don't clobber pending edits
+    // Don't rebuild controllers (and drop focus / lose keystrokes) while the
+    // user is actively editing this line.
+    final focused = FocusManager.instance.primaryFocus;
+    if (_ready && focused != null && focused.hasFocus) return;
     final list = data['sections'];
     if (!mounted) return;
     if (list is List) {
