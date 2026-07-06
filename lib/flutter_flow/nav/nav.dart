@@ -437,7 +437,14 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         FFRoute(
           name: EditProjectCostPageWidget.routeName,
           path: EditProjectCostPageWidget.routePath,
-          builder: (context, params) => EditProjectCostPageWidget(),
+          builder: (context, params) => EditProjectCostPageWidget(
+            projectRef: params.getParam(
+              'projectRef',
+              ParamType.DocumentReference,
+              isList: false,
+              collectionNamePath: ['projects'],
+            ),
+          ),
         )
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );
