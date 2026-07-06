@@ -24,6 +24,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:intl/intl.dart';
@@ -521,9 +523,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   List<_Section> buildProgramme(String key) {
     if (key == 'scratch') return <_Section>[];
 
-    // Standard trade sequence — durations are in WORKING DAYS.
-    // All floor configs (gf / gf1 / lgfgf / lgfgf1) currently share this one
-    // programme; branch on `key` here if they ever need to diverge.
+    // Trade sequence per floor config — durations are in WORKING DAYS.
     _Section p(String name, String group, String mode, int days,
             {int buffer = 0, int overlapPct = 50}) =>
         _Section(
@@ -534,39 +534,139 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
             buffer: buffer,
             overlapPct: overlapPct);
 
-    return <_Section>[
-      p('Professional Services', 'external', 'start', 20),
-      p('Site Preparation', 'external', 'after', 2),
-      p('Site Establishment', 'external', 'after', 2),
-      p('Earthworks & Excavation', 'struct', 'after', 5),
-      p('Shoring & Retaining Walls', 'struct', 'after', 8),
-      p('Brickwork & Concrete', 'struct', 'after', 5),
-      p('Structural Steel Works', 'external', 'with', 5),
-      p('Suspended Floor Slab 1', 'struct', 'after', 10),
-      p('Brickwork & Concrete', 'external', 'after', 10),
-      p('Structural Steel Works', 'external', 'after', 5),
-      p('Suspended Floor Slab 2', 'struct', 'with', 10),
-      p('Brickwork & Concrete', 'external', 'after', 10),
-      p('Structural Steel Works', 'struct', 'after', 5),
-      p('Suspended Roof Slab', 'external', 'with', 10),
-      p('Roofing', 'external', 'after', 10),
-      p('Plumbing & Drainage', 'external', 'with', 10),
-      p('Electrical Works', 'external', 'with', 10),
-      p('Plastering & Screeds', 'finish', 'overlap', 10),
-      p('Windows & Door Frames', 'struct', 'overlap', 5),
-      p('Waterproofing', 'external', 'after', 5),
-      p('Ceilings & Partitioning', 'finish', 'overlap', 5),
-      p('Joinery & Carpentry', 'finish', 'after', 5),
-      p('Painting & Wall Covering', 'finish', 'overlap', 21, overlapPct: 60),
-      p('Tiling', 'finish', 'with', 10),
-      p('Kitchen (Built-in Units)', 'finish', 'overlap', 5, overlapPct: 30),
-      p('Built-in Cupboards', 'finish', 'with', 5),
-      p('Sanitary Fittings', 'services', 'after', 5),
-      p('Floor Covering', 'finish', 'after', 10),
-      p('Electrical Fittings', 'services', 'overlap', 5),
-      p('External Site Works', 'external', 'overlap', 10),
-      p('Cleaning & Handover', 'external', 'overlap', 5),
-    ];
+    switch (key) {
+      case 'gf': // Ground Floor
+        return <_Section>[
+          p('Professional Services', 'external', 'start', 20),
+          p('Site Preparation', 'external', 'after', 2),
+          p('Site Establishment', 'external', 'after', 2),
+          p('Earthworks & Excavation', 'struct', 'after', 5),
+          p('Brickwork & Concrete', 'struct', 'after', 5),
+          p('Structural Steel Works', 'external', 'with', 5),
+          p('Brickwork & Concrete', 'external', 'after', 10),
+          p('Suspended Roof Slab', 'external', 'with', 10),
+          p('Roofing', 'external', 'after', 10),
+          p('Plumbing & Drainage', 'external', 'with', 10),
+          p('Electrical Works', 'external', 'with', 10),
+          p('Plastering & Screeds', 'finish', 'overlap', 10),
+          p('Windows & Door Frames', 'struct', 'overlap', 5),
+          p('Waterproofing', 'external', 'after', 5),
+          p('Ceilings & Partitioning', 'finish', 'overlap', 5),
+          p('Joinery & Carpentry', 'finish', 'after', 5),
+          p('Painting & Wall Covering', 'finish', 'overlap', 21,
+              overlapPct: 60),
+          p('Tiling', 'finish', 'with', 10),
+          p('Kitchen (Built-in Units)', 'finish', 'overlap', 5, overlapPct: 30),
+          p('Built-in Cupboards', 'finish', 'with', 5),
+          p('Sanitary Fittings', 'services', 'after', 5),
+          p('Floor Covering', 'finish', 'after', 10),
+          p('Electrical Fittings', 'services', 'overlap', 5),
+          p('External Site Works', 'external', 'overlap', 10),
+          p('Cleaning & Handover', 'external', 'overlap', 5),
+        ];
+      case 'gf1': // Ground + First
+        return <_Section>[
+          p('Professional Services', 'external', 'start', 20),
+          p('Site Preparation', 'external', 'after', 2),
+          p('Site Establishment', 'external', 'after', 2),
+          p('Earthworks & Excavation', 'struct', 'after', 5),
+          p('Brickwork & Concrete', 'struct', 'after', 5),
+          p('Structural Steel Works', 'external', 'with', 5),
+          p('Suspended Floor Slab', 'struct', 'after', 10),
+          p('Brickwork & Concrete', 'external', 'after', 10),
+          p('Structural Steel Works', 'external', 'after', 5),
+          p('Suspended Roof Slab', 'external', 'with', 10),
+          p('Roofing', 'external', 'after', 10),
+          p('Plumbing & Drainage', 'external', 'with', 10),
+          p('Electrical Works', 'external', 'with', 10),
+          p('Plastering & Screeds', 'finish', 'overlap', 10),
+          p('Windows & Door Frames', 'struct', 'overlap', 5),
+          p('Waterproofing', 'external', 'after', 5),
+          p('Ceilings & Partitioning', 'finish', 'overlap', 5),
+          p('Joinery & Carpentry', 'finish', 'after', 5),
+          p('Painting & Wall Covering', 'finish', 'overlap', 21,
+              overlapPct: 60),
+          p('Tiling', 'finish', 'with', 10),
+          p('Balustrades & Railings', 'external', 'after', 5),
+          p('Kitchen (Built-in Units)', 'finish', 'with', 5),
+          p('Built-in Cupboards', 'finish', 'with', 5),
+          p('Sanitary Fittings', 'services', 'after', 5),
+          p('Floor Covering', 'finish', 'after', 10),
+          p('Electrical Fittings', 'services', 'overlap', 5),
+          p('External Site Works', 'external', 'overlap', 10),
+          p('Cleaning & Handover', 'external', 'overlap', 5),
+        ];
+      case 'lgfgf': // Lower Ground + Ground
+        return <_Section>[
+          p('Professional Services', 'external', 'start', 20),
+          p('Site Preparation', 'external', 'after', 2),
+          p('Site Establishment', 'external', 'after', 2),
+          p('Earthworks & Excavation', 'struct', 'after', 5),
+          p('Shoring & Retaining Walls', 'struct', 'after', 8),
+          p('Brickwork & Concrete', 'struct', 'after', 5),
+          p('Structural Steel Works', 'external', 'with', 5),
+          p('Suspended Floor Slab', 'struct', 'after', 10),
+          p('Brickwork & Concrete', 'external', 'after', 10),
+          p('Structural Steel Works', 'external', 'after', 5),
+          p('Suspended Roof Slab', 'external', 'with', 10),
+          p('Roofing', 'external', 'after', 10),
+          p('Plumbing & Drainage', 'external', 'with', 10),
+          p('Electrical Works', 'external', 'with', 10),
+          p('Plastering & Screeds', 'finish', 'overlap', 10),
+          p('Windows & Door Frames', 'struct', 'overlap', 5),
+          p('Waterproofing', 'external', 'after', 5),
+          p('Ceilings & Partitioning', 'finish', 'overlap', 5),
+          p('Joinery & Carpentry', 'finish', 'after', 5),
+          p('Painting & Wall Covering', 'finish', 'overlap', 21,
+              overlapPct: 60),
+          p('Tiling', 'finish', 'with', 10),
+          p('Balustrades & Railings', 'external', 'after', 5),
+          p('Kitchen (Built-in Units)', 'finish', 'with', 5),
+          p('Built-in Cupboards', 'finish', 'with', 5),
+          p('Sanitary Fittings', 'services', 'after', 5),
+          p('Floor Covering', 'finish', 'after', 10),
+          p('Electrical Fittings', 'services', 'overlap', 5),
+          p('External Site Works', 'external', 'overlap', 10),
+          p('Cleaning & Handover', 'external', 'overlap', 5),
+        ];
+      case 'lgfgf1': // Lower Ground + Ground + First
+      default:
+        return <_Section>[
+          p('Professional Services', 'external', 'start', 20),
+          p('Site Preparation', 'external', 'after', 2),
+          p('Site Establishment', 'external', 'after', 2),
+          p('Earthworks & Excavation', 'struct', 'after', 5),
+          p('Shoring & Retaining Walls', 'struct', 'after', 8),
+          p('Brickwork & Concrete', 'struct', 'after', 5),
+          p('Structural Steel Works', 'external', 'with', 5),
+          p('Suspended Floor Slab 1', 'struct', 'after', 10),
+          p('Brickwork & Concrete', 'external', 'after', 10),
+          p('Structural Steel Works', 'external', 'after', 5),
+          p('Suspended Floor Slab 2', 'struct', 'with', 10),
+          p('Brickwork & Concrete', 'external', 'after', 10),
+          p('Structural Steel Works', 'struct', 'after', 5),
+          p('Suspended Roof Slab', 'external', 'with', 10),
+          p('Roofing', 'external', 'after', 10),
+          p('Plumbing & Drainage', 'external', 'with', 10),
+          p('Electrical Works', 'external', 'with', 10),
+          p('Plastering & Screeds', 'finish', 'overlap', 10),
+          p('Windows & Door Frames', 'struct', 'overlap', 5),
+          p('Waterproofing', 'external', 'after', 5),
+          p('Ceilings & Partitioning', 'finish', 'overlap', 5),
+          p('Joinery & Carpentry', 'finish', 'after', 5),
+          p('Painting & Wall Covering', 'finish', 'overlap', 21,
+              overlapPct: 60),
+          p('Tiling', 'finish', 'with', 10),
+          p('Balustrades & Railings', 'external', 'after', 5),
+          p('Kitchen (Built-in Units)', 'finish', 'with', 5),
+          p('Built-in Cupboards', 'finish', 'with', 5),
+          p('Sanitary Fittings', 'services', 'after', 5),
+          p('Floor Covering', 'finish', 'after', 10),
+          p('Electrical Fittings', 'services', 'overlap', 5),
+          p('External Site Works', 'external', 'overlap', 10),
+          p('Cleaning & Handover', 'external', 'overlap', 5),
+        ];
+    }
   }
 
   void _pickTemplate(String key) {
