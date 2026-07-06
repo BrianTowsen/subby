@@ -215,11 +215,19 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       final isOwner = ownerRef is DocumentReference &&
           currentUserReference != null &&
           ownerRef.path == currentUserReference!.path;
+      // Cost-module privacy is shared with ProjectDetailPageView via
+      // projects.moduleVisibility['projectCost'] (default private).
+      String vis = 'private';
+      final mv = data['moduleVisibility'];
+      if (mv is Map && mv['projectCost'] != null) {
+        vis = mv['projectCost'].toString() == 'shared' ? 'shared' : 'private';
+      }
       if (!mounted) return;
       setState(() {
         _projectName = name;
         _isOwner = isOwner;
         _readOnly = !isOwner;
+        _visibility = vis;
       });
     });
 
@@ -236,7 +244,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       return;
     }
     if (_saveTimer?.isActive ?? false) return; // don't clobber pending edits
-    final vis = (data['visibility'] ?? 'private').toString();
     final list = data['sections'];
     if (!mounted) return;
     if (list is List) {
@@ -257,7 +264,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       }
     }
     setState(() {
-      _visibility = vis == 'shared' ? 'shared' : 'private';
       _remoteLoaded = true;
     });
   }
@@ -337,17 +343,23 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     if (ref == null || _readOnly) return;
     try {
       await ref.set({
-        'visibility': _visibility,
         'updatedAt': FieldValue.serverTimestamp(),
         'sections': _sections.map(_sectionToMap).toList(),
       }, SetOptions(merge: true));
     } catch (_) {}
   }
 
+  // Cost-module privacy lives on projects.moduleVisibility['projectCost'] so it
+  // stays in sync with ProjectDetailPageView (the project-doc listener flips
+  // our icon back).
   void _toggleVisibility() {
-    setState(
-        () => _visibility = _visibility == 'shared' ? 'private' : 'shared');
-    _saveNow();
+    final ref = _projectRef;
+    final next = _visibility == 'shared' ? 'private' : 'shared';
+    setState(() => _visibility = next); // optimistic
+    if (ref == null || _readOnly) return;
+    ref.set(<String, dynamic>{
+      'moduleVisibility': <String, dynamic>{'projectCost': next},
+    }, SetOptions(merge: true)).catchError((_) {});
   }
 
   void _handleBack() {

@@ -126,6 +126,7 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
   int _selSub = -1; // -1 = a direct line; >= 0 = index into the section's subs
   int _selLi = 0;
   bool _ready = false;
+  bool _leaving = false; // guards against a second pop after delete/back
 
   DocumentReference<Map<String, dynamic>>? _projectRef;
   DocumentReference<Map<String, dynamic>>? _estimateRef;
@@ -405,8 +406,9 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
   }
 
   void _back() {
+    _leaving = true;
     _flushSave();
-    context.safePop();
+    if (mounted) context.safePop();
   }
 
   // -----------------------------------------------------------------
@@ -460,15 +462,13 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
 
   void _deleteLineNow() {
     final l = _selLine;
-    if (l != null) {
-      setState(() {
-        _curList.removeAt(_selLi);
-        l.dispose();
-        _selLi = -1;
-      });
-    }
+    if (l == null) return;
+    _leaving = true; // stop the build null-guard from popping again
+    _curList.removeAt(_selLi);
+    l.dispose();
+    _selLi = -1;
     _flushSave();
-    context.safePop();
+    if (mounted) context.safePop();
   }
 
   // Centered destructive confirm — shared "delete warning" module
@@ -679,10 +679,13 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
     _clampSel();
     final l = _selLine;
     if (l == null) {
-      // The line went away (deleted/synced out) — bail back to the estimate.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) context.safePop();
-      });
+      // The line went away (deleted/synced out) — bail back to the estimate,
+      // but only if we haven't already initiated a pop.
+      if (!_leaving) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) context.safePop();
+        });
+      }
       return Container(color: _startBg);
     }
 
