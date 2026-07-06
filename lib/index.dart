@@ -62,5 +62,5 @@ export '/edit_project_timeline_page/edit_project_timeline_page_widget.dart'
     show EditProjectTimelinePageWidget;
 export '/detail_site_book_page/detail_site_book_page_widget.dart'
     show DetailSiteBookPageWidget;
-export '/edit_project_cost_page/edit_project_cost_page_widget.dart'
+export '/project_cost/edit_project_cost_page/edit_project_cost_page_widget.dart'
     show EditProjectCostPageWidget;
