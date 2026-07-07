@@ -10,10 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -66,34 +62,33 @@ class _ProjectCostViewState extends State<ProjectCostView> {
   // Standard residential trade sections (the template scaffold).
   static const List<String> _baseSections = [
     'Professional Fees',
-    'Preliminaries & General',
+    'Preliminaries',
     'Site Preparation',
     'Site Establishment',
     'Earthworks & Excavation',
-    'Concrete Works (Foundations)',
-    'Brickwork & Blockwork',
-    'Damp Proofing & Waterproofing',
+    'Brickwork & Concrete',
     'Structural Steel Works',
-    'Roofing & Trusses',
-    'Windows & Door Frames',
-    'Glazing',
+    'Roofing',
+    'Windows & Doors',
     'Plumbing & Drainage',
-    'Sanitary Fittings',
     'Electrical Works',
-    'Electrical Fittings',
-    'Plastering & Screeds',
+    'Plastering',
+    'Waterproofing',
     'Ceilings & Partitioning',
     'Internal Carpentry & Joinery',
-    'Kitchen (Built-in Units)',
+    'Kitchen',
     'Built-in Cupboards',
     'Tiling',
-    'Floor Covering',
+    'Steel Works',
     'Special Items',
-    'Painting & Decorating',
-    'Balustrades & Railings',
+    'Painting & Wall Covering',
+    'Floor Covering',
+    'Sanitary Fittings',
+    'Electrical Fittings',
     'External Site Works',
     'Landscaping',
     'Cleaning & Handover',
+    'Builder',
   ];
 
   // Contingency is now user-editable (persisted on the estimate doc).
