@@ -3453,8 +3453,10 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   Widget _rModTile(IconData icon, String title, String sub, String visKey,
       bool readOnly, VoidCallback onTap,
       {bool featured = false}) {
-    // Full-width horizontal module row (100 tall): icon chip · title+subtitle ·
-    // visibility chip · chevron. Featured tile = slate (white text).
+    // Full-width horizontal module row (84 tall): icon chip · a stacked block
+    // with the TITLE on its own full-width line and the subtitle + visibility
+    // chip on the line below (so the heading always has room). Featured tile =
+    // slate (white text).
     final Color titleColor = featured ? Colors.white : _ink;
     final Color subColor = featured ? Colors.white.withOpacity(0.72) : _inkMute;
     return Material(
@@ -3463,25 +3465,25 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         onTap: onTap,
         borderRadius: BorderRadius.circular(14),
         child: Container(
-          height: 100,
-          padding: const EdgeInsets.symmetric(horizontal: 18),
+          height: 84,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
               color:
                   featured ? const Color(0xFF58707D) : const Color(0xFFE3E7EA),
               borderRadius: BorderRadius.circular(14)),
           child: Row(children: [
             Container(
-              width: 56,
-              height: 56,
+              width: 50,
+              height: 50,
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: featured ? Colors.white.withOpacity(0.14) : _paper,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(13),
               ),
               child:
-                  Icon(icon, size: 26, color: featured ? Colors.white : _ink),
+                  Icon(icon, size: 25, color: featured ? Colors.white : _ink),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -3496,29 +3498,30 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.3,
                           color: titleColor)),
-                  const SizedBox(height: 3),
-                  Text(sub,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                          fontFamily: _bodyFont,
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w500,
-                          color: subColor)),
+                  const SizedBox(height: 5),
+                  Row(children: [
+                    Expanded(
+                      child: Text(sub,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                              fontFamily: _bodyFont,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w500,
+                              color: subColor)),
+                    ),
+                    if (!readOnly) ...[
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => _toggleModuleVis(visKey),
+                        child: _rVisChip(_moduleVisFor(visKey), _paper),
+                      ),
+                    ],
+                  ]),
                 ],
               ),
             ),
-            if (!readOnly) ...[
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => _toggleModuleVis(visKey),
-                child: _rVisChip(_moduleVisFor(visKey), _paper),
-              ),
-              const SizedBox(width: 10),
-            ],
-            Icon(Icons.chevron_right_rounded,
-                size: 22,
-                color: featured ? Colors.white.withOpacity(0.6) : _rChevron),
           ]),
         ),
       ),
