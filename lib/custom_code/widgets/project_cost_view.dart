@@ -21,11 +21,11 @@ import '/auth/firebase_auth/auth_util.dart';
 
 /// ProjectCostView — Financial Control Module.
 ///
-/// Three connected tabs sharing one project spine:
-///   • Cost Estimate — the budget baseline (trade sections × line items).
-///   • Payments      — supplier payment claims allocated to a section/line,
-///                     with a Received → Approved → Paid status.
-///   • Cost Control  — Budget vs Actual + Cost to Complete, rolled up live.
+/// Three connected tabs sharing one project spine: • Cost Estimate — the
+/// budget baseline (trade sections × line items). • Payments      — supplier
+/// payment claims allocated to a section/line, with a Received → Approved →
+/// Paid status. • Cost Control  — Budget vs Actual + Cost to Complete, rolled
+/// up live.
 ///
 /// The app owns the STRUCTURE and the ARITHMETIC. The user owns the NUMBERS.
 /// The section list is built in Cost Estimate and flows automatically into

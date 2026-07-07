@@ -445,6 +445,11 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
               collectionNamePath: ['projects'],
             ),
           ),
+        ),
+        FFRoute(
+          name: AddSiteBookPageWidget.routeName,
+          path: AddSiteBookPageWidget.routePath,
+          builder: (context, params) => AddSiteBookPageWidget(),
         )
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );
