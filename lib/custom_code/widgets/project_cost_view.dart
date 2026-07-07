@@ -12,12 +12,6 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -100,7 +94,9 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     'Cleaning & Handover',
   ];
 
-  static const int _contingencyPct = 10;
+  // Contingency is now user-editable (persisted on the estimate doc).
+  num _contingencyPct = 10;
+  final TextEditingController _contCtl = TextEditingController(text: '10');
   static const int _vatPct = 15;
 
   // Fixed sub-section vocabulary (a standard cost breakdown of a trade).
@@ -113,7 +109,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
   ];
 
   final List<_EstSection> _sections = [];
-  bool _breakdownOpen = false;
 
   DocumentReference<Map<String, dynamic>>? _projectRef;
   DocumentReference<Map<String, dynamic>>? _estimateRef;
@@ -189,6 +184,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     _projSub?.cancel();
     _estSub?.cancel();
     _saveTimer?.cancel();
+    _contCtl.dispose();
     for (final s in _sections) {
       s.dispose();
     }
@@ -253,6 +249,14 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     }
     final list = data['sections'];
     if (!mounted) return;
+    // Load the (optional) user-set contingency percentage.
+    final cp = data['contingencyPct'];
+    if (cp is num) {
+      _contingencyPct = cp;
+      final t =
+          cp == cp.roundToDouble() ? cp.toInt().toString() : cp.toString();
+      if (_contCtl.text != t) _contCtl.text = t;
+    }
     if (list is List) {
       final parsed = <_EstSection>[];
       for (final e in list) {
@@ -352,6 +356,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     try {
       await ref.set({
         'updatedAt': FieldValue.serverTimestamp(),
+        'contingencyPct': _contingencyPct,
         'sections': _sections.map(_sectionToMap).toList(),
       }, SetOptions(merge: true));
     } catch (_) {}
@@ -383,7 +388,12 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     _persist();
   }
 
-  void _toggleBreakdown() => setState(() => _breakdownOpen = !_breakdownOpen);
+  void _onContingencyChanged(String v) {
+    final cleaned = v.replaceAll(RegExp(r'[^0-9.]'), '');
+    setState(() =>
+        _contingencyPct = cleaned.isEmpty ? 0 : (num.tryParse(cleaned) ?? 0));
+    _persist();
+  }
 
   void _toggleAll() {
     final allOpen = _sections.every((s) => s.expanded);
@@ -536,7 +546,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
           _hero(topInset, total, started, items),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(14, 14, 14, 24),
+              padding: EdgeInsets.fromLTRB(14, 14, 14, 24 + bottomInset),
               children: [
                 _sectionsHeaderRow(),
                 const SizedBox(height: 10),
@@ -556,10 +566,13 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                 ),
                 const SizedBox(height: 12),
                 if (!_readOnly) _addSectionButton(),
+                const SizedBox(height: 14),
+                _breakdownCard(net, contAmount, vat, total),
+                const SizedBox(height: 14),
+                _savedCue(),
               ],
             ),
           ),
-          _bottomBar(bottomInset, net, contAmount, vat),
         ],
       ),
     );
@@ -836,6 +849,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                     ? TextField(
                         controller: s.nameCtl,
                         readOnly: _readOnly,
+                        textInputAction: TextInputAction.done,
                         onChanged: (v) {
                           setState(() => s.name = v);
                           _persist();
@@ -1339,83 +1353,139 @@ class _ProjectCostViewState extends State<ProjectCostView> {
   // -----------------------------------------------------------------
   // Bottom bar (breakdown + saved cue)
   // -----------------------------------------------------------------
-  Widget _bottomBar(double bottomInset, double net, double cont, double vat) {
+  // -----------------------------------------------------------------
+  // Estimate breakdown (inline, always visible) + saved cue
+  // -----------------------------------------------------------------
+  Widget _breakdownCard(double net, double cont, double vat, double total) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _paper,
-        border: Border(top: BorderSide(color: _surface)),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x1A19232D),
-            blurRadius: 30,
-            offset: Offset(0, -10),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _border),
       ),
-      padding: EdgeInsets.fromLTRB(20, 12, 20, bottomInset + 12),
+      padding: const EdgeInsets.fromLTRB(14, 6, 14, 14),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (_breakdownOpen) ...[
-            _breakdownRow('Net total — trades', _money(net)),
-            _breakdownRow('Contingency @ $_contingencyPct%', _money(cont)),
-            _breakdownRow('VAT @ $_vatPct%', _money(vat)),
-            const SizedBox(height: 6),
-            Container(height: 1, color: _surface),
-          ],
-          InkWell(
-            onTap: _toggleBreakdown,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: Row(
-                children: [
-                  const Icon(Icons.receipt_long_outlined,
-                      size: 18, color: _inkMute),
-                  const SizedBox(width: 9),
-                  const Expanded(
-                    child: Text('Estimate breakdown',
-                        style: TextStyle(
-                          fontFamily: _body,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: _ink,
-                        )),
-                  ),
-                  Text(_breakdownOpen ? 'Hide' : 'Show',
-                      style: const TextStyle(
-                        fontFamily: _body,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: _inkMute,
-                      )),
-                  AnimatedRotation(
-                    turns: _breakdownOpen ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 180),
-                    child: const Icon(Icons.expand_less_rounded,
-                        size: 20, color: _faint),
-                  ),
-                ],
-              ),
+          _breakdownRow('Net total — trades', _money(net)),
+          _contingencyRow(cont),
+          _breakdownRow('VAT @ $_vatPct%', _money(vat)),
+          const SizedBox(height: 6),
+          Container(height: 1, color: _surface),
+          Padding(
+            padding: const EdgeInsets.only(top: 9, bottom: 2),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Total incl. VAT',
+                    style: TextStyle(
+                      fontFamily: _body,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w800,
+                      color: _ink,
+                    )),
+                Text(_money(total),
+                    style: const TextStyle(
+                      fontFamily: _display,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      color: _green,
+                    )),
+              ],
             ),
-          ),
-          Row(
-            children: const [
-              Icon(Icons.cloud_done_outlined, size: 13, color: _green),
-              SizedBox(width: 5),
-              Text('Changes saved automatically',
-                  style: TextStyle(
-                    fontFamily: _body,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: _faint,
-                  )),
-            ],
           ),
         ],
       ),
     );
   }
+
+  // Contingency row with an inline editable percentage field.
+  Widget _contingencyRow(double cont) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 5),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Contingency @ ',
+                    style: TextStyle(
+                      fontFamily: _body,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: _inkMute,
+                    )),
+                SizedBox(
+                  width: 44,
+                  height: 30,
+                  child: TextField(
+                    controller: _contCtl,
+                    readOnly: _readOnly,
+                    onChanged: _onContingencyChanged,
+                    textAlign: TextAlign.center,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    textInputAction: TextInputAction.done,
+                    style: const TextStyle(
+                      fontFamily: _display,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: _ink,
+                    ),
+                    decoration: InputDecoration(
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 5),
+                      filled: true,
+                      fillColor: const Color(0xFFF7F9FA),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(7),
+                        borderSide: const BorderSide(color: _dash, width: 1),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(7),
+                        borderSide: const BorderSide(color: _green, width: 1.4),
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(7),
+                      ),
+                    ),
+                  ),
+                ),
+                const Text(' %',
+                    style: TextStyle(
+                      fontFamily: _body,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: _inkMute,
+                    )),
+              ],
+            ),
+            Text(_money(cont),
+                style: const TextStyle(
+                  fontFamily: _display,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: _ink,
+                )),
+          ],
+        ),
+      );
+
+  Widget _savedCue() => Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Icon(Icons.cloud_done_outlined, size: 13, color: _green),
+          SizedBox(width: 5),
+          Text('Changes saved automatically',
+              style: TextStyle(
+                fontFamily: _body,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: _faint,
+              )),
+        ],
+      );
 
   Widget _breakdownRow(String label, String value) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 5),
