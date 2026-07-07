@@ -10,16 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -63,8 +53,7 @@ class DetailSnagPageView extends StatefulWidget {
   State<DetailSnagPageView> createState() => _DetailSnagPageViewState();
 }
 
-class _DetailSnagPageViewState extends State<DetailSnagPageView>
-    with SingleTickerProviderStateMixin {
+class _DetailSnagPageViewState extends State<DetailSnagPageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
   static const Color _ink = Color(0xFF29343A);
   static const Color _inkMute = Color(0xFF566670);
@@ -127,7 +116,6 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView>
   @override
   void dispose() {
     _galleryCtrl.dispose();
-    _snapCtrl.dispose();
     super.dispose();
   }
 
@@ -482,63 +470,6 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView>
 
   // =========================================================
   // Build
-  // =========================================================
-  // ─── Swipe-right-to-go-back (follow the thumb, snap back or pop) ──────
-  // Ported from ProjectDetailPageView so the page closes on a right-sweep on
-  // iOS AND Android. The native left-edge gesture is iOS-only and gets eaten by
-  // horizontally-scrolling children, so we drive the pop ourselves.
-  double _dragX = 0;
-  late final AnimationController _snapCtrl = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 220),
-  );
-  Animation<double>? _snapAnim;
-
-  void _onDragUpdate(DragUpdateDetails d) {
-    if (_snapCtrl.isAnimating) _snapCtrl.stop();
-    setState(() {
-      _dragX = (_dragX + d.delta.dx).clamp(0.0, double.infinity);
-    });
-  }
-
-  void _onDragEnd(DragEndDetails d) {
-    final double width = MediaQuery.sizeOf(context).width;
-    final double v = d.primaryVelocity ?? 0;
-    final bool shouldClose = _dragX > width * 0.30 || v > 700;
-    if (shouldClose) {
-      _animateDragTo(width, then: _handleBack);
-    } else {
-      _animateDragTo(0);
-    }
-  }
-
-  void _animateDragTo(double target, {VoidCallback? then}) {
-    _snapAnim = Tween<double>(begin: _dragX, end: target).animate(
-      CurvedAnimation(parent: _snapCtrl, curve: Curves.easeOutCubic),
-    )..addListener(() {
-        setState(() => _dragX = _snapAnim!.value);
-      });
-    _snapCtrl
-      ..reset()
-      ..forward().whenComplete(() {
-        if (then != null) then();
-      });
-  }
-
-  // deferToChild lets vertical scroll views keep vertical drags; horizontal
-  // drags translate the page and pop on release.
-  Widget _swipeBack(Widget child) {
-    return GestureDetector(
-      behavior: HitTestBehavior.deferToChild,
-      onHorizontalDragUpdate: _onDragUpdate,
-      onHorizontalDragEnd: _onDragEnd,
-      child: Transform.translate(
-        offset: Offset(_dragX, 0),
-        child: child,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
@@ -632,13 +563,11 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView>
     );
   }
 
-  Widget _shell({required Widget child}) => _swipeBack(
-        Container(
-          width: widget.width ?? double.infinity,
-          height: widget.height ?? double.infinity,
-          color: _paper,
-          child: SafeArea(top: false, bottom: true, child: child),
-        ),
+  Widget _shell({required Widget child}) => Container(
+        width: widget.width ?? double.infinity,
+        height: widget.height ?? double.infinity,
+        color: _paper,
+        child: SafeArea(top: false, bottom: true, child: child),
       );
 
   Widget _minBack() => Material(
