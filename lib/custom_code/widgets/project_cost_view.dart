@@ -21,11 +21,11 @@ import '/auth/firebase_auth/auth_util.dart';
 
 /// ProjectCostView — Financial Control Module.
 ///
-/// Three connected tabs sharing one project spine: • Cost Estimate — the
-/// budget baseline (trade sections × line items). • Payments      — supplier
-/// payment claims allocated to a section/line, with a Received → Approved →
-/// Paid status. • Cost Control  — Budget vs Actual + Cost to Complete, rolled
-/// up live.
+/// Three connected tabs sharing one project spine:
+///   • Cost Estimate — the budget baseline (trade sections × line items).
+///   • Payments      — supplier payment claims allocated to a section/line,
+///                     with a Received → Approved → Paid status.
+///   • Cost Control  — Budget vs Actual + Cost to Complete, rolled up live.
 ///
 /// The app owns the STRUCTURE and the ARITHMETIC. The user owns the NUMBERS.
 /// The section list is built in Cost Estimate and flows automatically into
@@ -617,6 +617,141 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     _persist();
   }
 
+  // Centered destructive confirm — shared "delete warning" module
+  // (matches DocumentUploadPageView: clay accent, 322-wide card, icon disc).
+  Future<void> _confirmDeletePayment() async {
+    final p = _editingPayment;
+    if (p == null) return;
+    final name = p.supplier.trim().isEmpty
+        ? 'This payment'
+        : '\u201C${p.supplier.trim()}\u201D';
+    FocusScope.of(context).unfocus();
+    await showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.55),
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 34),
+          child: Container(
+            width: 322,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _paper,
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.30),
+                  blurRadius: 54,
+                  offset: const Offset(0, 22),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 62,
+                  height: 62,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: _warn.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                    border:
+                        Border.all(color: _warn.withOpacity(0.22), width: 1),
+                  ),
+                  child:
+                      const Icon(Icons.delete_rounded, color: _warn, size: 30),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Delete this payment?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: _display,
+                    fontSize: 19,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.4,
+                    color: _ink,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '$name will be removed from this project. This can\u2019t be undone.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontFamily: _body,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w500,
+                    height: 1.5,
+                    color: _inkMute,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _deletePayment();
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _warn,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Text(
+                        'Delete payment',
+                        style: TextStyle(
+                          fontFamily: _body,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: _paper,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => Navigator.pop(ctx),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _paper,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: _dash, width: 1.4),
+                      ),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(
+                          fontFamily: _body,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: _ink,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _deletePayment() {
     final p = _editingPayment;
     if (p == null) return;
@@ -643,7 +778,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       final bytes = await file.readAsBytes();
       final safeName = file.name.isEmpty ? 'invoice.jpg' : file.name;
       final storageRef = FirebaseStorage.instance
-          .ref('${proj.path}/payments/${p.id}/$safeName');
+          .ref('${proj.path}/documents/payments/${p.id}/$safeName');
       final snap = await storageRef.putData(bytes);
       final url = await snap.ref.getDownloadURL();
       _editPayment((x) {
@@ -2473,7 +2608,8 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                   ),
                 ),
                 if (!_readOnly)
-                  _circleBtn(Icons.delete_outline_rounded, _deletePayment,
+                  _circleBtn(
+                      Icons.delete_outline_rounded, _confirmDeletePayment,
                       iconSize: 18, bg: _paper.withOpacity(0.10))
                 else
                   const SizedBox(width: 38, height: 38),
@@ -2596,7 +2732,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                   const SizedBox(height: 20),
                   if (!_readOnly)
                     InkWell(
-                      onTap: _deletePayment,
+                      onTap: _confirmDeletePayment,
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
                         padding: const EdgeInsets.all(13),
