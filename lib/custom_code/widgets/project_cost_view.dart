@@ -932,7 +932,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _moduleHeader('BUILDING COST ESTIMATE'),
+              _moduleHeader('COST ESTIMATE'),
               const SizedBox(height: 16),
               _capLabel('YOUR TOTAL INCL. VAT'),
               const SizedBox(height: 4),
@@ -2027,10 +2027,14 @@ class _ProjectCostViewState extends State<ProjectCostView> {
   Widget _costControlScreen() {
     final bottomInset = MediaQuery.of(context).padding.bottom;
 
+    // Budget baseline is grossed up to the estimate's Total incl. VAT:
+    // net × (1 + contingency%) × (1 + VAT%). Cost to complete is measured
+    // against that full figure, not the bare trade net.
+    final gross = (1 + _contingencyPct / 100.0) * (1 + _vatPct / 100.0);
     double budget = 0, invoiced = 0, paid = 0, forecast = 0, ctc = 0;
     final rows = <Widget>[];
     for (var i = 0; i < _sections.length; i++) {
-      final b = _sectionBudget(_sections[i]);
+      final b = _sectionBudget(_sections[i]) * gross;
       final inv = _sectionInvoiced(i);
       final pd = _sectionPaid(i);
       budget += b;
@@ -2092,7 +2096,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                 children: const [
                   Icon(Icons.info_outline_rounded, size: 13, color: _green),
                   SizedBox(width: 5),
-                  Text('Cost to complete = budget − payments to date',
+                  Text('Cost to complete = total incl. VAT − payments to date',
                       style: TextStyle(
                         fontFamily: _body,
                         fontSize: 11,
