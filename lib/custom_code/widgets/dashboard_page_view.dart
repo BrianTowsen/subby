@@ -12,20 +12,6 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -1660,7 +1646,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       onTap: () => _goToProject(ref),
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        height: 100,
+        height: 84,
         decoration: BoxDecoration(
           color: bg,
           border: Border.all(color: border),
@@ -1733,7 +1719,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         onTap: _goToAddProject,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          height: 100,
+          height: 84,
           decoration: BoxDecoration(
             color: const Color(0xFFE3E7EA),
             border: Border.all(color: const Color(0xFFCCD2D7), width: 1.4),
