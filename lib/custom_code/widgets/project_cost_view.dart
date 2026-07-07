@@ -10,16 +10,24 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/auth/firebase_auth/auth_util.dart';
 
-/// ProjectCostView — Building Cost Estimate TEMPLATE.
+/// ProjectCostView — Financial Control Module.
 ///
-/// The app owns the STRUCTURE (trade sections) and the ARITHMETIC
-/// (qty × rate → subtotals → contingency → VAT → total). The user owns the
-/// NUMBERS — their own quotes and rates. Nothing is auto-estimated.
+/// Three connected tabs sharing one project spine:
+///   • Cost Estimate — the budget baseline (trade sections × line items).
+///   • Payments      — supplier payment claims allocated to a section/line,
+///                     with a Received → Approved → Paid status.
+///   • Cost Control  — Budget vs Actual + Cost to Complete, rolled up live.
+///
+/// The app owns the STRUCTURE and the ARITHMETIC. The user owns the NUMBERS.
+/// The section list is built in Cost Estimate and flows automatically into
+/// Payments (allocation targets) and Cost Control (budget baselines).
 class ProjectCostView extends StatefulWidget {
   const ProjectCostView({
     super.key,
@@ -41,18 +49,22 @@ class ProjectCostView extends StatefulWidget {
 
 class _ProjectCostViewState extends State<ProjectCostView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  // Ported from the estimate template · ink + sage-green system.
   static const Color _ink = Color(0xFF29343A);
   static const Color _inkMute = Color(0xFF566670);
   static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
-  static const Color _band = Color(0xFFF2F5F6); // section header band
-  static const Color _border = Color(0xFFEAEEF0); // sheet outline
-  static const Color _line = Color(0xFFF2F5F6); // row separators
-  static const Color _green = Color(0xFF5D737E); // accent / filled subtotal
-  static const Color _danger = Color(0xFF93A3AC); // delete
-  static const Color _dash = Color(0xFFCBD8DD); // add-section border
+  static const Color _band = Color(0xFFF2F5F6);
+  static const Color _border = Color(0xFFEAEEF0);
+  static const Color _line = Color(0xFFF2F5F6);
+  static const Color _green = Color(0xFF5D737E);
+  static const Color _danger = Color(0xFF93A3AC);
+  static const Color _warn = Color(0xFFB53F1A); // over-budget / destructive
+  static const Color _dash = Color(0xFFCBD8DD);
+  static const Color _hairline = Color(0xFFDCE3E6);
+  static const Color _zero = Color(0xFFB7C2C7);
+  static const Color _startBg = Color(0xFFF5F8F9);
+  static const Color _tabIdle = Color(0xFFAEBAC0);
   static const String _display = 'Inter Tight';
   static const String _body = 'Inter';
   // ────────────────────────────────────────────────────────────────────
@@ -91,12 +103,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     'Builder',
   ];
 
-  // Contingency is now user-editable (persisted on the estimate doc).
-  num _contingencyPct = 10;
-  final TextEditingController _contCtl = TextEditingController(text: '10');
-  static const int _vatPct = 15;
-
-  // Fixed sub-section vocabulary (a standard cost breakdown of a trade).
   static const List<String> _subTypes = [
     'Supply and Fit',
     'Material',
@@ -105,32 +111,93 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     'Specialist',
   ];
 
+  static const List<String> _units = [
+    'Sum',
+    'no',
+    'm',
+    'm²',
+    'm³',
+    'kg',
+    'ton',
+    'point',
+    'load',
+    'hour',
+    'day',
+    'month',
+    'item',
+    'lot',
+    'roll',
+    'bundle',
+    '5L',
+    '20L',
+    '%',
+  ];
+
+  static const List<String> _months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+
+  // Payment status vocabulary.
+  static const Map<String, String> _statusLabel = {
+    'received': 'Received',
+    'approved': 'Approved',
+    'paid': 'Paid',
+  };
+  static const List<String> _statusOrder = ['received', 'approved', 'paid'];
+
+  static const int _vatPct = 15;
+
+  // ── State ──────────────────────────────────────────────────────────
   final List<_EstSection> _sections = [];
+  final List<_Payment> _payments = [];
+
+  num _contingencyPct = 10;
+  final TextEditingController _contCtl = TextEditingController(text: '10');
+
+  int _tab = 0; // 0 = Cost Estimate, 1 = Payments, 2 = Cost Control
+  int? _paymentFilter; // null = all; otherwise section index
+  String? _editingPaymentId; // full-screen payment editor when non-null
+
+  // Payment-editor controllers (synced to the edited payment).
+  final TextEditingController _paySupplierCtl = TextEditingController();
+  final TextEditingController _payAmountCtl = TextEditingController();
 
   DocumentReference<Map<String, dynamic>>? _projectRef;
   DocumentReference<Map<String, dynamic>>? _estimateRef;
+  CollectionReference<Map<String, dynamic>>? _paymentsRef;
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _projSub;
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _estSub;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _paySub;
   Timer? _saveTimer;
+  Timer? _paySaveTimer;
   bool _isOwner = true;
   bool _readOnly = false;
   String _visibility = 'private';
   bool _remoteLoaded = false;
-  int _lastSaveMs = 0; // when we last wrote — used to ignore our own echo
+  int _lastSaveMs = 0;
+  int _lastPaySaveMs = 0;
   String _projectName = 'Project';
 
   @override
   void initState() {
     super.initState();
-    // All sections start collapsed and empty — the clean default template.
     for (var i = 0; i < _baseSections.length; i++) {
       _sections.add(_EstSection(name: _baseSections[i]));
     }
-    // NOTE: project resolution happens in didChangeDependencies (route
-    // reading needs context).
   }
 
-  bool _resolvedRef = false; // resolve projectRef once
+  bool _resolvedRef = false;
 
   @override
   void didChangeDependencies() {
@@ -138,12 +205,9 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     if (_resolvedRef) return;
     _resolvedRef = true;
 
-    // Resolution order: widget param, then route query param
-    // passed by ProjectDetailPageView, then shared-prefs fallback.
     final fromRoute =
         widget.projectRef ?? _readRefFromRoute('projectRef', 'projects');
     if (fromRoute != null) {
-      // Persist so downstream views inherit it and survive cold start.
       SharedPreferences.getInstance()
           .then((p) => p.setString(_kActiveProjectPath, fromRoute.path));
       _bindProject(FirebaseFirestore.instance.doc(fromRoute.path));
@@ -152,8 +216,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     }
   }
 
-  // Reads a serialized DocumentReference query param — same logic as
-  // SnagListPageView — and turns it into a DocumentReference.
   DocumentReference? _readRefFromRoute(String key, String fallbackCollection) {
     try {
       final qp = GoRouterState.of(context).uri.queryParameters;
@@ -176,8 +238,12 @@ class _ProjectCostViewState extends State<ProjectCostView> {
   void dispose() {
     _projSub?.cancel();
     _estSub?.cancel();
+    _paySub?.cancel();
     _saveTimer?.cancel();
+    _paySaveTimer?.cancel();
     _contCtl.dispose();
+    _paySupplierCtl.dispose();
+    _payAmountCtl.dispose();
     for (final s in _sections) {
       s.dispose();
     }
@@ -194,6 +260,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
   void _bindProject(DocumentReference<Map<String, dynamic>> ref) {
     _projectRef = ref;
     _estimateRef = ref.collection('estimate').doc('plan');
+    _paymentsRef = ref.collection('payments');
 
     _projSub = ref.snapshots().listen((snap) {
       final raw = snap.data();
@@ -205,8 +272,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       final isOwner = ownerRef is DocumentReference &&
           currentUserReference != null &&
           ownerRef.path == currentUserReference!.path;
-      // Cost-module privacy is shared with ProjectDetailPageView via
-      // projects.moduleVisibility['projectCost'] (default private).
       String vis = 'private';
       final mv = data['moduleVisibility'];
       if (mv is Map && mv['projectCost'] != null) {
@@ -223,26 +288,23 @@ class _ProjectCostViewState extends State<ProjectCostView> {
 
     _estSub =
         _estimateRef!.snapshots().listen(_onRemoteEstimate, onError: (_) {});
+    _paySub =
+        _paymentsRef!.snapshots().listen(_onRemotePayments, onError: (_) {});
   }
 
-  // Apply a remote estimate snapshot (real-time sync across devices).
+  // ─── Estimate sync ─────────────────────────────────────────────────
   void _onRemoteEstimate(DocumentSnapshot<Map<String, dynamic>> snap) {
     final data = snap.data();
     if (data == null) {
       _remoteLoaded = true;
-      if (_isOwner) _saveNow(); // seed the template on first open
+      if (_isOwner) _saveNow();
       return;
     }
-    if (_saveTimer?.isActive ?? false) return; // don't clobber pending edits
-    // Ignore the Firestore echo of our own recent write so it can't rebuild
-    // controllers (and drop focus / revert keystrokes) mid-edit.
+    if (_saveTimer?.isActive ?? false) return;
     if (DateTime.now().millisecondsSinceEpoch - _lastSaveMs < 2000) {
       _remoteLoaded = true;
       return;
     }
-    final list = data['sections'];
-    if (!mounted) return;
-    // Load the (optional) user-set contingency percentage.
     final cp = data['contingencyPct'];
     if (cp is num) {
       _contingencyPct = cp;
@@ -250,6 +312,8 @@ class _ProjectCostViewState extends State<ProjectCostView> {
           cp == cp.roundToDouble() ? cp.toInt().toString() : cp.toString();
       if (_contCtl.text != t) _contCtl.text = t;
     }
+    final list = data['sections'];
+    if (!mounted) return;
     if (list is List) {
       final parsed = <_EstSection>[];
       for (final e in list) {
@@ -267,9 +331,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
           ..addAll(parsed);
       }
     }
-    setState(() {
-      _remoteLoaded = true;
-    });
+    setState(() => _remoteLoaded = true);
   }
 
   Map<String, dynamic> _lineToMap(_EstLine l) => {
@@ -335,7 +397,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     );
   }
 
-  // Debounced save so typing doesn't spam Firestore.
   void _persist() {
     if (_readOnly || _estimateRef == null) return;
     _saveTimer?.cancel();
@@ -355,13 +416,72 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     } catch (_) {}
   }
 
-  // Cost-module privacy lives on projects.moduleVisibility['projectCost'] so it
-  // stays in sync with ProjectDetailPageView (the project-doc listener flips
-  // our icon back).
+  // ─── Payments sync ─────────────────────────────────────────────────
+  void _onRemotePayments(QuerySnapshot<Map<String, dynamic>> snap) {
+    // Don't clobber an in-progress edit or the echo of our own write.
+    if (_editingPaymentId != null) return;
+    if (_paySaveTimer?.isActive ?? false) return;
+    if (DateTime.now().millisecondsSinceEpoch - _lastPaySaveMs < 2000) return;
+    if (!mounted) return;
+    final parsed = <_Payment>[];
+    for (final d in snap.docs) {
+      parsed.add(_paymentFromDoc(d.id, d.data()));
+    }
+    parsed.sort((a, b) => a.date.compareTo(b.date));
+    setState(() {
+      _payments
+        ..clear()
+        ..addAll(parsed);
+    });
+  }
+
+  _Payment _paymentFromDoc(String id, Map<String, dynamic> m) => _Payment(
+        id: id,
+        supplier: (m['supplier'] ?? '').toString(),
+        secIndex: (m['secIndex'] is num) ? (m['secIndex'] as num).toInt() : 0,
+        allocSub: (m['allocSub'] is num) ? (m['allocSub'] as num).toInt() : -2,
+        allocLine:
+            (m['allocLine'] is num) ? (m['allocLine'] as num).toInt() : 0,
+        date: (m['date'] ?? '').toString(),
+        amount: (m['amount'] ?? '').toString(),
+        status: _statusLabel.containsKey((m['status'] ?? '').toString())
+            ? (m['status']).toString()
+            : 'received',
+      );
+
+  Map<String, dynamic> _paymentToMap(_Payment p) => {
+        'supplier': p.supplier,
+        'secIndex': p.secIndex,
+        'allocSub': p.allocSub,
+        'allocLine': p.allocLine,
+        'date': p.date,
+        'amount': p.amount,
+        'status': p.status,
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+  void _persistPayment(_Payment p) {
+    if (_readOnly || _paymentsRef == null) return;
+    _paySaveTimer?.cancel();
+    _paySaveTimer = Timer(const Duration(milliseconds: 600), () {
+      _savePaymentNow(p);
+    });
+  }
+
+  Future<void> _savePaymentNow(_Payment p) async {
+    final ref = _paymentsRef;
+    if (ref == null || _readOnly) return;
+    _lastPaySaveMs = DateTime.now().millisecondsSinceEpoch;
+    try {
+      await ref.doc(p.id).set(_paymentToMap(p), SetOptions(merge: true));
+    } catch (_) {}
+  }
+
+  // ─── Cost-module privacy (shared with ProjectDetailPageView) ───────
   void _toggleVisibility() {
     final ref = _projectRef;
     final next = _visibility == 'shared' ? 'private' : 'shared';
-    setState(() => _visibility = next); // optimistic
+    setState(() => _visibility = next);
     if (ref == null || _readOnly) return;
     ref.set(<String, dynamic>{
       'moduleVisibility': <String, dynamic>{'projectCost': next},
@@ -373,9 +493,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     if (nav.canPop()) nav.pop();
   }
 
-  // -----------------------------------------------------------------
-  // Mutations
-  // -----------------------------------------------------------------
+  // ─── Estimate mutations ────────────────────────────────────────────
   void _toggleSection(_EstSection s) {
     setState(() => s.expanded = !s.expanded);
     _persist();
@@ -398,20 +516,18 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     _persist();
   }
 
-  // A new direct line is created, saved, then opened on the edit page.
   Future<void> _addLine(_EstSection s) async {
     if (_readOnly) return;
     setState(() {
       s.expanded = true;
       s.lines.add(_EstLine());
     });
-    await _saveNow(); // land it in the shared doc before editing
+    await _saveNow();
     final si = _sections.indexOf(s);
     if (!mounted || si < 0) return;
     _openEditLine(si, -1, s.lines.length - 1);
   }
 
-  // A new line inside a sub-section.
   Future<void> _addSubLine(_EstSection s, _EstSub sb) async {
     if (_readOnly) return;
     setState(() {
@@ -426,7 +542,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     _openEditLine(si, subI, sb.lines.length - 1);
   }
 
-  // Add a preset sub-section (a standard breakdown heading) to a section.
   void _addSub(_EstSection s, String name) {
     setState(() {
       s.expanded = true;
@@ -443,14 +558,12 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     _persist();
   }
 
-  // The line editor is its own route (EditProjectCostPage) so it gets native
-  // push/pop + swipe-back. subIndex == -1 addresses a direct line of the
-  // section; >= 0 addresses a line inside that sub-section.
+  // Line editor is its own route (EditProjectCostPage) — native push/pop.
   void _openEditLine(int si, int subIndex, int li) {
     final ref = _projectRef;
     if (ref == null) return;
     _saveTimer?.cancel();
-    _saveNow(); // flush any pending edit before we leave
+    _saveNow();
     context.pushNamed(
       'EditProjectCostPage',
       queryParameters: {
@@ -479,9 +592,104 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     _persist();
   }
 
-  // -----------------------------------------------------------------
-  // Formatting
-  // -----------------------------------------------------------------
+  // ─── Payment mutations ─────────────────────────────────────────────
+  void _addPayment() {
+    if (_readOnly || _paymentsRef == null) return;
+    final id = _paymentsRef!.doc().id;
+    final now = DateTime.now();
+    final today = '${now.year.toString().padLeft(4, '0')}-'
+        '${now.month.toString().padLeft(2, '0')}-'
+        '${now.day.toString().padLeft(2, '0')}';
+    final p = _Payment(
+      id: id,
+      supplier: '',
+      secIndex: _paymentFilter ?? 0,
+      allocSub: -2,
+      allocLine: 0,
+      date: today,
+      amount: '',
+      status: 'received',
+    );
+    setState(() => _payments.add(p));
+    _savePaymentNow(p);
+    _openPayment(p.id);
+  }
+
+  void _openPayment(String id) {
+    final p =
+        _payments.firstWhere((x) => x.id == id, orElse: () => _Payment.empty());
+    _paySupplierCtl.text = p.supplier;
+    _payAmountCtl.text = p.amount;
+    setState(() => _editingPaymentId = id);
+  }
+
+  void _closePayment() {
+    _paySaveTimer?.cancel();
+    final p = _editingPayment;
+    if (p != null) _savePaymentNow(p);
+    setState(() => _editingPaymentId = null);
+  }
+
+  _Payment? get _editingPayment {
+    final id = _editingPaymentId;
+    if (id == null) return null;
+    for (final p in _payments) {
+      if (p.id == id) return p;
+    }
+    return null;
+  }
+
+  void _editPayment(void Function(_Payment) fn) {
+    final p = _editingPayment;
+    if (p == null) return;
+    setState(() => fn(p));
+    _persistPayment(p);
+  }
+
+  void _deletePayment() {
+    final p = _editingPayment;
+    if (p == null) return;
+    _paySaveTimer?.cancel();
+    _paymentsRef?.doc(p.id).delete().catchError((_) {});
+    setState(() {
+      _payments.removeWhere((x) => x.id == p.id);
+      _editingPaymentId = null;
+    });
+  }
+
+  // ─── Derived numbers ───────────────────────────────────────────────
+  double _sectionBudget(_EstSection s) {
+    double b = 0;
+    for (final l in s.lines) {
+      b += l.amount;
+    }
+    for (final sb in s.subs) {
+      for (final l in sb.lines) {
+        b += l.amount;
+      }
+    }
+    return b;
+  }
+
+  double _paymentAmount(_Payment p) => double.tryParse(p.amount.trim()) ?? 0;
+
+  double _sectionInvoiced(int i) {
+    double v = 0;
+    for (final p in _payments) {
+      if (p.secIndex == i) v += _paymentAmount(p);
+    }
+    return v;
+  }
+
+  double _sectionPaid(int i) {
+    double v = 0;
+    for (final p in _payments) {
+      if (p.secIndex == i && p.status == 'paid') v += _paymentAmount(p);
+    }
+    return v;
+  }
+
+  // ─── Formatting ────────────────────────────────────────────────────
   String _fmt(num v) {
     final n = v.round();
     final s = n.abs().toString();
@@ -495,16 +703,201 @@ class _ProjectCostViewState extends State<ProjectCostView> {
 
   String _money(num v) => 'R ${_fmt(v)}';
 
+  String _fmtDate(String iso) {
+    if (iso.isEmpty) return '—';
+    final p = iso.split('-');
+    if (p.length != 3) return iso;
+    final mi = (int.tryParse(p[1]) ?? 1) - 1;
+    return '${int.tryParse(p[2]) ?? p[2]} '
+        '${(mi >= 0 && mi < 12) ? _months[mi] : ''} ${p[0]}';
+  }
+
+  // Human label for a payment's allocation (section · line).
+  String _allocLabel(_Payment p) {
+    final sec = (p.secIndex >= 0 && p.secIndex < _sections.length)
+        ? _sections[p.secIndex]
+        : null;
+    final secName = sec?.name.trim().isNotEmpty == true ? sec!.name : 'Section';
+    if (sec == null || p.allocSub == -2) return secName;
+    if (p.allocSub == -1) {
+      if (p.allocLine >= 0 && p.allocLine < sec.lines.length) {
+        final d = sec.lines[p.allocLine].desc.text.trim();
+        return '$secName · ${d.isEmpty ? 'line ${p.allocLine + 1}' : d}';
+      }
+      return secName;
+    }
+    if (p.allocSub >= 0 && p.allocSub < sec.subs.length) {
+      final sb = sec.subs[p.allocSub];
+      if (p.allocLine >= 0 && p.allocLine < sb.lines.length) {
+        final d = sb.lines[p.allocLine].desc.text.trim();
+        return '$secName · ${sb.name}: ${d.isEmpty ? 'line ${p.allocLine + 1}' : d}';
+      }
+      return '$secName · ${sb.name}';
+    }
+    return secName;
+  }
+
   // =================================================================
   // BUILD
   // =================================================================
   @override
   Widget build(BuildContext context) {
-    final media = MediaQuery.of(context);
-    final topInset = media.padding.top;
-    final bottomInset = media.padding.bottom;
+    return Container(
+      width: widget.width ?? double.infinity,
+      height: widget.height ?? double.infinity,
+      color: _tab == 0 ? _paper : _startBg,
+      child: Stack(
+        children: [
+          Column(
+            children: [
+              Expanded(child: _activeScreen()),
+              _tabBar(),
+            ],
+          ),
+          if (_editingPaymentId != null && _editingPayment != null)
+            Positioned.fill(child: _paymentEditor(_editingPayment!)),
+        ],
+      ),
+    );
+  }
 
-    // Totals (roll up from the user's own numbers).
+  Widget _activeScreen() {
+    switch (_tab) {
+      case 1:
+        return _paymentsScreen();
+      case 2:
+        return _costControlScreen();
+      default:
+        return _estimateScreen();
+    }
+  }
+
+  // ─── Shared header ─────────────────────────────────────────────────
+  Widget _moduleHeader(String subtitle) {
+    final topInset = MediaQuery.of(context).padding.top;
+    return Padding(
+      padding: EdgeInsets.only(top: topInset),
+      child: Row(
+        children: [
+          _circleBtn(Icons.arrow_back_ios_new_rounded, _handleBack),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Column(
+                children: [
+                  Text(
+                    _projectName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontFamily: _body,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: _paper,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontFamily: _body,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.7,
+                      color: _paper.withOpacity(0.5),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          _isOwner ? _visBtn() : _viewOnlyPill(),
+        ],
+      ),
+    );
+  }
+
+  Widget _capLabel(String t) => Text(t,
+      style: TextStyle(
+        fontFamily: _body,
+        fontSize: 10.5,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 1,
+        color: _paper.withOpacity(0.55),
+      ));
+
+  Widget _bigNumber(String t) => Text(t,
+      style: const TextStyle(
+        fontFamily: _display,
+        fontSize: 34,
+        fontWeight: FontWeight.w900,
+        letterSpacing: -1,
+        color: _paper,
+        height: 1.0,
+      ));
+
+  Widget _heroSub(String t) => Text(t,
+      style: TextStyle(
+        fontFamily: _body,
+        fontSize: 11.5,
+        fontWeight: FontWeight.w600,
+        color: _paper.withOpacity(0.6),
+      ));
+
+  // ─── TAB BAR ───────────────────────────────────────────────────────
+  Widget _tabBar() {
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+    return Container(
+      decoration: const BoxDecoration(
+        color: _paper,
+        border: Border(top: BorderSide(color: _border)),
+      ),
+      padding: EdgeInsets.only(bottom: bottomInset),
+      child: Row(
+        children: [
+          _tabItem(0, Icons.checklist_rounded, 'Cost Estimate'),
+          _tabItem(1, Icons.receipt_long_rounded, 'Payments'),
+          _tabItem(2, Icons.insights_rounded, 'Cost Control'),
+        ],
+      ),
+    );
+  }
+
+  Widget _tabItem(int index, IconData icon, String label) {
+    final active = _tab == index;
+    final color = active ? _ink : _tabIdle;
+    return Expanded(
+      child: InkWell(
+        onTap: () => setState(() => _tab = index),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(0, 9, 0, 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 23, color: color),
+              const SizedBox(height: 3),
+              Text(label,
+                  maxLines: 1,
+                  style: TextStyle(
+                    fontFamily: _body,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: color,
+                  )),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ===================================================================
+  // COST ESTIMATE SCREEN
+  // ===================================================================
+  Widget _estimateScreen() {
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+
     double net = 0;
     int items = 0;
     int started = 0;
@@ -529,208 +922,60 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     final vat = subExcl * _vatPct / 100.0;
     final total = subExcl + vat;
 
-    return Container(
-      width: widget.width ?? double.infinity,
-      height: widget.height ?? double.infinity,
-      color: _paper,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _hero(topInset, total, started, items),
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.fromLTRB(14, 14, 14, 24 + bottomInset),
-              children: [
-                _sectionsHeaderRow(),
-                const SizedBox(height: 10),
-                Container(
-                  decoration: BoxDecoration(
-                    color: _paper,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: _border),
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: Column(
-                    children: [
-                      for (var i = 0; i < _sections.length; i++)
-                        _sectionBlock(i, _sections[i]),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                if (!_readOnly) _addSectionButton(),
-                const SizedBox(height: 14),
-                _breakdownCard(net, contAmount, vat, total),
-                const SizedBox(height: 14),
-                _savedCue(),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // -----------------------------------------------------------------
-  // Hero
-  // -----------------------------------------------------------------
-  Widget _hero(double topInset, double total, int started, int items) {
-    return Container(
-      width: double.infinity,
-      color: _ink,
-      padding: EdgeInsets.fromLTRB(20, topInset + 14, 20, 18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          color: _ink,
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _circleBtn(Icons.arrow_back_ios_new_rounded, _handleBack),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Column(
-                    children: [
-                      Text(
-                        _projectName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontFamily: _body,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: _paper,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'BUILDING COST ESTIMATE',
-                        style: TextStyle(
-                          fontFamily: _body,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.7,
-                          color: _paper.withOpacity(0.5),
-                        ),
-                      ),
-                    ],
-                  ),
+              _moduleHeader('BUILDING COST ESTIMATE'),
+              const SizedBox(height: 16),
+              _capLabel('YOUR TOTAL INCL. VAT'),
+              const SizedBox(height: 4),
+              _bigNumber(_money(total)),
+              const SizedBox(height: 10),
+              _heroSub(
+                  '$started of ${_sections.length} sections started · $items items'),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView(
+            padding: EdgeInsets.fromLTRB(14, 14, 14, 24 + bottomInset),
+            children: [
+              _sectionsHeaderRow(),
+              const SizedBox(height: 10),
+              Container(
+                decoration: BoxDecoration(
+                  color: _paper,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: _border),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  children: [
+                    for (var i = 0; i < _sections.length; i++)
+                      _sectionBlock(i, _sections[i]),
+                  ],
                 ),
               ),
-              _isOwner ? _visBtn() : _viewOnlyPill(),
+              const SizedBox(height: 12),
+              if (!_readOnly) _addSectionButton(),
+              const SizedBox(height: 14),
+              _breakdownCard(net, contAmount, vat, total),
+              const SizedBox(height: 14),
+              _savedCue(),
             ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            'YOUR TOTAL INCL. VAT',
-            style: TextStyle(
-              fontFamily: _body,
-              fontSize: 10.5,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 1,
-              color: _paper.withOpacity(0.55),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            _money(total),
-            style: const TextStyle(
-              fontFamily: _display,
-              fontSize: 34,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -1,
-              color: _paper,
-              height: 1.0,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            '$started of ${_sections.length} sections started · $items items',
-            style: TextStyle(
-              fontFamily: _body,
-              fontSize: 11.5,
-              fontWeight: FontWeight.w600,
-              color: _paper.withOpacity(0.6),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _circleBtn(IconData icon, VoidCallback onTap) => Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(999),
-          child: Container(
-            width: 38,
-            height: 38,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: _paper.withOpacity(0.12),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 16, color: _paper),
-          ),
-        ),
-      );
-
-  Widget _visBtn() => GestureDetector(
-        onTap: _toggleVisibility,
-        child: Container(
-          height: 38,
-          padding: const EdgeInsets.symmetric(horizontal: 11),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-              color: _paper.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(999)),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                  _visibility == 'shared'
-                      ? Icons.visibility_outlined
-                      : Icons.lock_outline_rounded,
-                  size: 14,
-                  color: _paper),
-              const SizedBox(width: 5),
-              Text(_visibility == 'shared' ? 'Shared' : 'Private',
-                  style: const TextStyle(
-                      fontFamily: _body,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: _paper)),
-            ],
-          ),
-        ),
-      );
-
-  Widget _viewOnlyPill() => Container(
-        height: 38,
-        padding: const EdgeInsets.symmetric(horizontal: 11),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-            color: _paper.withOpacity(0.12),
-            borderRadius: BorderRadius.circular(999)),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: const [
-            Icon(Icons.visibility_outlined, size: 14, color: _paper),
-            SizedBox(width: 5),
-            Text('View only',
-                style: TextStyle(
-                    fontFamily: _body,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: _paper)),
-          ],
-        ),
-      );
-
-  // -----------------------------------------------------------------
-  // Sections header row (title + expand/collapse all)
-  // -----------------------------------------------------------------
   Widget _sectionsHeaderRow() {
     final allOpen = _sections.every((s) => s.expanded);
     return Padding(
@@ -772,9 +1017,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     );
   }
 
-  // -----------------------------------------------------------------
-  // Section block (header band + editable lines)
-  // -----------------------------------------------------------------
   Widget _sectionBlock(int index, _EstSection s) {
     double sub = 0;
     for (final l in s.lines) {
@@ -796,7 +1038,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                 fontFamily: _display,
                 fontSize: 13,
                 fontWeight: FontWeight.w800,
-                color: sub > 0 ? _green : const Color(0xFFB7C2C7),
+                color: sub > 0 ? _green : _zero,
               )),
           AnimatedRotation(
             turns: s.expanded ? 0.5 : 0,
@@ -810,7 +1052,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
 
     return Column(
       children: [
-        // header band
         Container(
           padding: const EdgeInsets.fromLTRB(12, 9, 10, 9),
           decoration: const BoxDecoration(
@@ -881,7 +1122,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
             ],
           ),
         ),
-        // body
         if (s.expanded) ...[
           if (s.lines.isEmpty && s.subs.isEmpty)
             Container(
@@ -911,7 +1151,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     );
   }
 
-  // A sub-section: a heading that groups line items inside a section.
   Widget _subBlock(int si, _EstSection s, int subIdx, _EstSub sb) {
     final subNum = '${si + 1}.${subIdx + 1}';
     double ss = 0;
@@ -925,7 +1164,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       ),
       child: Column(
         children: [
-          // sub-section header
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 10, 8),
             child: Row(
@@ -990,7 +1228,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                             fontFamily: _display,
                             fontSize: 12,
                             fontWeight: FontWeight.w800,
-                            color: ss > 0 ? _green : const Color(0xFFB7C2C7),
+                            color: ss > 0 ? _green : _zero,
                           )),
                       AnimatedRotation(
                         turns: sb.expanded ? 0.5 : 0,
@@ -1102,7 +1340,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     );
   }
 
-  // Inline editor for a sub-section: change its preset type or delete it.
   Widget _subTypePicker(_EstSection s, _EstSub sb) {
     final usedByOthers =
         s.subs.where((x) => x != sb).map((x) => x.name).toSet();
@@ -1189,7 +1426,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     );
   }
 
-  // Read-only summary row — tap opens the line on its own edit page.
   Widget _lineRow(String numLabel, _EstLine l, VoidCallback onTap,
       {double leftPad = 12}) {
     final desc = l.desc.text.trim();
@@ -1217,7 +1453,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                     fontFamily: _body,
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFFB7C2C7),
+                    color: _zero,
                   )),
             ),
             Expanded(
@@ -1257,7 +1493,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                   fontFamily: _display,
                   fontSize: 13.5,
                   fontWeight: FontWeight.w800,
-                  color: l.amount > 0 ? _ink : const Color(0xFFB7C2C7),
+                  color: l.amount > 0 ? _ink : _zero,
                 )),
             const Icon(Icons.chevron_right_rounded, size: 20, color: _faint),
           ],
@@ -1343,12 +1579,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     );
   }
 
-  // -----------------------------------------------------------------
-  // Bottom bar (breakdown + saved cue)
-  // -----------------------------------------------------------------
-  // -----------------------------------------------------------------
-  // Estimate breakdown (inline, always visible) + saved cue
-  // -----------------------------------------------------------------
   Widget _breakdownCard(double net, double cont, double vat, double total) {
     return Container(
       decoration: BoxDecoration(
@@ -1392,7 +1622,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     );
   }
 
-  // Contingency row with an inline editable percentage field.
   Widget _contingencyRow(double cont) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 5),
         child: Row(
@@ -1502,6 +1731,1143 @@ class _ProjectCostViewState extends State<ProjectCostView> {
           ],
         ),
       );
+
+  // ===================================================================
+  // PAYMENTS SCREEN
+  // ===================================================================
+  Widget _paymentsScreen() {
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+
+    double invoiced = 0, paid = 0;
+    for (final p in _payments) {
+      invoiced += _paymentAmount(p);
+      if (p.status == 'paid') paid += _paymentAmount(p);
+    }
+
+    final shown = _paymentFilter == null
+        ? _payments
+        : _payments.where((p) => p.secIndex == _paymentFilter).toList();
+
+    final secsWithPay =
+        (_payments.map((p) => p.secIndex).toSet().toList()..sort());
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          color: _ink,
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _moduleHeader('PAYMENTS'),
+              const SizedBox(height: 16),
+              _capLabel('PAYMENTS TO DATE'),
+              const SizedBox(height: 4),
+              _bigNumber(_money(invoiced)),
+              const SizedBox(height: 10),
+              _heroSub('${_payments.length} payments · ${_money(paid)} paid'),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView(
+            padding: EdgeInsets.fromLTRB(14, 14, 14, 24 + bottomInset),
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _paymentFilter == null
+                        ? (shown.length == 1
+                            ? '1 payment'
+                            : '${shown.length} payments')
+                        : '${shown.length} ${shown.length == 1 ? 'payment' : 'payments'} · ${_sections[_paymentFilter!].name}',
+                    style: const TextStyle(
+                      fontFamily: _display,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      color: _ink,
+                    ),
+                  ),
+                  if (!_readOnly)
+                    InkWell(
+                      onTap: _addPayment,
+                      borderRadius: BorderRadius.circular(999),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 7),
+                        decoration: BoxDecoration(
+                          color: _ink,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(Icons.add_rounded, size: 15, color: _paper),
+                            SizedBox(width: 5),
+                            Text('New payment',
+                                style: TextStyle(
+                                  fontFamily: _body,
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: _paper,
+                                )),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // section filter chips
+              SizedBox(
+                height: 34,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    _filterChip('All', _payments.length, _paymentFilter == null,
+                        () => setState(() => _paymentFilter = null)),
+                    for (final i in secsWithPay)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 7),
+                        child: _filterChip(
+                          _sections[i].name,
+                          _payments.where((p) => p.secIndex == i).length,
+                          _paymentFilter == i,
+                          () => setState(() => _paymentFilter = i),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (shown.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(14, 30, 14, 30),
+                  child: Center(
+                    child: Text('No payments in this section yet.',
+                        style: TextStyle(
+                          fontFamily: _body,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: _faint,
+                        )),
+                  ),
+                )
+              else
+                for (final p in shown) ...[
+                  _paymentCard(p),
+                  const SizedBox(height: 10),
+                ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _filterChip(String label, int count, bool active, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+        decoration: BoxDecoration(
+          color: active ? _ink : _paper,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: active ? _ink : _hairline),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label,
+                style: TextStyle(
+                  fontFamily: _body,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w800,
+                  color: active ? _paper : _inkMute,
+                )),
+            const SizedBox(width: 6),
+            Text('$count',
+                style: TextStyle(
+                  fontFamily: _body,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: active ? _paper.withOpacity(0.55) : _zero,
+                )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _paymentCard(_Payment p) {
+    final st = p.status;
+    final Color sBg = st == 'paid'
+        ? _ink
+        : (st == 'approved' ? _green.withOpacity(0.15) : _band);
+    final Color sFg =
+        st == 'paid' ? _paper : (st == 'approved' ? _green : _inkMute);
+    final IconData sIcon = st == 'paid'
+        ? Icons.check_circle_rounded
+        : (st == 'approved' ? Icons.task_alt_rounded : Icons.schedule_rounded);
+
+    return InkWell(
+      onTap: () => _openPayment(p.id),
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
+        decoration: BoxDecoration(
+          color: _paper,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        p.supplier.trim().isEmpty
+                            ? 'Unnamed supplier'
+                            : p.supplier,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: _body,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: _ink,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        _allocLabel(p),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: _body,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: _faint,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(_money(_paymentAmount(p)),
+                        style: const TextStyle(
+                          fontFamily: _display,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                          color: _ink,
+                        )),
+                    const SizedBox(height: 3),
+                    Text(_fmtDate(p.date),
+                        style: const TextStyle(
+                          fontFamily: _body,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w600,
+                          color: _zero,
+                        )),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 11),
+            Row(
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: sBg,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(sIcon, size: 13, color: sFg),
+                      const SizedBox(width: 4),
+                      Text(_statusLabel[st] ?? 'Received',
+                          style: TextStyle(
+                            fontFamily: _body,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.3,
+                            color: sFg,
+                          )),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                const Icon(Icons.chevron_right_rounded, size: 20, color: _dash),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ===================================================================
+  // COST CONTROL SCREEN
+  // ===================================================================
+  Widget _costControlScreen() {
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+
+    double budget = 0, invoiced = 0, paid = 0, forecast = 0, ctc = 0;
+    final rows = <Widget>[];
+    for (var i = 0; i < _sections.length; i++) {
+      final b = _sectionBudget(_sections[i]);
+      final inv = _sectionInvoiced(i);
+      final pd = _sectionPaid(i);
+      budget += b;
+      invoiced += inv;
+      paid += pd;
+      forecast += b > inv ? b : inv;
+      ctc += (b - inv) > 0 ? (b - inv) : 0;
+      if (b > 0 || inv > 0)
+        rows.add(_costSectionRow(_sections[i].name, b, inv, pd));
+    }
+    final variance = budget - forecast; // negative = over
+    final fbase = forecast > 0 ? forecast : 1;
+    final pctSpent = budget > 0 ? (invoiced / budget * 100).round() : 0;
+    final over = variance < -0.5;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          color: _ink,
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _moduleHeader('COST CONTROL'),
+              const SizedBox(height: 16),
+              _capLabel('COST TO COMPLETE'),
+              const SizedBox(height: 4),
+              _bigNumber(_money(ctc)),
+              const SizedBox(height: 10),
+              _heroSub(
+                  '$pctSpent% of budget in payments · forecast ${_money(forecast)}'),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView(
+            padding: EdgeInsets.fromLTRB(14, 14, 14, 24 + bottomInset),
+            children: [
+              _costSummaryCard(budget, invoiced, paid, ctc, fbase.toDouble()),
+              const SizedBox(height: 12),
+              _varianceBanner(over, variance, forecast, budget),
+              const SizedBox(height: 16),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(2, 0, 2, 10),
+                child: Text('By trade section',
+                    style: TextStyle(
+                      fontFamily: _display,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      color: _ink,
+                    )),
+              ),
+              for (final r in rows) ...[r, const SizedBox(height: 10)],
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.info_outline_rounded, size: 13, color: _green),
+                  SizedBox(width: 5),
+                  Text('Cost to complete = budget − payments to date',
+                      style: TextStyle(
+                        fontFamily: _body,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: _faint,
+                      )),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _costSummaryCard(
+      double budget, double invoiced, double paid, double ctc, double fbase) {
+    final paidW = (paid / fbase).clamp(0.0, 1.0);
+    final invUnpaidW = ((invoiced - paid) / fbase).clamp(0.0, 1.0);
+    return Container(
+      decoration: BoxDecoration(
+        color: _paper,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _border),
+      ),
+      padding: const EdgeInsets.fromLTRB(15, 15, 15, 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: SizedBox(
+              height: 12,
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: (paidW * 1000).round().clamp(0, 1000),
+                    child: Container(color: _ink),
+                  ),
+                  const SizedBox(width: 3),
+                  Expanded(
+                    flex: (invUnpaidW * 1000).round().clamp(0, 1000),
+                    child: Container(color: _green),
+                  ),
+                  const SizedBox(width: 3),
+                  Expanded(
+                    flex: ((1 - paidW - invUnpaidW) * 1000)
+                        .round()
+                        .clamp(0, 1000),
+                    child: Container(color: _band),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 16,
+            runSpacing: 4,
+            children: [
+              _legend(_ink, 'Paid'),
+              _legend(_green, 'Unpaid'),
+              _legend(const Color(0xFFE4EAED), 'To complete'),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(child: _statCell('BUDGET', _money(budget), _ink)),
+              Expanded(child: _statCell('PAYMENTS', _money(invoiced), _ink)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(child: _statCell('PAID', _money(paid), _ink)),
+              Expanded(child: _statCell('TO COMPLETE', _money(ctc), _green)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _legend(Color c, String t) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 9,
+            height: 9,
+            decoration:
+                BoxDecoration(color: c, borderRadius: BorderRadius.circular(3)),
+          ),
+          const SizedBox(width: 6),
+          Text(t,
+              style: const TextStyle(
+                fontFamily: _body,
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                color: _inkMute,
+              )),
+        ],
+      );
+
+  Widget _statCell(String label, String value, Color valueColor) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              style: const TextStyle(
+                fontFamily: _body,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.4,
+                color: _faint,
+              )),
+          const SizedBox(height: 2),
+          Text(value,
+              style: TextStyle(
+                fontFamily: _display,
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                color: valueColor,
+              )),
+        ],
+      );
+
+  Widget _varianceBanner(
+      bool over, double variance, double forecast, double budget) {
+    final Color c = over ? _warn : _green;
+    final title = over
+        ? '${_money(-variance)} over budget'
+        : (variance > 0.5 ? '${_money(variance)} under budget' : 'On budget');
+    return Container(
+      decoration: BoxDecoration(
+        color: c.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: c.withOpacity(0.18)),
+      ),
+      padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: c.withOpacity(0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+                over ? Icons.trending_up_rounded : Icons.verified_rounded,
+                size: 19,
+                color: c),
+          ),
+          const SizedBox(width: 11),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: TextStyle(
+                      fontFamily: _body,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: c,
+                    )),
+                const SizedBox(height: 1),
+                Text(
+                    'Forecast final cost ${_money(forecast)} vs budget ${_money(budget)}',
+                    style: const TextStyle(
+                      fontFamily: _body,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: _inkMute,
+                    )),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _costSectionRow(String name, double b, double inv, double pd) {
+    final over = inv > b;
+    final remain = b - inv;
+    final base = b > 0 ? b : 1;
+    final invW = (inv / base).clamp(0.0, 1.0);
+    final paidW = (pd / base).clamp(0.0, 1.0);
+    final Color barColor = over ? _warn : _green;
+    return Container(
+      decoration: BoxDecoration(
+        color: _paper,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _border),
+      ),
+      padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Expanded(
+                child: Text(name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: _body,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: _ink,
+                    )),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                  over
+                      ? '${_money(-remain)} over'
+                      : '${_money(remain)} to spend',
+                  style: TextStyle(
+                    fontFamily: _body,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w800,
+                    color: over ? _warn : _green,
+                  )),
+            ],
+          ),
+          const SizedBox(height: 10),
+          LayoutBuilder(builder: (context, c) {
+            final w = c.maxWidth;
+            return SizedBox(
+              height: 8,
+              child: Stack(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                        color: _band, borderRadius: BorderRadius.circular(999)),
+                  ),
+                  Container(
+                    width: (w * invW).clamp(0.0, w),
+                    decoration: BoxDecoration(
+                        color: barColor,
+                        borderRadius: BorderRadius.circular(999)),
+                  ),
+                  Container(
+                    width: (w * paidW).clamp(0.0, w),
+                    decoration: BoxDecoration(
+                        color: _ink, borderRadius: BorderRadius.circular(999)),
+                  ),
+                ],
+              ),
+            );
+          }),
+          const SizedBox(height: 7),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Budget ${_money(b)}',
+                  style: const TextStyle(
+                    fontFamily: _body,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: _faint,
+                  )),
+              Text('Payments ${_money(inv)}',
+                  style: const TextStyle(
+                    fontFamily: _body,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: _faint,
+                  )),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===================================================================
+  // PAYMENT EDITOR (full-screen push-in page)
+  // ===================================================================
+  Widget _paymentEditor(_Payment p) {
+    final top = MediaQuery.of(context).viewPadding.top;
+    final bottom = MediaQuery.of(context).padding.bottom;
+    final sec = (p.secIndex >= 0 && p.secIndex < _sections.length)
+        ? _sections[p.secIndex]
+        : null;
+
+    return Container(
+      color: _startBg,
+      child: Column(
+        children: [
+          // header
+          Container(
+            width: double.infinity,
+            color: _ink,
+            padding: EdgeInsets.fromLTRB(14, top + 14, 14, 16),
+            child: Row(
+              children: [
+                _circleBtn(Icons.chevron_left_rounded, _closePayment,
+                    iconSize: 24),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Column(
+                      children: [
+                        Text(
+                            p.supplier.trim().isEmpty
+                                ? 'New payment'
+                                : p.supplier.trim(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                                fontFamily: _body,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: _paper)),
+                        const SizedBox(height: 2),
+                        Text('PAYMENT',
+                            style: TextStyle(
+                                fontFamily: _body,
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.6,
+                                color: _paper.withOpacity(0.5))),
+                      ],
+                    ),
+                  ),
+                ),
+                if (!_readOnly)
+                  _circleBtn(Icons.delete_outline_rounded, _deletePayment,
+                      iconSize: 18, bg: _paper.withOpacity(0.10))
+                else
+                  const SizedBox(width: 38, height: 38),
+              ],
+            ),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(18, 16, 18, bottom + 40),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _editorLabel('SUPPLIER'),
+                  const SizedBox(height: 8),
+                  _cardField(
+                    child: TextField(
+                      controller: _paySupplierCtl,
+                      readOnly: _readOnly,
+                      onChanged: (v) => _editPayment((x) => x.supplier = v),
+                      style: const TextStyle(
+                          fontFamily: _display,
+                          fontSize: 19,
+                          fontWeight: FontWeight.w800,
+                          color: _ink),
+                      decoration: const InputDecoration(
+                        isCollapsed: true,
+                        border: InputBorder.none,
+                        hintText: 'Supplier / subcontractor',
+                        hintStyle: TextStyle(color: _faint),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _editorLabel('PAYMENT AMOUNT'),
+                  const SizedBox(height: 8),
+                  _cardField(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 14),
+                    child: Row(
+                      children: [
+                        const Text('R',
+                            style: TextStyle(
+                                fontFamily: _display,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                                color: _faint)),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextField(
+                            controller: _payAmountCtl,
+                            readOnly: _readOnly,
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
+                            textAlign: TextAlign.right,
+                            onChanged: (v) => _editPayment((x) => x.amount =
+                                v.replaceAll(RegExp(r'[^0-9.]'), '')),
+                            style: const TextStyle(
+                                fontFamily: _display,
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                color: _ink),
+                            decoration: const InputDecoration(
+                              isCollapsed: true,
+                              border: InputBorder.none,
+                              hintText: '0',
+                              hintStyle: TextStyle(color: _faint),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _editorLabel('DATE'),
+                  const SizedBox(height: 8),
+                  InkWell(
+                    onTap: _readOnly ? null : () => _pickDate(p),
+                    borderRadius: BorderRadius.circular(14),
+                    child: _cardField(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 14),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(_fmtDate(p.date),
+                              style: const TextStyle(
+                                  fontFamily: _body,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: _ink)),
+                          const Icon(Icons.calendar_today_rounded,
+                              size: 16, color: _faint),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _editorLabel('STATUS'),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      for (var i = 0; i < _statusOrder.length; i++) ...[
+                        if (i > 0) const SizedBox(width: 7),
+                        Expanded(
+                          child: _statusChip(p, _statusOrder[i]),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _editorLabel('ALLOCATE TO SECTION'),
+                  const SizedBox(height: 8),
+                  _sectionDropdown(p),
+                  const SizedBox(height: 10),
+                  _lineDropdown(p, sec),
+                  const SizedBox(height: 20),
+                  if (!_readOnly)
+                    InkWell(
+                      onTap: _deletePayment,
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.all(13),
+                        decoration: BoxDecoration(
+                            color: _paper,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: _border)),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Icon(Icons.delete_outline_rounded,
+                                size: 18, color: _faint),
+                            SizedBox(width: 7),
+                            Text('Delete payment',
+                                style: TextStyle(
+                                    fontFamily: _body,
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: _faint)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 12),
+                  InkWell(
+                    onTap: _closePayment,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.all(15),
+                      decoration: BoxDecoration(
+                          color: _ink, borderRadius: BorderRadius.circular(12)),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(Icons.check_rounded, size: 18, color: _paper),
+                          SizedBox(width: 7),
+                          Text('Done',
+                              style: TextStyle(
+                                  fontFamily: _body,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: _paper)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Icon(Icons.cloud_done_outlined, size: 13, color: _green),
+                      SizedBox(width: 5),
+                      Text('Changes saved automatically',
+                          style: TextStyle(
+                              fontFamily: _body,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: _faint)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _editorLabel(String t) => Text(t,
+      style: const TextStyle(
+        fontFamily: _body,
+        fontSize: 9.5,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0.5,
+        color: _faint,
+      ));
+
+  Widget _cardField({required Widget child, EdgeInsets? padding}) => Container(
+        width: double.infinity,
+        padding: padding ?? const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: _paper,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _border),
+        ),
+        child: child,
+      );
+
+  Widget _statusChip(_Payment p, String v) {
+    final active = p.status == v;
+    return InkWell(
+      onTap: _readOnly ? null : () => _editPayment((x) => x.status = v),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: active ? _ink : _paper,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: active ? _ink : _hairline),
+        ),
+        child: Text(_statusLabel[v] ?? v,
+            style: TextStyle(
+              fontFamily: _body,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: active ? _paper : _inkMute,
+            )),
+      ),
+    );
+  }
+
+  Widget _sectionDropdown(_Payment p) {
+    return Container(
+      decoration: BoxDecoration(
+        color: _paper,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _border),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<int>(
+          value: p.secIndex,
+          isExpanded: true,
+          icon: const Icon(Icons.expand_more_rounded, color: _faint),
+          style: const TextStyle(
+              fontFamily: _body,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: _ink),
+          onChanged: _readOnly
+              ? null
+              : (v) {
+                  if (v == null) return;
+                  _editPayment((x) {
+                    x.secIndex = v;
+                    x.allocSub = -2;
+                    x.allocLine = 0;
+                  });
+                },
+          items: [
+            for (var i = 0; i < _sections.length; i++)
+              DropdownMenuItem(
+                value: i,
+                child: Text('${i + 1}. ${_sections[i].name}',
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _lineDropdown(_Payment p, _EstSection? sec) {
+    // Encoded values: 'w' whole section, 's{k}_{li}' sub line, 'd{j}' direct.
+    String current = 'w';
+    if (p.allocSub == -1) {
+      current = 'd${p.allocLine}';
+    } else if (p.allocSub >= 0) {
+      current = 's${p.allocSub}_${p.allocLine}';
+    }
+    final items = <DropdownMenuItem<String>>[
+      const DropdownMenuItem(value: 'w', child: Text('Whole section')),
+    ];
+    if (sec != null) {
+      for (var k = 0; k < sec.subs.length; k++) {
+        final sb = sec.subs[k];
+        for (var li = 0; li < sb.lines.length; li++) {
+          final d = sb.lines[li].desc.text.trim();
+          items.add(DropdownMenuItem(
+            value: 's${k}_$li',
+            child: Text('${sb.name}: ${d.isEmpty ? 'line ${li + 1}' : d}',
+                maxLines: 1, overflow: TextOverflow.ellipsis),
+          ));
+        }
+      }
+      for (var j = 0; j < sec.lines.length; j++) {
+        final d = sec.lines[j].desc.text.trim();
+        items.add(DropdownMenuItem(
+          value: 'd$j',
+          child: Text(d.isEmpty ? 'line ${j + 1}' : d,
+              maxLines: 1, overflow: TextOverflow.ellipsis),
+        ));
+      }
+    }
+    // Guard against a stale value no longer present.
+    if (!items.any((it) => it.value == current)) current = 'w';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: _paper,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _border),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: current,
+          isExpanded: true,
+          icon: const Icon(Icons.expand_more_rounded, color: _faint),
+          style: const TextStyle(
+              fontFamily: _body,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: _inkMute),
+          onChanged: _readOnly
+              ? null
+              : (v) {
+                  if (v == null) return;
+                  _editPayment((x) {
+                    if (v == 'w') {
+                      x.allocSub = -2;
+                      x.allocLine = 0;
+                    } else if (v.startsWith('s')) {
+                      final parts = v.substring(1).split('_');
+                      x.allocSub = int.tryParse(parts[0]) ?? -2;
+                      x.allocLine =
+                          parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
+                    } else if (v.startsWith('d')) {
+                      x.allocSub = -1;
+                      x.allocLine = int.tryParse(v.substring(1)) ?? 0;
+                    }
+                  });
+                },
+          items: items,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickDate(_Payment p) async {
+    DateTime init = DateTime.now();
+    final parts = p.date.split('-');
+    if (parts.length == 3) {
+      init = DateTime(int.tryParse(parts[0]) ?? init.year,
+          int.tryParse(parts[1]) ?? 1, int.tryParse(parts[2]) ?? 1);
+    }
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: init,
+      firstDate: DateTime(2015),
+      lastDate: DateTime(2100),
+    );
+    if (picked == null) return;
+    final iso = '${picked.year.toString().padLeft(4, '0')}-'
+        '${picked.month.toString().padLeft(2, '0')}-'
+        '${picked.day.toString().padLeft(2, '0')}';
+    _editPayment((x) => x.date = iso);
+  }
+
+  // ─── Small shared widgets ──────────────────────────────────────────
+  Widget _circleBtn(IconData icon, VoidCallback onTap,
+          {double iconSize = 16, Color? bg}) =>
+      Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            width: 38,
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: bg ?? _paper.withOpacity(0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: iconSize, color: _paper),
+          ),
+        ),
+      );
+
+  Widget _visBtn() => GestureDetector(
+        onTap: _toggleVisibility,
+        child: Container(
+          height: 38,
+          padding: const EdgeInsets.symmetric(horizontal: 11),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+              color: _paper.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(999)),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                  _visibility == 'shared'
+                      ? Icons.visibility_outlined
+                      : Icons.lock_outline_rounded,
+                  size: 14,
+                  color: _paper),
+              const SizedBox(width: 5),
+              Text(_visibility == 'shared' ? 'Shared' : 'Private',
+                  style: const TextStyle(
+                      fontFamily: _body,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: _paper)),
+            ],
+          ),
+        ),
+      );
+
+  Widget _viewOnlyPill() => Container(
+        height: 38,
+        padding: const EdgeInsets.symmetric(horizontal: 11),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+            color: _paper.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(999)),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            Icon(Icons.visibility_outlined, size: 14, color: _paper),
+            SizedBox(width: 5),
+            Text('View only',
+                style: TextStyle(
+                    fontFamily: _body,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: _paper)),
+          ],
+        ),
+      );
 }
 
 // ============================================================================
@@ -1565,12 +2931,10 @@ class _EstSection {
   }
 }
 
-// A sub-section: a preset breakdown heading inside a section (e.g. Material,
-// Labour) that groups line items.
 class _EstSub {
   String name;
   bool expanded;
-  bool pick = false; // transient: change-type/delete picker open
+  bool pick = false;
   final List<_EstLine> lines;
 
   _EstSub({required this.name, this.expanded = true, List<_EstLine>? lines})
@@ -1581,4 +2945,40 @@ class _EstSub {
       l.dispose();
     }
   }
+}
+
+// A supplier payment claim, allocated to a section (and optionally one line).
+//   allocSub: -2 = whole section · -1 = a direct line · >=0 = a sub-section
+//   allocLine: index of the line within that list (ignored when allocSub == -2)
+class _Payment {
+  String id;
+  String supplier;
+  int secIndex;
+  int allocSub;
+  int allocLine;
+  String date; // yyyy-MM-dd
+  String amount;
+  String status; // received | approved | paid
+
+  _Payment({
+    required this.id,
+    required this.supplier,
+    required this.secIndex,
+    required this.allocSub,
+    required this.allocLine,
+    required this.date,
+    required this.amount,
+    required this.status,
+  });
+
+  factory _Payment.empty() => _Payment(
+        id: '',
+        supplier: '',
+        secIndex: 0,
+        allocSub: -2,
+        allocLine: 0,
+        date: '',
+        amount: '',
+        status: 'received',
+      );
 }
