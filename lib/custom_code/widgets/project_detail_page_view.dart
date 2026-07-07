@@ -20,6 +20,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -3451,48 +3453,72 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   Widget _rModTile(IconData icon, String title, String sub, String visKey,
       bool readOnly, VoidCallback onTap,
       {bool featured = false}) {
+    // Full-width horizontal module row (100 tall): icon chip · title+subtitle ·
+    // visibility chip · chevron. Featured tile = slate (white text).
+    final Color titleColor = featured ? Colors.white : _ink;
+    final Color subColor = featured ? Colors.white.withOpacity(0.72) : _inkMute;
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(14),
         child: Container(
-          height: 118,
-          padding: const EdgeInsets.all(14),
+          height: 100,
+          padding: const EdgeInsets.symmetric(horizontal: 18),
           decoration: BoxDecoration(
-              // Featured (first) tile = slate (white text); the rest = tint.
               color:
                   featured ? const Color(0xFF58707D) : const Color(0xFFE3E7EA),
               borderRadius: BorderRadius.circular(14)),
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              _rModIcon(icon),
-              const Spacer(),
-              if (!readOnly)
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => _toggleModuleVis(visKey),
-                  child: _rVisChip(_moduleVisFor(visKey), _paper),
-                ),
-            ]),
-            const Spacer(),
-            Text(title,
-                style: TextStyle(
-                    fontFamily: _displayFont,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.2,
-                    color: featured ? Colors.white : _ink)),
-            const SizedBox(height: 2),
-            Text(sub,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                    fontFamily: _bodyFont,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: featured ? Colors.white.withOpacity(0.7) : _ink)),
+          child: Row(children: [
+            Container(
+              width: 56,
+              height: 56,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: featured ? Colors.white.withOpacity(0.14) : _paper,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child:
+                  Icon(icon, size: 26, color: featured ? Colors.white : _ink),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          fontFamily: _displayFont,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.3,
+                          color: titleColor)),
+                  const SizedBox(height: 3),
+                  Text(sub,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
+                          color: subColor)),
+                ],
+              ),
+            ),
+            if (!readOnly) ...[
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _toggleModuleVis(visKey),
+                child: _rVisChip(_moduleVisFor(visKey), _paper),
+              ),
+              const SizedBox(width: 10),
+            ],
+            Icon(Icons.chevron_right_rounded,
+                size: 22,
+                color: featured ? Colors.white.withOpacity(0.6) : _rChevron),
           ]),
         ),
       ),
@@ -3550,169 +3576,100 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   }
 
   Widget _rModules(bool readOnly) {
-    // Shared (read-only) view: show ONLY the modules the owner shared, laid out
-    // 2-up, with no visibility chips.
-    if (readOnly) {
-      final mods = <List<dynamic>>[
-        [
-          Icons.timeline_rounded,
-          'Timeline',
-          'Programme & phases',
-          'timeline',
-          widget.timelineRouteName,
-          _fallbackTimelineRoute
-        ],
-        [
-          Icons.menu_book_rounded,
-          'Site Book',
-          'Journal site entries',
-          'siteBook',
-          widget.siteBookRouteName,
-          _fallbackSiteBookRoute
-        ],
-        [
-          Icons.checklist_rounded,
-          'To-Do List',
-          'Tasks & reminders',
-          'toDo',
-          widget.toDoListRouteName,
-          _fallbackToDoRoute
-        ],
-        [
-          Icons.fact_check_outlined,
-          'Snag List',
-          'Defects & fixes',
-          'snagList',
-          widget.snagListRouteName,
-          _fallbackSnagRoute
-        ],
-        [
-          Icons.calculate_outlined,
-          'Project Cost',
-          'Budget & estimates',
-          'projectCost',
-          widget.projectCostRouteName,
-          _fallbackCostRoute
-        ],
-        [
-          Icons.request_quote_outlined,
-          'Get Quotes',
-          'Compare trades',
-          'getQuotes',
-          widget.getQuotesRouteName,
-          _fallbackQuotesRoute
-        ],
-      ].where((m) => _moduleVisFor(m[3] as String) == 'shared').toList();
+    // Full-width single-column module rows. Shared (read-only) view shows ONLY
+    // the modules the owner shared, with no visibility chips.
+    final all = <List<dynamic>>[
+      [
+        Icons.timeline_rounded,
+        'Timeline',
+        'Programme & phases',
+        'timeline',
+        widget.timelineRouteName,
+        _fallbackTimelineRoute,
+        true, // featured
+      ],
+      [
+        Icons.menu_book_rounded,
+        'Site Book',
+        'Journal site entries',
+        'siteBook',
+        widget.siteBookRouteName,
+        _fallbackSiteBookRoute,
+        false,
+      ],
+      [
+        Icons.checklist_rounded,
+        'To-Do List',
+        'Tasks & reminders',
+        'toDo',
+        widget.toDoListRouteName,
+        _fallbackToDoRoute,
+        false,
+      ],
+      [
+        Icons.fact_check_outlined,
+        'Snag List',
+        'Defects & fixes',
+        'snagList',
+        widget.snagListRouteName,
+        _fallbackSnagRoute,
+        false,
+      ],
+      [
+        Icons.calculate_outlined,
+        'Project Cost',
+        'Budget & estimates',
+        'projectCost',
+        widget.projectCostRouteName,
+        _fallbackCostRoute,
+        false,
+      ],
+      [
+        Icons.request_quote_outlined,
+        'Get Quotes',
+        'Compare trades',
+        'getQuotes',
+        widget.getQuotesRouteName,
+        _fallbackQuotesRoute,
+        false,
+      ],
+    ];
 
-      if (mods.isEmpty) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-          decoration: BoxDecoration(
-            color: _surface,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: const Text('No modules shared with you yet.',
-              style: TextStyle(
-                  fontFamily: _bodyFont,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: _rFaint)),
-        );
-      }
+    final mods = readOnly
+        ? all.where((m) => _moduleVisFor(m[3] as String) == 'shared').toList()
+        : all;
 
-      Widget tileFor(List<dynamic> m) => _rModTile(
-            m[0] as IconData,
-            m[1] as String,
-            m[2] as String,
-            m[3] as String,
-            true,
-            () => _safeNavigate(m[4] as String?, fallbackRoute: m[5] as String),
-          );
-
-      final rows = <Widget>[];
-      for (var i = 0; i < mods.length; i += 2) {
-        final right = (i + 1 < mods.length) ? mods[i + 1] : null;
-        rows.add(Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Expanded(child: tileFor(mods[i])),
-          const SizedBox(width: 10),
-          Expanded(
-              child: right == null ? const SizedBox.shrink() : tileFor(right)),
-        ]));
-        if (i + 2 < mods.length) rows.add(const SizedBox(height: 10));
-      }
-      return Column(children: rows);
+    if (readOnly && mods.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        decoration: BoxDecoration(
+          color: _surface,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: const Text('No modules shared with you yet.',
+            style: TextStyle(
+                fontFamily: _bodyFont,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: _rFaint)),
+      );
     }
 
-    return Column(children: [
-      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Expanded(
-            child: _rModTile(
-                Icons.timeline_rounded,
-                'Timeline',
-                'Programme & phases',
-                'timeline',
-                readOnly,
-                () => _safeNavigate(widget.timelineRouteName,
-                    fallbackRoute: _fallbackTimelineRoute),
-                featured: true)),
-        const SizedBox(width: 10),
-        Expanded(
-            child: _rModTile(
-                Icons.menu_book_rounded,
-                'Site Book',
-                'Journal site entries',
-                'siteBook',
-                readOnly,
-                () => _safeNavigate(widget.siteBookRouteName,
-                    fallbackRoute: _fallbackSiteBookRoute))),
-      ]),
-      const SizedBox(height: 10),
-      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Expanded(
-            child: _rModTile(
-                Icons.checklist_rounded,
-                'To-Do List',
-                'Tasks & reminders',
-                'toDo',
-                readOnly,
-                () => _safeNavigate(widget.toDoListRouteName,
-                    fallbackRoute: _fallbackToDoRoute))),
-        const SizedBox(width: 10),
-        Expanded(
-            child: _rModTile(
-                Icons.fact_check_outlined,
-                'Snag List',
-                'Defects & fixes',
-                'snagList',
-                readOnly,
-                () => _safeNavigate(widget.snagListRouteName,
-                    fallbackRoute: _fallbackSnagRoute))),
-      ]),
-      if (!readOnly) ...[
-        const SizedBox(height: 10),
-        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Expanded(
-              child: _rModTile(
-                  Icons.calculate_outlined,
-                  'Project Cost',
-                  'Budget & estimates',
-                  'projectCost',
-                  readOnly,
-                  () => _safeNavigate(widget.projectCostRouteName,
-                      fallbackRoute: _fallbackCostRoute))),
-          const SizedBox(width: 10),
-          Expanded(
-              child: _rModTile(
-                  Icons.request_quote_outlined,
-                  'Get Quotes',
-                  'Compare trades',
-                  'getQuotes',
-                  readOnly,
-                  () => _safeNavigate(widget.getQuotesRouteName,
-                      fallbackRoute: _fallbackQuotesRoute))),
-        ]),
-      ],
-    ]);
+    final children = <Widget>[];
+    for (var i = 0; i < mods.length; i++) {
+      final m = mods[i];
+      children.add(_rModTile(
+        m[0] as IconData,
+        m[1] as String,
+        m[2] as String,
+        m[3] as String,
+        readOnly,
+        () => _safeNavigate(m[4] as String?, fallbackRoute: m[5] as String),
+        featured: m[6] as bool,
+      ));
+      if (i != mods.length - 1) children.add(const SizedBox(height: 10));
+    }
+    return Column(children: children);
   }
 
   Widget _rDocGroup(String label, int count) => Padding(
@@ -3912,8 +3869,20 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         ..._listingRows.map((s) {
           final d = s.data();
           final title = (d['title'] ?? 'Listing').toString();
-          final trade =
-              (d['subtitle'] ?? d['subTitle'] ?? '').toString().trim();
+          final trade = (d['subtitle'] ?? d['subTitle'] ?? d['trade'] ?? '')
+              .toString()
+              .trim();
+          final city = (d['city'] ?? '').toString().trim();
+          final province = (d['province'] ?? '').toString().trim();
+          final locBits = <String>[
+            if (city.isNotEmpty) city,
+            if (province.isNotEmpty) province,
+          ];
+          final metaBits = <String>[
+            if (trade.isNotEmpty) trade,
+            if (locBits.isNotEmpty) locBits.join(', '),
+          ];
+          final meta = metaBits.join(' · ');
           final ref = _extractListingRef(d);
           return Container(
             padding: const EdgeInsets.symmetric(vertical: 11),
@@ -3927,8 +3896,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                 },
                 child: Row(children: [
                   Container(
-                    width: 34,
-                    height: 34,
+                    width: 38,
+                    height: 38,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                         color: _tealTint,
@@ -3942,22 +3911,31 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            fontFamily: _bodyFont,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: _ink)),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontFamily: _bodyFont,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: _ink)),
+                        if (meta.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(meta,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontFamily: _bodyFont,
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: _rFaint)),
+                        ],
+                      ],
+                    ),
                   ),
-                  if (trade.isNotEmpty)
-                    Text(trade,
-                        style: const TextStyle(
-                            fontFamily: _bodyFont,
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w600,
-                            color: _rFaint)),
                 ]),
               ),
             ),
