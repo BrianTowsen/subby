@@ -2629,6 +2629,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                     child: TextField(
                       controller: _paySupplierCtl,
                       readOnly: _readOnly,
+                      textInputAction: TextInputAction.done,
                       onChanged: (v) => _editPayment((x) => x.supplier = v),
                       style: const TextStyle(
                           fontFamily: _display,
@@ -2664,6 +2665,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                             readOnly: _readOnly,
                             keyboardType: const TextInputType.numberWithOptions(
                                 decimal: true),
+                            textInputAction: TextInputAction.done,
                             textAlign: TextAlign.right,
                             onChanged: (v) => _editPayment((x) => x.amount =
                                 v.replaceAll(RegExp(r'[^0-9.]'), '')),
