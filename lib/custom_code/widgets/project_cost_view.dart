@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -125,13 +127,9 @@ class _ProjectCostViewState extends State<ProjectCostView> {
   @override
   void initState() {
     super.initState();
+    // All sections start collapsed and empty — the clean default template.
     for (var i = 0; i < _baseSections.length; i++) {
-      final sec = _EstSection(name: _baseSections[i]);
-      if (i == 0) {
-        sec.expanded = true;
-        sec.lines.add(_EstLine());
-      }
-      _sections.add(sec);
+      _sections.add(_EstSection(name: _baseSections[i]));
     }
     // NOTE: project resolution happens in didChangeDependencies (route
     // reading needs context).
