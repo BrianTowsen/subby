@@ -14,16 +14,18 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/auth/firebase_auth/auth_util.dart';
 
 /// ProjectCostView — Financial Control Module.
 ///
-/// Three connected tabs sharing one project spine:
-///   • Cost Estimate — the budget baseline (trade sections × line items).
-///   • Payments      — supplier payment claims allocated to a section/line,
-///                     with a Received → Approved → Paid status.
-///   • Cost Control  — Budget vs Actual + Cost to Complete, rolled up live.
+/// Three connected tabs sharing one project spine: • Cost Estimate — the
+/// budget baseline (trade sections × line items). • Payments      — supplier
+/// payment claims allocated to a section/line, with a Received → Approved →
+/// Paid status. • Cost Control  — Budget vs Actual + Cost to Complete, rolled
+/// up live.
 ///
 /// The app owns the STRUCTURE and the ARITHMETIC. The user owns the NUMBERS.
 /// The section list is built in Cost Estimate and flows automatically into
@@ -175,18 +177,14 @@ class _ProjectCostViewState extends State<ProjectCostView> {
 
   DocumentReference<Map<String, dynamic>>? _projectRef;
   DocumentReference<Map<String, dynamic>>? _estimateRef;
-  CollectionReference<Map<String, dynamic>>? _paymentsRef;
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _projSub;
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _estSub;
-  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _paySub;
   Timer? _saveTimer;
-  Timer? _paySaveTimer;
   bool _isOwner = true;
   bool _readOnly = false;
   String _visibility = 'private';
   bool _remoteLoaded = false;
   int _lastSaveMs = 0;
-  int _lastPaySaveMs = 0;
   String _projectName = 'Project';
 
   @override
@@ -238,9 +236,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
   void dispose() {
     _projSub?.cancel();
     _estSub?.cancel();
-    _paySub?.cancel();
     _saveTimer?.cancel();
-    _paySaveTimer?.cancel();
     _contCtl.dispose();
     _paySupplierCtl.dispose();
     _payAmountCtl.dispose();
@@ -260,7 +256,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
   void _bindProject(DocumentReference<Map<String, dynamic>> ref) {
     _projectRef = ref;
     _estimateRef = ref.collection('estimate').doc('plan');
-    _paymentsRef = ref.collection('payments');
 
     _projSub = ref.snapshots().listen((snap) {
       final raw = snap.data();
@@ -288,8 +283,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
 
     _estSub =
         _estimateRef!.snapshots().listen(_onRemoteEstimate, onError: (_) {});
-    _paySub =
-        _paymentsRef!.snapshots().listen(_onRemotePayments, onError: (_) {});
   }
 
   // ─── Estimate sync ─────────────────────────────────────────────────
@@ -301,6 +294,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       return;
     }
     if (_saveTimer?.isActive ?? false) return;
+    if (_editingPaymentId != null) return; // don't clobber an open editor
     if (DateTime.now().millisecondsSinceEpoch - _lastSaveMs < 2000) {
       _remoteLoaded = true;
       return;
@@ -330,6 +324,13 @@ class _ProjectCostViewState extends State<ProjectCostView> {
           ..clear()
           ..addAll(parsed);
       }
+    }
+    final pl = data['payments'];
+    if (pl is List) {
+      _payments
+        ..clear()
+        ..addAll(pl.whereType<Map>().map((e) =>
+            _paymentFromMap(e.map((k, v) => MapEntry(k.toString(), v)))));
     }
     setState(() => _remoteLoaded = true);
   }
@@ -412,31 +413,28 @@ class _ProjectCostViewState extends State<ProjectCostView> {
         'updatedAt': FieldValue.serverTimestamp(),
         'contingencyPct': _contingencyPct,
         'sections': _sections.map(_sectionToMap).toList(),
+        'payments': _payments.map(_paymentToMap).toList(),
       }, SetOptions(merge: true));
     } catch (_) {}
   }
 
-  // ─── Payments sync ─────────────────────────────────────────────────
-  void _onRemotePayments(QuerySnapshot<Map<String, dynamic>> snap) {
-    // Don't clobber an in-progress edit or the echo of our own write.
-    if (_editingPaymentId != null) return;
-    if (_paySaveTimer?.isActive ?? false) return;
-    if (DateTime.now().millisecondsSinceEpoch - _lastPaySaveMs < 2000) return;
-    if (!mounted) return;
-    final parsed = <_Payment>[];
-    for (final d in snap.docs) {
-      parsed.add(_paymentFromDoc(d.id, d.data()));
-    }
-    parsed.sort((a, b) => a.date.compareTo(b.date));
-    setState(() {
-      _payments
-        ..clear()
-        ..addAll(parsed);
-    });
-  }
+  // ─── Payments (persisted on estimate/plan alongside sections, so they
+  //     inherit the exact same Firestore rules that already work) ──────
+  Map<String, dynamic> _paymentToMap(_Payment p) => {
+        'id': p.id,
+        'supplier': p.supplier,
+        'secIndex': p.secIndex,
+        'allocSub': p.allocSub,
+        'allocLine': p.allocLine,
+        'date': p.date,
+        'amount': p.amount,
+        'status': p.status,
+        'attachmentUrl': p.attachmentUrl,
+        'attachmentName': p.attachmentName,
+      };
 
-  _Payment _paymentFromDoc(String id, Map<String, dynamic> m) => _Payment(
-        id: id,
+  _Payment _paymentFromMap(Map<String, dynamic> m) => _Payment(
+        id: (m['id'] ?? '').toString(),
         supplier: (m['supplier'] ?? '').toString(),
         secIndex: (m['secIndex'] is num) ? (m['secIndex'] as num).toInt() : 0,
         allocSub: (m['allocSub'] is num) ? (m['allocSub'] as num).toInt() : -2,
@@ -447,35 +445,9 @@ class _ProjectCostViewState extends State<ProjectCostView> {
         status: _statusLabel.containsKey((m['status'] ?? '').toString())
             ? (m['status']).toString()
             : 'received',
+        attachmentUrl: (m['attachmentUrl'] ?? '').toString(),
+        attachmentName: (m['attachmentName'] ?? '').toString(),
       );
-
-  Map<String, dynamic> _paymentToMap(_Payment p) => {
-        'supplier': p.supplier,
-        'secIndex': p.secIndex,
-        'allocSub': p.allocSub,
-        'allocLine': p.allocLine,
-        'date': p.date,
-        'amount': p.amount,
-        'status': p.status,
-        'updatedAt': FieldValue.serverTimestamp(),
-      };
-
-  void _persistPayment(_Payment p) {
-    if (_readOnly || _paymentsRef == null) return;
-    _paySaveTimer?.cancel();
-    _paySaveTimer = Timer(const Duration(milliseconds: 600), () {
-      _savePaymentNow(p);
-    });
-  }
-
-  Future<void> _savePaymentNow(_Payment p) async {
-    final ref = _paymentsRef;
-    if (ref == null || _readOnly) return;
-    _lastPaySaveMs = DateTime.now().millisecondsSinceEpoch;
-    try {
-      await ref.doc(p.id).set(_paymentToMap(p), SetOptions(merge: true));
-    } catch (_) {}
-  }
 
   // ─── Cost-module privacy (shared with ProjectDetailPageView) ───────
   void _toggleVisibility() {
@@ -594,8 +566,8 @@ class _ProjectCostViewState extends State<ProjectCostView> {
 
   // ─── Payment mutations ─────────────────────────────────────────────
   void _addPayment() {
-    if (_readOnly || _paymentsRef == null) return;
-    final id = _paymentsRef!.doc().id;
+    if (_readOnly) return;
+    final id = 'p${DateTime.now().microsecondsSinceEpoch}';
     final now = DateTime.now();
     final today = '${now.year.toString().padLeft(4, '0')}-'
         '${now.month.toString().padLeft(2, '0')}-'
@@ -611,7 +583,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       status: 'received',
     );
     setState(() => _payments.add(p));
-    _savePaymentNow(p);
+    _saveNow();
     _openPayment(p.id);
   }
 
@@ -624,9 +596,8 @@ class _ProjectCostViewState extends State<ProjectCostView> {
   }
 
   void _closePayment() {
-    _paySaveTimer?.cancel();
-    final p = _editingPayment;
-    if (p != null) _savePaymentNow(p);
+    _saveTimer?.cancel();
+    _saveNow();
     setState(() => _editingPaymentId = null);
   }
 
@@ -643,17 +614,49 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     final p = _editingPayment;
     if (p == null) return;
     setState(() => fn(p));
-    _persistPayment(p);
+    _persist();
   }
 
   void _deletePayment() {
     final p = _editingPayment;
     if (p == null) return;
-    _paySaveTimer?.cancel();
-    _paymentsRef?.doc(p.id).delete().catchError((_) {});
     setState(() {
       _payments.removeWhere((x) => x.id == p.id);
       _editingPaymentId = null;
+    });
+    _saveNow();
+  }
+
+  // ─── Invoice attachment (photo/scan → Firebase Storage) ────────────
+  // Picks an image, uploads it under the project, and keeps the download
+  // URL on the payment. Requires the image_picker & firebase_storage
+  // packages (already present in any FlutterFlow app that does uploads).
+  Future<void> _attachInvoice() async {
+    final p = _editingPayment;
+    final proj = _projectRef;
+    if (p == null || proj == null || _readOnly) return;
+    try {
+      final picker = ImagePicker();
+      final XFile? file =
+          await picker.pickImage(source: ImageSource.gallery, imageQuality: 82);
+      if (file == null) return;
+      final bytes = await file.readAsBytes();
+      final safeName = file.name.isEmpty ? 'invoice.jpg' : file.name;
+      final storageRef = FirebaseStorage.instance
+          .ref('${proj.path}/payments/${p.id}/$safeName');
+      final snap = await storageRef.putData(bytes);
+      final url = await snap.ref.getDownloadURL();
+      _editPayment((x) {
+        x.attachmentUrl = url;
+        x.attachmentName = safeName;
+      });
+    } catch (_) {}
+  }
+
+  void _removeInvoice() {
+    _editPayment((x) {
+      x.attachmentUrl = '';
+      x.attachmentName = '';
     });
   }
 
@@ -750,12 +753,47 @@ class _ProjectCostViewState extends State<ProjectCostView> {
         children: [
           Column(
             children: [
-              Expanded(child: _activeScreen()),
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 280),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeIn,
+                  transitionBuilder: (child, anim) => FadeTransition(
+                    opacity: anim,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0, 0.035),
+                        end: Offset.zero,
+                      ).animate(anim),
+                      child: child,
+                    ),
+                  ),
+                  child: KeyedSubtree(
+                    key: ValueKey<int>(_tab),
+                    child: _activeScreen(),
+                  ),
+                ),
+              ),
               _tabBar(),
             ],
           ),
           if (_editingPaymentId != null && _editingPayment != null)
-            Positioned.fill(child: _paymentEditor(_editingPayment!)),
+            Positioned.fill(
+              child: TweenAnimationBuilder<double>(
+                key: ValueKey<String>(_editingPaymentId!),
+                tween: Tween<double>(begin: 0, end: 1),
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOutCubic,
+                builder: (context, t, child) => Opacity(
+                  opacity: t,
+                  child: Transform.translate(
+                    offset: Offset(0, (1 - t) * 28),
+                    child: child,
+                  ),
+                ),
+                child: _paymentEditor(_editingPayment!),
+              ),
+            ),
         ],
       ),
     );
@@ -2012,6 +2050,12 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                   ),
                 ),
                 const Spacer(),
+                if (p.attachmentUrl.trim().isNotEmpty)
+                  const Padding(
+                    padding: EdgeInsets.only(right: 6),
+                    child: Icon(Icons.attach_file_rounded,
+                        size: 15, color: _faint),
+                  ),
                 const Icon(Icons.chevron_right_rounded, size: 20, color: _dash),
               ],
             ),
@@ -2540,6 +2584,10 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                     ],
                   ),
                   const SizedBox(height: 16),
+                  _editorLabel('INVOICE DOCUMENT'),
+                  const SizedBox(height: 8),
+                  _attachmentField(p),
+                  const SizedBox(height: 16),
                   _editorLabel('ALLOCATE TO SECTION'),
                   const SizedBox(height: 8),
                   _sectionDropdown(p),
@@ -2660,6 +2708,119 @@ class _ProjectCostViewState extends State<ProjectCostView> {
             )),
       ),
     );
+  }
+
+  Widget _attachmentField(_Payment p) {
+    final has = p.attachmentUrl.trim().isNotEmpty;
+    if (!has) {
+      return InkWell(
+        onTap: _readOnly ? null : _attachInvoice,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: _paper,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: _dash, width: 1.4),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(Icons.attach_file_rounded, size: 18, color: _green),
+              SizedBox(width: 7),
+              Text('Attach invoice',
+                  style: TextStyle(
+                    fontFamily: _body,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w800,
+                    color: _green,
+                  )),
+            ],
+          ),
+        ),
+      );
+    }
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+      decoration: BoxDecoration(
+        color: _paper,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _border),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: _green.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child:
+                const Icon(Icons.description_rounded, size: 18, color: _green),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: InkWell(
+              onTap: () => _viewInvoice(p),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    p.attachmentName.trim().isEmpty
+                        ? 'Invoice attached'
+                        : p.attachmentName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: _body,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w800,
+                      color: _ink,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  const Text('Tap to view',
+                      style: TextStyle(
+                        fontFamily: _body,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        color: _green,
+                      )),
+                ],
+              ),
+            ),
+          ),
+          if (!_readOnly) ...[
+            InkWell(
+              onTap: _attachInvoice,
+              borderRadius: BorderRadius.circular(999),
+              child: const Padding(
+                padding: EdgeInsets.all(8),
+                child: Icon(Icons.autorenew_rounded, size: 18, color: _faint),
+              ),
+            ),
+            InkWell(
+              onTap: _removeInvoice,
+              borderRadius: BorderRadius.circular(999),
+              child: const Padding(
+                padding: EdgeInsets.all(8),
+                child: Icon(Icons.close_rounded, size: 18, color: _danger),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _viewInvoice(_Payment p) {
+    final url = p.attachmentUrl.trim();
+    if (url.isEmpty) return;
+    try {
+      launchURL(url);
+    } catch (_) {}
   }
 
   Widget _sectionDropdown(_Payment p) {
@@ -2963,6 +3124,8 @@ class _Payment {
   String date; // yyyy-MM-dd
   String amount;
   String status; // received | approved | paid
+  String attachmentUrl;
+  String attachmentName;
 
   _Payment({
     required this.id,
@@ -2973,6 +3136,8 @@ class _Payment {
     required this.date,
     required this.amount,
     required this.status,
+    this.attachmentUrl = '',
+    this.attachmentName = '',
   });
 
   factory _Payment.empty() => _Payment(

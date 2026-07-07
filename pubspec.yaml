@@ -60,6 +60,7 @@ dependencies:
   google_sign_in_ios: 5.9.0
   google_sign_in_platform_interface: 2.5.0
   google_sign_in_web: 0.12.4+4
+  image_picker: ^1.1.2
   intl: 0.20.2
   json_path: 0.7.2
   mime: ^1.0.4
