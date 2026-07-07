@@ -24,6 +24,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -1617,21 +1619,12 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     }
     tiles.add(_addTile());
 
-    final rows = <Widget>[];
-    for (int i = 0; i < tiles.length; i += 2) {
-      final left = tiles[i];
-      final right = (i + 1 < tiles.length) ? tiles[i + 1] : null;
-      rows.add(Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(child: left),
-          const SizedBox(width: 12),
-          Expanded(child: right ?? const SizedBox.shrink()),
-        ],
-      ));
-      if (i + 2 < tiles.length) rows.add(const SizedBox(height: 12));
+    final children = <Widget>[];
+    for (int i = 0; i < tiles.length; i++) {
+      children.add(tiles[i]);
+      if (i != tiles.length - 1) children.add(const SizedBox(height: 12));
     }
-    return Column(children: rows);
+    return Column(children: children);
   }
 
   // A single build tile. `featured` paints it as a full-green fill (white
@@ -1667,54 +1660,67 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       onTap: () => _goToProject(ref),
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        height: 132,
+        height: 100,
         decoration: BoxDecoration(
           color: bg,
           border: Border.all(color: border),
           borderRadius: BorderRadius.circular(16),
         ),
-        padding: const EdgeInsets.all(15),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.symmetric(horizontal: 18),
+        child: Row(
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text('$pct%',
-                      style: TextStyle(
-                        fontFamily: _displayFont,
-                        fontSize: 32,
-                        fontWeight: FontWeight.w900,
-                        height: 1.0,
-                        color: numColor,
-                      )),
-                ),
-                if (shared)
-                  Icon(Icons.ios_share_rounded, size: 16, color: subColor),
-              ],
-            ),
-            const Spacer(),
-            Text(name.isEmpty ? 'Untitled' : name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+            Text('$pct%',
                 style: TextStyle(
                   fontFamily: _displayFont,
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.1,
+                  fontSize: 34,
+                  fontWeight: FontWeight.w900,
+                  height: 1.0,
                   color: numColor,
                 )),
-            const SizedBox(height: 2),
-            Text(sub,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontFamily: _bodyFont,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: subColor,
-                )),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name.isEmpty ? 'Untitled' : name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: _displayFont,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.2,
+                        color: numColor,
+                      )),
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      if (shared) ...[
+                        Icon(Icons.ios_share_rounded,
+                            size: 13, color: subColor),
+                        const SizedBox(width: 5),
+                      ],
+                      Flexible(
+                        child: Text(sub,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: _bodyFont,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: subColor,
+                            )),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Icon(Icons.chevron_right_rounded,
+                size: 22,
+                color: featured ? Colors.white.withOpacity(0.6) : _faint),
           ],
         ),
       ),
@@ -1727,23 +1733,22 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         onTap: _goToAddProject,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          height: 132,
+          height: 100,
           decoration: BoxDecoration(
             color: const Color(0xFFE3E7EA),
             border: Border.all(color: const Color(0xFFCCD2D7), width: 1.4),
             borderRadius: BorderRadius.circular(16),
           ),
-          padding: const EdgeInsets.all(15),
-          child: const Column(
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+          child: const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.add_rounded, size: 28, color: Color(0xFF55656E)),
-              SizedBox(height: 8),
+              Icon(Icons.add_rounded, size: 26, color: Color(0xFF55656E)),
+              SizedBox(width: 10),
               Text('New home build',
-                  textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: _bodyFont,
-                    fontSize: 13,
+                    fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF55656E),
                   )),
