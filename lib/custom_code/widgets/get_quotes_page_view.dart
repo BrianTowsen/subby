@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -279,7 +281,23 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (status.trim().isNotEmpty)
-                      _softPill(status, fg: _teal, bg: _tealTint),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                            color: const Color(0xFFAC0C0C),
+                            borderRadius: BorderRadius.circular(999)),
+                        child: Row(mainAxisSize: MainAxisSize.min, children: [
+                          const Icon(Icons.bolt, size: 12, color: Colors.white),
+                          const SizedBox(width: 5),
+                          Text(status,
+                              style: const TextStyle(
+                                  fontFamily: _bodyFont,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white)),
+                        ]),
+                      ),
                     if (status.trim().isNotEmpty) const SizedBox(height: 8),
                     Text(
                       name,
@@ -337,104 +355,313 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
       color: _paper,
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, _hPad),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _minBack(),
-              const SizedBox(height: 18),
-              Text('Get Quotes', style: _pageTitle(theme)),
-              const SizedBox(height: 8),
-              Text('Request pricing from suppliers',
-                  style: _pageSubtitle(theme)),
-              const SizedBox(height: 22),
-              Text('PROJECTS ADDED', style: _uLabel(theme)),
-              const SizedBox(height: 10),
-              if (_projectRef == null)
-                _flatCard(
-                  padding: const EdgeInsets.all(14),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.folder_open_rounded,
-                          color: _teal, size: 22),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'No project selected',
-                              style: theme.titleMedium.override(
-                                fontFamily: _displayFont,
-                                color: _ink,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 15,
-                                letterSpacing: -0.1,
-                              ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _inkHeader(theme),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(_hPad, 18, _hPad,
+                  _hPad + MediaQuery.of(context).padding.bottom),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('PROJECT', style: _uLabel(theme)),
+                  const SizedBox(height: 10),
+                  if (_projectRef == null)
+                    _flatCard(
+                      padding: const EdgeInsets.all(14),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.folder_open_rounded,
+                              color: _teal, size: 22),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'No project selected',
+                                  style: theme.titleMedium.override(
+                                    fontFamily: _displayFont,
+                                    color: _ink,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 15,
+                                    letterSpacing: -0.1,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Select a project in My Projects to request quotes.',
+                                  style: _metaStyle(theme),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Select a project in My Projects to request quotes.',
-                              style: _metaStyle(theme),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                )
-              else
-                StreamBuilder<DocumentSnapshot<Object?>>(
-                  stream: _projectRef!.snapshots(),
-                  builder: (context, snap) {
-                    final raw = snap.data?.data();
-                    final data =
-                        raw is Map<String, dynamic> ? raw : <String, dynamic>{};
+                    )
+                  else
+                    StreamBuilder<DocumentSnapshot<Object?>>(
+                      stream: _projectRef!.snapshots(),
+                      builder: (context, snap) {
+                        final raw = snap.data?.data();
+                        final data = raw is Map<String, dynamic>
+                            ? raw
+                            : <String, dynamic>{};
 
-                    final name = (data['name'] ??
-                            data['projectName'] ??
-                            data['title'] ??
-                            'Project')
-                        .toString();
-                    final status =
-                        (data['status'] ?? 'Active').toString().trim();
-                    final province = (data['province'] ?? '').toString().trim();
-                    final city = (data['city'] ?? '').toString().trim();
-                    final location = [city, province]
-                        .where((x) => x.trim().isNotEmpty)
-                        .join(', ');
-                    final updatedAt = data['updatedAt'];
-                    final updatedLabel = (updatedAt is Timestamp)
-                        ? dateTimeFormat('relative', updatedAt.toDate())
-                        : 'recently';
+                        final name = (data['name'] ??
+                                data['projectName'] ??
+                                data['title'] ??
+                                'Project')
+                            .toString();
+                        final status =
+                            (data['status'] ?? 'Active').toString().trim();
+                        final province =
+                            (data['province'] ?? '').toString().trim();
+                        final city = (data['city'] ?? '').toString().trim();
+                        final location = [city, province]
+                            .where((x) => x.trim().isNotEmpty)
+                            .join(', ');
+                        final updatedAt = data['updatedAt'];
+                        final updatedLabel = (updatedAt is Timestamp)
+                            ? dateTimeFormat('relative', updatedAt.toDate())
+                            : 'recently';
 
-                    return _projectTile(
-                      theme: theme,
-                      accent: quotesColour,
-                      name: name,
-                      location: location.isEmpty ? 'South Africa' : location,
-                      status: status,
-                      lastUpdated: updatedLabel,
-                      icon: Icons.request_quote_outlined,
-                      onTap: () {},
-                    );
-                  },
-                ),
-              const SizedBox(height: _gap),
-              _flatCard(
-                fill: const Color(0xFFF2F5F6),
-                Text(
-                  'Get Quotes content coming next.',
-                  style: _metaStyle(theme),
+                        return _projectTile(
+                          theme: theme,
+                          accent: quotesColour,
+                          name: name,
+                          location:
+                              location.isEmpty ? 'South Africa' : location,
+                          status: status,
+                          lastUpdated: updatedLabel,
+                          icon: Icons.request_quote_outlined,
+                          onTap: () {},
+                        );
+                      },
+                    ),
+                  const SizedBox(height: 22),
+                  Text('TENDER STATUS', style: _uLabel(theme)),
+                  const SizedBox(height: 10),
+                  _tenderStrip(theme),
+                  const SizedBox(height: 22),
+                  Text('ACTIONS', style: _uLabel(theme)),
+                  const SizedBox(height: 10),
+                  _actionInvite(theme),
+                  const SizedBox(height: 10),
+                  _actionQuotes(theme),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Ink masthead — consistent with the quote-flow screens.
+  Widget _inkHeader(FlutterFlowTheme theme) {
+    final topInset = MediaQuery.of(context).padding.top;
+    return Container(
+      width: double.infinity,
+      color: _ink,
+      padding: EdgeInsets.fromLTRB(20, topInset + 6, 20, 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _handleBack,
+                borderRadius: BorderRadius.circular(999),
+                child: Container(
+                  width: 38,
+                  height: 38,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                      color: _paper.withOpacity(0.12), shape: BoxShape.circle),
+                  child: const Icon(Icons.arrow_back_ios_new_rounded,
+                      size: 16, color: _paper),
                 ),
               ),
-              const SizedBox(height: 12),
-              Expanded(child: Container()),
-            ],
+            ),
+            Expanded(
+              child: Center(
+                child: Text('GET QUOTES',
+                    style: TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.7,
+                        color: _paper.withOpacity(0.5))),
+              ),
+            ),
+            const SizedBox(width: 38),
+          ]),
+          const SizedBox(height: 16),
+          Text('Get Quotes',
+              style: TextStyle(
+                  fontFamily: _displayFont,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.6,
+                  height: 1.1,
+                  color: _paper)),
+          const SizedBox(height: 8),
+          Text('Request pricing from suppliers',
+              style: TextStyle(
+                  fontFamily: _bodyFont,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: _paper.withOpacity(0.55))),
+        ],
+      ),
+    );
+  }
+
+  // Tender status: invited / submitted / accepted (accepted = lime).
+  Widget _tenderStrip(FlutterFlowTheme theme) {
+    Widget tile(String value, String label, {bool lime = false}) => Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(13),
+            decoration: BoxDecoration(
+                color: lime ? const Color(0xFFE7E247) : _surface,
+                borderRadius: BorderRadius.circular(12)),
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(value,
+                  style: const TextStyle(
+                      fontFamily: _displayFont,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: _ink)),
+              const SizedBox(height: 4),
+              Text(label,
+                  style: TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: lime ? _ink : _inkMute)),
+            ]),
           ),
+        );
+    return Row(children: [
+      tile('4', 'Invited'),
+      const SizedBox(width: 10),
+      tile('2', 'Submitted'),
+      const SizedBox(width: 10),
+      tile('1', 'Accepted', lime: true),
+    ]);
+  }
+
+  // Primary action — opens InviteView.
+  Widget _actionInvite(FlutterFlowTheme theme) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: () {},
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+              color: const Color(0xFFE7E247),
+              borderRadius: BorderRadius.circular(14)),
+          child: Row(children: [
+            Container(
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                  color: _ink.withOpacity(0.10),
+                  borderRadius: BorderRadius.circular(12)),
+              child: const Icon(Icons.person_add_alt_1_rounded,
+                  size: 22, color: _ink),
+            ),
+            const SizedBox(width: 13),
+            Expanded(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Invite trades to quote',
+                        style: TextStyle(
+                            fontFamily: _displayFont,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.2,
+                            color: _ink)),
+                    const SizedBox(height: 2),
+                    Text('Share drawings & request pricing',
+                        style: TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: _ink.withOpacity(0.65))),
+                  ]),
+            ),
+            const Icon(Icons.chevron_right_rounded, size: 22, color: _ink),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  // Secondary action — opens QuotesReceivedView.
+  Widget _actionQuotes(FlutterFlowTheme theme) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: () {},
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+              color: _paper,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: _hairline)),
+          child: Row(children: [
+            Container(
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                  color: _surface, borderRadius: BorderRadius.circular(12)),
+              child: const Icon(Icons.reviews_outlined, size: 22, color: _ink),
+            ),
+            const SizedBox(width: 13),
+            Expanded(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Quotes received',
+                        style: TextStyle(
+                            fontFamily: _displayFont,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.2,
+                            color: _ink)),
+                    const SizedBox(height: 2),
+                    Text('Compare & award', style: _metaStyle(theme)),
+                  ]),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+              decoration: BoxDecoration(
+                  color: _tealTint, borderRadius: BorderRadius.circular(999)),
+              child: const Text('4',
+                  style: TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: _ink)),
+            ),
+            const SizedBox(width: 6),
+            const Icon(Icons.chevron_right_rounded, size: 22, color: _faint),
+          ]),
         ),
       ),
     );

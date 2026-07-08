@@ -10,20 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -1381,7 +1367,11 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     return out;
   }
 
-  String _moduleVisFor(String key) => _moduleVisMap()[key] ?? 'private';
+  String _moduleVisFor(String key) {
+    // Get Quotes is never shareable — always private, no toggle.
+    if (key == 'getQuotes') return 'private';
+    return _moduleVisMap()[key] ?? 'private';
+  }
 
   // Human label for a module key (used by the visibility snackbar).
   String _moduleLabel(String key) {
@@ -3511,13 +3501,26 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                               fontWeight: FontWeight.w500,
                               color: subColor)),
                     ),
-                    if (!readOnly) ...[
+                    if (!readOnly && visKey != 'getQuotes') ...[
                       const SizedBox(width: 8),
                       GestureDetector(
                         behavior: HitTestBehavior.opaque,
                         onTap: () => _toggleModuleVis(visKey),
                         child: _rVisChip(_moduleVisFor(visKey), _paper),
                       ),
+                    ] else if (visKey == 'getQuotes') ...[
+                      const SizedBox(width: 8),
+                      Row(mainAxisSize: MainAxisSize.min, children: const [
+                        Icon(Icons.lock_rounded,
+                            size: 11, color: Color(0xFF93A3AC)),
+                        SizedBox(width: 4),
+                        Text('Private · locked',
+                            style: TextStyle(
+                                fontFamily: _bodyFont,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF93A3AC))),
+                      ]),
                     ],
                   ]),
                 ],

@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -49,6 +51,7 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _border = Color(0xFFEAEEF0);
   static const Color _green = Color(0xFF5D737E);
+  static const Color _lime = Color(0xFFE7E247); // primary CTA / positive accent
   static const Color _sageBorder = Color(0xFFCBD8DD);
   static const Color _coral = Color(0xFF566670);
   static const Color _cobalt = Color(0xFF5D737E);
@@ -253,8 +256,7 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
   Widget _emptyCard() => Container(
         decoration: BoxDecoration(
             color: const Color(0xFFF2F5F6),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: _border)),
+            borderRadius: BorderRadius.circular(14)),
         padding: const EdgeInsets.all(18),
         child: const Text(
             'No trades invited yet. Invite trades from the project team to request quotes.',
@@ -282,8 +284,11 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
       decoration: BoxDecoration(
         color: submitted ? _paper : const Color(0xFFF2F5F6),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-            color: accepted ? _sageBorder : _border, width: accepted ? 1.5 : 1),
+        border: submitted
+            ? Border.all(
+                color: accepted ? _sageBorder : _border,
+                width: accepted ? 1.5 : 1)
+            : null,
       ),
       padding: const EdgeInsets.all(14),
       child: Column(
@@ -338,7 +343,7 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
                             fontFamily: 'Roboto Mono',
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
-                            color: _green)),
+                            color: _ink)),
                     const SizedBox(width: 4),
                     Text(vatIncl ? 'incl. VAT' : 'no VAT',
                         style: const TextStyle(
@@ -369,18 +374,18 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
                       height: 42,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                          color: _green,
+                          color: _lime,
                           borderRadius: BorderRadius.circular(11)),
                       child:
                           Row(mainAxisSize: MainAxisSize.min, children: const [
-                        Icon(Icons.verified_rounded, size: 16, color: _paper),
+                        Icon(Icons.verified_rounded, size: 16, color: _ink),
                         SizedBox(width: 6),
                         Text('Accept',
                             style: TextStyle(
                                 fontFamily: _body,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w800,
-                                color: _paper)),
+                                color: _ink)),
                       ]),
                     ),
                   ),
@@ -441,8 +446,8 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
         label = 'Submitted';
         break;
       case 'accepted':
-        fg = _paper;
-        bg = _green;
+        fg = _ink;
+        bg = _lime;
         ic = Icons.verified_rounded;
         label = 'Accepted';
         break;
