@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -62,6 +64,7 @@ import '/custom_code/widgets/index.dart';
 import 'dart:ui';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DashboardPageView extends StatefulWidget {
   const DashboardPageView({
@@ -81,6 +84,11 @@ class DashboardPageView extends StatefulWidget {
     this.projectParamName, // param name for the project ref (default "projectRef")
     this.snagDetailRouteName, // deep-link a single snag from the feed
     this.taskDetailRouteName, // deep-link a single task from the feed
+
+    /// Quote invites (trade side) — tapping a pending invite opens
+    /// QuoteRequestView. Listing owners see invites here BEFORE they have
+    /// project access.
+    this.quoteRequestRouteName,
 
     /// Listing management routes — USED by the Directory card in the empty state
     this.addListingRouteName,
@@ -113,6 +121,7 @@ class DashboardPageView extends StatefulWidget {
   final String? projectParamName;
   final String? snagDetailRouteName;
   final String? taskDetailRouteName;
+  final String? quoteRequestRouteName;
 
   // USED for the Directory listing card (empty state)
   final String? addListingRouteName;
@@ -187,6 +196,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   static const String _fallbackAddProjectsRoute = 'addProjectsPage';
   static const String _fallbackAddListingRoute = 'addListingPage';
   static const String _fallbackEditListingRoute = 'editListingPage';
+  static const String _fallbackQuoteRequestRoute = 'QuoteRequest';
+  static const String _kActiveQuotePath = 'subby_active_quote_path';
 
   // Listing exists (drives the Directory card in the empty state, + Directory nav)
   bool _hasListing = false;
@@ -587,6 +598,191 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           Expanded(child: Text('My Home Builds', style: _stepHeadlineStyle)),
         ],
       );
+
+  // =====================================================================
+  // QUOTE INVITES (trade side) — invites this user received across ALL
+  // projects via collectionGroup('quotes') on providerRef. Shown so a listing
+  // owner can respond BEFORE they are granted access to the project. Only
+  // pending states (invited / viewed / submitted) surface here; renders
+  // nothing when there are none.
+  // =====================================================================
+  Future<void> _openQuoteInvite(DocumentReference quoteRef) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kActiveQuotePath, quoteRef.path);
+    if (!mounted) return;
+    _safeNavigate(widget.quoteRequestRouteName,
+        fallbackRoute: _fallbackQuoteRequestRoute);
+  }
+
+  Widget _buildQuoteInvites() {
+    final me = currentUserReference;
+    if (me == null) return const SizedBox.shrink();
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collectionGroup('quotes')
+          .where('providerRef', isEqualTo: me)
+          .snapshots(),
+      builder: (context, snap) {
+        if (snap.hasError) return const SizedBox.shrink();
+        final all = snap.data?.docs ?? [];
+        const pending = ['invited', 'viewed', 'submitted'];
+        final docs = all
+            .where((d) =>
+                pending.contains((d.data()['status'] ?? 'invited').toString()))
+            .toList();
+        if (docs.isEmpty) return const SizedBox.shrink();
+        // Newest-action first: invited, then viewed, then submitted.
+        int rank(String s) => s == 'invited' ? 0 : (s == 'viewed' ? 1 : 2);
+        docs.sort((a, b) => rank((a.data()['status'] ?? 'invited').toString())
+            .compareTo(rank((b.data()['status'] ?? 'invited').toString())));
+        final actionable = docs
+            .where((d) => ['invited', 'viewed']
+                .contains((d.data()['status'] ?? '').toString()))
+            .length;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 22),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: _hPad),
+              child: Row(children: [
+                _accentMarker(_teal),
+                const SizedBox(width: 10),
+                Expanded(
+                    child: Text('Quote invites', style: _stepHeadlineStyle)),
+                if (actionable > 0)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                    decoration: BoxDecoration(
+                        color: const Color(0xFFE7E247),
+                        borderRadius: BorderRadius.circular(_rPill)),
+                    child: Text('$actionable new',
+                        style: const TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: _ink)),
+                  ),
+              ]),
+            ),
+            const SizedBox(height: 6),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: _hPad),
+              child: Text(
+                  'Projects that invited you to quote. Open one to view the drawings and respond — no project access needed.',
+                  style: _tileSubtitleStyle),
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: _hPad),
+              child:
+                  Column(children: [for (final d in docs) _quoteInviteRow(d)]),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _quoteInviteRow(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+    final d = doc.data();
+    final status = (d['status'] ?? 'invited').toString();
+    final projectRef = doc.reference.parent.parent;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(_rLarge),
+        child: InkWell(
+          onTap: () => _openQuoteInvite(doc.reference),
+          borderRadius: BorderRadius.circular(_rLarge),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+                color: _paper,
+                borderRadius: BorderRadius.circular(_rLarge),
+                border: Border.all(color: _hairline)),
+            child: Row(children: [
+              Container(
+                width: 44,
+                height: 44,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                    color: _surface,
+                    borderRadius: BorderRadius.circular(_rLarge)),
+                child: const Icon(Icons.request_quote_outlined,
+                    size: 22, color: _ink),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                  future: projectRef?.get(),
+                  builder: (context, ps) {
+                    final pd = ps.data?.data() ?? const <String, dynamic>{};
+                    final pname = (pd['name'] ??
+                            pd['projectName'] ??
+                            pd['title'] ??
+                            'Project')
+                        .toString();
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(pname,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: _tileTitleStyle),
+                        const SizedBox(height: 3),
+                        Text(_inviteStatusText(status),
+                            style: _tileSubtitleStyle),
+                      ],
+                    );
+                  },
+                ),
+              ),
+              _inviteStatusPill(status),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _inviteStatusText(String s) {
+    switch (s) {
+      case 'viewed':
+        return 'Viewed · continue your quote';
+      case 'submitted':
+        return 'Quote submitted · awaiting decision';
+      default:
+        return 'New request · tap to view';
+    }
+  }
+
+  Widget _inviteStatusPill(String status) {
+    Color fg = _faint, bg = _surface;
+    String label = 'Invited';
+    if (status == 'viewed') {
+      fg = _teal;
+      bg = _orangeTint;
+      label = 'Viewed';
+    } else if (status == 'submitted') {
+      fg = _teal;
+      bg = _orangeTint;
+      label = 'Submitted';
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration:
+          BoxDecoration(color: bg, borderRadius: BorderRadius.circular(_rPill)),
+      child: Text(label,
+          style: TextStyle(
+              fontFamily: _bodyFont,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: fg)),
+    );
+  }
 
   // =====================================================================
   // WELCOME — big & minimal
@@ -2970,6 +3166,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
+                    _buildQuoteInvites(),
                     _buildBody(),
                     // Archived builds — collapsed, pinned to the bottom.
                     _buildArchivedCollapsible(),
