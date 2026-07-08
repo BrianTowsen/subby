@@ -10,16 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -31,12 +21,18 @@ class GetQuotesPageView extends StatefulWidget {
 
     /// ✅ Project reference (passed by ProjectDetailPageView / FF page param)
     this.projectRef,
+
+    /// ✅ Routes for the two hub actions.
+    this.inviteRouteName,
+    this.quotesReceivedRouteName,
   });
 
   final double? width;
   final double? height;
 
   final DocumentReference? projectRef;
+  final String? inviteRouteName;
+  final String? quotesReceivedRouteName;
 
   @override
   State<GetQuotesPageView> createState() => _GetQuotesPageViewState();
@@ -73,6 +69,8 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
   static const double _gap = 12;
 
   static const String _kActiveProjectPath = 'subby_active_project_path';
+  static const String _fallbackInviteRoute = 'Invite';
+  static const String _fallbackQuotesReceivedRoute = 'QuotesReceived';
 
   DocumentReference? _projectRef;
   bool _resolved = false; // resolve projectRef once
@@ -131,6 +129,20 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
   void _handleBack() {
     final nav = Navigator.of(context);
     if (nav.canPop()) nav.pop();
+  }
+
+  // Persist the active project so InviteView / QuotesReceivedView (which read
+  // subby_active_project_path) open on THIS project, then navigate.
+  Future<void> _openQuoteRoute(String? route, String fallback) async {
+    final target = (route ?? '').trim().isEmpty ? fallback : route!.trim();
+    if (target.isEmpty) return;
+    final ref = _projectRef;
+    if (ref != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_kActiveProjectPath, ref.path);
+    }
+    if (!mounted) return;
+    context.pushNamed(target);
   }
 
   // Accent (theme token override → falls back to teal ink).
@@ -442,16 +454,7 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
                         );
                       },
                     ),
-                  const SizedBox(height: 22),
-                  Text('TENDER STATUS', style: _uLabel(theme)),
-                  const SizedBox(height: 10),
-                  _tenderStrip(theme),
-                  const SizedBox(height: 22),
-                  Text('ACTIONS', style: _uLabel(theme)),
-                  const SizedBox(height: 10),
-                  _actionInvite(theme),
-                  const SizedBox(height: 10),
-                  _actionQuotes(theme),
+                  _quotesArea(theme),
                 ],
               ),
             ),
@@ -522,9 +525,49 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
     );
   }
 
+  // Live tender area: streams the project's quotes subcollection and renders
+  // the status tiles + actions from real counts.
+  Widget _quotesArea(FlutterFlowTheme theme) {
+    final ref = _projectRef;
+    if (ref == null) return const SizedBox.shrink();
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: ref.collection('quotes').snapshots(),
+      builder: (context, snap) {
+        final docs = snap.data?.docs ?? [];
+        int invited = 0, submitted = 0, accepted = 0;
+        for (final d in docs) {
+          final s = (d.data()['status'] ?? 'invited').toString();
+          if (s == 'accepted') {
+            accepted++;
+          } else if (s == 'submitted') {
+            submitted++;
+          } else if (s == 'invited' || s == 'viewed') {
+            invited++;
+          }
+        }
+        final received = submitted + accepted;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 22),
+            Text('TENDER STATUS', style: _uLabel(theme)),
+            const SizedBox(height: 10),
+            _tenderStrip(invited, submitted, accepted),
+            const SizedBox(height: 22),
+            Text('ACTIONS', style: _uLabel(theme)),
+            const SizedBox(height: 10),
+            _actionInvite(theme),
+            const SizedBox(height: 10),
+            _actionQuotes(theme, received),
+          ],
+        );
+      },
+    );
+  }
+
   // Tender status: invited / submitted / accepted (accepted = lime).
-  Widget _tenderStrip(FlutterFlowTheme theme) {
-    Widget tile(String value, String label, {bool lime = false}) => Expanded(
+  Widget _tenderStrip(int invited, int submitted, int accepted) {
+    Widget tile(int value, String label, {bool lime = false}) => Expanded(
           child: Container(
             padding: const EdgeInsets.all(13),
             decoration: BoxDecoration(
@@ -532,7 +575,7 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
                 borderRadius: BorderRadius.circular(12)),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(value,
+              Text('$value',
                   style: const TextStyle(
                       fontFamily: _displayFont,
                       fontSize: 22,
@@ -549,11 +592,11 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
           ),
         );
     return Row(children: [
-      tile('4', 'Invited'),
+      tile(invited, 'Invited'),
       const SizedBox(width: 10),
-      tile('2', 'Submitted'),
+      tile(submitted, 'Submitted'),
       const SizedBox(width: 10),
-      tile('1', 'Accepted', lime: true),
+      tile(accepted, 'Accepted', lime: true),
     ]);
   }
 
@@ -563,7 +606,8 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
-        onTap: () {},
+        onTap: () =>
+            _openQuoteRoute(widget.inviteRouteName, _fallbackInviteRoute),
         borderRadius: BorderRadius.circular(14),
         child: Container(
           padding: const EdgeInsets.all(14),
@@ -610,12 +654,13 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
   }
 
   // Secondary action — opens QuotesReceivedView.
-  Widget _actionQuotes(FlutterFlowTheme theme) {
+  Widget _actionQuotes(FlutterFlowTheme theme, int received) {
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
-        onTap: () {},
+        onTap: () => _openQuoteRoute(
+            widget.quotesReceivedRouteName, _fallbackQuotesReceivedRoute),
         borderRadius: BorderRadius.circular(14),
         child: Container(
           padding: const EdgeInsets.all(14),
@@ -648,18 +693,20 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
                     Text('Compare & award', style: _metaStyle(theme)),
                   ]),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-              decoration: BoxDecoration(
-                  color: _tealTint, borderRadius: BorderRadius.circular(999)),
-              child: const Text('4',
-                  style: TextStyle(
-                      fontFamily: _bodyFont,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: _ink)),
-            ),
-            const SizedBox(width: 6),
+            if (received > 0) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                decoration: BoxDecoration(
+                    color: _tealTint, borderRadius: BorderRadius.circular(999)),
+                child: Text('$received',
+                    style: const TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: _ink)),
+              ),
+              const SizedBox(width: 6),
+            ],
             const Icon(Icons.chevron_right_rounded, size: 22, color: _faint),
           ]),
         ),
