@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -684,7 +686,20 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: _quoteInvitesStreamCached(me),
       builder: (context, snap) {
-        if (snap.hasError) return const SizedBox.shrink();
+        // Surface the failure instead of hiding it. The usual cause is a
+        // missing COLLECTION_GROUP index on quotes.providerRef (see
+        // firestore.indexes.json) or the collection-group security rule —
+        // without either, this query throws and the whole section silently
+        // vanished, which is exactly the "invites don't show" symptom.
+        if (snap.hasError) {
+          return Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: _hPad, vertical: 16),
+            child: Text(
+                'Couldn\'t load quote invites. Check the collection-group rule and the providerRef index on "quotes".',
+                style: _tileSubtitleStyle),
+          );
+        }
         final all = snap.data?.docs ?? [];
         const pending = ['invited', 'viewed', 'submitted'];
         final docs = all
