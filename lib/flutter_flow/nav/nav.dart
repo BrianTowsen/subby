@@ -329,7 +329,14 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         FFRoute(
           name: GetQuotesPageWidget.routeName,
           path: GetQuotesPageWidget.routePath,
-          builder: (context, params) => GetQuotesPageWidget(),
+          builder: (context, params) => GetQuotesPageWidget(
+            projectRef: params.getParam(
+              'projectRef',
+              ParamType.DocumentReference,
+              isList: false,
+              collectionNamePath: ['projects'],
+            ),
+          ),
         ),
         FFRoute(
           name: ToDoListPageWidget.routeName,
