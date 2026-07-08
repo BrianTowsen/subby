@@ -6,7 +6,12 @@ import 'get_quotes_page_model.dart';
 export 'get_quotes_page_model.dart';
 
 class GetQuotesPageWidget extends StatefulWidget {
-  const GetQuotesPageWidget({super.key});
+  const GetQuotesPageWidget({
+    super.key,
+    this.projectRef,
+  });
+
+  final DocumentReference? projectRef;
 
   static String routeName = 'getQuotesPage';
   static String routePath = '/getQuotesPage';
@@ -46,10 +51,12 @@ class _GetQuotesPageWidgetState extends State<GetQuotesPageWidget> {
         body: Container(
           width: MediaQuery.sizeOf(context).width * 1.0,
           height: MediaQuery.sizeOf(context).height * 1.0,
-          child: custom_widgets.QuoteRequestView(
+          child: custom_widgets.GetQuotesPageView(
             width: MediaQuery.sizeOf(context).width * 1.0,
             height: MediaQuery.sizeOf(context).height * 1.0,
-            submitQuoteRouteName: 'SubmitQuote',
+            inviteRouteName: 'inviteRouteName',
+            quotesReceivedRouteName: 'quotesReceivedRouteName',
+            projectRef: widget.projectRef,
           ),
         ),
       ),
