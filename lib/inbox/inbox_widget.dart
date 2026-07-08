@@ -49,6 +49,7 @@ class _InboxWidgetState extends State<InboxWidget> {
           child: custom_widgets.InboxView(
             width: MediaQuery.sizeOf(context).width * 1.0,
             height: MediaQuery.sizeOf(context).height * 1.0,
+            quoteRequestRouteName: 'QuoteRequest',
           ),
         ),
       ),

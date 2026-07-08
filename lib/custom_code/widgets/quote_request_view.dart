@@ -611,9 +611,34 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
     );
   }
 
+  // Phone helpers — mirror ListingDetailPageView so the manager calling card
+  // dials and opens WhatsApp consistently across the app.
+  String _telNumber(String s) => s.replaceAll(RegExp(r'[^0-9+]'), '');
+
+  // wa.me needs an international number with no '+'/spaces. Local SA numbers
+  // beginning with 0 are converted to the 27 country code.
+  String _waNumber(String s) {
+    var n = s.replaceAll(RegExp(r'[^0-9+]'), '').replaceAll('+', '');
+    if (n.isEmpty) return '';
+    if (n.startsWith('0')) n = '27${n.substring(1)}';
+    return n;
+  }
+
+  void _noContactSnack(String what) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+          backgroundColor: _ink,
+          content: Text('No $what for this project manager.',
+              style: const TextStyle(
+                  fontFamily: _body,
+                  fontWeight: FontWeight.w700,
+                  color: _paper))));
+  }
+
   // Project Manager calling card — mirrors the shared ProjectDetailPageView
   // owner card: reads the project's ownerRef profile (name + phone) and
-  // exposes call / message actions.
+  // exposes call / WhatsApp actions.
   Widget _pmCard() {
     final ref = _ownerRef;
     return Container(
@@ -627,7 +652,10 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
               const <String, dynamic>{};
           final nm =
               (od['display_name'] ?? 'Project manager').toString().trim();
-          final phone = (od['phone_number'] ?? '').toString().trim();
+          final phone =
+              (od['phone_number'] ?? od['phoneNumber'] ?? od['phone'] ?? '')
+                  .toString()
+                  .trim();
           final display = nm.isEmpty ? 'Project manager' : nm;
           return Row(children: [
             Container(
@@ -686,11 +714,21 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
             ),
             const SizedBox(width: 8),
             _pmRound(Icons.call_rounded, _paper, _ink, () {
-              if (phone.isNotEmpty) launchURL('tel:$phone');
+              final n = _telNumber(phone);
+              if (n.isNotEmpty) {
+                launchURL('tel:$n');
+              } else {
+                _noContactSnack('phone number');
+              }
             }),
             const SizedBox(width: 8),
-            _pmRound(Icons.chat_bubble_rounded, _ink, _paper, () {
-              if (phone.isNotEmpty) launchURL('sms:$phone');
+            _pmRound(Icons.chat_rounded, const Color(0xFF25D366), _paper, () {
+              final n = _waNumber(phone);
+              if (n.isNotEmpty) {
+                launchURL('https://wa.me/$n');
+              } else {
+                _noContactSnack('WhatsApp number');
+              }
             }),
           ]);
         },
