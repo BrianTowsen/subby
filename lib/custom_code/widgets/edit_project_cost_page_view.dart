@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -49,12 +51,12 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _band = Color(0xFFF2F5F6);
-  static const Color _border = Color(0xFFEAEEF0);
+  static const Color _border = Color(0xFFECF0F2);
   static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
   static const Color _green = Color(0xFF5D737E);
   static const Color _danger = Color(0xFF93A3AC);
-  // Warning / destructive accent — clay (shared "delete warning" module).
-  static const Color _warn = Color(0xFFB53F1A);
+  // Warning / destructive accent — brown (shared "delete warning" module).
+  static const Color _warn = Color(0xFFAC0C0C);
   static const Color _dash = Color(0xFFCBD8DD);
   static const Color _ruleIdle = Color(0xFFB7C2C7);
   static const Color _startBg = Color(0xFFF5F8F9);
@@ -118,6 +120,7 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
     '20L',
     '%',
     'pct',
+    'pc',
   ];
 
   final List<_EstSection> _sections = [];
@@ -492,9 +495,9 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
         return Dialog(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 34),
+          insetPadding: EdgeInsets.zero,
           child: Container(
-            width: 322,
+            width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: _paper,

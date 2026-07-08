@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -57,11 +59,11 @@ class _ProjectCostViewState extends State<ProjectCostView> {
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _band = Color(0xFFF2F5F6);
-  static const Color _border = Color(0xFFEAEEF0);
+  static const Color _border = Color(0xFFECF0F2);
   static const Color _line = Color(0xFFF2F5F6);
   static const Color _green = Color(0xFF5D737E);
   static const Color _danger = Color(0xFF93A3AC);
-  static const Color _warn = Color(0xFFB53F1A); // over-budget / destructive
+  static const Color _warn = Color(0xFFAC0C0C); // over-budget / destructive
   static const Color _dash = Color(0xFFCBD8DD);
   static const Color _hairline = Color(0xFFDCE3E6);
   static const Color _zero = Color(0xFFB7C2C7);
@@ -69,6 +71,10 @@ class _ProjectCostViewState extends State<ProjectCostView> {
   static const Color _tabIdle = Color(0xFFAEBAC0);
   static const String _display = 'Inter Tight';
   static const String _body = 'Inter';
+  // Brand yellow — module accent (ported from ProjectDetailPageView).
+  static const Color _brandYellow = Color(0xFFE7E247); // featured tile
+  static const Color _brandYellowPale = Color(0xFFF4F2D2); // standard tile
+  static const Color _brandYellowBorder = Color(0xFFE4DE94);
   // ────────────────────────────────────────────────────────────────────
 
   static const String _kActiveProjectPath = 'subby_active_project_path';
@@ -134,6 +140,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     '5L',
     '20L',
     '%',
+    'pc',
   ];
 
   static const List<String> _months = [
@@ -634,9 +641,9 @@ class _ProjectCostViewState extends State<ProjectCostView> {
         return Dialog(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 34),
+          insetPadding: EdgeInsets.zero,
           child: Container(
-            width: 322,
+            width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: _paper,
@@ -1756,9 +1763,9 @@ class _ProjectCostViewState extends State<ProjectCostView> {
   Widget _breakdownCard(double net, double cont, double vat, double total) {
     return Container(
       decoration: BoxDecoration(
-        color: _paper,
+        color: _brandYellowPale,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _border),
+        border: Border.all(color: _brandYellowBorder),
       ),
       padding: const EdgeInsets.fromLTRB(14, 6, 14, 14),
       child: Column(
@@ -1973,20 +1980,20 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 7),
                         decoration: BoxDecoration(
-                          color: _ink,
+                          color: _brandYellow,
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: const [
-                            Icon(Icons.add_rounded, size: 15, color: _paper),
+                            Icon(Icons.add_rounded, size: 15, color: _ink),
                             SizedBox(width: 5),
                             Text('New payment',
                                 style: TextStyle(
                                   fontFamily: _body,
                                   fontSize: 11.5,
                                   fontWeight: FontWeight.w800,
-                                  color: _paper,
+                                  color: _ink,
                                 )),
                           ],
                         ),
@@ -2298,9 +2305,9 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     final invUnpaidW = ((invoiced - paid) / fbase).clamp(0.0, 1.0);
     return Container(
       decoration: BoxDecoration(
-        color: _paper,
+        color: _brandYellowPale,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _border),
+        border: Border.all(color: _brandYellowBorder),
       ),
       padding: const EdgeInsets.fromLTRB(15, 15, 15, 14),
       child: Column(
@@ -2423,13 +2430,11 @@ class _ProjectCostViewState extends State<ProjectCostView> {
             height: 34,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: c.withOpacity(0.12),
+              color: over ? c : c.withOpacity(0.12),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-                over ? Icons.trending_up_rounded : Icons.verified_rounded,
-                size: 19,
-                color: c),
+            child: Icon(over ? Icons.bolt_rounded : Icons.verified_rounded,
+                size: 19, color: over ? _paper : c),
           ),
           const SizedBox(width: 11),
           Expanded(
