@@ -17,12 +17,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/auth/firebase_auth/auth_util.dart';
 
-/// EditProjectCostPageView — single-line editor for the Building Cost Estimate.
+/// EditProjectCostPageView — single-line editor for the Building Cost
+/// Estimate.
 ///
-/// Its own route (EditProjectCostPage), so it gets native push/pop + swipe-back.
-/// ProjectCostView passes the project + which line to edit (secIndex/lineIndex);
-/// this page streams the shared `estimate/plan` doc, edits that one line, and
-/// saves back — the cost view reflects the change on return.
+/// Its own route (EditProjectCostPage), so it gets native push/pop +
+/// swipe-back. ProjectCostView passes the project + which line to edit
+/// (secIndex/lineIndex); this page streams the shared `estimate/plan` doc,
+/// edits that one line, and saves back — the cost view reflects the change on
+/// return.
 class EditProjectCostPageView extends StatefulWidget {
   const EditProjectCostPageView({
     super.key,
