@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -208,6 +210,24 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // sync once the async shared loader resolves.
   int _sharedCount = 0;
   bool _archivedExpanded = false;
+
+  // ─── CACHED STREAMS / FUTURES ──────────────────────────────────────
+  // These are created ONCE and reused across rebuilds. Previously each of
+  // these was built inline in the widget tree (e.g. `.snapshots()` directly
+  // in a StreamBuilder's `stream:`), so every rebuild produced a NEW
+  // Stream/Future instance. StreamBuilder/FutureBuilder treat a new instance
+  // as a fresh subscription: they reset to ConnectionState.waiting with null
+  // data, so the section blanks out for a frame — the "flicker then it
+  // disappears" behaviour — and (combined with the post-frame setState calls
+  // in build) could keep re-resetting so the content never settled. Caching
+  // hands the SAME instance back each build, so the sections stay stable.
+  Stream<QuerySnapshot<Map<String, dynamic>>>? _quoteInvitesStream;
+  Stream<QuerySnapshot<Map<String, dynamic>>>? _activeProjectsStream;
+  Stream<QuerySnapshot<Map<String, dynamic>>>? _archivedProjectsStream;
+  Future<List<_SharedProject>>? _sharedProjectsFuture;
+  // Guards a rebuild if the signed-in user changes (login/logout) — the cached
+  // streams above are keyed to whoever was signed in when they were created.
+  DocumentReference? _cachedForUser;
 
   // Date formatting (SA: DD MMM YYYY)
   static const List<String> _months = [
@@ -506,6 +526,50 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   }
 
   // -----------------------------
+  // Cached stream / future accessors (see the CACHED STREAMS block above for
+  // why these exist). Each builds its underlying query/future only once and
+  // returns the same instance on every rebuild. If the signed-in user changes,
+  // the caches are dropped so the new user's data loads.
+  // -----------------------------
+  void _resetCachesIfUserChanged() {
+    final me = currentUserReference;
+    if (me?.path != _cachedForUser?.path) {
+      _cachedForUser = me;
+      _quoteInvitesStream = null;
+      _activeProjectsStream = null;
+      _archivedProjectsStream = null;
+      _sharedProjectsFuture = null;
+      _sharedCount = 0;
+    }
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>>? _quoteInvitesStreamCached(
+      DocumentReference me) {
+    return _quoteInvitesStream ??= FirebaseFirestore.instance
+        .collectionGroup('quotes')
+        .where('providerRef', isEqualTo: me)
+        .snapshots();
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>>? _activeProjectsStreamCached() {
+    if (_activeProjectsStream != null) return _activeProjectsStream;
+    final q = _activeProjectsQuery();
+    if (q == null) return null;
+    return _activeProjectsStream = q.snapshots();
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>>? _archivedProjectsStreamCached() {
+    if (_archivedProjectsStream != null) return _archivedProjectsStream;
+    final q = _archivedProjectsQuery();
+    if (q == null) return null;
+    return _archivedProjectsStream = q.snapshots();
+  }
+
+  Future<List<_SharedProject>> _sharedProjectsFutureCached() {
+    return _sharedProjectsFuture ??= _loadSharedProjects();
+  }
+
+  // -----------------------------
   // Listing exists for current user (debounced + only setState on change).
   // -----------------------------
   Future<void> _refreshHasListing({bool force = false}) async {
@@ -618,10 +682,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     final me = currentUserReference;
     if (me == null) return const SizedBox.shrink();
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance
-          .collectionGroup('quotes')
-          .where('providerRef', isEqualTo: me)
-          .snapshots(),
+      stream: _quoteInvitesStreamCached(me),
       builder: (context, snap) {
         if (snap.hasError) return const SizedBox.shrink();
         final all = snap.data?.docs ?? [];
@@ -873,9 +934,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // BODY — owner layout · shared-primary · or unified empty (role-agnostic)
   // =====================================================================
   Widget _buildBody() {
-    final q = _activeProjectsQuery();
+    final stream = _activeProjectsStreamCached();
 
-    if (q == null) {
+    if (stream == null) {
       // No authenticated user → Create account / Log in.
       return Padding(
         padding: const EdgeInsets.fromLTRB(_hPad, 18, _hPad, 0),
@@ -884,7 +945,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     }
 
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: q.snapshots(),
+      stream: stream,
       builder: (context, snap) {
         if (snap.hasError) {
           // Can't read owned projects → fall through to the role-agnostic path.
@@ -914,7 +975,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             // Shared loads async, so the grid is wrapped in a FutureBuilder
             // and rebuilds (also keeping _sharedCount fresh) once it resolves.
             FutureBuilder<List<_SharedProject>>(
-              future: _loadSharedProjects(),
+              future: _sharedProjectsFutureCached(),
               builder: (context, sharedSnap) {
                 final rawShared = sharedSnap.data ?? const <_SharedProject>[];
                 // De-dupe: a build the viewer OWNS can also come back as a
@@ -959,7 +1020,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       );
     }
     return FutureBuilder<List<_SharedProject>>(
-      future: _loadSharedProjects(),
+      future: _sharedProjectsFutureCached(),
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting && !snap.hasData) {
           return _bodyShell(child: _loadingList());
@@ -1321,10 +1382,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // Archived builds — collapsed by default, pinned to the bottom. Reuses the
   // archived query + _archivedRow. Renders nothing (no toggle) when empty.
   Widget _buildArchivedCollapsible() {
-    final q = _archivedProjectsQuery();
-    if (q == null) return const SizedBox.shrink();
+    final stream = _archivedProjectsStreamCached();
+    if (stream == null) return const SizedBox.shrink();
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: q.snapshots(),
+      stream: stream,
       builder: (context, snap) {
         final docs = snap.data?.docs ?? const [];
         if (docs.isEmpty) return const SizedBox.shrink();
@@ -1393,11 +1454,11 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
   // ignore: unused_element
   Widget _buildArchivedSection() {
-    final q = _archivedProjectsQuery();
-    if (q == null) return const SizedBox.shrink();
+    final stream = _archivedProjectsStreamCached();
+    if (stream == null) return const SizedBox.shrink();
 
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: q.snapshots(),
+      stream: stream,
       builder: (context, snap) {
         final docs = snap.data?.docs ?? const [];
         if (docs.isEmpty) return const SizedBox.shrink();
@@ -1503,7 +1564,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   Widget _buildSharedSection() {
     if (currentUserReference == null) return const SizedBox.shrink();
     return FutureBuilder<List<_SharedProject>>(
-      future: _loadSharedProjects(),
+      future: _sharedProjectsFutureCached(),
       builder: (context, snap) {
         final docs = snap.data ?? const <_SharedProject>[];
 
@@ -3144,6 +3205,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // =====================================================================
   @override
   Widget build(BuildContext context) {
+    // Drop cached streams/futures if the signed-in user changed.
+    _resetCachesIfUserChanged();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _refreshHasListing(); // keep listing state fresh on return
