@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -83,6 +85,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _projSub;
   final Set<String> _scope = {};
   bool _saving = false;
+  String _status = 'invited';
 
   @override
   void initState() {
@@ -142,6 +145,9 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
             'status': 'viewed',
             'viewedAt': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
+          if (mounted) setState(() => _status = 'viewed');
+        } else if (snap.exists) {
+          if (mounted) setState(() => _status = status);
         }
       } catch (_) {}
     }
@@ -174,6 +180,169 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
                     color: _paper))));
     }
   }
+
+  // Trade accepts the invitation to tender. Distinct from the OWNER's
+  // 'accepted' (award) status: the trade-side accept uses 'quoting' so the
+  // owner's QuotesReceivedView award/decline logic is untouched.
+  Future<void> _accept() async {
+    final qref = _quoteRef;
+    if (qref == null || _saving) return;
+    setState(() => _saving = true);
+    try {
+      await qref.set({
+        'status': 'quoting',
+        'acceptedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      if (mounted) setState(() => _status = 'quoting');
+    } catch (_) {}
+    if (!mounted) return;
+    setState(() => _saving = false);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(
+          backgroundColor: _ink,
+          content: Text(
+              'Invitation accepted — pick your scope, then prepare your quote.',
+              style: TextStyle(
+                  fontFamily: _body,
+                  fontWeight: FontWeight.w700,
+                  color: _paper))));
+  }
+
+  // Trade declines the invitation. Sets 'declined' so the invite drops off
+  // their dashboard and the owner sees they've passed.
+  Future<void> _decline() async {
+    final qref = _quoteRef;
+    if (qref == null || _saving) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: _paper,
+        title: const Text('Decline this invite?',
+            style: TextStyle(
+                fontFamily: _body, fontWeight: FontWeight.w800, color: _ink)),
+        content: const Text(
+            'The project manager will see that you\'ve passed on this quote.',
+            style: TextStyle(
+                fontFamily: _body, fontWeight: FontWeight.w600, color: _ink)),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Cancel',
+                  style: TextStyle(
+                      fontFamily: _body,
+                      fontWeight: FontWeight.w700,
+                      color: _ink))),
+          TextButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('Decline',
+                  style: TextStyle(
+                      fontFamily: _body,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFFC0392B)))),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    setState(() => _saving = true);
+    try {
+      await qref.set({
+        'status': 'declined',
+        'declinedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (_) {}
+    if (!mounted) return;
+    setState(() => _saving = false);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(
+          backgroundColor: _ink,
+          content: Text('Invite declined.',
+              style: TextStyle(
+                  fontFamily: _body,
+                  fontWeight: FontWeight.w700,
+                  color: _paper))));
+    final nav = Navigator.of(context);
+    if (nav.canPop()) nav.pop();
+  }
+
+  Widget _bottomBar(double bottom) {
+    // Once accepted ('quoting') or already submitted, show the quote CTA.
+    // Before that, the two choices are Accept and Decline.
+    final accepted = _status == 'quoting' || _status == 'submitted';
+    return Container(
+      decoration: const BoxDecoration(
+          color: _paper, border: Border(top: BorderSide(color: _surface))),
+      padding: EdgeInsets.fromLTRB(20, 14, 20, bottom + 14),
+      child: Row(children: [
+        if (_status != 'submitted') ...[
+          _outlineBtn('Decline', _saving ? null : _decline),
+          const SizedBox(width: 12),
+        ],
+        Expanded(
+          child: accepted
+              ? _primaryBtn(
+                  icon: Icons.edit_document,
+                  label: 'Prepare your quote',
+                  color: _scope.isEmpty ? const Color(0xFFB7C2C7) : _lime,
+                  onTap: _saving ? null : _prepare)
+              : _primaryBtn(
+                  icon: Icons.check_rounded,
+                  label: 'Accept invitation',
+                  color: _lime,
+                  onTap: _saving ? null : _accept),
+        ),
+      ]),
+    );
+  }
+
+  Widget _outlineBtn(String label, VoidCallback? onTap) => InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          height: 52,
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+              color: _paper,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: _surface)),
+          child: Text(label,
+              style: const TextStyle(
+                  fontFamily: _body,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: _ink)),
+        ),
+      );
+
+  Widget _primaryBtn(
+          {required IconData icon,
+          required String label,
+          required Color color,
+          required VoidCallback? onTap}) =>
+      InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          height: 52,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+              color: color, borderRadius: BorderRadius.circular(14)),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(icon, size: 19, color: _ink),
+            const SizedBox(width: 8),
+            Text(label,
+                style: const TextStyle(
+                    fontFamily: _body,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: _ink)),
+          ]),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -302,33 +471,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
                     ],
                   ),
           ),
-          Container(
-            decoration: const BoxDecoration(
-                color: _paper,
-                border: Border(top: BorderSide(color: _surface))),
-            padding: EdgeInsets.fromLTRB(20, 14, 20, bottom + 14),
-            child: InkWell(
-              onTap: _saving ? null : _prepare,
-              borderRadius: BorderRadius.circular(14),
-              child: Container(
-                height: 52,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                    color: _scope.isEmpty ? const Color(0xFFB7C2C7) : _lime,
-                    borderRadius: BorderRadius.circular(14)),
-                child: Row(mainAxisSize: MainAxisSize.min, children: const [
-                  Icon(Icons.edit_document, size: 19, color: _ink),
-                  SizedBox(width: 8),
-                  Text('Prepare your quote',
-                      style: TextStyle(
-                          fontFamily: _body,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: _ink)),
-                ]),
-              ),
-            ),
-          ),
+          _bottomBar(bottom),
         ],
       ),
     );

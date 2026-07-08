@@ -701,18 +701,19 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           );
         }
         final all = snap.data?.docs ?? [];
-        const pending = ['invited', 'viewed', 'submitted'];
+        const pending = ['invited', 'viewed', 'quoting', 'submitted'];
         final docs = all
             .where((d) =>
                 pending.contains((d.data()['status'] ?? 'invited').toString()))
             .toList();
         if (docs.isEmpty) return const SizedBox.shrink();
         // Newest-action first: invited, then viewed, then submitted.
-        int rank(String s) => s == 'invited' ? 0 : (s == 'viewed' ? 1 : 2);
+        int rank(String s) =>
+            s == 'invited' ? 0 : (s == 'viewed' ? 1 : (s == 'quoting' ? 2 : 3));
         docs.sort((a, b) => rank((a.data()['status'] ?? 'invited').toString())
             .compareTo(rank((b.data()['status'] ?? 'invited').toString())));
         final actionable = docs
-            .where((d) => ['invited', 'viewed']
+            .where((d) => ['invited', 'viewed', 'quoting']
                 .contains((d.data()['status'] ?? '').toString()))
             .length;
         return Column(
@@ -828,6 +829,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     switch (s) {
       case 'viewed':
         return 'Viewed · continue your quote';
+      case 'quoting':
+        return 'Accepted · continue your quote';
       case 'submitted':
         return 'Quote submitted · awaiting decision';
       default:
@@ -842,6 +845,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       fg = _teal;
       bg = _orangeTint;
       label = 'Viewed';
+    } else if (status == 'quoting') {
+      fg = _teal;
+      bg = _orangeTint;
+      label = 'Accepted';
     } else if (status == 'submitted') {
       fg = _teal;
       bg = _orangeTint;
