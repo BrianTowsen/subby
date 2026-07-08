@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -137,7 +139,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   //
   // Neutrals
   static const Color _ink =
-      Color(0xFF29343A); // text, chrome, dark surfaces (slate)
+      Color(0xFF161B1F); // text, chrome, dark surfaces (slate)
   static const Color _inkMute = Color(0xFF566670);
   static const Color _faint = Color(0xFF93A3AC); // muted labels, chevrons
   static const Color _paper = Color(0xFFFFFFFF);
@@ -598,10 +600,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
     return Column(
       children: [
-        Container(height: topInset, color: _ink),
+        Container(height: topInset, color: const Color(0xFF323B48)),
         Container(
           width: double.infinity,
-          color: _ink,
+          color: const Color(0xFF323B48),
           padding: const EdgeInsets.fromLTRB(_hPad, 14, _hPad, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -893,8 +895,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       child: Container(
         decoration: BoxDecoration(
           // SHARED hero — tint surface (matches the tint project tiles).
-          color: const Color(0xFFE3E7EA),
-          border: Border.all(color: const Color(0xFFCCD2D7)),
+          color: const Color(0xFFF4F2D2),
+          border: Border.all(color: const Color(0xFFF4F2D2)),
           borderRadius: BorderRadius.circular(16),
         ),
         padding: const EdgeInsets.all(18),
@@ -1032,9 +1034,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         child: Container(
           decoration: BoxDecoration(
             // SHARED primary row — muted yellow (matches owner tint tiles).
-            color: const Color(0xFFE3E7EA),
+            color: const Color(0xFFF4F2D2),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFCCD2D7)),
+            border: Border.all(color: const Color(0xFFF4F2D2)),
           ),
           padding: const EdgeInsets.all(14),
           child: Column(
@@ -1632,11 +1634,11 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
     // Slate featured tile (white text) + tint tiles (ink text).
     final Color bg =
-        featured ? const Color(0xFF58707D) : const Color(0xFFE3E7EA);
+        featured ? const Color(0xFFE7E247) : const Color(0xFFF4F2D2);
     final Color border =
-        featured ? const Color(0xFF445C69) : const Color(0xFFCCD2D7);
-    final Color numColor = featured ? Colors.white : _ink;
-    final Color subColor = featured ? Colors.white70 : _ink;
+        featured ? const Color(0xFFE7E247) : const Color(0xFFF4F2D2);
+    final Color numColor = _ink;
+    final Color subColor = featured ? _inkMute : _ink;
 
     final String sub = shared
         ? (sharedBy!.isNotEmpty ? 'Shared by $sharedBy' : 'Shared with you')
@@ -1705,8 +1707,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             ),
             const SizedBox(width: 12),
             Icon(Icons.chevron_right_rounded,
-                size: 22,
-                color: featured ? Colors.white.withOpacity(0.6) : _faint),
+                size: 22, color: featured ? _inkMute : _faint),
           ],
         ),
       ),
@@ -1721,8 +1722,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         child: Container(
           height: 84,
           decoration: BoxDecoration(
-            color: const Color(0xFFE3E7EA),
-            border: Border.all(color: const Color(0xFFCCD2D7), width: 1.4),
+            color: const Color(0xFFF4F2D2),
+            border: Border.all(color: const Color(0xFFF4F2D2), width: 1.4),
             borderRadius: BorderRadius.circular(16),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 18),
@@ -2025,20 +2026,20 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFFB53F1A).withOpacity(0.12),
+              color: const Color(0xFFAC0C0C).withOpacity(0.12),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.bolt, size: 13, color: Color(0xFFB53F1A)),
+                const Icon(Icons.bolt, size: 13, color: Color(0xFFAC0C0C)),
                 const SizedBox(width: 4),
                 Text('$count recent',
                     style: const TextStyle(
                       fontFamily: _bodyFont,
                       fontSize: 11,
                       fontWeight: FontWeight.w900,
-                      color: Color(0xFFB53F1A),
+                      color: Color(0xFFAC0C0C),
                     )),
               ],
             ),
@@ -2578,7 +2579,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           height: 64,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: const Color(0xFFB53F1A),
+            color: const Color(0xFFAC0C0C),
             borderRadius: BorderRadius.circular(18),
           ),
           child: const Icon(Icons.lock_open_rounded, size: 32, color: _paper),
@@ -2652,7 +2653,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           height: 64,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: const Color(0xFFB53F1A),
+            color: const Color(0xFFAC0C0C),
             borderRadius: BorderRadius.circular(18),
           ),
           child: const Icon(Icons.construction, size: 32, color: _paper),
@@ -2997,7 +2998,7 @@ class _CapabilityChip extends StatelessWidget {
   final String label;
 
   static const Color _tealTint = Color(0xFFE7EDF0);
-  static const Color _tealText = Color(0xFF29343A);
+  static const Color _tealText = Color(0xFF161B1F);
 
   @override
   Widget build(BuildContext context) {

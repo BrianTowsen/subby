@@ -22,6 +22,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -109,21 +111,21 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF29343A);
+  static const Color _ink = Color(0xFF161B1F);
   static const Color _inkMute = Color(0xFF566670);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _hairline = Color(0xFFECF0F2);
   static const Color _hairlineOnSurface = Color(0xFFCBD8DD);
   // Brand accent — TEAL.
-  static const Color _spark = Color(0xFF29343A); // primary CTA / ranked accent
+  static const Color _spark = Color(0xFF161B1F); // primary CTA / ranked accent
   static const Color _sparkInk = Color(0xFFFFFFFF);
-  static const Color _teal = Color(0xFF29343A);
+  static const Color _teal = Color(0xFF161B1F);
   static const Color _tealBright =
       Color(0xFF5D737E); // icon on ink chips (sage)
   static const Color _tealTint =
       Color(0xFFE7EDF0); // pill / chip fill (sage tint)
-  static const Color _tealText = Color(0xFF29343A); // pill text
+  static const Color _tealText = Color(0xFF161B1F); // pill text
   static const Color _tealSurface =
       Color(0xFFE7EDF0); // tinted module card (sage)
   static const Color _tealSurfaceBorder = Color(0xFFCBD8DD);
@@ -1025,7 +1027,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       child: Container(
         width: double.infinity,
         decoration: const BoxDecoration(
-          color: _ink,
+          color: Color(0xFF323B48),
         ),
         padding: EdgeInsets.fromLTRB(20, topInset + 6, 20, 18),
         child: Column(
@@ -3274,7 +3276,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         .trim();
     return Row(children: [
       _rPill(status.isEmpty ? 'Active' : status,
-          fg: _paper, bg: const Color(0xFFA44200), icon: Icons.bolt_rounded),
+          fg: _paper, bg: const Color(0xFFAC0C0C), icon: Icons.bolt_rounded),
       if (category.isNotEmpty) ...[
         const SizedBox(width: 8),
         _rPill(category, fg: _ink, bg: _surface),
@@ -3457,8 +3459,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     // with the TITLE on its own full-width line and the subtitle + visibility
     // chip on the line below (so the heading always has room). Featured tile =
     // slate (white text).
-    final Color titleColor = featured ? Colors.white : _ink;
-    final Color subColor = featured ? Colors.white.withOpacity(0.72) : _inkMute;
+    final Color titleColor = _ink;
+    final Color subColor = _inkMute;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -3469,7 +3471,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
               color:
-                  featured ? const Color(0xFF58707D) : const Color(0xFFE3E7EA),
+                  featured ? const Color(0xFFE7E247) : const Color(0xFFF4F2D2),
               borderRadius: BorderRadius.circular(14)),
           child: Row(children: [
             Container(
@@ -3477,11 +3479,10 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
               height: 50,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: featured ? Colors.white.withOpacity(0.14) : _paper,
+                color: featured ? const Color(0x1A161B1F) : _paper,
                 borderRadius: BorderRadius.circular(13),
               ),
-              child:
-                  Icon(icon, size: 25, color: featured ? Colors.white : _ink),
+              child: Icon(icon, size: 25, color: _ink),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -3770,14 +3771,14 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-                color: const Color(0xFFB53F1A).withOpacity(0.12),
+                color: const Color(0xFFAC0C0C).withOpacity(0.12),
                 borderRadius: BorderRadius.circular(999)),
             child: Text('${visible.length} files',
                 style: const TextStyle(
                     fontFamily: _bodyFont,
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFFB53F1A))),
+                    color: Color(0xFFAC0C0C))),
           ),
         ]),
         if (!readOnly)
@@ -3791,7 +3792,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                 height: 30,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                    color: const Color(0xFFB53F1A),
+                    color: const Color(0xFFAC0C0C),
                     borderRadius: BorderRadius.circular(9)),
                 child: const Icon(Icons.add_rounded,
                     size: 18, color: Colors.white),

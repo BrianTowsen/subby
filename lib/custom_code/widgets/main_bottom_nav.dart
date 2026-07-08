@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // HapticFeedback (medium impact on tab tap)
 
 import '/custom_code/widgets/index.dart'; // (kept if FF expects it)
@@ -28,7 +30,7 @@ import '/custom_code/widgets/index.dart'; // (kept if FF expects it)
 // taps on the already-active tab are ignored.
 //
 // UPDATE (this revision):
-//   • Active tab pill is now INK (#29343A) with a WHITE icon (was the sage
+//   • Active tab pill is now INK (#161B1F) with a WHITE icon (was the sage
 //     green pill).
 //   • The bar is a BRIGHT-WHITE ELEVATED shell — hairline top border plus a
 //     soft upward drop shadow — to match the DetailTaskView dock treatment.
@@ -62,7 +64,7 @@ class MainBottomNav extends StatefulWidget {
 
 class _MainBottomNavState extends State<MainBottomNav> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _ink = Color(0xFF29343A); // active pill + active label
+  static const Color _ink = Color(0xFF161B1F); // active pill + active label
   static const Color _faint = Color(0xFF93A3AC); // inactive
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface =
