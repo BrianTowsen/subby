@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -217,7 +219,9 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
               ? 0
               : (s == 'submitted'
                   ? 1
-                  : (s == 'viewed' ? 2 : (s == 'declined' ? 4 : 3)));
+                  : (s == 'quoting'
+                      ? 2
+                      : (s == 'viewed' ? 3 : (s == 'declined' ? 5 : 4))));
           final ra = rank((a.data()['status'] ?? 'invited').toString());
           final rb = rank((b.data()['status'] ?? 'invited').toString());
           if (ra != rb) return ra.compareTo(rb);
@@ -444,6 +448,12 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
         bg = const Color(0xFFE7EDF0);
         ic = Icons.check_circle_rounded;
         label = 'Submitted';
+        break;
+      case 'quoting':
+        fg = _ink;
+        bg = const Color(0xFFE7EDF0);
+        ic = Icons.edit_note_rounded;
+        label = 'Quoting';
         break;
       case 'accepted':
         fg = _ink;
