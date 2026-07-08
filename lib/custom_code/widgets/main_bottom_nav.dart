@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // HapticFeedback (medium impact on tab tap)
 
 import '/custom_code/widgets/index.dart'; // (kept if FF expects it)
@@ -177,14 +179,7 @@ class _MainBottomNavState extends State<MainBottomNav> {
       // (matches the DetailTaskView dock).
       decoration: const BoxDecoration(
         color: _paper,
-        border: Border(top: BorderSide(color: _surface, width: 1)),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x1F19232D), // rgba(25,35,45,0.12)
-            blurRadius: 30,
-            offset: Offset(0, -10),
-          ),
-        ],
+        border: Border(top: BorderSide(color: Color(0xFFEAEEF0), width: 1)),
       ),
       // Three roomy tabs — a little extra horizontal inset keeps them centred.
       // top:12 gives the pill + icons more breathing room from the top edge.

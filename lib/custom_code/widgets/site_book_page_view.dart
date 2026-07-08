@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
@@ -92,9 +94,6 @@ class _SiteBookPageViewState extends State<SiteBookPageView> {
 
   // App-standard bright-white elevated footer shadow (matches _footerBar in
   // ToDoListPageView / AddTaskPageView).
-  static const List<BoxShadow> _footerShadow = [
-    BoxShadow(color: Color(0x1F19232D), blurRadius: 30, offset: Offset(0, -10)),
-  ];
   // ────────────────────────────────────────────────────────────────────
 
   static const double _hPad = 20;
@@ -760,8 +759,7 @@ class _SiteBookPageViewState extends State<SiteBookPageView> {
   Widget _bottomComposer(double bottomInset) => Container(
         decoration: const BoxDecoration(
           color: _paper,
-          border: Border(top: BorderSide(color: _surface)),
-          boxShadow: _footerShadow,
+          border: Border(top: BorderSide(color: Color(0xFFEAEEF0))),
         ),
         padding: EdgeInsets.fromLTRB(_hPad, 14, _hPad, 14 + bottomInset + 8),
         child: Material(

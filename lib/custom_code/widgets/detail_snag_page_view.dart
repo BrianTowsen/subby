@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -1102,11 +1104,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
     return Container(
       decoration: const BoxDecoration(
         color: _paper,
-        border: Border(top: BorderSide(color: _surface, width: 1)),
-        boxShadow: [
-          BoxShadow(
-              color: Color(0x1F19232D), blurRadius: 30, offset: Offset(0, -10)),
-        ],
+        border: Border(top: BorderSide(color: Color(0xFFEAEEF0), width: 1)),
       ),
       padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
       child: SafeArea(
