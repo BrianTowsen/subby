@@ -10,16 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
