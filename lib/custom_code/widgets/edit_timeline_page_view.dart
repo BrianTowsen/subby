@@ -20,6 +20,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:intl/intl.dart';
@@ -929,6 +931,138 @@ class _EditTimelinePageViewState extends State<EditTimelinePageView> {
   }
 
   void _deleteSel() {
+    final bool isChild = _selIsChild;
+    final String nm = isChild ? _selSec.children[_selCi].name : _selSec.name;
+    _showDeleteDialog(
+      title: isChild ? 'Delete sub-task?' : 'Delete section?',
+      message:
+          '“$nm” will be permanently removed from the programme. This can’t be undone.',
+      confirmLabel: isChild ? 'Delete sub-task' : 'Delete section',
+      onConfirm: _performDeleteSel,
+    );
+  }
+
+  // Shared destructive-confirm module — full-width centred card (matches the
+  // delete sheets across the app). Uses the app's red accent.
+  Future<void> _showDeleteDialog({
+    required String title,
+    required String message,
+    required String confirmLabel,
+    VoidCallback? onConfirm,
+  }) async {
+    const Color red = Color(0xFFAC0C0C);
+    await showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.55),
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          insetPadding: EdgeInsets.zero,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _paper,
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.30),
+                  blurRadius: 54,
+                  offset: const Offset(0, 22),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 62,
+                  height: 62,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: red.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: red.withOpacity(0.22), width: 1),
+                  ),
+                  child: const Icon(Icons.delete_rounded, color: red, size: 30),
+                ),
+                const SizedBox(height: 16),
+                Text(title,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontFamily: _display,
+                        fontSize: 19,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.4,
+                        color: _ink)),
+                const SizedBox(height: 8),
+                Text(message,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontFamily: _body,
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w500,
+                        height: 1.5,
+                        color: _inkMute)),
+                const SizedBox(height: 22),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      if (onConfirm != null) onConfirm();
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                          color: red, borderRadius: BorderRadius.circular(12)),
+                      child: Text(confirmLabel,
+                          style: const TextStyle(
+                              fontFamily: _body,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: _paper)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => Navigator.pop(ctx),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _paper,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: const Color(0xFFCBD8DD), width: 1.4),
+                      ),
+                      child: const Text('Cancel',
+                          style: TextStyle(
+                              fontFamily: _body,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: _ink)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _performDeleteSel() {
     setState(() {
       if (_selIsChild) {
         _selSec.children.removeAt(_selCi);
