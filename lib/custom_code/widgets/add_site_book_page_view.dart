@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -88,9 +90,6 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
 
   // App-standard bright-white elevated footer shadow (matches _footerBar in
   // ToDoListPageView / AddTaskPageView).
-  static const List<BoxShadow> _footerShadow = [
-    BoxShadow(color: Color(0x1F19232D), blurRadius: 30, offset: Offset(0, -10)),
-  ];
   // ────────────────────────────────────────────────────────────────────
 
   static const double _hPad = 20;
@@ -508,8 +507,7 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
   Widget _footerBar(double bottomInset) => Container(
         decoration: const BoxDecoration(
           color: _paper,
-          border: Border(top: BorderSide(color: _surface, width: 1)),
-          boxShadow: _footerShadow,
+          border: Border(top: BorderSide(color: Color(0xFFEAEEF0), width: 1)),
         ),
         padding: EdgeInsets.fromLTRB(18, 14, 18, bottomInset + 14),
         child: Material(

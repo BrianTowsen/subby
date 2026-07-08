@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -905,13 +907,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
   Widget _footerBar() => Container(
         decoration: const BoxDecoration(
           color: _paper,
-          border: Border(top: BorderSide(color: _surface, width: 1)),
-          boxShadow: [
-            BoxShadow(
-                color: Color(0x1F19232D),
-                blurRadius: 30,
-                offset: Offset(0, -10)),
-          ],
+          border: Border(top: BorderSide(color: Color(0xFFEAEEF0), width: 1)),
         ),
         padding: const EdgeInsets.fromLTRB(_hPad, 14, _hPad, 14),
         child: SafeArea(

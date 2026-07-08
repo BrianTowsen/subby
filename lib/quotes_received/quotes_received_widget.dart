@@ -49,6 +49,8 @@ class _QuotesReceivedWidgetState extends State<QuotesReceivedWidget> {
           child: custom_widgets.QuotesReceivedView(
             width: MediaQuery.sizeOf(context).width * 1.0,
             height: MediaQuery.sizeOf(context).height * 1.0,
+            inviteRouteName: 'Invite',
+            quoteDetailRouteName: 'QuoteDetail',
           ),
         ),
       ),
