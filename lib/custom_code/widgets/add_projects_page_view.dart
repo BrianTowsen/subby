@@ -20,6 +20,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status bar icons over ink hero)
@@ -45,7 +47,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
   // Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF29343A);
+  static const Color _ink = Color(0xFF161B1F);
   static const Color _inkMute = Color(0xFF566670);
   static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
@@ -54,7 +56,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
   static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
   // Brand accent — TEAL. Used as the accent (focus ring, active switch); the
   // primary CTA stays ink to match the dashboard's "Create project".
-  static const Color _teal = Color(0xFF29343A);
+  static const Color _teal = Color(0xFF161B1F);
   // Status
   static const Color _live = Color(0xFF566670); // clay — live / warning
   static const Color _coral = Color(0xFF566670);
@@ -701,7 +703,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
   // Dark ink hero (matches ProjectTimelinePageView).
   Widget _hero() => Container(
         width: double.infinity,
-        color: _ink,
+        color: const Color(0xFF323B48),
         padding: EdgeInsets.fromLTRB(
             20, MediaQuery.of(context).padding.top + 6, 20, 18),
         child: Column(
