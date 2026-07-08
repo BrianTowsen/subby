@@ -54,8 +54,8 @@ class _GetQuotesPageWidgetState extends State<GetQuotesPageWidget> {
           child: custom_widgets.GetQuotesPageView(
             width: MediaQuery.sizeOf(context).width * 1.0,
             height: MediaQuery.sizeOf(context).height * 1.0,
-            inviteRouteName: 'inviteRouteName',
-            quotesReceivedRouteName: 'quotesReceivedRouteName',
+            inviteRouteName: '',
+            quotesReceivedRouteName: '',
             projectRef: widget.projectRef,
           ),
         ),

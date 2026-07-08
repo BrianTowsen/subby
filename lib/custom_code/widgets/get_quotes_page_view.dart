@@ -8,8 +8,6 @@ import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -146,14 +144,8 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
   }
 
   // Accent (theme token override → falls back to teal ink).
-  Color _quotesColour(FlutterFlowTheme theme) {
-    try {
-      final c = (theme as dynamic).getQuotesColour as Color?;
-      return c ?? _ink;
-    } catch (_) {
-      return _ink;
-    }
-  }
+  // Accent for this page is ink — the teal theme token is no longer used.
+  Color _quotesColour(FlutterFlowTheme theme) => _ink;
 
   // =========================================================
   // ✅ TYPOGRAPHY (flat teal system)
@@ -697,7 +689,7 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
                 decoration: BoxDecoration(
-                    color: _tealTint, borderRadius: BorderRadius.circular(999)),
+                    color: _surface, borderRadius: BorderRadius.circular(999)),
                 child: Text('$received',
                     style: const TextStyle(
                         fontFamily: _bodyFont,
