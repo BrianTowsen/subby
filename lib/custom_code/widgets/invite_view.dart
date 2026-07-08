@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -103,14 +105,26 @@ class _InviteViewState extends State<InviteView> {
     setState(() => _sending = true);
     try {
       final batch = FirebaseFirestore.instance.batch();
+      final skipped = <String>[];
+      var sent = 0;
       for (final row in rows) {
         final d = row.data();
         final lref = _listingRefOf(d);
         final id = lref?.id ?? row.id;
         if (!_selected.contains(id)) continue;
         // Denormalize the provider (trade's user ref) onto the quote so
-        // InboxView can find it via collectionGroup('quotes') on providerRef.
+        // InboxView / DashboardPageView can find it via
+        // collectionGroup('quotes').where('providerRef', ...). If we can't
+        // resolve the trade's user ref, the invite would be INVISIBLE to them
+        // (both the collection-group query and its security rule match on
+        // providerRef), so skip it and report rather than writing an orphan
+        // invite that shows for nobody.
         final providerRef = await _providerRefOf(d, lref);
+        if (providerRef == null) {
+          skipped.add((d['title'] ?? 'Trade').toString());
+          continue;
+        }
+        sent++;
         batch.set(
             ref.collection('quotes').doc(id),
             {
@@ -123,6 +137,21 @@ class _InviteViewState extends State<InviteView> {
             },
             SetOptions(merge: true));
       }
+      if (sent == 0) {
+        if (mounted) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(SnackBar(
+                backgroundColor: _ink,
+                content: Text(
+                    'Couldn\'t invite ${skipped.length == 1 ? 'this trade' : 'these trades'} — no linked Subby account found. Ask them to claim their listing, then try again.',
+                    style: const TextStyle(
+                        fontFamily: _body,
+                        fontWeight: FontWeight.w700,
+                        color: _paper))));
+        }
+        return;
+      }
       await batch.commit();
       if (!mounted) return;
       ScaffoldMessenger.of(context)
@@ -130,7 +159,9 @@ class _InviteViewState extends State<InviteView> {
         ..showSnackBar(SnackBar(
             backgroundColor: _ink,
             content: Text(
-                'Quote request sent to ${_selected.length} trade${_selected.length == 1 ? '' : 's'}.',
+                skipped.isEmpty
+                    ? 'Quote request sent to $sent trade${sent == 1 ? '' : 's'}.'
+                    : 'Sent to $sent; skipped ${skipped.length} trade${skipped.length == 1 ? '' : 's'} with no linked account.',
                 style: const TextStyle(
                     fontFamily: _body,
                     fontWeight: FontWeight.w700,
