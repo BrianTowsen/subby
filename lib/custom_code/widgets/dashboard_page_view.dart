@@ -139,7 +139,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   //
   // Neutrals
   static const Color _ink =
-      Color(0xFF161B1F); // text, chrome, dark surfaces (slate)
+      Color(0xFF29343A); // text, chrome, dark surfaces (slate)
   static const Color _inkMute = Color(0xFF566670);
   static const Color _faint = Color(0xFF93A3AC); // muted labels, chevrons
   static const Color _paper = Color(0xFFFFFFFF);
@@ -600,10 +600,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
     return Column(
       children: [
-        Container(height: topInset, color: const Color(0xFF323B48)),
+        Container(height: topInset, color: _ink),
         Container(
           width: double.infinity,
-          color: const Color(0xFF323B48),
+          color: _ink,
           padding: const EdgeInsets.fromLTRB(_hPad, 14, _hPad, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2998,7 +2998,7 @@ class _CapabilityChip extends StatelessWidget {
   final String label;
 
   static const Color _tealTint = Color(0xFFE7EDF0);
-  static const Color _tealText = Color(0xFF161B1F);
+  static const Color _tealText = Color(0xFF29343A);
 
   @override
   Widget build(BuildContext context) {

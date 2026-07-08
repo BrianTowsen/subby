@@ -111,21 +111,21 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF161B1F);
+  static const Color _ink = Color(0xFF29343A);
   static const Color _inkMute = Color(0xFF566670);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _hairline = Color(0xFFECF0F2);
   static const Color _hairlineOnSurface = Color(0xFFCBD8DD);
   // Brand accent — TEAL.
-  static const Color _spark = Color(0xFF161B1F); // primary CTA / ranked accent
+  static const Color _spark = Color(0xFF29343A); // primary CTA / ranked accent
   static const Color _sparkInk = Color(0xFFFFFFFF);
-  static const Color _teal = Color(0xFF161B1F);
+  static const Color _teal = Color(0xFF29343A);
   static const Color _tealBright =
       Color(0xFF5D737E); // icon on ink chips (sage)
   static const Color _tealTint =
       Color(0xFFE7EDF0); // pill / chip fill (sage tint)
-  static const Color _tealText = Color(0xFF161B1F); // pill text
+  static const Color _tealText = Color(0xFF29343A); // pill text
   static const Color _tealSurface =
       Color(0xFFE7EDF0); // tinted module card (sage)
   static const Color _tealSurfaceBorder = Color(0xFFCBD8DD);
@@ -801,9 +801,9 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         return Dialog(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 34),
+          insetPadding: EdgeInsets.zero,
           child: Container(
-            width: 322,
+            width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: _paper,
@@ -1027,7 +1027,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       child: Container(
         width: double.infinity,
         decoration: const BoxDecoration(
-          color: Color(0xFF323B48),
+          color: _ink,
         ),
         padding: EdgeInsets.fromLTRB(20, topInset + 6, 20, 18),
         child: Column(
@@ -3479,7 +3479,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
               height: 50,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: featured ? const Color(0x1A161B1F) : _paper,
+                color: featured ? const Color(0x1A29343A) : _paper,
                 borderRadius: BorderRadius.circular(13),
               ),
               child: Icon(icon, size: 25, color: _ink),

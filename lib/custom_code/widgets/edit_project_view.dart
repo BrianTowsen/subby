@@ -55,14 +55,14 @@ class _EditProjectViewState extends State<EditProjectView>
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF161B1F);
+  static const Color _ink = Color(0xFF29343A);
   static const Color _inkMute = Color(0xFF566670);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _hairline = Color(0xFFECF0F2);
   static const Color _hairlineOnSurface = Color(0xFFCBD8DD);
   // Brand accent — TEAL.
-  static const Color _teal = Color(0xFF161B1F);
+  static const Color _teal = Color(0xFF29343A);
   // Status
   static const Color _live =
       Color(0xFF566670); // clay — live / open-now / warning
@@ -1024,9 +1024,9 @@ class _EditProjectViewState extends State<EditProjectView>
         return Dialog(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 34),
+          insetPadding: EdgeInsets.zero,
           child: Container(
-            width: 322,
+            width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: _paper,
@@ -1186,7 +1186,7 @@ class _EditProjectViewState extends State<EditProjectView>
   // Dark ink hero (matches ProjectTimelinePageView).
   Widget _hero(FlutterFlowTheme theme) => Container(
         width: double.infinity,
-        color: const Color(0xFF323B48),
+        color: _ink,
         padding: EdgeInsets.fromLTRB(
             20, 6 + MediaQuery.of(context).padding.top, 20, 18),
         child: Column(
