@@ -10,12 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/auth/firebase_auth/auth_util.dart';
@@ -43,6 +37,7 @@ class _InboxViewState extends State<InboxView> {
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _border = Color(0xFFEAEEF0);
   static const Color _green = Color(0xFF5D737E);
+  static const Color _lime = Color(0xFFE7E247); // positive / awarded accent
   static const Color _coral = Color(0xFF566670);
   static const Color _cobalt = Color(0xFF5D737E);
   static const String _body = 'Inter';
@@ -252,8 +247,8 @@ class _InboxViewState extends State<InboxView> {
         label = 'Submitted';
         break;
       case 'accepted':
-        fg = _paper;
-        bg = _green;
+        fg = _ink;
+        bg = _lime;
         label = 'Awarded';
         break;
       case 'declined':

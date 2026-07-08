@@ -10,12 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -47,6 +41,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
   static const Color _border = Color(0xFFEAEEF0);
   static const Color _line = Color(0xFFF2F5F6);
   static const Color _green = Color(0xFF5D737E);
+  static const Color _lime = Color(0xFFE7E247); // primary CTA / positive accent
   static const Color _sage = Color(0xFFF2F5F6);
   static const Color _sageBorder = Color(0xFFCBD8DD);
   static const Color _coral = Color(0xFF566670);
@@ -292,12 +287,6 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
             decoration: const BoxDecoration(
               color: _paper,
               border: Border(top: BorderSide(color: _surface)),
-              boxShadow: [
-                BoxShadow(
-                    color: Color(0x1A19232D),
-                    blurRadius: 30,
-                    offset: Offset(0, -10)),
-              ],
             ),
             padding: EdgeInsets.fromLTRB(20, 14, 20, bottom + 14),
             child: Column(
@@ -310,7 +299,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
                     height: 52,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: canSubmit ? _green : const Color(0xFFB7C2C7),
+                      color: canSubmit ? _lime : const Color(0xFFB7C2C7),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: _saving
@@ -320,18 +309,18 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
                             child: CircularProgressIndicator(
                                 strokeWidth: 2.4,
                                 valueColor:
-                                    AlwaysStoppedAnimation<Color>(_paper)))
+                                    AlwaysStoppedAnimation<Color>(_ink)))
                         : Row(
                             mainAxisSize: MainAxisSize.min,
                             children: const [
-                              Icon(Icons.send_rounded, size: 19, color: _paper),
+                              Icon(Icons.send_rounded, size: 19, color: _ink),
                               SizedBox(width: 8),
                               Text('Submit quote',
                                   style: TextStyle(
                                       fontFamily: _body,
                                       fontSize: 15,
                                       fontWeight: FontWeight.w800,
-                                      color: _paper)),
+                                      color: _ink)),
                             ],
                           ),
                   ),
@@ -388,7 +377,6 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
         decoration: BoxDecoration(
           color: _sage,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: _sageBorder, width: 1.6),
         ),
         padding: const EdgeInsets.all(14),
         child: Row(
@@ -398,7 +386,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
               height: 40,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                  color: _green, borderRadius: BorderRadius.circular(10)),
+                  color: _ink, borderRadius: BorderRadius.circular(10)),
               child: const Icon(Icons.picture_as_pdf_rounded,
                   size: 21, color: _paper),
             ),
@@ -444,7 +432,6 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
         decoration: BoxDecoration(
           color: _sage,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _sageBorder, width: 1.6),
         ),
         padding: const EdgeInsets.symmetric(vertical: 26, horizontal: 20),
         child: Column(
@@ -454,7 +441,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
               height: 56,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                  color: _green, borderRadius: BorderRadius.circular(16)),
+                  color: _ink, borderRadius: BorderRadius.circular(16)),
               child: const Icon(Icons.upload_file_rounded,
                   size: 28, color: _paper),
             ),
@@ -596,7 +583,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
                         fontFamily: 'Roboto Mono',
                         fontSize: 17,
                         fontWeight: FontWeight.w800,
-                        color: _green)),
+                        color: _ink)),
               ],
             ),
           ),

@@ -10,12 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -39,6 +33,7 @@ class _InviteViewState extends State<InviteView> {
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _border = Color(0xFFEAEEF0);
   static const Color _green = Color(0xFF5D737E);
+  static const Color _lime = Color(0xFFE7E247); // primary CTA / positive accent
   static const Color _sageBorder = Color(0xFFCBD8DD);
   static const Color _cobalt = Color(0xFF5D737E);
   static const String _body = 'Inter';
@@ -308,7 +303,7 @@ class _InviteViewState extends State<InviteView> {
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
                                     color: _selected.isNotEmpty
-                                        ? _green
+                                        ? _lime
                                         : const Color(0xFFB7C2C7),
                                     borderRadius: BorderRadius.circular(14)),
                                 child: _sending
@@ -319,12 +314,12 @@ class _InviteViewState extends State<InviteView> {
                                             strokeWidth: 2.4,
                                             valueColor:
                                                 AlwaysStoppedAnimation<Color>(
-                                                    _paper)))
+                                                    _ink)))
                                     : Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                             const Icon(Icons.send_rounded,
-                                                size: 19, color: _paper),
+                                                size: 19, color: _ink),
                                             const SizedBox(width: 8),
                                             Text(
                                                 'Send quote request (${_selected.length})',
@@ -332,7 +327,7 @@ class _InviteViewState extends State<InviteView> {
                                                     fontFamily: _body,
                                                     fontSize: 15,
                                                     fontWeight: FontWeight.w800,
-                                                    color: _paper)),
+                                                    color: _ink)),
                                           ]),
                               ),
                             ),
@@ -406,13 +401,13 @@ class _InviteViewState extends State<InviteView> {
             height: 26,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-                color: on ? _green : _paper,
+                color: on ? _lime : _paper,
                 shape: BoxShape.circle,
                 border: on
                     ? null
                     : Border.all(color: const Color(0xFFCBD8DD), width: 1.6)),
             child: on
-                ? const Icon(Icons.check_rounded, size: 17, color: _paper)
+                ? const Icon(Icons.check_rounded, size: 17, color: _ink)
                 : null,
           ),
         ]),

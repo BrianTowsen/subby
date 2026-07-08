@@ -10,22 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'dart:convert';
 import 'package:intl/intl.dart';
@@ -1223,7 +1207,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                   if (nav.canPop()) nav.pop();
                 }),
                 const SizedBox(height: 16),
-                Text('CONSTRUCTION PROGRAMME',
+                Text('PROGRAMME',
                     style: TextStyle(
                         fontFamily: _body,
                         fontSize: 10,

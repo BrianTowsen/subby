@@ -10,18 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'dart:convert';
 import 'package:intl/intl.dart';
@@ -148,6 +136,7 @@ class _EditTimelinePageViewState extends State<EditTimelinePageView> {
   final TextEditingController _nameCtl = TextEditingController();
   final ScrollController _vCtl = ScrollController();
   final ScrollController _editScrollCtl = ScrollController();
+  bool _openScrolledTop = false;
 
   @override
   void initState() {
@@ -1097,11 +1086,18 @@ class _EditTimelinePageViewState extends State<EditTimelinePageView> {
       if (_selCi >= kids.length) _selCi = kids.isEmpty ? -1 : kids.length - 1;
     }
 
+    final bool showEdit = _ready && _sections.isNotEmpty;
+    if (showEdit && !_openScrolledTop) {
+      _openScrolledTop = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_editScrollCtl.hasClients) _editScrollCtl.jumpTo(0);
+      });
+    }
     return Container(
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
       color: _startBg,
-      child: (!_ready || _sections.isEmpty) ? _editLoading() : _editScreen(),
+      child: showEdit ? _editScreen() : _editLoading(),
     );
   }
 

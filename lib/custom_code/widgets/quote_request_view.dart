@@ -10,12 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -44,6 +38,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
   static const Color _border = Color(0xFFEAEEF0);
   static const Color _line = Color(0xFFF2F5F6);
   static const Color _green = Color(0xFF5D737E);
+  static const Color _lime = Color(0xFFE7E247); // primary CTA / positive accent
   static const Color _cobalt = Color(0xFF5D737E);
   static const String _body = 'Inter';
   static const String _kActiveProjectPath = 'subby_active_project_path';
@@ -51,24 +46,40 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
 
   static const List<String> _scopeOptions = [
     'Professional Fees',
+    'Preliminaries & General',
     'Site Preparation',
-    'Concrete Works',
+    'Site Establishment',
+    'Earthworks & Excavation',
+    'Concrete Works (Foundations)',
     'Brickwork & Blockwork',
+    'Damp Proofing & Waterproofing',
+    'Structural Steel Works',
     'Roofing & Trusses',
     'Windows & Door Frames',
+    'Glazing',
     'Plumbing & Drainage',
+    'Sanitary Fittings',
     'Electrical Works',
     'Electrical Fittings',
     'Plastering & Screeds',
+    'Ceilings & Partitioning',
+    'Internal Carpentry & Joinery',
+    'Kitchen (Built-in Units)',
+    'Built-in Cupboards',
     'Tiling',
-    'Painting & Decorating',
-    'External Site Works',
+    'Floor Covering',
     'Special Items',
+    'Painting & Decorating',
+    'Balustrades & Railings',
+    'External Site Works',
+    'Landscaping',
+    'Cleaning & Handover',
   ];
 
   DocumentReference<Map<String, dynamic>>? _projectRef;
   DocumentReference<Map<String, dynamic>>? _quoteRef;
   String _projectName = 'Project';
+  DocumentReference? _ownerRef;
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _projSub;
   final Set<String> _scope = {};
   bool _saving = false;
@@ -111,7 +122,13 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
       final d = snap.data() ?? const {};
       final name =
           (d['name'] ?? d['projectName'] ?? d['title'] ?? 'Project').toString();
-      if (mounted) setState(() => _projectName = name);
+      final ownerRef = d['ownerRef'];
+      if (mounted) {
+        setState(() {
+          _projectName = name;
+          if (ownerRef is DocumentReference) _ownerRef = ownerRef;
+        });
+      }
     });
     // Mark as viewed ONLY if the quote exists and is still 'invited' —
     // never downgrade a submitted/decided quote, never create orphan docs.
@@ -262,6 +279,8 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
                 : ListView(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                     children: [
+                      _pmCard(),
+                      const SizedBox(height: 18),
                       _docsSection(ref, 'DRAWINGS', 'drawing',
                           Icons.architecture_rounded),
                       const SizedBox(height: 14),
@@ -295,17 +314,17 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
                 height: 52,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                    color: _scope.isEmpty ? const Color(0xFFB7C2C7) : _green,
+                    color: _scope.isEmpty ? const Color(0xFFB7C2C7) : _lime,
                     borderRadius: BorderRadius.circular(14)),
                 child: Row(mainAxisSize: MainAxisSize.min, children: const [
-                  Icon(Icons.edit_document, size: 19, color: _paper),
+                  Icon(Icons.edit_document, size: 19, color: _ink),
                   SizedBox(width: 8),
                   Text('Prepare your quote',
                       style: TextStyle(
                           fontFamily: _body,
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
-                          color: _paper)),
+                          color: _ink)),
                 ]),
               ),
             ),
@@ -368,8 +387,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
             return Container(
               decoration: BoxDecoration(
                   color: const Color(0xFFF2F5F6),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: _border)),
+                  borderRadius: BorderRadius.circular(12)),
               padding: const EdgeInsets.all(13),
               child: Text('No shared ${category}s.',
                   style: const TextStyle(
@@ -433,7 +451,6 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
         decoration: BoxDecoration(
           color: on ? _ink : _surface,
           borderRadius: BorderRadius.circular(999),
-          border: on ? null : Border.all(color: const Color(0xFFDCE3E6)),
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           if (on) ...[
@@ -449,6 +466,117 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
         ]),
       ),
     );
+  }
+
+  // Project Manager calling card — mirrors the shared ProjectDetailPageView
+  // owner card: reads the project's ownerRef profile (name + phone) and
+  // exposes call / message actions.
+  Widget _pmCard() {
+    final ref = _ownerRef;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+          color: _surface, borderRadius: BorderRadius.circular(14)),
+      child: FutureBuilder<DocumentSnapshot<Object?>>(
+        future: ref?.get(),
+        builder: (context, snap) {
+          final od = (snap.data?.data() as Map<String, dynamic>?) ??
+              const <String, dynamic>{};
+          final nm =
+              (od['display_name'] ?? 'Project manager').toString().trim();
+          final phone = (od['phone_number'] ?? '').toString().trim();
+          final display = nm.isEmpty ? 'Project manager' : nm;
+          return Row(children: [
+            Container(
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                  color: _paper, borderRadius: BorderRadius.circular(12)),
+              child: Text(_initials(display),
+                  style: const TextStyle(
+                      fontFamily: 'Inter Tight',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: _ink)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('PROJECT MANAGER',
+                        style: TextStyle(
+                            fontFamily: _body,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.6,
+                            color: _faint)),
+                    const SizedBox(height: 3),
+                    Row(children: [
+                      Flexible(
+                          child: Text(display,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontFamily: _body,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  color: _ink))),
+                      const SizedBox(width: 5),
+                      const Icon(Icons.verified_rounded, size: 14, color: _ink),
+                    ]),
+                    if (phone.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Row(children: [
+                        const Icon(Icons.call_rounded, size: 13, color: _faint),
+                        const SizedBox(width: 5),
+                        Text(phone,
+                            style: const TextStyle(
+                                fontFamily: _body,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: _inkMute)),
+                      ]),
+                    ],
+                  ]),
+            ),
+            const SizedBox(width: 8),
+            _pmRound(Icons.call_rounded, _paper, _ink, () {
+              if (phone.isNotEmpty) launchURL('tel:$phone');
+            }),
+            const SizedBox(width: 8),
+            _pmRound(Icons.chat_bubble_rounded, _ink, _paper, () {
+              if (phone.isNotEmpty) launchURL('sms:$phone');
+            }),
+          ]);
+        },
+      ),
+    );
+  }
+
+  Widget _pmRound(IconData icon, Color bg, Color fg, VoidCallback onTap) =>
+      Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            width: 44,
+            height: 44,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
+            child: Icon(icon, size: 19, color: fg),
+          ),
+        ),
+      );
+
+  String _initials(String name) {
+    final parts =
+        name.trim().split(RegExp(r'\s+')).where((s) => s.isNotEmpty).toList();
+    if (parts.isEmpty) return '\u2013';
+    if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
+    return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
   }
 
   Widget _circleBtn() => Material(
