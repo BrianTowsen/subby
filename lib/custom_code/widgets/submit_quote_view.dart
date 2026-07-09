@@ -422,7 +422,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
           fontSize: 11,
           fontWeight: FontWeight.w800,
           letterSpacing: 0.6,
-          color: _faint));
+          color: _inkMute));
 
   Widget _uploadBox() {
     if (_fileAttached) {

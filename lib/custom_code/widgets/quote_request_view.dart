@@ -472,7 +472,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
                               fontSize: 11,
                               fontWeight: FontWeight.w800,
                               letterSpacing: 0.6,
-                              color: _faint)),
+                              color: _inkMute)),
                       const SizedBox(height: 10),
                       Wrap(
                           spacing: 8,
@@ -519,7 +519,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
               fontSize: 11,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.6,
-              color: _faint)),
+              color: _inkMute)),
       const SizedBox(height: 9),
       StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance
