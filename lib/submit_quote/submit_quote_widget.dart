@@ -42,6 +42,7 @@ class _SubmitQuoteWidgetState extends State<SubmitQuoteWidget> {
       },
       child: Scaffold(
         key: scaffoldKey,
+        resizeToAvoidBottomInset: false,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
         body: Container(
           width: MediaQuery.sizeOf(context).width * 1.0,
