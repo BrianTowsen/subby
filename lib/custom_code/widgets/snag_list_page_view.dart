@@ -24,6 +24,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -344,10 +346,11 @@ class _SnagListPageViewState extends State<SnagListPageView>
   }
 
   // Critical = clay; major = ink; minor = faint. Tint: critical clay@16%, else surface.
-  Color _severityColor(String sev) =>
-      sev == 'critical' ? _live : (sev == 'minor' ? _faint : _ink);
+  Color _severityColor(String sev) => sev == 'critical'
+      ? const Color(0xFFAC0C0C)
+      : (sev == 'minor' ? _faint : _ink);
   Color _severityTint(String sev) =>
-      sev == 'critical' ? const Color(0x29566670) : _surface;
+      sev == 'critical' ? const Color(0x1AAC0C0C) : _surface;
 
   String _severityLabel(String sev) {
     switch (sev) {

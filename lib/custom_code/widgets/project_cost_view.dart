@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -484,7 +486,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     final top = MediaQuery.of(context).viewPadding.top;
     final bottom = MediaQuery.of(context).padding.bottom;
     return Container(
-      color: _startBg,
+      color: _paper,
       child: Column(
         children: [
           Container(
@@ -664,7 +666,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                           child: const Padding(
                             padding: EdgeInsets.all(6),
                             child: Icon(Icons.delete_outline_rounded,
-                                size: 18, color: _faint),
+                                size: 18, color: Color(0xFFAC0C0C)),
                           ),
                         ),
                     ],
@@ -1223,7 +1225,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     return Container(
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
-      color: _tab == 0 ? _paper : _startBg,
+      color: _paper,
       child: Stack(
         children: [
           Column(
@@ -1459,10 +1461,10 @@ class _ProjectCostViewState extends State<ProjectCostView> {
         ),
         Expanded(
           child: ListView(
-            padding: EdgeInsets.fromLTRB(14, 14, 14, 24 + bottomInset),
+            padding: EdgeInsets.fromLTRB(14, 18, 14, 24 + bottomInset),
             children: [
               _sectionsHeaderRow(),
-              const SizedBox(height: 10),
+              const SizedBox(height: 14),
               Container(
                 decoration: BoxDecoration(
                   color: _paper,
@@ -1514,7 +1516,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                   borderRadius: BorderRadius.circular(999),
                   child: Container(
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                     decoration: BoxDecoration(
                       color: _brandYellow,
                       borderRadius: BorderRadius.circular(999),
@@ -2451,6 +2453,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
         decoration: BoxDecoration(
           color: _paper,
           borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -2652,9 +2655,11 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     final invUnpaidW = ((invoiced - paid) / fbase).clamp(0.0, 1.0);
     return Container(
       decoration: BoxDecoration(
+        color: _paper,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _border),
       ),
-      padding: const EdgeInsets.fromLTRB(0, 15, 0, 14),
+      padding: const EdgeInsets.fromLTRB(14, 15, 14, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2765,7 +2770,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       decoration: BoxDecoration(
         color: c.withOpacity(0.06),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: c.withOpacity(0.18)),
       ),
       padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
       child: Row(
@@ -2821,6 +2825,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       decoration: BoxDecoration(
         color: _paper,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _border),
       ),
       padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
       child: Column(
@@ -2916,7 +2921,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
         : null;
 
     return Container(
-      color: _startBg,
+      color: _paper,
       child: Column(
         children: [
           // header

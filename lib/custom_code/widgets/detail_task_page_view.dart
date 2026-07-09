@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -71,6 +73,8 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
       Color(0xFF566670); // DS: lime → clay (high/attention)
   static const Color _coral =
       Color(0xFF566670); // DS: → clay (destructive/error)
+  static const Color _warn =
+      Color(0xFFAC0C0C); // delete-dialog red (matches DocumentUploadPageView)
   static const Color _navy = Color(0xFF29343A);
   static const Color _green =
       Color(0xFF5D737E); // DS: to-do / in-progress / info / mark-done
@@ -285,9 +289,9 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
   }
 
   Color _priorityColor(String s) =>
-      s == 'high' ? _live : (s == 'low' ? _faint : _teal);
+      s == 'high' ? const Color(0xFFAC0C0C) : (s == 'low' ? _faint : _teal);
   Color _priorityTint(String s) => s == 'high'
-      ? const Color(0x33566670)
+      ? const Color(0x1AAC0C0C)
       : (s == 'low' ? _surface : _tealTint);
 
   Widget _softPill(String text,
@@ -1329,7 +1333,8 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
     await _showDeleteDialog(
       icon: Icons.delete_rounded,
       title: 'Delete this task?',
-      message: '“$title” will be permanently removed. This can’t be undone.',
+      message:
+          '“$title” and its details will be permanently removed. This can’t be undone.',
       confirmLabel: 'Delete task',
       onConfirm: () => _deleteTask(ref),
     );
@@ -1362,9 +1367,9 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
         return Dialog(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 34),
+          insetPadding: EdgeInsets.zero,
           child: Container(
-            width: 322,
+            width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: _paper,
@@ -1385,12 +1390,12 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
                   height: 62,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: _coral.withOpacity(0.12),
+                    color: _warn.withOpacity(0.12),
                     shape: BoxShape.circle,
                     border:
-                        Border.all(color: _coral.withOpacity(0.22), width: 1),
+                        Border.all(color: _warn.withOpacity(0.22), width: 1),
                   ),
-                  child: Icon(icon, color: _coral, size: 30),
+                  child: Icon(icon, color: _warn, size: 30),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -1430,7 +1435,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: _coral,
+                        color: _warn,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(

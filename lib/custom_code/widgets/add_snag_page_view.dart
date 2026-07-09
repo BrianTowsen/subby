@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -482,8 +484,9 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
   }
 
   // Severity selector. Critical = clay, Major = ink, Minor = faint.
-  Color _sevColor(String k) =>
-      k == 'critical' ? _live : (k == 'minor' ? _faint : _ink);
+  Color _sevColor(String k) => k == 'critical'
+      ? const Color(0xFFAC0C0C)
+      : (k == 'minor' ? _faint : _ink);
 
   Widget _severityField() {
     Widget pill(String key, String label) {
@@ -495,7 +498,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
           decoration: BoxDecoration(
             color:
-                sel && key == 'critical' ? const Color(0x29566670) : _surface,
+                sel && key == 'critical' ? const Color(0x1AAC0C0C) : _surface,
             borderRadius: BorderRadius.circular(999),
             border: sel ? Border.all(color: c, width: 1.5) : null,
           ),

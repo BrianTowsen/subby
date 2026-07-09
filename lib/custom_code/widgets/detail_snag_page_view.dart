@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -307,10 +309,11 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
   }
 
   // Critical = clay; major = ink; minor = faint.
-  Color _severityColor(String s) =>
-      s == 'critical' ? _live : (s == 'minor' ? _faint : _ink);
+  Color _severityColor(String s) => s == 'critical'
+      ? const Color(0xFFAC0C0C)
+      : (s == 'minor' ? _faint : _ink);
   Color _severityTint(String s) =>
-      s == 'critical' ? const Color(0x29566670) : _surface;
+      s == 'critical' ? const Color(0x1AAC0C0C) : _surface;
 
   Widget _softPill(String text, {required Color fg, required Color bg}) {
     return Container(
