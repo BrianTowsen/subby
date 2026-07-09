@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
@@ -360,7 +362,7 @@ class _SiteBookPageViewState extends State<SiteBookPageView> {
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.7,
-                              color: const Color(0xFFE7E247),
+                              color: _paper.withOpacity(0.5),
                             )),
                       ],
                     ),
@@ -528,7 +530,6 @@ class _SiteBookPageViewState extends State<SiteBookPageView> {
         decoration: BoxDecoration(
           color: _surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: _tintBorder),
         ),
         child: Row(
           children: [
@@ -537,6 +538,7 @@ class _SiteBookPageViewState extends State<SiteBookPageView> {
             Expanded(
               child: TextField(
                 controller: _searchCtl,
+                textInputAction: TextInputAction.done,
                 style: const TextStyle(
                     fontFamily: _bodyFont,
                     fontSize: 13.5,
@@ -776,7 +778,6 @@ class _SiteBookPageViewState extends State<SiteBookPageView> {
               decoration: BoxDecoration(
                 color: _surface,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: _tintBorder),
               ),
               child: Row(
                 children: [

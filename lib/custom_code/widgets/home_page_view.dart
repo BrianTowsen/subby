@@ -10,12 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -61,23 +55,19 @@ class HomePageView extends StatefulWidget {
 }
 
 class _HomePageViewState extends State<HomePageView> {
-  // ─── SUBBY PALETTE — DIRECTORY (amber / sunshine) ──────────────────
-  static const Color _amber = Color(0xFF29343A); // accent (slate)
+  // ─── SUBBY PALETTE — DIRECTORY (Get-Quotes system) ─────────────────
+  static const Color _ink = Color(0xFF29343A); // titles / values
   static const Color _inkMute = Color(0xFF566670); // labels
   static const Color _faint = Color(0xFF93A3AC); // subtitles / inactive
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
-  static const Color _orange = Color(
-      0xFF5D737E); // DS green: leading icons / active bookmark (was orange #EB7A02)
-  static const Color _green = Color(0xFF5D737E); // DS: verified / info
-  static const Color _gold = Color(0xFF5D737E); // DS: rating stars
+  static const Color _steel = Color(0xFF455861); // masthead hero
+  static const Color _lime = Color(0xFFE7E247); // primary accent
+  static const Color _slate = Color(0xFF5D737E); // leading icons
   static const Color _hairline = Color(0xFFEAEEF0);
-  static const Color _rule = Color(0xFFDCE3E6);
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
-  static const double _hPad = 24;
-  static const double _vPad = 14;
-  static const double _navReserve = 96;
+  static const double _hPad = 22;
 
   static const String _kProvince = 'subby_app_province';
   static const String _kCity = 'subby_app_city';
@@ -95,47 +85,6 @@ class _HomePageViewState extends State<HomePageView> {
 
   bool _checkingListing = true;
   DocumentReference? _myListingRef;
-
-  TextStyle get _titleStyle => const TextStyle(
-        fontFamily: _displayFont,
-        fontSize: 30,
-        fontWeight: FontWeight.w900,
-        color: _amber,
-        height: 1.05,
-      );
-
-  TextStyle get _subtitleStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: _faint,
-      );
-
-  TextStyle get _uLabelStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 11,
-        fontWeight: FontWeight.w800,
-        letterSpacing: 0.6,
-        color: _inkMute,
-      );
-
-  TextStyle get _valueStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 16,
-        fontWeight: FontWeight.w700,
-        color: _amber,
-      );
-
-  TextStyle get _hintStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        color: Color(0xFF93A3AC),
-      );
-
-  static const BoxDecoration _uRule = BoxDecoration(
-    border: Border(bottom: BorderSide(color: _rule, width: 1)),
-  );
 
   String get _selectedCategoryLabel {
     switch (_selectedMainTabIndex) {
@@ -199,29 +148,11 @@ class _HomePageViewState extends State<HomePageView> {
       'East London',
       'Mthatha',
     ],
-    'Free State': [
-      'Bloemfontein',
-      'Welkom',
-    ],
-    'North West': [
-      'Rustenburg',
-      'Mahikeng',
-      'Potchefstroom',
-    ],
-    'Limpopo': [
-      'Polokwane',
-      'Tzaneen',
-      'Thohoyandou',
-    ],
-    'Mpumalanga': [
-      'Nelspruit (Mbombela)',
-      'Witbank (eMalahleni)',
-      'Secunda',
-    ],
-    'Northern Cape': [
-      'Kimberley',
-      'Upington',
-    ],
+    'Free State': ['Bloemfontein', 'Welkom'],
+    'North West': ['Rustenburg', 'Mahikeng', 'Potchefstroom'],
+    'Limpopo': ['Polokwane', 'Tzaneen', 'Thohoyandou'],
+    'Mpumalanga': ['Nelspruit (Mbombela)', 'Witbank (eMalahleni)', 'Secunda'],
+    'Northern Cape': ['Kimberley', 'Upington'],
   };
 
   static const Map<String, List<String>> _subcategories = {
@@ -291,12 +222,9 @@ class _HomePageViewState extends State<HomePageView> {
         final regions = _regionsByProvince[prov] ?? const <String>[];
         setState(() {
           _selectedProvince = prov;
-          if (city.isNotEmpty && regions.contains(city)) {
-            _selectedRegion = city;
-          } else {
-            _selectedRegion =
-                regions.isNotEmpty ? regions.first : _selectedRegion;
-          }
+          _selectedRegion = (city.isNotEmpty && regions.contains(city))
+              ? city
+              : (regions.isNotEmpty ? regions.first : _selectedRegion);
         });
       }
 
@@ -375,29 +303,6 @@ class _HomePageViewState extends State<HomePageView> {
     }
   }
 
-  void _goBackToDashboard() {
-    final nav = Navigator.of(context);
-    if (nav.canPop()) {
-      nav.pop();
-      return;
-    }
-    final target = (widget.dashboardRouteName ?? 'dashboardPage').trim();
-    if (target.isEmpty) {
-      context.safePop();
-      return;
-    }
-    context.pushReplacementNamed(
-      target,
-      extra: {
-        kTransitionInfoKey: const TransitionInfo(
-          hasTransition: true,
-          transitionType: PageTransitionType.leftToRight,
-          duration: Duration(milliseconds: 260),
-        ),
-      },
-    );
-  }
-
   Future<void> _openLocationSelect({String? searchText}) async {
     final route =
         (widget.locationSelectRouteName ?? 'LocationSelectPage').trim();
@@ -417,20 +322,15 @@ class _HomePageViewState extends State<HomePageView> {
     if (result is Map) {
       final prov = result['province']?.toString();
       final reg = result['region']?.toString();
-
       if (prov != null && prov.trim().isNotEmpty) {
         final regions = _regionsByProvince[prov.trim()] ?? const <String>[];
         setState(() {
           _selectedProvince = prov.trim();
-          if (reg != null &&
-              reg.trim().isNotEmpty &&
-              regions.isNotEmpty &&
-              regions.contains(reg.trim())) {
-            _selectedRegion = reg.trim();
-          } else {
-            _selectedRegion =
-                regions.isNotEmpty ? regions.first : _placeholderRegion;
-          }
+          _selectedRegion = (reg != null &&
+                  reg.trim().isNotEmpty &&
+                  regions.contains(reg.trim()))
+              ? reg.trim()
+              : (regions.isNotEmpty ? regions.first : _placeholderRegion);
         });
         await _persistLocation();
       }
@@ -514,7 +414,7 @@ class _HomePageViewState extends State<HomePageView> {
       context: context,
       backgroundColor: _paper,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
       ),
       builder: (ctx) => SafeArea(
         top: false,
@@ -523,39 +423,56 @@ class _HomePageViewState extends State<HomePageView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 6),
+              padding: const EdgeInsets.fromLTRB(22, 18, 22, 8),
               child: Text(title,
                   style: const TextStyle(
                     fontFamily: _displayFont,
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
-                    color: _amber,
+                    letterSpacing: -0.3,
+                    color: _ink,
                   )),
             ),
             Flexible(
               child: ListView(
                 shrinkWrap: true,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
                 children: items.map((e) {
                   final selected = e == current;
-                  return ListTile(
-                    title: Text(e,
-                        style: TextStyle(
-                          fontFamily: _bodyFont,
-                          fontSize: 16,
-                          fontWeight:
-                              selected ? FontWeight.w700 : FontWeight.w600,
-                          color: selected ? _amber : _inkMute,
-                        )),
-                    trailing: selected
-                        ? const Icon(Icons.check_circle_rounded,
-                            color: _amber, size: 20)
-                        : null,
+                  return InkWell(
                     onTap: () => Navigator.of(ctx).pop(e),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? const Color(0xFFF3F6F7)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(children: [
+                        Expanded(
+                          child: Text(e,
+                              style: TextStyle(
+                                fontFamily: _bodyFont,
+                                fontSize: 16,
+                                fontWeight: selected
+                                    ? FontWeight.w700
+                                    : FontWeight.w600,
+                                color: selected ? _ink : _inkMute,
+                              )),
+                        ),
+                        if (selected)
+                          const Icon(Icons.check_circle_rounded,
+                              color: _ink, size: 20),
+                      ]),
+                    ),
                   );
                 }).toList(),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 14),
           ],
         ),
       ),
@@ -584,6 +501,7 @@ class _HomePageViewState extends State<HomePageView> {
   Widget build(BuildContext context) {
     final double width = widget.width ?? MediaQuery.sizeOf(context).width;
     final double height = widget.height ?? MediaQuery.sizeOf(context).height;
+    final double topInset = MediaQuery.of(context).padding.top;
 
     final category = _selectedCategoryLabel;
     final subs = _subcategories[category] ?? const <String>[];
@@ -593,61 +511,110 @@ class _HomePageViewState extends State<HomePageView> {
       width: width,
       height: height,
       child: Container(
-        color: _paper,
-        child: SafeArea(
-          bottom: false,
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            padding: EdgeInsets.fromLTRB(_hPad, _vPad, _hPad,
-                _navReserve + MediaQuery.of(context).padding.bottom),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _topBar(),
-                const SizedBox(height: 8),
-                Text('Find trades, pros & suppliers near you.',
-                    style: _subtitleStyle),
-                const SizedBox(height: 26),
-
-                _selectRow(
-                  label: 'Province',
-                  icon: Icons.location_on_outlined,
-                  value: _selectedProvince,
-                  onTap: _selectProvince,
-                ),
-                _selectRow(
-                  label: 'Region',
-                  icon: Icons.place_outlined,
-                  value: _selectedRegion,
-                  onTap: _selectRegion,
-                ),
-                // search
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  decoration: _uRule,
+        color: _steel,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Steel masthead ──
+            Container(
+              width: double.infinity,
+              color: _steel,
+              padding: EdgeInsets.fromLTRB(_hPad, topInset + 10, _hPad, 30),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('DIRECTORY',
+                          style: TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.7,
+                            color: _paper.withOpacity(0.5),
+                          )),
+                      _circleButton(Icons.menu_rounded, _openMore),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  const Text('Subby Directory',
+                      style: TextStyle(
+                        fontFamily: _displayFont,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.6,
+                        height: 1.08,
+                        color: _paper,
+                      )),
+                  const SizedBox(height: 8),
+                  Text('Find trades, pros & suppliers near you.',
+                      style: TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: _paper.withOpacity(0.55),
+                      )),
+                ],
+              ),
+            ),
+            // ── White content block (flush, no radius) ──
+            Expanded(
+              child: Container(
+                color: _paper,
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: EdgeInsets.fromLTRB(_hPad, 22, _hPad,
+                      24 + MediaQuery.of(context).padding.bottom),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('SEARCH', style: _uLabelStyle),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          const Icon(Icons.search, size: 19, color: _orange),
-                          const SizedBox(width: 10),
+                      _uLabel('LOCATION'),
+                      const SizedBox(height: 10),
+                      _card(Column(children: [
+                        _selectRow(
+                          icon: Icons.location_on_outlined,
+                          label: 'Province',
+                          value: _selectedProvince,
+                          onTap: _selectProvince,
+                          divider: true,
+                        ),
+                        _selectRow(
+                          icon: Icons.place_outlined,
+                          label: 'Region',
+                          value: _selectedRegion,
+                          onTap: _selectRegion,
+                        ),
+                      ])),
+                      const SizedBox(height: 14),
+                      _card(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 13),
+                        Row(children: [
+                          const Icon(Icons.search, size: 20, color: _slate),
+                          const SizedBox(width: 12),
                           Expanded(
                             child: TextField(
                               controller: _searchController,
                               focusNode: _searchFocusNode,
-                              cursorColor: _amber,
-                              style: _valueStyle,
+                              cursorColor: _ink,
                               textInputAction: TextInputAction.search,
                               onSubmitted: (_) => _goToResultsFromSearch(),
-                              decoration: InputDecoration(
+                              style: const TextStyle(
+                                  fontFamily: _bodyFont,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: _ink),
+                              decoration: const InputDecoration(
                                 isDense: true,
                                 border: InputBorder.none,
                                 contentPadding: EdgeInsets.zero,
                                 hintText: 'Trade, contractor or supplier',
-                                hintStyle: _hintStyle,
+                                hintStyle: TextStyle(
+                                    fontFamily: _bodyFont,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: _faint),
                               ),
                             ),
                           ),
@@ -655,111 +622,68 @@ class _HomePageViewState extends State<HomePageView> {
                             onTap: () => _openLocationSelect(
                                 searchText: _searchController.text),
                             child: const Icon(Icons.tune_rounded,
-                                size: 19, color: _inkMute),
+                                size: 20, color: _inkMute),
                           ),
-                        ],
+                        ]),
+                      ),
+                      const SizedBox(height: 22),
+                      // ── Category pills ──
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: List.generate(tabs.length, (index) {
+                            final selected = _selectedMainTabIndex == index;
+                            return Padding(
+                              padding: EdgeInsets.only(
+                                  right: index == tabs.length - 1 ? 0 : 8),
+                              child: GestureDetector(
+                                onTap: () async {
+                                  if (_selectedMainTabIndex == index) return;
+                                  setState(() => _selectedMainTabIndex = index);
+                                  await _persistCategory();
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 9),
+                                  decoration: BoxDecoration(
+                                    color: selected ? _lime : _surface,
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Text(
+                                    tabs[index],
+                                    style: TextStyle(
+                                      fontFamily: _bodyFont,
+                                      fontSize: 13,
+                                      fontWeight: selected
+                                          ? FontWeight.w800
+                                          : FontWeight.w700,
+                                      color: selected ? _ink : _inkMute,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                      ),
+                      const SizedBox(height: 22),
+                      _uLabel(
+                          'BROWSE ${category.toUpperCase()} · ${subs.length}'),
+                      const SizedBox(height: 10),
+                      _card(
+                        padding: EdgeInsets.zero,
+                        Column(
+                          children: [
+                            for (int i = 0; i < subs.length; i++)
+                              _subRow(subs[i], category,
+                                  divider: i != subs.length - 1),
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ),
-
-                // category tabs
-                const SizedBox(height: 22),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: List.generate(tabs.length, (index) {
-                      final selected = _selectedMainTabIndex == index;
-                      return Padding(
-                        padding: EdgeInsets.only(
-                            right: index == tabs.length - 1 ? 0 : 20),
-                        child: GestureDetector(
-                          onTap: () async {
-                            if (_selectedMainTabIndex == index) return;
-                            setState(() => _selectedMainTabIndex = index);
-                            await _persistCategory();
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.only(bottom: 6),
-                            decoration: BoxDecoration(
-                              border: Border(
-                                bottom: BorderSide(
-                                  color: selected ? _amber : Colors.transparent,
-                                  width: 2,
-                                ),
-                              ),
-                            ),
-                            child: Text(
-                              tabs[index],
-                              style: TextStyle(
-                                fontFamily: _bodyFont,
-                                fontSize: 14,
-                                fontWeight: selected
-                                    ? FontWeight.w800
-                                    : FontWeight.w600,
-                                color: selected ? _amber : _faint,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-
-                const SizedBox(height: 18),
-                Text('BROWSE ${category.toUpperCase()} · ${subs.length}',
-                    style: _uLabelStyle),
-
-                // subcategory rows
-                ...subs.map((sub) => InkWell(
-                      onTap: () => _openSubcategory(sub),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        decoration: _uRule,
-                        child: Row(
-                          children: [
-                            Icon(_iconForCategory(category),
-                                size: 19, color: _orange),
-                            const SizedBox(width: 10),
-                            Expanded(child: Text(sub, style: _valueStyle)),
-                            const Icon(Icons.chevron_right_rounded,
-                                color: _rule),
-                          ],
-                        ),
-                      ),
-                    )),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _selectRow({
-    required String label,
-    required IconData icon,
-    required String value,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: _uRule,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label.toUpperCase(), style: _uLabelStyle),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(icon, size: 19, color: _orange),
-                const SizedBox(width: 10),
-                Expanded(child: Text(value, style: _valueStyle)),
-                const Icon(Icons.expand_more_rounded, color: _inkMute),
-              ],
+              ),
             ),
           ],
         ),
@@ -767,37 +691,125 @@ class _HomePageViewState extends State<HomePageView> {
     );
   }
 
-  Widget _topBar() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(child: Text('Subby Directory', style: _titleStyle)),
-        const SizedBox(width: 12),
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: _openMore,
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              width: 42,
-              height: 42,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: _surface,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.menu_rounded, size: 22, color: _amber),
+  // =========================================================
+  // UI helpers
+  // =========================================================
+  Widget _uLabel(String text) => Text(text,
+      style: const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 11,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0.6,
+        color: _inkMute,
+      ));
+
+  Widget _card(Widget child, {EdgeInsets padding = const EdgeInsets.all(0)}) =>
+      Container(
+        width: double.infinity,
+        padding: padding,
+        decoration: BoxDecoration(
+          color: _paper,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _hairline),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: child,
+      );
+
+  Widget _selectRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    required VoidCallback onTap,
+    bool divider = false,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          border: divider
+              ? const Border(bottom: BorderSide(color: _hairline))
+              : null,
+        ),
+        child: Row(children: [
+          Icon(icon, size: 20, color: _slate),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: const TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: _faint)),
+                const SizedBox(height: 1),
+                Text(value,
+                    style: const TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: _ink)),
+              ],
             ),
           ),
-        ),
-      ],
+          const Icon(Icons.expand_more_rounded, color: _faint),
+        ]),
+      ),
     );
   }
 
-  // More hub — pushed as a standard page so it uses the same platform
-  // transition as every other in-page link (Directory browse, profile
-  // actions, …). Only MainBottomNav uses a fade.
+  Widget _subRow(String sub, String category, {bool divider = true}) {
+    return InkWell(
+      onTap: () => _openSubcategory(sub),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+        decoration: BoxDecoration(
+          border: divider
+              ? const Border(bottom: BorderSide(color: _hairline))
+              : null,
+        ),
+        child: Row(children: [
+          Container(
+            width: 34,
+            height: 34,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+                color: _surface, borderRadius: BorderRadius.circular(9)),
+            child: Icon(_iconForCategory(category), size: 18, color: _slate),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+              child: Text(sub,
+                  style: const TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: _ink))),
+          const Icon(Icons.chevron_right_rounded, color: Color(0xFFC6D0D5)),
+        ]),
+      ),
+    );
+  }
+
+  Widget _circleButton(IconData icon, VoidCallback onTap) => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            width: 38,
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+                color: _paper.withOpacity(0.12), shape: BoxShape.circle),
+            child: Icon(icon, size: 20, color: _paper),
+          ),
+        ),
+      );
+
   void _openMore() {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const MorePageView()),

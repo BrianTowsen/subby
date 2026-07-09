@@ -10,12 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -260,7 +254,7 @@ class _DetailSiteBookPageViewState extends State<DetailSiteBookPageView> {
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.7,
-                              color: const Color(0xFFE7E247))),
+                              color: _paper.withOpacity(0.5))),
                     ),
                   ),
                   if (weather.isNotEmpty)
