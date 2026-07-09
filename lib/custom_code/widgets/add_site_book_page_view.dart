@@ -10,14 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -513,7 +505,10 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
           color: _paper,
           border: Border(top: BorderSide(color: Color(0xFFEAEEF0), width: 1)),
         ),
-        padding: EdgeInsets.fromLTRB(18, 14, 18, bottomInset + 14),
+        // SafeArea(bottom:true) already reserves the device inset, so the bar
+        // uses a plain bottom pad — matching the To-Do list composer height and
+        // keeping the button flush to the bottom instead of floating up.
+        padding: EdgeInsets.fromLTRB(18, 14, 18, 22),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
@@ -609,6 +604,7 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
           controller: _noteCtl,
           maxLines: 5,
           minLines: 4,
+          textInputAction: TextInputAction.done,
           cursorColor: _ink,
           style: const TextStyle(
               fontFamily: _bodyFont,
@@ -851,6 +847,7 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
               Expanded(
                 child: TextField(
                   controller: _tagCtl,
+                  textInputAction: TextInputAction.done,
                   onSubmitted: (_) => _commitTag(),
                   cursorColor: _ink,
                   style: const TextStyle(
@@ -919,7 +916,6 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
                     decoration: BoxDecoration(
                       color: _surface,
                       borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: _hairlineOnSurface),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,

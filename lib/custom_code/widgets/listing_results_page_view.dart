@@ -10,12 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -38,13 +32,11 @@ class ListingResultsPageView extends StatefulWidget {
 
   final double? width;
   final double? height;
-
   final String? province;
   final String? city;
   final String? speciality;
   final String? category;
   final String? searchText;
-
   final String? provinceSlug;
   final String? categorySlug;
   final String? specialitySlug;
@@ -54,22 +46,20 @@ class ListingResultsPageView extends StatefulWidget {
 }
 
 class _ListingResultsPageViewState extends State<ListingResultsPageView> {
-  // ─── SUBBY PALETTE — DIRECTORY (amber / sunshine) ──────────────────
-  static const Color _amber = Color(0xFF29343A); // accent: title, value, rating
-  static const Color _inkMute = Color(0xFF566670); // labels
-  static const Color _faint = Color(0xFF93A3AC); // meta
+  // ─── SUBBY PALETTE — DIRECTORY (Get-Quotes system) ─────────────────
+  static const Color _ink = Color(0xFF29343A);
+  static const Color _inkMute = Color(0xFF566670);
+  static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
-  static const Color _orange = Color(
-      0xFF5D737E); // DS green: leading icons / active bookmark (was orange #EB7A02)
-  static const Color _green = Color(0xFF5D737E); // DS: verified / info
-  static const Color _gold = Color(0xFF5D737E); // DS: rating stars
+  static const Color _steel = Color(0xFF455861);
+  static const Color _lime = Color(0xFFE7E247);
+  static const Color _slate = Color(0xFF5D737E);
   static const Color _hairline = Color(0xFFEAEEF0);
   static const Color _rule = Color(0xFFDCE3E6);
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
-  static const double _hPad = 24;
-  static const double _vPad = 14;
+  static const double _hPad = 22;
 
   String _sortBy = 'A–Z';
   bool _verifiedOnly = false;
@@ -120,18 +110,8 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
       'brakpan',
       'alberton',
     ],
-    'west rand': [
-      'roodepoort',
-      'krugersdorp',
-      'randfontein',
-      'carletonville',
-    ],
-    'vaal': [
-      'vanderbijlpark',
-      'vereeniging',
-      'sasolsburg',
-      'meyerton',
-    ],
+    'west rand': ['roodepoort', 'krugersdorp', 'randfontein', 'carletonville'],
+    'vaal': ['vanderbijlpark', 'vereeniging', 'sasolsburg', 'meyerton'],
     'gqeberha (port elizabeth)': ['gqeberha', 'port elizabeth'],
     'nelspruit (mbombela)': ['nelspruit', 'mbombela'],
     'witbank (emalahleni)': ['witbank', 'emalahleni'],
@@ -139,47 +119,11 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
     'durban': ['durban', 'umhlanga', 'pinetown'],
   };
 
-  TextStyle get _titleStyle => const TextStyle(
-        fontFamily: _displayFont,
-        fontSize: 30,
-        fontWeight: FontWeight.w900,
-        color: _amber,
-        height: 1.05,
-      );
-
-  TextStyle get _subtitleStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: _faint,
-      );
-
-  TextStyle get _nameStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 16,
-        fontWeight: FontWeight.w700,
-        color: _amber,
-      );
-
-  TextStyle get _metaStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
-        color: _faint,
-      );
-
-  static const BoxDecoration _uRule = BoxDecoration(
-    border: Border(bottom: BorderSide(color: _rule, width: 1)),
-  );
-
   // ----------------------------
   // Helpers (unchanged logic)
   // ----------------------------
-  String _norm(String input) {
-    var s = input.trim().toLowerCase();
-    s = s.replaceAll(RegExp(r'\s+'), ' ');
-    return s;
-  }
+  String _norm(String input) =>
+      input.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
 
   String _readString(SubbyListingsRecord listing, String key) {
     try {
@@ -194,7 +138,6 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
   bool _matchesSearch(SubbyListingsRecord listing, String query) {
     final q = _norm(query);
     if (q.isEmpty) return true;
-
     final haystack = <String>[
       listing.name,
       listing.speciality,
@@ -209,39 +152,30 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
       (listing.tags ?? const <String>[]).join(' '),
       (listing.searchKeywords ?? const <String>[]).join(' '),
     ].join(' ').toLowerCase();
-
     return haystack.contains(q);
   }
 
   bool _matchesRegionClient(SubbyListingsRecord l, String? regionParam) {
     var raw = _norm(regionParam ?? '');
     if (raw.isEmpty) return true;
-
     final city = _norm(l.city ?? '');
     final suburb = _norm(l.suburb ?? '');
-
     if (city.isEmpty && suburb.isEmpty) return false;
-
     final blob = ('$city $suburb').trim();
-
     if (blob.contains(raw)) return true;
-
     final keywords = _regionKeywordMap[raw];
-    if (keywords != null && keywords.isNotEmpty) {
+    if (keywords != null) {
       for (final k in keywords) {
         final kk = _norm(k);
-        if (kk.isEmpty) continue;
-        if (blob.contains(kk)) return true;
+        if (kk.isNotEmpty && blob.contains(kk)) return true;
       }
     }
-
     if (raw.contains('(') && raw.contains(')')) {
       final before = _norm(raw.split('(').first);
       final inside = _norm(raw.split('(').last.replaceAll(')', ''));
       if (before.isNotEmpty && blob.contains(before)) return true;
       if (inside.isNotEmpty && blob.contains(inside)) return true;
     }
-
     return false;
   }
 
@@ -252,13 +186,10 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
     String? regionParam,
   ) {
     var out = input;
-
     out = out.where((l) => _matchesRegionClient(l, regionParam)).toList();
-
     if (_norm(searchText).isNotEmpty) {
       out = out.where((l) => _matchesSearch(l, searchText)).toList();
     }
-
     final String sSlug = functions.slugify(speciality ?? '');
     if (sSlug.isNotEmpty) {
       out = out.where((l) {
@@ -270,24 +201,17 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
             .contains(_norm(speciality ?? ''));
       }).toList();
     }
-
-    if (_verifiedOnly) {
-      out = out.where((l) => l.isVerified == true).toList();
-    }
-
+    if (_verifiedOnly) out = out.where((l) => l.isVerified == true).toList();
     if (_minRating > 0) {
       out = out.where((l) => (l.rating ?? 0.0) >= _minRating).toList();
     }
-
     return out;
   }
 
   List<SubbyListingsRecord> _applySort(List<SubbyListingsRecord> input) {
     final out = [...input];
-
     int cmpString(String a, String b) =>
         a.toLowerCase().compareTo(b.toLowerCase());
-
     switch (_sortBy) {
       case 'Highest rated':
         out.sort((a, b) => (b.rating ?? 0.0).compareTo(a.rating ?? 0.0));
@@ -296,31 +220,23 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
         out.sort(
             (a, b) => (b.jobsCompleted ?? 0).compareTo(a.jobsCompleted ?? 0));
         break;
-      case 'A–Z':
-        out.sort((a, b) => cmpString(a.name, b.name));
-        break;
       case 'Z–A':
         out.sort((a, b) => cmpString(b.name, a.name));
         break;
+      case 'A–Z':
       default:
         out.sort((a, b) => cmpString(a.name, b.name));
         break;
     }
-
     return out;
   }
 
   RelativeRect _menuPositionFor(GlobalKey key) {
     final box = key.currentContext?.findRenderObject() as RenderBox?;
     final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
-
-    if (box == null) {
-      return const RelativeRect.fromLTRB(24, 120, 24, 0);
-    }
-
+    if (box == null) return const RelativeRect.fromLTRB(24, 120, 24, 0);
     final pos = box.localToGlobal(Offset.zero, ancestor: overlay);
     final size = box.size;
-
     return RelativeRect.fromRect(
       Rect.fromLTWH(pos.dx, pos.dy + size.height, size.width, 0),
       Offset.zero & overlay.size,
@@ -339,13 +255,12 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
         PopupMenuItem(value: 'Most jobs', child: Text('Most jobs')),
       ],
     );
-
     if (!mounted) return;
     if (selected != null) setState(() => _sortBy = selected);
   }
 
   // ===========================
-  // BOOKMARK (Saved listings)
+  // BOOKMARK
   // ===========================
   DocumentReference? _currentUserRefOrNull() {
     final user = FirebaseAuth.instance.currentUser;
@@ -356,33 +271,9 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
   Set<String> _savedPathsFromUserDoc(Map<String, dynamic> userData) {
     final v = userData[_kSavedField];
     if (v is List) {
-      final refs = v.whereType<DocumentReference>().toList();
-      return refs.map((r) => r.path).toSet();
+      return v.whereType<DocumentReference>().map((r) => r.path).toSet();
     }
     return <String>{};
-  }
-
-  void _showBookmarkSnack({required bool wasSaved}) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          backgroundColor: _amber,
-          content: Text(
-            wasSaved ? 'Saved to bookmarks' : 'Removed from bookmarks',
-            style: const TextStyle(
-              fontFamily: _bodyFont,
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
-          ),
-          duration: const Duration(milliseconds: 1400),
-        ),
-      );
   }
 
   Future<void> _toggleSaved({
@@ -394,7 +285,6 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
       context.pushNamed('loginPage');
       return;
     }
-
     try {
       await userRef.set(
         {
@@ -404,178 +294,140 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
         },
         SetOptions(merge: true),
       );
-
-      _showBookmarkSnack(wasSaved: !isSaved);
     } catch (e) {
       debugPrint('⚠️ toggleSaved failed: $e');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(content: Text('Could not update bookmark.')),
-        );
     }
   }
 
   Future<void> _openFiltersSheet() async {
     bool tempVerified = _verifiedOnly;
     double tempMinRating = _minRating;
-
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: _paper,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
       ),
-      builder: (_) {
-        return StatefulBuilder(
-          builder: (context, modalSetState) {
-            return SafeArea(
-              top: false,
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  20,
-                  16,
-                  20,
-                  MediaQuery.of(context).viewInsets.bottom + 16,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Text('Filters',
-                            style: TextStyle(
-                              fontFamily: _displayFont,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                              color: _amber,
-                            )),
-                        const Spacer(),
-                        IconButton(
-                          icon:
-                              const Icon(Icons.close_rounded, color: _inkMute),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ],
-                    ),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      value: tempVerified,
-                      activeColor: _amber,
-                      onChanged: (v) => modalSetState(() => tempVerified = v),
-                      title: const Text(
-                        'Verified only',
-                        style: TextStyle(
+      builder: (_) => StatefulBuilder(
+        builder: (context, modalSetState) => SafeArea(
+          top: false,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+                22, 18, 22, MediaQuery.of(context).viewInsets.bottom + 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  const Text('Filters',
+                      style: TextStyle(
+                          fontFamily: _displayFont,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.3,
+                          color: _ink)),
+                  const Spacer(),
+                  IconButton(
+                      icon: const Icon(Icons.close_rounded, color: _inkMute),
+                      onPressed: () => Navigator.pop(context)),
+                ]),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  value: tempVerified,
+                  activeColor: _ink,
+                  onChanged: (v) => modalSetState(() => tempVerified = v),
+                  title: const Text('Verified only',
+                      style: TextStyle(
                           fontFamily: _bodyFont,
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: _inkMute,
-                        ),
-                      ),
-                    ),
-                    const Divider(height: 1, thickness: 1, color: _rule),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: Row(
-                        children: [
-                          const Text('Minimum rating',
-                              style: TextStyle(
-                                fontFamily: _bodyFont,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: _inkMute,
-                              )),
-                          const Spacer(),
-                          Text(tempMinRating.toStringAsFixed(1),
-                              style: const TextStyle(
-                                fontFamily: _bodyFont,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: _amber,
-                              )),
-                        ],
-                      ),
-                    ),
-                    SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        activeTrackColor: _amber,
-                        inactiveTrackColor: _rule,
-                        thumbColor: _amber,
-                        overlayColor: _amber.withOpacity(0.12),
-                      ),
-                      child: Slider(
-                        value: tempMinRating,
-                        min: 0,
-                        max: 5,
-                        divisions: 10,
-                        onChanged: (v) =>
-                            modalSetState(() => tempMinRating = v),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () {
-                              modalSetState(() {
-                                tempVerified = false;
-                                tempMinRating = 0.0;
-                              });
-                            },
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: _inkMute,
-                              side: const BorderSide(color: _rule, width: 1),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                            ),
-                            child: const Text('Reset',
-                                style: TextStyle(
-                                  fontFamily: _bodyFont,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w800,
-                                  color: _inkMute,
-                                )),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () => Navigator.pop(context),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _amber,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                            ),
-                            child: const Text('Apply',
-                                style: TextStyle(
-                                  fontFamily: _bodyFont,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.white,
-                                )),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                          color: _inkMute)),
                 ),
-              ),
-            );
-          },
-        );
-      },
+                const Divider(height: 1, thickness: 1, color: _rule),
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Row(children: [
+                    const Text('Minimum rating',
+                        style: TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: _inkMute)),
+                    const Spacer(),
+                    Text(tempMinRating.toStringAsFixed(1),
+                        style: const TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: _ink)),
+                  ]),
+                ),
+                SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    activeTrackColor: _ink,
+                    inactiveTrackColor: _rule,
+                    thumbColor: _ink,
+                    overlayColor: _ink.withOpacity(0.12),
+                  ),
+                  child: Slider(
+                    value: tempMinRating,
+                    min: 0,
+                    max: 5,
+                    divisions: 10,
+                    onChanged: (v) => modalSetState(() => tempMinRating = v),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => modalSetState(() {
+                        tempVerified = false;
+                        tempMinRating = 0.0;
+                      }),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: _inkMute,
+                        side: const BorderSide(color: _rule, width: 1),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text('Reset',
+                          style: TextStyle(
+                              fontFamily: _bodyFont,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: _inkMute)),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _lime,
+                        foregroundColor: _ink,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text('Apply',
+                          style: TextStyle(
+                              fontFamily: _bodyFont,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                              color: _ink)),
+                    ),
+                  ),
+                ]),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
-
     if (!mounted) return;
     setState(() {
       _verifiedOnly = tempVerified;
@@ -587,6 +439,7 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
   Widget build(BuildContext context) {
     final double width = widget.width ?? MediaQuery.sizeOf(context).width;
     final double height = widget.height ?? MediaQuery.sizeOf(context).height;
+    final double topInset = MediaQuery.of(context).padding.top;
 
     final String? provinceLabel = widget.province;
     final String? regionLabel = widget.city;
@@ -596,11 +449,9 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
     final String provinceSlug = (widget.provinceSlug ?? '').trim().isNotEmpty
         ? widget.provinceSlug!.trim()
         : functions.slugify(provinceLabel ?? '');
-
     final String categorySlug = (widget.categorySlug ?? '').trim().isNotEmpty
         ? widget.categorySlug!.trim()
         : functions.slugify(categoryLabel ?? '');
-
     final String searchText = (widget.searchText ?? '').trim();
 
     String subtitle;
@@ -630,200 +481,243 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
       width: width,
       height: height,
       child: Container(
-        color: _paper,
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 0),
+        color: _steel,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Steel masthead ──
+            Container(
+              width: double.infinity,
+              color: _steel,
+              padding: EdgeInsets.fromLTRB(_hPad, topInset + 10, _hPad, 30),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(children: [
+                    _circleButton(
+                        Icons.arrow_back_ios_new_rounded, () => context.pop()),
+                    Expanded(
+                      child: Center(
+                        child: Text('RESULTS',
+                            style: TextStyle(
+                              fontFamily: _bodyFont,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.7,
+                              color: _paper.withOpacity(0.5),
+                            )),
+                      ),
+                    ),
+                    const SizedBox(width: 38),
+                  ]),
+                  const SizedBox(height: 14),
+                  Text(title,
+                      style: const TextStyle(
+                        fontFamily: _displayFont,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.6,
+                        height: 1.08,
+                        color: _paper,
+                      )),
+                  const SizedBox(height: 8),
+                  Row(children: [
+                    Icon(Icons.location_on_outlined,
+                        size: 15, color: _paper.withOpacity(0.55)),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: _paper.withOpacity(0.55),
+                          )),
+                    ),
+                  ]),
+                ],
+              ),
+            ),
+            // ── White content ──
+            Expanded(
+              child: Container(
+                color: _paper,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _backButton(),
-                    const SizedBox(height: 20),
-                    Text(title, style: _titleStyle),
-                    const SizedBox(height: 8),
-                    Text(subtitle, style: _subtitleStyle),
-                    const SizedBox(height: 22),
-                    // sort + filter row
-                    Container(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      decoration: _uRule,
-                      child: Row(
-                        children: [
-                          InkWell(
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(_hPad, 18, _hPad, 16),
+                      child: Row(children: [
+                        Expanded(
+                          child: InkWell(
                             key: _sortKey,
                             onTap: _openSortMenu,
-                            child: Row(
-                              children: [
+                            borderRadius: BorderRadius.circular(10),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 10),
+                              decoration: BoxDecoration(
+                                  color: _surface,
+                                  borderRadius: BorderRadius.circular(10)),
+                              child: Row(children: [
                                 const Icon(Icons.sort_rounded,
-                                    size: 19, color: _orange),
-                                const SizedBox(width: 10),
+                                    size: 18, color: _slate),
+                                const SizedBox(width: 8),
                                 Text(_sortBy,
                                     style: const TextStyle(
-                                      fontFamily: _bodyFont,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w700,
-                                      color: _amber,
-                                    )),
-                              ],
+                                        fontFamily: _bodyFont,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                        color: _ink)),
+                              ]),
                             ),
                           ),
-                          const Spacer(),
-                          InkWell(
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: InkWell(
                             onTap: _openFiltersSheet,
-                            child: Row(
-                              children: [
+                            borderRadius: BorderRadius.circular(10),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 10),
+                              decoration: BoxDecoration(
+                                  color: _surface,
+                                  borderRadius: BorderRadius.circular(10)),
+                              child: Row(children: [
                                 const Icon(Icons.tune_rounded,
-                                    size: 19, color: _orange),
+                                    size: 18, color: _slate),
                                 const SizedBox(width: 8),
                                 const Text('Filters',
                                     style: TextStyle(
-                                      fontFamily: _bodyFont,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w700,
-                                      color: _amber,
-                                    )),
+                                        fontFamily: _bodyFont,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                        color: _ink)),
                                 if (_hasActiveFilters) ...[
                                   const SizedBox(width: 6),
                                   Container(
-                                    width: 7,
-                                    height: 7,
-                                    decoration: const BoxDecoration(
-                                      color: _green,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
+                                      width: 7,
+                                      height: 7,
+                                      decoration: const BoxDecoration(
+                                          color: _slate,
+                                          shape: BoxShape.circle)),
                                 ],
-                              ],
+                              ]),
                             ),
                           ),
-                        ],
+                        ),
+                      ]),
+                    ),
+                    Expanded(
+                      child: StreamBuilder<DocumentSnapshot>(
+                        stream: userRef?.snapshots(),
+                        builder: (context, userSnap) {
+                          final userData = (userSnap.data?.data()
+                                  as Map<String, dynamic>?) ??
+                              <String, dynamic>{};
+                          final savedPaths = _savedPathsFromUserDoc(userData);
+
+                          return StreamBuilder<List<SubbyListingsRecord>>(
+                            stream: querySubbyListingsRecord(
+                              queryBuilder: (q) {
+                                var query = q;
+                                if (provinceSlug.isNotEmpty) {
+                                  query = query.where('provinceSlug',
+                                      isEqualTo: provinceSlug);
+                                }
+                                if (categorySlug.isNotEmpty) {
+                                  query = query.where('categorySlug',
+                                      isEqualTo: categorySlug);
+                                }
+                                return query.orderBy('name');
+                              },
+                            ),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasError) {
+                                return _buildEmptyState(
+                                  icon: Icons.warning_amber_rounded,
+                                  title: 'Couldn’t load listings',
+                                  subtitle:
+                                      'This can happen while indexes are building or if permissions block reads.',
+                                );
+                              }
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Center(
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2.4, color: _ink));
+                              }
+                              final allListings = snapshot.data ??
+                                  const <SubbyListingsRecord>[];
+                              final filtered = _applyClientFilters(allListings,
+                                  searchText, specialityLabel, regionLabel);
+                              final sorted = _applySort(filtered);
+                              if (sorted.isEmpty) {
+                                return _buildEmptyState(
+                                  icon: Icons.search_off_rounded,
+                                  title: 'No listings found',
+                                  subtitle:
+                                      'Try clearing filters or searching a different keyword.',
+                                );
+                              }
+                              return ListView.builder(
+                                padding: EdgeInsets.fromLTRB(_hPad, 0, _hPad,
+                                    24 + MediaQuery.of(context).padding.bottom),
+                                physics: const BouncingScrollPhysics(),
+                                itemCount: sorted.length,
+                                itemBuilder: (context, index) {
+                                  final listing = sorted[index];
+                                  final isSaved = savedPaths
+                                      .contains(listing.reference.path);
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 10),
+                                    child: _buildListingCard(
+                                      listing,
+                                      isSaved: isSaved,
+                                      onToggleSaved: () => _toggleSaved(
+                                        listingRef: listing.reference,
+                                        isSaved: isSaved,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          );
+                        },
                       ),
                     ),
                   ],
                 ),
               ),
-              Expanded(
-                child: StreamBuilder<DocumentSnapshot>(
-                  stream: userRef?.snapshots(),
-                  builder: (context, userSnap) {
-                    final userData =
-                        (userSnap.data?.data() as Map<String, dynamic>?) ??
-                            <String, dynamic>{};
-                    final savedPaths = _savedPathsFromUserDoc(userData);
-
-                    return StreamBuilder<List<SubbyListingsRecord>>(
-                      stream: querySubbyListingsRecord(
-                        queryBuilder: (q) {
-                          var query = q;
-                          if (provinceSlug.isNotEmpty) {
-                            query = query.where('provinceSlug',
-                                isEqualTo: provinceSlug);
-                          }
-                          if (categorySlug.isNotEmpty) {
-                            query = query.where('categorySlug',
-                                isEqualTo: categorySlug);
-                          }
-                          query = query.orderBy('name');
-                          return query;
-                        },
-                      ),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasError) {
-                          return _buildEmptyState(
-                            icon: Icons.warning_amber_rounded,
-                            title: 'Couldn’t load listings',
-                            subtitle:
-                                'This can happen while indexes are building or if permissions block reads.',
-                          );
-                        }
-
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2.4, color: _amber),
-                          );
-                        }
-
-                        final allListings =
-                            snapshot.data ?? const <SubbyListingsRecord>[];
-
-                        final filtered = _applyClientFilters(
-                          allListings,
-                          searchText,
-                          specialityLabel,
-                          regionLabel,
-                        );
-
-                        final sorted = _applySort(filtered);
-
-                        if (sorted.isEmpty) {
-                          return _buildEmptyState(
-                            icon: Icons.search_off_rounded,
-                            title: 'No listings found',
-                            subtitle:
-                                'Try clearing filters or searching a different keyword.',
-                          );
-                        }
-
-                        return ListView.builder(
-                          padding:
-                              const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 24),
-                          physics: const BouncingScrollPhysics(),
-                          itemCount: sorted.length,
-                          itemBuilder: (context, index) {
-                            final listing = sorted[index];
-                            final isSaved =
-                                savedPaths.contains(listing.reference.path);
-
-                            return _buildListingRow(
-                              listing,
-                              isSaved: isSaved,
-                              onToggleSaved: () => _toggleSaved(
-                                listingRef: listing.reference,
-                                isSaved: isSaved,
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildListingRow(
+  Widget _buildListingCard(
     SubbyListingsRecord listing, {
     required bool isSaved,
     required VoidCallback onToggleSaved,
   }) {
     final String name = listing.name;
     final String speciality = listing.speciality;
-
-    final String area = [
-      listing.city ?? '',
-      listing.province ?? '',
-    ].where((s) => s.trim().isNotEmpty).join(', ');
-
+    final String area = [listing.city ?? '', listing.province ?? '']
+        .where((s) => s.trim().isNotEmpty)
+        .join(', ');
     final double rating = listing.rating ?? 0.0;
     final int jobs = listing.jobsCompleted ?? 0;
     final bool isVerified = listing.isVerified == true;
-
     final String heroPhoto = (listing.heroPhotoUrl ?? '').isNotEmpty
         ? (listing.heroPhotoUrl ?? '')
         : ((listing.photoUrls ?? const <String>[]).isNotEmpty
             ? (listing.photoUrls ?? const <String>[]).first
             : '');
-
     String metaLine = area;
     if (jobs > 0) metaLine = area.isEmpty ? '$jobs jobs' : '$area · $jobs jobs';
 
@@ -832,90 +726,114 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
         context.pushNamed(
           'listingDetailPage',
           queryParameters: {
-            'listingRef': serializeParam(
-              listing.reference,
-              ParamType.DocumentReference,
-            ),
+            'listingRef':
+                serializeParam(listing.reference, ParamType.DocumentReference),
           }.withoutNulls,
         );
       },
+      borderRadius: BorderRadius.circular(14),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: _uRule,
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
-                color: _surface,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: heroPhoto.isNotEmpty
-                  ? Image.network(heroPhoto, fit: BoxFit.cover)
-                  : const Icon(Icons.handyman_rounded, size: 22, color: _faint),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: _nameStyle),
-                      ),
-                      if (isVerified) ...[
-                        const SizedBox(width: 6),
-                        const Icon(Icons.verified_rounded,
-                            size: 15, color: _green),
-                      ],
-                    ],
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: _paper,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _hairline),
+        ),
+        child: Row(children: [
+          Container(
+            width: 48,
+            height: 48,
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+                color: _surface, borderRadius: BorderRadius.circular(11)),
+            child: heroPhoto.isNotEmpty
+                ? Image.network(heroPhoto, fit: BoxFit.cover)
+                : const Icon(Icons.handyman_rounded, size: 22, color: _slate),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  Flexible(
+                    child: Text(name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontFamily: _displayFont,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.2,
+                            color: _ink)),
                   ),
-                  const SizedBox(height: 3),
-                  Text(speciality,
-                      style: const TextStyle(
+                  if (isVerified) ...[
+                    const SizedBox(width: 6),
+                    const Icon(Icons.verified_rounded, size: 15, color: _slate),
+                  ],
+                ]),
+                const SizedBox(height: 3),
+                Text(speciality,
+                    style: const TextStyle(
                         fontFamily: _bodyFont,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: _inkMute,
-                      )),
-                  const SizedBox(height: 3),
-                  Row(
-                    children: [
-                      const Icon(Icons.location_on_outlined,
-                          size: 13, color: _faint),
-                      const SizedBox(width: 3),
-                      Flexible(
-                        child: Text(metaLine,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: _metaStyle),
-                      ),
-                    ],
+                        color: _inkMute)),
+                const SizedBox(height: 4),
+                Row(children: [
+                  const Icon(Icons.location_on_outlined,
+                      size: 13, color: _faint),
+                  const SizedBox(width: 3),
+                  Flexible(
+                    child: Text(metaLine,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: _faint)),
                   ),
-                ],
-              ),
+                ]),
+              ],
             ),
-            const SizedBox(width: 10),
-            if (rating > 0) ...[
-              const Icon(Icons.star_rounded, size: 16, color: _gold),
-              const SizedBox(width: 3),
-              Text(rating.toStringAsFixed(1),
-                  style: const TextStyle(
-                    fontFamily: _bodyFont,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: _amber,
-                  )),
-            ] else
-              Text('New', style: _metaStyle),
-          ],
-        ),
+          ),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (rating > 0)
+                Row(children: [
+                  const Icon(Icons.star_rounded, size: 16, color: _slate),
+                  const SizedBox(width: 3),
+                  Text(rating.toStringAsFixed(1),
+                      style: const TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: _ink)),
+                ])
+              else
+                const Text('New',
+                    style: TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: _faint)),
+              const SizedBox(height: 8),
+              InkWell(
+                onTap: onToggleSaved,
+                customBorder: const CircleBorder(),
+                child: Icon(
+                    isSaved
+                        ? Icons.bookmark_rounded
+                        : Icons.bookmark_border_rounded,
+                    size: 20,
+                    color: isSaved ? _slate : const Color(0xFFC6D0D5)),
+              ),
+            ],
+          ),
+        ]),
       ),
     );
   }
@@ -936,38 +854,37 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
             Text(title,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  fontFamily: _displayFont,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  color: _amber,
-                )),
+                    fontFamily: _displayFont,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: _ink)),
             const SizedBox(height: 6),
-            Text(subtitle, textAlign: TextAlign.center, style: _subtitleStyle),
+            Text(subtitle,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: _faint)),
           ],
         ),
       ),
     );
   }
 
-  Widget _backButton() {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => context.pop(),
-        customBorder: const CircleBorder(),
-        child: Container(
-          width: 36,
-          height: 36,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: _surface,
-            shape: BoxShape.circle,
-            border: Border.all(color: _hairline),
+  Widget _circleButton(IconData icon, VoidCallback onTap) => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            width: 38,
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+                color: _paper.withOpacity(0.12), shape: BoxShape.circle),
+            child: Icon(icon, size: 16, color: _paper),
           ),
-          child: const Icon(Icons.arrow_back_ios_new_rounded,
-              size: 15, color: _inkMute),
         ),
-      ),
-    );
-  }
+      );
 }
