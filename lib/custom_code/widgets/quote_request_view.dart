@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -310,7 +312,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
           decoration: BoxDecoration(
               color: _paper,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: _surface)),
+              border: Border.all(color: const Color(0xFFCBD8DD), width: 1.4)),
           child: Text(label,
               style: const TextStyle(
                   fontFamily: _body,
@@ -392,12 +394,17 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
                     decoration: BoxDecoration(
                         color: _cobalt.withOpacity(0.22),
                         borderRadius: BorderRadius.circular(999)),
-                    child: const Text('Viewed',
-                        style: TextStyle(
-                            fontFamily: _body,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFFCBD8DD)))),
+                    child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                      Icon(Icons.visibility_outlined,
+                          size: 12, color: Color(0xFFCBD8DD)),
+                      SizedBox(width: 4),
+                      Text('Viewed',
+                          style: TextStyle(
+                              fontFamily: _body,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFFCBD8DD))),
+                    ])),
               ]),
               const SizedBox(height: 14),
               Container(
@@ -463,7 +470,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
                           style: TextStyle(
                               fontFamily: _body,
                               fontSize: 11,
-                              fontWeight: FontWeight.w900,
+                              fontWeight: FontWeight.w800,
                               letterSpacing: 0.6,
                               color: _faint)),
                       const SizedBox(height: 10),
@@ -510,7 +517,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
           style: const TextStyle(
               fontFamily: _body,
               fontSize: 11,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w800,
               letterSpacing: 0.6,
               color: _faint)),
       const SizedBox(height: 9),

@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -835,30 +837,38 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
   Widget _inviteStatusPill(String status) {
     Color fg = _faint, bg = _surface;
+    IconData ic = Icons.schedule_rounded;
     String label = 'Invited';
     if (status == 'viewed') {
       fg = _teal;
       bg = _orangeTint;
+      ic = Icons.visibility_outlined;
       label = 'Viewed';
     } else if (status == 'quoting') {
       fg = _teal;
       bg = _orangeTint;
+      ic = Icons.verified_rounded;
       label = 'Accepted';
     } else if (status == 'submitted') {
       fg = _teal;
       bg = _orangeTint;
+      ic = Icons.check_circle_rounded;
       label = 'Submitted';
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration:
           BoxDecoration(color: bg, borderRadius: BorderRadius.circular(_rPill)),
-      child: Text(label,
-          style: TextStyle(
-              fontFamily: _bodyFont,
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              color: fg)),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(ic, size: 12, color: fg),
+        const SizedBox(width: 4),
+        Text(label,
+            style: TextStyle(
+                fontFamily: _bodyFont,
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                color: fg)),
+      ]),
     );
   }
 
