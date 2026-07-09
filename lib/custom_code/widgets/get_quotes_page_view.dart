@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -461,7 +463,7 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
     final topInset = MediaQuery.of(context).padding.top;
     return Container(
       width: double.infinity,
-      color: _ink,
+      color: const Color(0xFF455861), // steel — matches DashboardPageView hero
       padding: EdgeInsets.fromLTRB(20, topInset + 6, 20, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -542,7 +544,7 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 22),
-            Text('TENDER STATUS', style: _uLabel(theme)),
+            Text('QUOTE STATUS', style: _uLabel(theme)),
             const SizedBox(height: 10),
             _tenderStrip(invited, submitted, accepted),
             const SizedBox(height: 22),
@@ -586,9 +588,9 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
     return Row(children: [
       tile(invited, 'Invited'),
       const SizedBox(width: 10),
-      tile(submitted, 'Submitted'),
+      tile(accepted, 'Accepted'),
       const SizedBox(width: 10),
-      tile(accepted, 'Accepted', lime: true),
+      tile(submitted, 'Submitted', lime: true),
     ]);
   }
 
