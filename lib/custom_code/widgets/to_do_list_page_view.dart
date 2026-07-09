@@ -22,6 +22,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -205,9 +207,9 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
   String _priorityLabel(String s) =>
       s == 'high' ? 'High' : (s == 'low' ? 'Low' : 'Medium');
   Color _priorityColor(String s) =>
-      s == 'high' ? _live : (s == 'low' ? _faint : _teal);
+      s == 'high' ? const Color(0xFFAC0C0C) : (s == 'low' ? _faint : _teal);
   Color _priorityTint(String s) => s == 'high'
-      ? const Color(0x33566670)
+      ? const Color(0x1AAC0C0C)
       : (s == 'low' ? _surface : _tealTint);
 
   Widget _softPill(String text,
@@ -261,6 +263,12 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
 
   Future<void> _quickToggle(DocumentReference ref, String status) async {
     final next = status == 'done' ? 'todo' : 'done';
+    // Closing a task (marking it done) from the list asks for confirmation.
+    // Reopening (done → todo) does not.
+    if (next == 'done') {
+      final ok = await _confirmClose();
+      if (ok != true) return;
+    }
     try {
       await ref.update(<String, dynamic>{
         'status': next,
@@ -272,6 +280,133 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
       debugPrint('🔥 Quick toggle failed: $e');
       if (mounted) _snack('Could not update. Please try again.');
     }
+  }
+
+  // Red, full-width confirm before closing a task from the list
+  // (shared "warning" module — matches DocumentUploadPageView).
+  Future<bool?> _confirmClose() {
+    const Color warn = Color(0xFFAC0C0C);
+    return showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.55),
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          insetPadding: EdgeInsets.zero,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _paper,
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.30),
+                  blurRadius: 54,
+                  offset: const Offset(0, 22),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 62,
+                  height: 62,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: warn.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: warn.withOpacity(0.22), width: 1),
+                  ),
+                  child: const Icon(Icons.check_circle_rounded,
+                      color: warn, size: 30),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Close this task?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: _displayFont,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.4,
+                    fontSize: 18,
+                    color: _ink,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'This task will be marked as done. You can reopen it later.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: _bodyFont,
+                    fontWeight: FontWeight.w500,
+                    height: 1.5,
+                    fontSize: 14,
+                    color: _inkMute,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => Navigator.pop(ctx, true),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: warn,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Text(
+                        'Close task',
+                        style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: _paper,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => Navigator.pop(ctx, false),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _paper,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: const Color(0xFFCBD8DD), width: 1.4),
+                      ),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: _ink,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   // =========================================================

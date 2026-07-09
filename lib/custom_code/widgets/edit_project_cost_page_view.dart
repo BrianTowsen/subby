@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -850,6 +852,7 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
                         child: TextField(
                           controller: _descCtl,
                           readOnly: _readOnly,
+                          textInputAction: TextInputAction.done,
                           onChanged: (v) {
                             l.desc.text = v;
                             setState(() {});
@@ -1160,6 +1163,7 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
                   child: TextField(
                     controller: _qtyCtl,
                     readOnly: _readOnly,
+                    textInputAction: TextInputAction.done,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                     textAlign: TextAlign.right,
@@ -1220,6 +1224,7 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
             child: TextField(
               controller: _rateCtl,
               readOnly: _readOnly,
+              textInputAction: TextInputAction.done,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
               textAlign: TextAlign.right,

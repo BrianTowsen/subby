@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -414,8 +416,8 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
     Widget pill(String key, String label) {
       final sel = _priority == key;
       final isHigh = key == 'high';
-      final selFg = isHigh ? _live : _teal;
-      final selBg = isHigh ? const Color(0x33566670) : _tealTint;
+      final selFg = isHigh ? const Color(0xFFAC0C0C) : _teal;
+      final selBg = isHigh ? const Color(0x1AAC0C0C) : _tealTint;
       return GestureDetector(
         onTap: () => setState(() => _priority = key),
         child: Container(
