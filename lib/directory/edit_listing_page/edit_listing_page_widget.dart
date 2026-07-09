@@ -47,6 +47,7 @@ class _EditListingPageWidgetState extends State<EditListingPageWidget> {
       },
       child: Scaffold(
         key: scaffoldKey,
+        resizeToAvoidBottomInset: false,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
         body: Container(
           width: double.infinity,

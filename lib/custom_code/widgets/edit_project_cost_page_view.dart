@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -51,6 +53,7 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
   static const Color _inkMute = Color(0xFF566670);
   static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _header = Color(0xFF455861);
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _band = Color(0xFFF2F5F6);
   static const Color _border = Color(0xFFECF0F2);
@@ -651,8 +654,8 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
       children: [
         Container(
           width: double.infinity,
-          color: _ink,
-          padding: EdgeInsets.fromLTRB(14, top + 14, 14, 16),
+          color: _header,
+          padding: EdgeInsets.fromLTRB(20, top + 14, 20, 16),
           child: Row(
             children: [
               _circleBtn(Icons.chevron_left_rounded, () => context.safePop()),
@@ -727,8 +730,8 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
         // header
         Container(
           width: double.infinity,
-          color: _ink,
-          padding: EdgeInsets.fromLTRB(14, top + 14, 14, 16),
+          color: _header,
+          padding: EdgeInsets.fromLTRB(20, top + 14, 20, 16),
           child: Row(
             children: [
               _circleBtn(Icons.chevron_left_rounded, _back),

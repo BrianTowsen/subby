@@ -62,6 +62,7 @@ class _ListingResultsPageWidgetState extends State<ListingResultsPageWidget> {
       },
       child: Scaffold(
         key: scaffoldKey,
+        resizeToAvoidBottomInset: false,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
         body: Container(
           width: double.infinity,

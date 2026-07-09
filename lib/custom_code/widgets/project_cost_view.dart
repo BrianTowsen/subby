@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -57,6 +59,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
   static const Color _inkMute = Color(0xFF566670);
   static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
+  static const Color _header = Color(0xFF455861);
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _band = Color(0xFFF2F5F6);
   static const Color _border = Color(0xFFECF0F2);
@@ -176,6 +179,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
   final TextEditingController _contCtl = TextEditingController(text: '10');
 
   int _tab = 0; // 0 = Cost Estimate, 1 = Payments, 2 = Cost Control
+  bool _manage = false; // manage-sections overlay
   int? _paymentFilter; // null = all; otherwise section index
   String? _editingPaymentId; // full-screen payment editor when non-null
 
@@ -473,6 +477,332 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     if (nav.canPop()) nav.pop();
   }
 
+  // ─── Manage sections (reorder / rename / delete / add) ─────────────
+  Widget _manageScreen() {
+    final top = MediaQuery.of(context).viewPadding.top;
+    final bottom = MediaQuery.of(context).padding.bottom;
+    return Container(
+      color: _startBg,
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            color: _header,
+            padding: EdgeInsets.fromLTRB(20, top + 14, 20, 16),
+            child: Row(
+              children: [
+                _circleBtn(Icons.chevron_left_rounded,
+                    () => setState(() => _manage = false),
+                    iconSize: 24),
+                const Expanded(
+                  child: Column(
+                    children: [
+                      Text('Manage sections',
+                          style: TextStyle(
+                              fontFamily: _body,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: _paper)),
+                      SizedBox(height: 2),
+                      Text('EDIT & REORDER',
+                          style: TextStyle(
+                              fontFamily: _body,
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.6,
+                              color: Color(0x80FFFFFF))),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 38, height: 38),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ReorderableListView.builder(
+              buildDefaultDragHandles: false,
+              padding: EdgeInsets.fromLTRB(14, 14, 14, bottom + 40),
+              itemCount: _sections.length + 1,
+              onReorder: (oldIndex, newIndex) {
+                if (oldIndex >= _sections.length) return;
+                setState(() {
+                  if (newIndex > _sections.length) newIndex = _sections.length;
+                  if (newIndex > oldIndex) newIndex -= 1;
+                  final it = _sections.removeAt(oldIndex);
+                  _sections.insert(newIndex, it);
+                });
+                _persist();
+              },
+              itemBuilder: (context, i) {
+                if (i == _sections.length) {
+                  return Padding(
+                    key: const ValueKey('mng-actions'),
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Column(
+                      children: [
+                        if (!_readOnly)
+                          InkWell(
+                            onTap: _addSection,
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              padding: const EdgeInsets.all(13),
+                              decoration: BoxDecoration(
+                                color: _paper,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: _dash, width: 1.4),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: const [
+                                  Icon(Icons.add_rounded,
+                                      size: 19, color: _inkMute),
+                                  SizedBox(width: 8),
+                                  Text('Add section',
+                                      style: TextStyle(
+                                          fontFamily: _body,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w800,
+                                          color: _inkMute)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 12),
+                        InkWell(
+                          onTap: () => setState(() => _manage = false),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.all(15),
+                            decoration: BoxDecoration(
+                                color: _header,
+                                borderRadius: BorderRadius.circular(12)),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                Icon(Icons.check_rounded,
+                                    size: 18, color: _paper),
+                                SizedBox(width: 7),
+                                Text('Done',
+                                    style: TextStyle(
+                                        fontFamily: _body,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w800,
+                                        color: _paper)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                final s = _sections[i];
+                return Container(
+                  key: ValueKey('mng-sec-$i'),
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.fromLTRB(8, 6, 6, 6),
+                  decoration: BoxDecoration(
+                    color: _paper,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: _border),
+                  ),
+                  child: Row(
+                    children: [
+                      ReorderableDragStartListener(
+                        index: i,
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 4),
+                          child: Icon(Icons.drag_indicator_rounded,
+                              size: 20, color: _zero),
+                        ),
+                      ),
+                      Container(
+                        constraints: const BoxConstraints(minWidth: 24),
+                        height: 20,
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        margin: const EdgeInsets.symmetric(horizontal: 8),
+                        decoration: BoxDecoration(
+                          color: _header,
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: Text('${i + 1}',
+                            style: const TextStyle(
+                                fontFamily: _body,
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w800,
+                                color: _paper)),
+                      ),
+                      Expanded(
+                        child: TextField(
+                          controller: s.nameCtl,
+                          readOnly: _readOnly,
+                          textInputAction: TextInputAction.done,
+                          onChanged: (v) {
+                            setState(() => s.name = v);
+                            _persist();
+                          },
+                          style: const TextStyle(
+                              fontFamily: _body,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: _ink),
+                          decoration: const InputDecoration(
+                            isCollapsed: true,
+                            border: InputBorder.none,
+                            hintText: 'Section name',
+                            hintStyle: TextStyle(color: _faint),
+                          ),
+                        ),
+                      ),
+                      if (!_readOnly)
+                        InkWell(
+                          onTap: () => _removeSection(s),
+                          borderRadius: BorderRadius.circular(8),
+                          child: const Padding(
+                            padding: EdgeInsets.all(6),
+                            child: Icon(Icons.delete_outline_rounded,
+                                size: 18, color: _faint),
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Centered destructive confirm for removing an invoice attachment.
+  Future<void> _confirmRemoveInvoice() async {
+    final p = _editingPayment;
+    if (p == null) return;
+    final name = p.attachmentName.trim().isEmpty
+        ? 'This invoice'
+        : '\u201C${p.attachmentName.trim()}\u201D';
+    FocusScope.of(context).unfocus();
+    await showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.55),
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          insetPadding: EdgeInsets.zero,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _paper,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.30),
+                  blurRadius: 54,
+                  offset: const Offset(0, 22),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 62,
+                  height: 62,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: _warn.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                    border:
+                        Border.all(color: _warn.withOpacity(0.22), width: 1),
+                  ),
+                  child:
+                      const Icon(Icons.delete_rounded, color: _warn, size: 30),
+                ),
+                const SizedBox(height: 16),
+                const Text('Delete this invoice?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: _display,
+                      fontSize: 19,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.4,
+                      color: _ink,
+                    )),
+                const SizedBox(height: 8),
+                Text(
+                    '$name will be removed from this payment. This can\u2019t be undone.',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontFamily: _body,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w500,
+                      height: 1.5,
+                      color: _inkMute,
+                    )),
+                const SizedBox(height: 22),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _removeInvoice();
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _warn,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Text('Delete invoice',
+                          style: TextStyle(
+                            fontFamily: _body,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: _paper,
+                          )),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => Navigator.pop(ctx),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _paper,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: _dash, width: 1.4),
+                      ),
+                      child: const Text('Cancel',
+                          style: TextStyle(
+                            fontFamily: _body,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: _ink,
+                          )),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   // ─── Estimate mutations ────────────────────────────────────────────
   void _toggleSection(_EstSection s) {
     setState(() => s.expanded = !s.expanded);
@@ -647,7 +977,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: _paper,
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.30),
@@ -937,6 +1267,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                 child: _paymentEditor(_editingPayment!),
               ),
             ),
+          if (_manage) Positioned.fill(child: _manageScreen()),
         ],
       ),
     );
@@ -1108,7 +1439,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       children: [
         Container(
           width: double.infinity,
-          color: _ink,
+          color: _header,
           padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1164,13 +1495,46 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text('Sections',
-              style: TextStyle(
-                fontFamily: _display,
-                fontSize: 14,
-                fontWeight: FontWeight.w900,
-                color: _ink,
-              )),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Sections',
+                  style: TextStyle(
+                    fontFamily: _display,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    color: _ink,
+                  )),
+              const SizedBox(width: 8),
+              if (!_readOnly)
+                InkWell(
+                  onTap: () => setState(() => _manage = true),
+                  borderRadius: BorderRadius.circular(999),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _brandYellow,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(Icons.tune_rounded, size: 14, color: _ink),
+                        SizedBox(width: 4),
+                        Text('Edit list',
+                            style: TextStyle(
+                              fontFamily: _body,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: _ink,
+                            )),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
           InkWell(
             onTap: _toggleAll,
             child: Row(
@@ -1260,43 +1624,27 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                     )),
               ),
               Expanded(
-                child: s.custom
-                    ? TextField(
-                        controller: s.nameCtl,
-                        readOnly: _readOnly,
-                        textInputAction: TextInputAction.done,
-                        onChanged: (v) {
-                          setState(() => s.name = v);
-                          _persist();
-                        },
-                        style: const TextStyle(
-                          fontFamily: _body,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: _ink,
-                        ),
-                        decoration: const InputDecoration(
-                          isCollapsed: true,
-                          border: InputBorder.none,
-                          hintText: 'Section name',
-                          hintStyle: TextStyle(color: _faint),
-                        ),
-                      )
-                    : GestureDetector(
-                        onTap: () => _toggleSection(s),
-                        behavior: HitTestBehavior.opaque,
-                        child: Text(
-                          s.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontFamily: _body,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                            color: _ink,
-                          ),
-                        ),
-                      ),
+                child: TextField(
+                  controller: s.nameCtl,
+                  readOnly: _readOnly,
+                  textInputAction: TextInputAction.done,
+                  onChanged: (v) {
+                    setState(() => s.name = v);
+                    _persist();
+                  },
+                  style: const TextStyle(
+                    fontFamily: _body,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: _ink,
+                  ),
+                  decoration: const InputDecoration(
+                    isCollapsed: true,
+                    border: InputBorder.none,
+                    hintText: 'Section name',
+                    hintStyle: TextStyle(color: _faint),
+                  ),
+                ),
               ),
               const SizedBox(width: 8),
               trailing,
@@ -1712,7 +2060,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
               ),
             ),
           ),
-          if (s.custom)
+          if (!_readOnly)
             InkWell(
               onTap: () => _removeSection(s),
               child: const Padding(
@@ -1765,7 +2113,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       decoration: BoxDecoration(
         color: _brandYellowPale,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _brandYellowBorder),
       ),
       padding: const EdgeInsets.fromLTRB(14, 6, 14, 14),
       child: Column(
@@ -1937,7 +2284,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       children: [
         Container(
           width: double.infinity,
-          color: _ink,
+          color: _header,
           padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2056,9 +2403,8 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
         decoration: BoxDecoration(
-          color: active ? _ink : _paper,
+          color: active ? _ink : const Color(0xFFE4EAED),
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: active ? _ink : _hairline),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -2103,7 +2449,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
         decoration: BoxDecoration(
           color: _paper,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: _border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -2242,7 +2587,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       children: [
         Container(
           width: double.infinity,
-          color: _ink,
+          color: _header,
           padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2305,11 +2650,9 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     final invUnpaidW = ((invoiced - paid) / fbase).clamp(0.0, 1.0);
     return Container(
       decoration: BoxDecoration(
-        color: _brandYellowPale,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _brandYellowBorder),
       ),
-      padding: const EdgeInsets.fromLTRB(15, 15, 15, 14),
+      padding: const EdgeInsets.fromLTRB(0, 15, 0, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2476,7 +2819,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       decoration: BoxDecoration(
         color: _paper,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _border),
       ),
       padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
       child: Column(
@@ -2578,8 +2920,8 @@ class _ProjectCostViewState extends State<ProjectCostView> {
           // header
           Container(
             width: double.infinity,
-            color: _ink,
-            padding: EdgeInsets.fromLTRB(14, top + 14, 14, 16),
+            color: _header,
+            padding: EdgeInsets.fromLTRB(20, top + 14, 20, 16),
             child: Row(
               children: [
                 _circleBtn(Icons.chevron_left_rounded, _closePayment,
@@ -2746,8 +3088,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                         padding: const EdgeInsets.all(13),
                         decoration: BoxDecoration(
                             color: _paper,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: _border)),
+                            borderRadius: BorderRadius.circular(12)),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: const [
@@ -2825,7 +3166,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
         decoration: BoxDecoration(
           color: _paper,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: _border),
         ),
         child: child,
       );
@@ -2839,9 +3179,8 @@ class _ProjectCostViewState extends State<ProjectCostView> {
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: active ? _ink : _paper,
+          color: active ? _ink : const Color(0xFFE4EAED),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: active ? _ink : _hairline),
         ),
         child: Text(_statusLabel[v] ?? v,
             style: TextStyle(
@@ -2889,7 +3228,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       decoration: BoxDecoration(
         color: _paper,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _border),
       ),
       child: Row(
         children: [
@@ -2946,7 +3284,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
               ),
             ),
             InkWell(
-              onTap: _removeInvoice,
+              onTap: _confirmRemoveInvoice,
               borderRadius: BorderRadius.circular(999),
               child: const Padding(
                 padding: EdgeInsets.all(8),
@@ -2972,7 +3310,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       decoration: BoxDecoration(
         color: _paper,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _border),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 14),
       child: DropdownButtonHideUnderline(
@@ -3047,7 +3384,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       decoration: BoxDecoration(
         color: _paper,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _border),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 14),
       child: DropdownButtonHideUnderline(
@@ -3214,7 +3550,7 @@ class _EstLine {
 class _EstSection {
   String name;
   final bool custom;
-  final TextEditingController? nameCtl;
+  final TextEditingController nameCtl;
   bool expanded;
   final List<_EstLine> lines;
   final List<_EstSub> subs;
@@ -3227,10 +3563,10 @@ class _EstSection {
     List<_EstSub>? subs,
   })  : lines = lines ?? [],
         subs = subs ?? [],
-        nameCtl = custom ? TextEditingController(text: name) : null;
+        nameCtl = TextEditingController(text: name);
 
   void dispose() {
-    nameCtl?.dispose();
+    nameCtl.dispose();
     for (final l in lines) {
       l.dispose();
     }

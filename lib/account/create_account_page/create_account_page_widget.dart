@@ -50,6 +50,7 @@ class _CreateAccountPageWidgetState extends State<CreateAccountPageWidget> {
       },
       child: Scaffold(
         key: scaffoldKey,
+        resizeToAvoidBottomInset: false,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
         body: Container(
           width: double.infinity,
