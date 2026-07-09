@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -358,7 +360,8 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
         children: [
           Container(
             width: double.infinity,
-            color: _ink,
+            color: const Color(
+                0xFF455861), // steel — matches DashboardPageView hero
             padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

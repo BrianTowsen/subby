@@ -10,10 +10,14 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/auth/firebase_auth/auth_util.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 /// SubmitQuoteView — a trade submits a quote to a project.
 /// Upload-first, then the key figures (amount + VAT, lead time, deposit) and
@@ -64,6 +68,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
   int _depositPct = 40;
   bool _fileAttached = false;
   String _fileName = '';
+  String _fileUrl = '';
   bool _saving = false;
 
   @override
@@ -125,14 +130,57 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
 
   String _money(num v) => 'R ${_fmt(v)}';
 
-  void _pickFile() {
-    // Placeholder for a real file picker + Firebase Storage upload.
-    // Wire FilePicker + FirebaseStorage here and set _fileName to the upload URL.
+  // Opens the native file picker, then uploads the chosen file to Firebase
+  // Storage and stores the download URL in _fileName.
+  Future<void> _pickFile() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+        withData: true,
+      );
+      if (result == null || result.files.isEmpty) return;
+      final picked = result.files.first;
+      final name = picked.name;
+
+      // Show the chip immediately with the local name.
+      setState(() {
+        _fileAttached = true;
+        _fileName = name;
+      });
+
+      // Upload to Storage (quotes/<uid>/<timestamp>-<name>) if we have bytes.
+      final bytes = picked.bytes;
+      final uid = currentUserReference?.id ?? 'anon';
+      if (bytes != null) {
+        final ref = FirebaseStorage.instance
+            .ref('quotes/$uid/${DateTime.now().millisecondsSinceEpoch}-$name');
+        await ref.putData(bytes);
+        final url = await ref.getDownloadURL();
+        if (mounted) setState(() => _fileName = name); // keep display name
+        _fileUrl = url;
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(const SnackBar(
+              backgroundColor: _ink,
+              content: Text('Couldn\'t attach that file.',
+                  style: TextStyle(
+                      fontFamily: _body,
+                      fontWeight: FontWeight.w700,
+                      color: _paper))));
+      }
+    }
+  }
+
+  // Detaches the currently attached file.
+  void _removeFile() {
     setState(() {
-      _fileAttached = !_fileAttached;
-      _fileName = _fileAttached
-          ? 'Quote-${DateTime.now().millisecondsSinceEpoch % 10000}.pdf'
-          : '';
+      _fileAttached = false;
+      _fileName = '';
+      _fileUrl = '';
     });
   }
 
@@ -152,6 +200,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
         'depositPct': _depositPct,
         'notes': _notesCtl.text.trim(),
         'fileName': _fileName,
+        'fileUrl': _fileUrl,
         'submittedAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
@@ -201,7 +250,8 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
           // hero
           Container(
             width: double.infinity,
-            color: _ink,
+            color: const Color(
+                0xFF455861), // steel — matches DashboardPageView hero
             padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
             child: Row(
               children: [
@@ -262,6 +312,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
                   child: TextField(
                     controller: _notesCtl,
                     maxLines: 4,
+                    textInputAction: TextInputAction.done,
                     onChanged: (_) => setState(() {}),
                     style: const TextStyle(
                         fontFamily: _body,
@@ -414,7 +465,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
               ),
             ),
             InkWell(
-              onTap: _pickFile,
+              onTap: _removeFile,
               borderRadius: BorderRadius.circular(8),
               child: const Padding(
                 padding: EdgeInsets.all(6),
@@ -506,6 +557,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
                       Expanded(
                         child: TextField(
                           controller: _amountCtl,
+                          textInputAction: TextInputAction.done,
                           keyboardType: const TextInputType.numberWithOptions(
                               decimal: true),
                           textAlign: TextAlign.right,

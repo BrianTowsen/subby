@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -3776,14 +3778,14 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-                color: const Color(0xFFAC0C0C).withOpacity(0.12),
+                color: _surface, // standard grey count pill
                 borderRadius: BorderRadius.circular(999)),
             child: Text('${visible.length} files',
                 style: const TextStyle(
                     fontFamily: _bodyFont,
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFFAC0C0C))),
+                    color: _inkMute)),
           ),
         ]),
         if (!readOnly)

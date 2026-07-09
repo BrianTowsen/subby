@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -2311,20 +2313,20 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFFAC0C0C).withOpacity(0.12),
+              color: _surface, // standard grey pill (matches other counts)
               borderRadius: BorderRadius.circular(999),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.bolt, size: 13, color: Color(0xFFAC0C0C)),
+                const Icon(Icons.bolt, size: 13, color: _inkMute),
                 const SizedBox(width: 4),
                 Text('$count recent',
                     style: const TextStyle(
                       fontFamily: _bodyFont,
                       fontSize: 11,
                       fontWeight: FontWeight.w900,
-                      color: Color(0xFFAC0C0C),
+                      color: _inkMute,
                     )),
               ],
             ),

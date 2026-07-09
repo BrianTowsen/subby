@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -151,7 +153,8 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
         children: [
           Container(
             width: double.infinity,
-            color: _ink,
+            color: const Color(
+                0xFF455861), // steel — matches DashboardPageView hero
             padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,149 +278,165 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: submitted ? _paper : const Color(0xFFF2F5F6),
+      child: Material(
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(14),
-        border: submitted
-            ? Border.all(
-                color: accepted ? _sageBorder : _border,
-                width: accepted ? 1.5 : 1)
-            : null,
-      ),
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        children: [
-          Row(children: [
-            Container(
-              width: 40,
-              height: 40,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                  color: submitted ? _ink : _surface,
-                  borderRadius: BorderRadius.circular(11)),
-              child: Icon(Icons.storefront_rounded,
-                  size: 20, color: submitted ? _paper : _faint),
+        child: InkWell(
+          // Tapping anywhere on the quote block opens the full Quote Detail.
+          onTap: () => _openDetail(doc.reference),
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            decoration: BoxDecoration(
+              color: submitted ? _paper : const Color(0xFFF2F5F6),
+              borderRadius: BorderRadius.circular(14),
+              border: submitted
+                  ? Border.all(
+                      color: accepted ? _sageBorder : _border,
+                      width: accepted ? 1.5 : 1)
+                  : null,
             ),
-            const SizedBox(width: 11),
-            Expanded(
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            fontFamily: _body,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: _ink)),
-                    const SizedBox(height: 2),
-                    Text(
-                        submitted
-                            ? 'Lead $lead wks · $dep% deposit'
-                            : 'Awaiting response',
-                        style: const TextStyle(
-                            fontFamily: _body,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: _inkMute)),
-                  ]),
-            ),
-            _statusPill(status),
-          ]),
-          if (submitted) ...[
-            const SizedBox(height: 12),
-            Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => _openDetail(doc.reference),
-                  child: Row(children: [
-                    Text('R ${_fmt(total)}',
-                        style: const TextStyle(
-                            fontFamily: 'Roboto Mono',
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            color: _ink)),
-                    const SizedBox(width: 4),
-                    Text(vatIncl ? 'incl. VAT' : 'no VAT',
-                        style: const TextStyle(
-                            fontFamily: _body, fontSize: 11, color: _faint)),
-                  ]),
-                ),
-              ),
-              if (hasFile)
-                Row(children: const [
-                  Icon(Icons.picture_as_pdf_rounded, size: 16, color: _green),
-                  SizedBox(width: 4),
-                  Text('Quote.pdf',
-                      style: TextStyle(
-                          fontFamily: _body,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: _green)),
-                ]),
-            ]),
-            if (!accepted) ...[
-              const SizedBox(height: 12),
-              Row(children: [
-                Expanded(
-                  child: InkWell(
-                    onTap: () => _setStatus(doc.reference, 'accepted'),
-                    borderRadius: BorderRadius.circular(11),
-                    child: Container(
-                      height: 42,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                          color: _lime,
-                          borderRadius: BorderRadius.circular(11)),
-                      child:
-                          Row(mainAxisSize: MainAxisSize.min, children: const [
-                        Icon(Icons.verified_rounded, size: 16, color: _ink),
-                        SizedBox(width: 6),
-                        Text('Accept',
-                            style: TextStyle(
-                                fontFamily: _body,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                                color: _ink)),
-                      ]),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 9),
-                InkWell(
-                  onTap: () => _setStatus(doc.reference, 'declined'),
-                  borderRadius: BorderRadius.circular(11),
-                  child: Container(
-                    width: 42,
-                    height: 42,
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              children: [
+                Row(children: [
+                  Container(
+                    width: 40,
+                    height: 40,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                        color: _paper,
-                        borderRadius: BorderRadius.circular(11),
-                        border: Border.all(
-                            color: const Color(0xFFCBD8DD), width: 1.4)),
-                    child: const Icon(Icons.close_rounded,
-                        size: 19, color: _coral),
+                        color: submitted ? _ink : _surface,
+                        borderRadius: BorderRadius.circular(11)),
+                    child: Icon(Icons.storefront_rounded,
+                        size: 20, color: submitted ? _paper : _faint),
                   ),
-                ),
-              ]),
-            ] else
-              Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: Row(children: const [
-                  Icon(Icons.verified_rounded, size: 16, color: _green),
-                  SizedBox(width: 6),
-                  Text('Awarded',
-                      style: TextStyle(
-                          fontFamily: _body,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: _green)),
+                  const SizedBox(width: 11),
+                  Expanded(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontFamily: _body,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  color: _ink)),
+                          const SizedBox(height: 2),
+                          Text(
+                              submitted
+                                  ? 'Lead $lead wks · $dep% deposit'
+                                  : 'Awaiting response',
+                              style: const TextStyle(
+                                  fontFamily: _body,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: _inkMute)),
+                        ]),
+                  ),
+                  _statusPill(status),
                 ]),
-              ),
-          ],
-        ],
+                if (submitted) ...[
+                  const SizedBox(height: 12),
+                  Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => _openDetail(doc.reference),
+                        child: Row(children: [
+                          Text('R ${_fmt(total)}',
+                              style: const TextStyle(
+                                  fontFamily: 'Roboto Mono',
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  color: _ink)),
+                          const SizedBox(width: 4),
+                          Text(vatIncl ? 'incl. VAT' : 'no VAT',
+                              style: const TextStyle(
+                                  fontFamily: _body,
+                                  fontSize: 11,
+                                  color: _faint)),
+                        ]),
+                      ),
+                    ),
+                    if (hasFile)
+                      Row(children: const [
+                        Icon(Icons.picture_as_pdf_rounded,
+                            size: 16, color: _green),
+                        SizedBox(width: 4),
+                        Text('Quote.pdf',
+                            style: TextStyle(
+                                fontFamily: _body,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: _green)),
+                      ]),
+                  ]),
+                  if (!accepted) ...[
+                    const SizedBox(height: 12),
+                    Row(children: [
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => _setStatus(doc.reference, 'accepted'),
+                          borderRadius: BorderRadius.circular(11),
+                          child: Container(
+                            height: 42,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                                color: _lime,
+                                borderRadius: BorderRadius.circular(11)),
+                            child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  Icon(Icons.verified_rounded,
+                                      size: 16, color: _ink),
+                                  SizedBox(width: 6),
+                                  Text('Accept',
+                                      style: TextStyle(
+                                          fontFamily: _body,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w800,
+                                          color: _ink)),
+                                ]),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 9),
+                      InkWell(
+                        onTap: () => _setStatus(doc.reference, 'declined'),
+                        borderRadius: BorderRadius.circular(11),
+                        child: Container(
+                          width: 42,
+                          height: 42,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                              color: _paper,
+                              borderRadius: BorderRadius.circular(11),
+                              border: Border.all(
+                                  color: const Color(0xFFCBD8DD), width: 1.4)),
+                          child: const Icon(Icons.close_rounded,
+                              size: 19, color: _coral),
+                        ),
+                      ),
+                    ]),
+                  ] else
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Row(children: const [
+                        Icon(Icons.verified_rounded, size: 16, color: _green),
+                        SizedBox(width: 6),
+                        Text('Awarded',
+                            style: TextStyle(
+                                fontFamily: _body,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                color: _green)),
+                      ]),
+                    ),
+                ],
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
