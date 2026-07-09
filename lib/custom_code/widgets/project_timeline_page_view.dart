@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:intl/intl.dart';
@@ -64,6 +66,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   static const Color _ruleIdle = Color(0xFFB7C2C7);
   static const Color _childBg = Color(0xFFFBFCFD);
   static const Color _startBg = Color(0xFFF5F8F9);
+  static const Color _header = Color(0xFF455861); // hero header ink
 
   // Two-tone bar colours
   static const Color _phaseColor = Color(0xFF29343A); // dark ink = phase
@@ -1197,7 +1200,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
           // ink header
           Container(
             width: double.infinity,
-            color: _ink,
+            color: _header,
             padding: EdgeInsets.fromLTRB(22, top + 18, 22, 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1572,7 +1575,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
     final top = MediaQuery.of(context).viewPadding.top;
     return Container(
       width: double.infinity,
-      color: _ink,
+      color: _header,
       padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1598,7 +1601,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                               fontWeight: FontWeight.w800,
                               color: _paper)),
                       const SizedBox(height: 2),
-                      Text('CONSTRUCTION PROGRAMME',
+                      Text('PROGRAMME',
                           style: TextStyle(
                               fontFamily: _body,
                               fontSize: 10,
@@ -2406,7 +2409,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
           // header
           Container(
             width: double.infinity,
-            color: _ink,
+            color: _header,
             padding: EdgeInsets.fromLTRB(14, top + 14, 14, 16),
             child: Row(
               children: [
@@ -2491,6 +2494,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                           child: TextField(
                             controller: _nameCtl,
                             onChanged: _setName,
+                            textInputAction: TextInputAction.done,
                             style: const TextStyle(
                                 fontFamily: _display,
                                 fontSize: 19,
@@ -3081,10 +3085,10 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
               trackHeight: 5,
-              activeTrackColor: _green,
-              inactiveTrackColor: _band,
-              thumbColor: _green,
-              overlayColor: _green.withOpacity(0.14),
+              activeTrackColor: const Color(0xFFE7E247),
+              inactiveTrackColor: _hairlineOnSurface,
+              thumbColor: const Color(0xFFE7E247),
+              overlayColor: const Color(0xFFE7E247).withOpacity(0.14),
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9),
             ),
             child: Slider(
