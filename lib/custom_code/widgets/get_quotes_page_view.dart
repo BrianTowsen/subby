@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -173,7 +175,7 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
         fontSize: 11,
         fontWeight: FontWeight.w800,
         letterSpacing: 0.6,
-        color: _inkMute,
+        color: _faint,
       );
 
   TextStyle _metaStyle(FlutterFlowTheme t) => const TextStyle(
