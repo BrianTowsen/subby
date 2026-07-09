@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/services.dart'; // SystemChrome / SystemUiOverlayStyle (dark status bar over white form)
@@ -429,7 +431,7 @@ class _EditProjectViewState extends State<EditProjectView>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
-                    color: sel ? _ink : _surface,
+                    color: sel ? const Color(0xFFE7E247) : _surface,
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(o,
@@ -437,7 +439,7 @@ class _EditProjectViewState extends State<EditProjectView>
                         fontFamily: _bodyFont,
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: sel ? _paper : _inkMute,
+                        color: sel ? _ink : _inkMute,
                       )),
                 ),
               );
@@ -1186,7 +1188,7 @@ class _EditProjectViewState extends State<EditProjectView>
   // Dark ink hero (matches ProjectTimelinePageView).
   Widget _hero(FlutterFlowTheme theme) => Container(
         width: double.infinity,
-        color: _ink,
+        color: const Color(0xFF455861),
         padding: EdgeInsets.fromLTRB(
             20, 6 + MediaQuery.of(context).padding.top, 20, 18),
         child: Column(
@@ -1239,13 +1241,7 @@ class _EditProjectViewState extends State<EditProjectView>
   Widget _footer(FlutterFlowTheme theme) => Container(
         decoration: const BoxDecoration(
           color: _paper,
-          border: Border(top: BorderSide(color: _surface, width: 1)),
-          boxShadow: [
-            BoxShadow(
-                color: Color(0x1F19232D),
-                blurRadius: 30,
-                offset: Offset(0, -10)),
-          ],
+          border: Border(top: BorderSide(color: Color(0xFFEAEEF0), width: 1)),
         ),
         padding: const EdgeInsets.fromLTRB(_hPad, 14, _hPad, 14),
         child: SafeArea(top: false, child: _primarySave(theme)),

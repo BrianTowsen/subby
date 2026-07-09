@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -1156,7 +1158,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
 
   Widget _addHero(String title, String subtitle) => Container(
         width: double.infinity,
-        color: _ink,
+        color: const Color(0xFF455861),
         padding: EdgeInsets.fromLTRB(
             20, 6 + MediaQuery.of(context).padding.top, 20, 18),
         child: Column(
@@ -1218,7 +1220,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                 child: Container(
                   height: 52,
                   decoration: BoxDecoration(
-                    color: _teal,
+                    color: const Color(0xFFE7E247),
                     borderRadius: BorderRadius.circular(_radius),
                   ),
                   child: Row(
@@ -1234,12 +1236,12 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                                   AlwaysStoppedAnimation<Color>(_paper)),
                         )
                       else
-                        Icon(ctaIcon, color: _paper, size: 20),
+                        Icon(ctaIcon, color: _ink, size: 20),
                       const SizedBox(width: 9),
                       Text(ctaLabel,
                           style: const TextStyle(
                               fontFamily: _bodyFont,
-                              color: _paper,
+                              color: _ink,
                               fontWeight: FontWeight.w800,
                               fontSize: 15)),
                     ],

@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -148,6 +150,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _hairline = Color(0xFFEAEEF0);
+  static const Color _heroBg = Color(0xFF455861); // welcome header background
 
   // Accents
   static const Color _yellow = Color(0xFF5D737E); // sage — "on site" / on track
@@ -869,10 +872,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
     return Column(
       children: [
-        Container(height: topInset, color: _ink),
+        Container(height: topInset, color: _heroBg),
         Container(
           width: double.infinity,
-          color: _ink,
+          color: _heroBg,
           padding: const EdgeInsets.fromLTRB(_hPad, 14, _hPad, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1005,6 +1008,19 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 14),
+                      child: Row(
+                        children: [
+                          _accentMarker(_ink),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text('Home Build Projects',
+                                style: _stepHeadlineStyle),
+                          ),
+                        ],
+                      ),
+                    ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: _hPad),
                       child: _buildsGrid(docs, shared),

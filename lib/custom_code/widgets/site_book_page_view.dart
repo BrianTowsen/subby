@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
@@ -333,7 +335,7 @@ class _SiteBookPageViewState extends State<SiteBookPageView> {
   // a large stat block (today's entries) with with-photos / contributors.
   Widget _hero(double topInset) => Container(
         width: double.infinity,
-        color: _ink,
+        color: const Color(0xFF455861),
         padding: EdgeInsets.fromLTRB(_hPad, topInset + 14, _hPad, 18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -356,7 +358,7 @@ class _SiteBookPageViewState extends State<SiteBookPageView> {
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.7,
-                              color: _paper.withOpacity(0.5),
+                              color: const Color(0xFFE7E247),
                             )),
                       ],
                     ),
