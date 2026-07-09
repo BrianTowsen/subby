@@ -175,7 +175,7 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
         fontSize: 11,
         fontWeight: FontWeight.w800,
         letterSpacing: 0.6,
-        color: _faint,
+        color: _inkMute,
       );
 
   TextStyle _metaStyle(FlutterFlowTheme t) => const TextStyle(
