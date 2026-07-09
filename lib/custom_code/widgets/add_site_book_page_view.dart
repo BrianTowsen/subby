@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -460,7 +462,7 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
 
   Widget _addHero(String title, String subtitle) => Container(
         width: double.infinity,
-        color: _ink,
+        color: const Color(0xFF455861),
         padding: EdgeInsets.fromLTRB(
             _hPad, 6 + MediaQuery.of(context).padding.top, _hPad, 18),
         child: Column(
@@ -522,7 +524,8 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
                 height: 52,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                    color: _ink, borderRadius: BorderRadius.circular(_radius)),
+                    color: const Color(0xFFE7E247),
+                    borderRadius: BorderRadius.circular(_radius)),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -535,14 +538,14 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
                             valueColor: AlwaysStoppedAnimation<Color>(_paper)),
                       )
                     else
-                      const Icon(Icons.check_rounded, size: 18, color: _paper),
+                      const Icon(Icons.check_rounded, size: 18, color: _ink),
                     const SizedBox(width: 8),
                     Text(_saving ? 'Saving…' : 'Save entry',
                         style: const TextStyle(
                             fontFamily: _bodyFont,
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
-                            color: _paper)),
+                            color: _ink)),
                   ],
                 ),
               ),

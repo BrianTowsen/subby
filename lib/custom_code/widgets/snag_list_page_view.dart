@@ -20,6 +20,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -474,7 +476,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
                   width: segW,
                   height: double.infinity,
                   decoration: BoxDecoration(
-                    color: _green,
+                    color: const Color(0xFFE7E247),
                     borderRadius: BorderRadius.circular(999),
                     boxShadow: const [
                       BoxShadow(
@@ -504,7 +506,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
                                 fontSize: 12.5,
                                 fontWeight:
                                     active ? FontWeight.w800 : FontWeight.w600,
-                                color: active ? _paper : _faint,
+                                color: active ? _ink : _faint,
                               ),
                             ),
                             const SizedBox(width: 5),
@@ -540,7 +542,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
             fontFamily: _bodyFont,
             fontSize: 11,
             fontWeight: FontWeight.w700,
-            color: (active ? _paper : _faint).withOpacity(0.75),
+            color: (active ? _ink : _faint).withOpacity(0.75),
           ),
         );
       },
@@ -721,7 +723,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
     final top = MediaQuery.of(context).padding.top;
     return Container(
       width: double.infinity,
-      color: _ink,
+      color: const Color(0xFF455861),
       padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

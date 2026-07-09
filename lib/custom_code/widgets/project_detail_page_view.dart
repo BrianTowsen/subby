@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -1013,7 +1015,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       child: Container(
         width: double.infinity,
         decoration: const BoxDecoration(
-          color: _ink,
+          color: Color(0xFF455861),
         ),
         padding: EdgeInsets.fromLTRB(20, topInset + 6, 20, 18),
         child: Column(

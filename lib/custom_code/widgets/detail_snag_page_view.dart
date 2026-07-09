@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -625,7 +627,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
     final meta = parts.join('  ·  ');
     return Container(
       width: double.infinity,
-      color: _ink,
+      color: const Color(0xFF455861),
       padding: EdgeInsets.fromLTRB(
           20, 6 + MediaQuery.of(context).padding.top, 20, 18),
       child: Column(
@@ -642,7 +644,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.7,
-                          color: _paper.withOpacity(0.5))),
+                          color: const Color(0xFFE7E247))),
                 ),
               ),
               if (isOwner)

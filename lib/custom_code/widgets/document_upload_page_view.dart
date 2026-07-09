@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -652,7 +654,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
               heightFactor: 1,
               child: Container(
                 decoration: BoxDecoration(
-                  color: _ink,
+                  color: const Color(0xFFE7E247),
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
@@ -691,7 +693,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
         duration: const Duration(milliseconds: 240),
         curve: Curves.easeOutCubic,
         builder: (context, t, _) {
-          final color = Color.lerp(_inkMute, _paper, t)!;
+          final color = Color.lerp(_inkMute, _ink, t)!;
           return Row(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1140,7 +1142,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
   // Dark ink hero (matches ProjectTimelinePageView).
   Widget _hero() => Container(
         width: double.infinity,
-        color: _ink,
+        color: const Color(0xFF455861),
         padding: EdgeInsets.fromLTRB(
             20, 6 + MediaQuery.of(context).padding.top, 20, 18),
         child: Column(
