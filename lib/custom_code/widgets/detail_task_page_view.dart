@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -388,9 +390,9 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
         return Dialog(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 34),
+          insetPadding: EdgeInsets.zero,
           child: Container(
-            width: 322,
+            width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: _paper,
@@ -448,6 +450,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
                   controller: controller,
                   maxLines: 3,
                   cursorColor: _green,
+                  textInputAction: TextInputAction.done,
                   style: const TextStyle(
                       fontFamily: _bodyFont, fontSize: 14, color: _navy),
                   decoration: InputDecoration(
@@ -531,7 +534,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
-        backgroundColor: _ink,
+        backgroundColor: _green, // slate
         content: Text(msg,
             style: const TextStyle(
                 fontFamily: _bodyFont,
@@ -706,7 +709,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.7,
-                          color: const Color(0xFFE7E247))),
+                          color: _paper.withOpacity(0.5))),
                 ),
               ),
               if (isOwner)
@@ -1254,11 +1257,13 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
       case 'todo':
         label = 'Start Task';
         icon = Icons.play_arrow_rounded;
+        bg = const Color(0xFFE7E247); // lime
         onTap = () => _setStatus('in_progress');
         break;
       case 'in_progress':
         label = 'Mark as Done';
         icon = Icons.task_alt_rounded;
+        bg = const Color(0xFFE7E247); // lime
         onTap = _markDone;
         break;
       case 'done':
@@ -1289,23 +1294,22 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (_working)
-                  SizedBox(
+                  const SizedBox(
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(
                         strokeWidth: 2.2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                            isGhost ? _ink : _paper)),
+                        valueColor: AlwaysStoppedAnimation<Color>(_ink)),
                   )
                 else
-                  Icon(icon, size: 20, color: isGhost ? _ink : _paper),
+                  Icon(icon, size: 20, color: _ink),
                 const SizedBox(width: 9),
                 Text(label,
-                    style: TextStyle(
+                    style: const TextStyle(
                         fontFamily: _bodyFont,
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
-                        color: isGhost ? _ink : _paper)),
+                        color: _ink)),
               ],
             ),
           ),

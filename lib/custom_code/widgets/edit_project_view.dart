@@ -10,20 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/services.dart'; // SystemChrome / SystemUiOverlayStyle (dark status bar over white form)
@@ -264,6 +250,7 @@ class _EditProjectViewState extends State<EditProjectView>
                   controller: controller,
                   enabled: !_saving,
                   cursorColor: _teal,
+                  textInputAction: TextInputAction.done,
                   maxLines: maxLines,
                   validator: validator,
                   style: _fieldTextStyle(theme),
@@ -411,7 +398,7 @@ class _EditProjectViewState extends State<EditProjectView>
   static const List<String> _scopeOptions = <String>[
     'New build',
     'Building addition',
-    'Home Renovation',
+    'Home renovation',
   ];
 
   Widget _uScope(FlutterFlowTheme theme) {
@@ -510,8 +497,8 @@ class _EditProjectViewState extends State<EditProjectView>
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 19),
             decoration: BoxDecoration(
-              color: _ink,
-              borderRadius: BorderRadius.circular(999),
+              color: const Color(0xFFE7E247),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -524,18 +511,18 @@ class _EditProjectViewState extends State<EditProjectView>
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.2,
-                        valueColor: AlwaysStoppedAnimation<Color>(_paper),
+                        valueColor: AlwaysStoppedAnimation<Color>(_ink),
                       ),
                     ),
                   )
                 else
-                  const Icon(Icons.check_rounded, size: 18, color: _paper),
+                  const Icon(Icons.check_rounded, size: 18, color: _ink),
                 const SizedBox(width: 8),
                 Text(
                   'Save Changes',
                   style: theme.bodyMedium.override(
                     fontFamily: _bodyFont,
-                    color: _paper,
+                    color: _ink,
                     letterSpacing: 0.0,
                     fontWeight: FontWeight.w900,
                     fontSize: 15,
@@ -679,7 +666,7 @@ class _EditProjectViewState extends State<EditProjectView>
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              backgroundColor: _ink,
+              backgroundColor: const Color(0xFF5D737E),
               content: Text(
                 'You do not have permission to edit this project.',
                 style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -726,7 +713,7 @@ class _EditProjectViewState extends State<EditProjectView>
       setState(() => _loading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: _ink,
+          backgroundColor: const Color(0xFF5D737E),
           content: Text(
             'Could not load project. Please try again.',
             style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -770,7 +757,7 @@ class _EditProjectViewState extends State<EditProjectView>
     if (ref == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: _ink,
+          backgroundColor: const Color(0xFF5D737E),
           content: Text(
             'Missing project reference.',
             style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -797,7 +784,7 @@ class _EditProjectViewState extends State<EditProjectView>
       // ✅ show feedback BEFORE navigation so it always appears
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: _ink,
+          backgroundColor: const Color(0xFF5D737E),
           content: Text(
             'Project updated.',
             style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -834,7 +821,7 @@ class _EditProjectViewState extends State<EditProjectView>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: _ink,
+          backgroundColor: const Color(0xFF5D737E),
           content: Text(
             'Update failed. Please try again.',
             style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -869,7 +856,7 @@ class _EditProjectViewState extends State<EditProjectView>
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: _ink,
+          backgroundColor: const Color(0xFF5D737E),
           content: Text(
             'Project deleted.',
             style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -893,7 +880,7 @@ class _EditProjectViewState extends State<EditProjectView>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: _ink,
+          backgroundColor: const Color(0xFF5D737E),
           content: Text(
             'Delete failed. Please try again.',
             style: FlutterFlowTheme.of(context).bodyMedium.override(

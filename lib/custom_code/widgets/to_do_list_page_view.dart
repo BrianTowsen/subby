@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -159,7 +161,7 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
-        backgroundColor: _ink,
+        backgroundColor: _green, // slate
         content: Text(msg,
             style: const TextStyle(
                 fontFamily: _bodyFont,
@@ -1092,16 +1094,17 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
               child: Container(
                 height: 52,
                 decoration: BoxDecoration(
-                    color: _teal, borderRadius: BorderRadius.circular(_radius)),
+                    color: const Color(0xFFE7E247),
+                    borderRadius: BorderRadius.circular(_radius)),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: const [
-                    Icon(Icons.add_rounded, color: _paper, size: 20),
+                    Icon(Icons.add_rounded, color: _ink, size: 20),
                     SizedBox(width: 9),
                     Text('Add Task',
                         style: TextStyle(
                             fontFamily: _bodyFont,
-                            color: _paper,
+                            color: _ink,
                             fontWeight: FontWeight.w800,
                             fontSize: 15)),
                   ],

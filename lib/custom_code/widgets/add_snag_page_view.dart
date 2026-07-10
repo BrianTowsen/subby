@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -442,6 +444,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                   controller: controller,
                   enabled: !_saving,
                   cursorColor: _teal,
+                  textInputAction: TextInputAction.done,
                   maxLines: maxLines,
                   validator: validator,
                   style: _fieldText(),
@@ -985,7 +988,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          backgroundColor: _ink,
+          backgroundColor: _green, // slate
           content: Text(msg,
               style: const TextStyle(
                   fontFamily: _bodyFont,
