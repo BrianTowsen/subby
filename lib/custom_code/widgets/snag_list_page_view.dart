@@ -10,22 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -67,14 +51,14 @@ class SnagListPageView extends StatefulWidget {
 class _SnagListPageViewState extends State<SnagListPageView>
     with SingleTickerProviderStateMixin {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _ink = Color(0xFF29343A);
+  static const Color _ink = Color(0xFF1E282E);
   static const Color _inkMute = Color(0xFF566670);
   static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _hairline = Color(0xFFEAEEF0);
   static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
-  static const Color _teal = Color(0xFF29343A);
+  static const Color _teal = Color(0xFF1E282E);
   static const Color _tealTint =
       Color(0xFFECF0F2); // DS: lime tint → neutral surface
   static const Color _live =
@@ -728,7 +712,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
     final top = MediaQuery.of(context).padding.top;
     return Container(
       width: double.infinity,
-      color: const Color(0xFF455861),
+      color: const Color(0xFF3A5966),
       padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

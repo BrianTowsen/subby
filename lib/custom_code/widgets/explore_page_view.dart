@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -26,12 +28,12 @@ class ExplorePageView extends StatefulWidget {
 
 class _ExplorePageViewState extends State<ExplorePageView> {
   // ─── SUBBY PALETTE — DIRECTORY (Get-Quotes system) ─────────────────
-  static const Color _ink = Color(0xFF29343A);
+  static const Color _ink = Color(0xFF1E282E);
   static const Color _inkMute = Color(0xFF566670);
   static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
-  static const Color _steel = Color(0xFF455861);
+  static const Color _steel = Color(0xFF3A5966);
   static const Color _lime = Color(0xFFE7E247);
   static const Color _slate = Color(0xFF5D737E);
   static const Color _hairline = Color(0xFFEAEEF0);

@@ -10,14 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
@@ -83,7 +75,7 @@ class SiteBookPageView extends StatefulWidget {
 
 class _SiteBookPageViewState extends State<SiteBookPageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _ink = Color(0xFF29343A);
+  static const Color _ink = Color(0xFF1E282E);
   static const Color _inkMute = Color(0xFF566670);
   static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
@@ -339,7 +331,7 @@ class _SiteBookPageViewState extends State<SiteBookPageView> {
   // a large stat block (today's entries) with with-photos / contributors.
   Widget _hero(double topInset) => Container(
         width: double.infinity,
-        color: const Color(0xFF455861),
+        color: const Color(0xFF3A5966),
         padding: EdgeInsets.fromLTRB(_hPad, topInset + 14, _hPad, 18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

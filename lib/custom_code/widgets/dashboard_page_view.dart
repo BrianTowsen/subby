@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -148,13 +150,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   //
   // Neutrals
   static const Color _ink =
-      Color(0xFF29343A); // text, chrome, dark surfaces (slate)
+      Color(0xFF1E282E); // text, chrome, dark surfaces (slate)
   static const Color _inkMute = Color(0xFF566670);
   static const Color _faint = Color(0xFF93A3AC); // muted labels, chevrons
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _hairline = Color(0xFFEAEEF0);
-  static const Color _heroBg = Color(0xFF455861); // welcome header background
+  static const Color _heroBg = Color(0xFF3A5966); // welcome header background
 
   // Accents
   static const Color _yellow = Color(0xFF5D737E); // sage — "on site" / on track
@@ -3299,7 +3301,7 @@ class _CapabilityChip extends StatelessWidget {
   final String label;
 
   static const Color _tealTint = Color(0xFFE7EDF0);
-  static const Color _tealText = Color(0xFF29343A);
+  static const Color _tealText = Color(0xFF1E282E);
 
   @override
   Widget build(BuildContext context) {

@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -35,13 +37,13 @@ class ListingDetailPageView extends StatefulWidget {
 
 class _ListingDetailPageViewState extends State<ListingDetailPageView> {
   // ─── SUBBY PALETTE — DIRECTORY (Get-Quotes system) ─────────────────
-  static const Color _ink = Color(0xFF29343A);
+  static const Color _ink = Color(0xFF1E282E);
   static const Color _inkMute = Color(0xFF566670);
   static const Color _faint = Color(0xFF93A3AC);
   static const Color _coral = Color(0xFF5D737E);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
-  static const Color _steel = Color(0xFF455861);
+  static const Color _steel = Color(0xFF3A5966);
   static const Color _lime = Color(0xFFE7E247);
   static const Color _slate = Color(0xFF5D737E);
   static const Color _whatsapp = Color(0xFF25D366);
@@ -752,9 +754,9 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                     begin: Alignment.topCenter,
                                     end: Alignment.bottomCenter,
                                     colors: [
-                                      Color(0x5A455861),
-                                      Color(0x80455861),
-                                      Color(0xEB455861),
+                                      Color(0x5A3A5966),
+                                      Color(0x803A5966),
+                                      Color(0xEB3A5966),
                                     ],
                                     stops: [0.0, 0.42, 1.0],
                                   ),
@@ -1257,7 +1259,7 @@ class _DetailTabs extends StatefulWidget {
 }
 
 class _DetailTabsState extends State<_DetailTabs> {
-  static const Color _ink = Color(0xFF29343A);
+  static const Color _ink = Color(0xFF1E282E);
   static const Color _inkMute = Color(0xFF566670);
   static const Color _faint = Color(0xFF93A3AC);
   static const Color _surface = Color(0xFFECF0F2);

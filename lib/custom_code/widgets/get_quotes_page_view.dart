@@ -10,8 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -46,7 +44,7 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF29343A); // text, chrome, accent
+  static const Color _ink = Color(0xFF1E282E); // text, chrome, accent
   static const Color _inkMute = Color(0xFF566670);
   static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
@@ -54,7 +52,7 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
   static const Color _hairline = Color(0xFFEAEEF0);
   static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
   // Brand accent — TEAL.
-  static const Color _teal = Color(0xFF29343A);
+  static const Color _teal = Color(0xFF1E282E);
   static const Color _tealTint = Color(0xFFE7EDF0);
   // Status
   static const Color _live = Color(0xFF5D737E); // orange
@@ -465,7 +463,7 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
     final topInset = MediaQuery.of(context).padding.top;
     return Container(
       width: double.infinity,
-      color: const Color(0xFF455861), // steel — matches DashboardPageView hero
+      color: const Color(0xFF3A5966), // steel — matches DashboardPageView hero
       padding: EdgeInsets.fromLTRB(20, topInset + 6, 20, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

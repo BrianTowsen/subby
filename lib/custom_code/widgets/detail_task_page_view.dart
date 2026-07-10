@@ -10,16 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -59,14 +49,14 @@ class DetailTaskPageView extends StatefulWidget {
 
 class _DetailTaskPageViewState extends State<DetailTaskPageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _ink = Color(0xFF29343A);
+  static const Color _ink = Color(0xFF1E282E);
   static const Color _inkMute = Color(0xFF566670);
   static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _hairline = Color(0xFFEAEEF0);
   static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
-  static const Color _teal = Color(0xFF29343A);
+  static const Color _teal = Color(0xFF1E282E);
   static const Color _tealTint =
       Color(0xFFECF0F2); // DS: lime tint → neutral surface
   static const Color _live =
@@ -75,7 +65,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
       Color(0xFF566670); // DS: → clay (destructive/error)
   static const Color _warn =
       Color(0xFFAC0C0C); // delete-dialog red (matches DocumentUploadPageView)
-  static const Color _navy = Color(0xFF29343A);
+  static const Color _navy = Color(0xFF1E282E);
   static const Color _green =
       Color(0xFF5D737E); // DS: to-do / in-progress / info / mark-done
   static const String _displayFont = 'Inter Tight';
@@ -699,7 +689,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
     final meta = parts.join('  ·  ');
     return Container(
       width: double.infinity,
-      color: const Color(0xFF455861),
+      color: const Color(0xFF3A5966),
       padding: EdgeInsets.fromLTRB(
           20, 6 + MediaQuery.of(context).padding.top, 20, 18),
       child: Column(

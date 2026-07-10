@@ -10,14 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 // ✅ Auth helpers (currentUserReference, currentUserEmail, etc.)
 import '/auth/firebase_auth/auth_util.dart';
 
@@ -40,14 +32,14 @@ class EditProfilePageView extends StatefulWidget {
 
 class _EditProfilePageViewState extends State<EditProfilePageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _ink = Color(0xFF29343A);
+  static const Color _ink = Color(0xFF1E282E);
   static const Color _inkMute = Color(0xFF566670);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _hairline = Color(0xFFECF0F2);
   static const Color _hairlineOnSurface = Color(0xFFCBD8DD);
   // Brand accent — TEAL (field icons / focus). Primary action is ink.
-  static const Color _teal = Color(0xFF29343A);
+  static const Color _teal = Color(0xFF1E282E);
   // Status
   static const Color _live = Color(0xFF5D737E);
   static const Color _coral = Color(0xFF5D737E);
