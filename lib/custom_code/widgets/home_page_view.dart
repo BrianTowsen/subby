@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -68,6 +70,9 @@ class _HomePageViewState extends State<HomePageView> {
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
   static const double _hPad = 22;
+
+  // Menu-button geometry — matches DashboardPageView (_rLarge = 12).
+  static const double _rLarge = 12;
 
   static const String _kProvince = 'subby_app_province';
   static const String _kCity = 'subby_app_city';
@@ -523,18 +528,12 @@ class _HomePageViewState extends State<HomePageView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Logo + menu button — matches DashboardPageView masthead.
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('DIRECTORY',
-                          style: TextStyle(
-                            fontFamily: _bodyFont,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.7,
-                            color: _paper.withOpacity(0.5),
-                          )),
-                      _circleButton(Icons.menu_rounded, _openMore),
+                      _logo(),
+                      _menuButton(),
                     ],
                   ),
                   const SizedBox(height: 14),
@@ -794,19 +793,50 @@ class _HomePageViewState extends State<HomePageView> {
     );
   }
 
-  Widget _circleButton(IconData icon, VoidCallback onTap) => Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(999),
-          child: Container(
-            width: 38,
-            height: 38,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-                color: _paper.withOpacity(0.12), shape: BoxShape.circle),
-            child: Icon(icon, size: 20, color: _paper),
+  // ─────────────────────────────────────────────────────────────────────
+  // MASTHEAD LOGO + MENU — copied verbatim from DashboardPageView so the two
+  // screens share an identical top-left mark and top-right menu affordance.
+  // ─────────────────────────────────────────────────────────────────────
+  //
+  // Icon-only mark — bold, no wordmark. Loads the white Subby house PNG from
+  // FlutterFlow asset storage; falls back to the painted _SubbyMarkPainter if
+  // the network image fails (offline / cold start) so the logo never renders
+  // blank.
+  static const String _logoUrl =
+      'https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/winston-9dy48u/assets/vkvx0d5tvzte/subby_logo_white.png';
+
+  // Non-square mark: anchor on height (36) and leave width unconstrained so the
+  // image renders at its natural aspect ratio rather than being squeezed into a
+  // square box. The 36px height keeps the header's vertical rhythm.
+  Widget _logo() => SizedBox(
+        height: 36,
+        child: Image.network(
+          _logoUrl,
+          height: 36,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) => CustomPaint(
+            size: const Size(36, 36),
+            painter: const _SubbyMarkPainter(
+              peak: Color(0xFF5D737E), // Subby brand green
+              base: Color(0xFF5D737E),
+            ),
           ),
+        ),
+      );
+
+  Widget _menuButton() => InkWell(
+        onTap: _openMore,
+        borderRadius: BorderRadius.circular(_rLarge),
+        child: Container(
+          width: 42,
+          height: 42,
+          margin: const EdgeInsets.only(right: 4),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: _surface,
+            borderRadius: BorderRadius.circular(_rLarge),
+          ),
+          child: const Icon(Icons.menu_rounded, size: 22, color: _ink),
         ),
       );
 
@@ -815,4 +845,55 @@ class _HomePageViewState extends State<HomePageView> {
       MaterialPageRoute(builder: (_) => const MorePageView()),
     );
   }
+}
+
+// Subby mark — bold, icon only (viewBox 0 0 64 64):
+//   roof  : filled triangle, peak (32,11), base from (12.8,28.4)-(51.2,28.4).
+//   bars  : two full-width rounded bars beneath, matching the roof base width.
+// Fallback for the masthead logo when the PNG asset fails to load. Mirrors the
+// painter in DashboardPageView so both screens degrade identically.
+class _SubbyMarkPainter extends CustomPainter {
+  final Color peak;
+  final Color base;
+  const _SubbyMarkPainter({required this.peak, required this.base});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double s = size.width / 64.0;
+    Offset p(double x, double y) => Offset(x * s, y * s);
+
+    final markPaint = Paint()
+      ..color = peak
+      ..style = PaintingStyle.fill
+      ..isAntiAlias = true;
+
+    // Roof — filled triangle.
+    final roof = Path()
+      ..moveTo(p(32, 11).dx, p(32, 11).dy)
+      ..lineTo(p(51.2, 28.4).dx, p(51.2, 28.4).dy)
+      ..lineTo(p(12.8, 28.4).dx, p(12.8, 28.4).dy)
+      ..close();
+    canvas.drawPath(roof, markPaint);
+
+    // Two full-width rounded bars.
+    final r = Radius.circular(2.6 * s);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(p(12.8, 33.5).dx, p(12.8, 33.5).dy, 38.4 * s, 8.3 * s),
+        r,
+      ),
+      markPaint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(p(12.8, 44.4).dx, p(12.8, 44.4).dy, 38.4 * s, 8.3 * s),
+        r,
+      ),
+      markPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _SubbyMarkPainter old) =>
+      old.peak != peak || old.base != base;
 }

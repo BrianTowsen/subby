@@ -173,7 +173,7 @@ class _SiteBookPageViewState extends State<SiteBookPageView> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
-        backgroundColor: _ink,
+        backgroundColor: _sage,
         content: Text(msg,
             style: const TextStyle(
                 color: _paper,

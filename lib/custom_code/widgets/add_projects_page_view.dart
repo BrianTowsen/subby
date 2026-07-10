@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status bar icons over ink hero)
@@ -204,6 +206,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
                   controller: controller,
                   enabled: !_saving,
                   cursorColor: _teal,
+                  textInputAction: TextInputAction.done,
                   maxLines: maxLines,
                   validator: validator,
                   style: _fieldTextStyle(theme),
@@ -351,7 +354,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
   static const List<String> _scopeOptions = <String>[
     'New build',
     'Building addition',
-    'Home Renovation',
+    'Home renovation',
   ];
 
   Widget _uScope(FlutterFlowTheme theme) {
@@ -450,8 +453,8 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 19),
             decoration: BoxDecoration(
-              color: _ink,
-              borderRadius: BorderRadius.circular(999),
+              color: const Color(0xFFE7E247),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -464,18 +467,18 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.2,
-                        valueColor: AlwaysStoppedAnimation<Color>(_paper),
+                        valueColor: AlwaysStoppedAnimation<Color>(_ink),
                       ),
                     ),
                   )
                 else
-                  const Icon(Icons.check_rounded, size: 18, color: _paper),
+                  const Icon(Icons.check_rounded, size: 18, color: _ink),
                 const SizedBox(width: 8),
                 Text(
                   _saving ? 'Saving…' : 'Save Project',
                   style: theme.bodyMedium.override(
                     fontFamily: _bodyFont,
-                    color: _paper,
+                    color: _ink,
                     letterSpacing: 0.0,
                     fontWeight: FontWeight.w900,
                     fontSize: 15,
@@ -591,7 +594,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
     if (currentUserReference == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: _ink,
+          backgroundColor: const Color(0xFF5D737E),
           content: Text(
             'You must be logged in to create a project.',
             style: theme.bodyMedium.override(
@@ -637,7 +640,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: _ink,
+          backgroundColor: const Color(0xFF5D737E),
           content: Text(
             'Project created!',
             style: theme.bodyMedium.override(
@@ -656,7 +659,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: _ink,
+          backgroundColor: const Color(0xFF5D737E),
           content: Text(
             'Failed to save project: $e',
             style: theme.bodyMedium.override(
