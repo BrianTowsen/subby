@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -913,16 +915,17 @@ class _SnagListPageViewState extends State<SnagListPageView>
               child: Container(
                 height: 52,
                 decoration: BoxDecoration(
-                    color: _teal, borderRadius: BorderRadius.circular(12)),
+                    color: const Color(0xFFE7E247),
+                    borderRadius: BorderRadius.circular(12)),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: const [
-                    Icon(Icons.add_rounded, color: _paper, size: 20),
+                    Icon(Icons.add_rounded, color: _ink, size: 20),
                     SizedBox(width: 9),
                     Text('Add Snag',
                         style: TextStyle(
                             fontFamily: _bodyFont,
-                            color: _paper,
+                            color: _ink,
                             fontWeight: FontWeight.w800,
                             fontSize: 15)),
                   ],

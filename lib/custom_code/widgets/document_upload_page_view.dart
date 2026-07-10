@@ -24,6 +24,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -968,9 +970,10 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
     );
   }
 
-  // Standard app snackbar — ink background, white text.
+  // Standard app snackbar — slate background, white text.
   SnackBar _inkSnack(String message) => SnackBar(
-        backgroundColor: _ink,
+        backgroundColor: const Color(0xFF5D737E), // slate
+
         content: Text(
           message,
           style: const TextStyle(

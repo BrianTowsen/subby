@@ -10,8 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -643,7 +641,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.7,
-                          color: const Color(0xFFE7E247))),
+                          color: _paper.withOpacity(0.5))),
                 ),
               ),
               if (isOwner)
