@@ -10,8 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -69,7 +67,10 @@ class _HomePageViewState extends State<HomePageView> {
   static const Color _hairline = Color(0xFFEAEEF0);
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
-  static const double _hPad = 22;
+  // Horizontal page padding — matches DashboardPageView (_pageHPad = 20) so the
+  // masthead logo + menu button land at the identical left/right coordinates
+  // on both screens.
+  static const double _hPad = 20;
 
   // Menu-button geometry — matches DashboardPageView (_rLarge = 12).
   static const double _rLarge = 12;
@@ -524,7 +525,9 @@ class _HomePageViewState extends State<HomePageView> {
             Container(
               width: double.infinity,
               color: _steel,
-              padding: EdgeInsets.fromLTRB(_hPad, topInset + 10, _hPad, 30),
+              // Top pad matches DashboardPageView (topInset + 14) so the logo +
+              // menu button sit at the identical vertical position on both.
+              padding: EdgeInsets.fromLTRB(_hPad, topInset + 14, _hPad, 30),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

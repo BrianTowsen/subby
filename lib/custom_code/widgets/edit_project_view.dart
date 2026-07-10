@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/services.dart'; // SystemChrome / SystemUiOverlayStyle (dark status bar over white form)
@@ -92,15 +94,27 @@ class _EditProjectViewState extends State<EditProjectView>
   bool _loading = true;
   bool _saving = false;
 
-  // ─── Swipe-right-to-go-back (follow the thumb, snap back or pop) ──────
+  // ─── Swipe-right-to-go-back (EDGE-ONLY: follow the thumb, snap back or pop) ──
+  // Width of the live "hot zone" on the left edge that can begin the gesture.
+  // Matches the iOS interactive-pop feel: a swipe must START here to count.
+  static const double _edgeHitWidth = 20;
+
   double _dragX = 0;
+  bool _dragActive = false; // true only when the drag began at the left edge
   late final AnimationController _snapCtrl = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 220),
   );
   Animation<double>? _snapAnim;
 
+  // Only arm the drag when it starts within the left-edge hot zone.
+  void _onDragStart(DragStartDetails d) {
+    _dragActive = d.localPosition.dx <= _edgeHitWidth;
+    if (_dragActive && _snapCtrl.isAnimating) _snapCtrl.stop();
+  }
+
   void _onDragUpdate(DragUpdateDetails d) {
+    if (!_dragActive) return; // ignore swipes that didn't start at the edge
     if (_snapCtrl.isAnimating) _snapCtrl.stop();
     setState(() {
       _dragX = (_dragX + d.delta.dx).clamp(0.0, double.infinity);
@@ -108,6 +122,8 @@ class _EditProjectViewState extends State<EditProjectView>
   }
 
   void _onDragEnd(DragEndDetails d) {
+    if (!_dragActive) return;
+    _dragActive = false;
     final double width = MediaQuery.sizeOf(context).width;
     final double v = d.primaryVelocity ?? 0;
     final bool shouldClose = _dragX > width * 0.30 || v > 700;
@@ -119,6 +135,12 @@ class _EditProjectViewState extends State<EditProjectView>
     } else {
       _animateDragTo(0);
     }
+  }
+
+  void _onDragCancel() {
+    if (!_dragActive) return;
+    _dragActive = false;
+    _animateDragTo(0);
   }
 
   void _animateDragTo(double target, {VoidCallback? then}) {
@@ -134,12 +156,17 @@ class _EditProjectViewState extends State<EditProjectView>
       });
   }
 
-  // Wraps a page in the right-to-go-back swipe gesture.
+  // Wraps a page in the EDGE-ONLY right-to-go-back swipe gesture.
+  // The GestureDetector still spans the page (so the drag can continue
+  // across the whole screen once armed), but _onDragStart only arms it
+  // when the initial touch lands inside the left-edge hot zone.
   Widget _swipeBack(Widget child) {
     return GestureDetector(
       behavior: HitTestBehavior.deferToChild,
+      onHorizontalDragStart: _onDragStart,
       onHorizontalDragUpdate: _onDragUpdate,
       onHorizontalDragEnd: _onDragEnd,
+      onHorizontalDragCancel: _onDragCancel,
       child: Transform.translate(
         offset: Offset(_dragX, 0),
         child: child,
