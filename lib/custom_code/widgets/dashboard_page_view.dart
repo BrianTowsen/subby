@@ -10,14 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -1894,15 +1886,18 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
     List<_SharedProject> shared,
   ) {
-    // One tile per build: owned first (index 0 = featured FULL-GREEN tile),
-    // then shared builds (share marker, no heading), then the add tile.
+    // Newest owned build = bold yellow hero (rich, at-a-glance). Every other
+    // build (owned + shared) tones down to a quiet paper card. Trailing add tile.
     final tiles = <Widget>[];
     for (int i = 0; i < docs.length; i++) {
-      tiles.add(
-          _buildGridTile(docs[i].data(), docs[i].reference, featured: i == 0));
+      if (i == 0) {
+        tiles.add(_dashHeroCard(docs[i].data(), docs[i].reference));
+      } else {
+        tiles.add(_dashTonedCard(docs[i].data(), docs[i].reference));
+      }
     }
     for (final sp in shared) {
-      tiles.add(_buildGridTile(sp.data, sp.ref, sharedBy: sp.pmName.trim()));
+      tiles.add(_dashTonedCard(sp.data, sp.ref, sharedBy: sp.pmName.trim()));
     }
     tiles.add(_addTile());
 
@@ -1917,6 +1912,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // A single build tile. `featured` paints it as a full-green fill (white
   // text) — used for the most-recent owned build. `sharedBy` (non-null) marks
   // it as a shared build: it shows a share glyph and a "Shared by …" subtitle.
+  // ignore: unused_element
   Widget _buildGridTile(
     Map<String, dynamic> data,
     DocumentReference ref, {
@@ -2013,28 +2009,26 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     );
   }
 
-  // "New home build" add tile — same size/shape as a project tile, neutral
-  // surface fill with a centred add affordance.
+  // "New home build" add tile — slim neutral affordance so the hero leads.
   Widget _addTile() => InkWell(
         onTap: _goToAddProject,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          height: 84,
+          height: 56,
           decoration: BoxDecoration(
-            color: const Color(0xFFF4F2D2),
-            border: Border.all(color: const Color(0xFFF4F2D2), width: 1.4),
+            color: const Color(0xFFF6F8F9),
+            border: Border.all(color: const Color(0xFFCBD8DD), width: 1.4),
             borderRadius: BorderRadius.circular(16),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 18),
           child: const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.add_rounded, size: 26, color: Color(0xFF55656E)),
-              SizedBox(width: 10),
+              Icon(Icons.add_rounded, size: 22, color: Color(0xFF55656E)),
+              SizedBox(width: 9),
               Text('New home build',
                   style: TextStyle(
                     fontFamily: _bodyFont,
-                    fontSize: 14,
+                    fontSize: 13.5,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF55656E),
                   )),
@@ -2042,6 +2036,407 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           ),
         ),
       );
+
+  // ===================================================================
+  // BOLD HERO CARD — the newest owned build, rich & at-a-glance (no cost):
+  // status · category · location · completion + phase · days-left · snags ·
+  // tasks · docs · team · latest activity. All count fields are OPTIONAL and
+  // fall back to "—" (or are hidden) when the project doc doesn't carry them.
+  // ===================================================================
+  int? _dashInt(Map<String, dynamic> d, List<String> keys) {
+    for (final k in keys) {
+      final v = d[k];
+      if (v is num) return v.toInt();
+    }
+    return null;
+  }
+
+  int? _daysLeft(Map<String, dynamic> d) {
+    final v = d['endDate'] ?? d['targetDate'];
+    DateTime? end;
+    if (v is Timestamp) {
+      end = v.toDate();
+    } else if (v is DateTime) {
+      end = v;
+    }
+    if (end == null) return null;
+    final diff = end.difference(DateTime.now()).inDays;
+    return diff > 0 ? diff : 0;
+  }
+
+  Widget _dashStat(String value, String label, {bool attention = false}) =>
+      Expanded(
+        child: Column(
+          children: [
+            Text(value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: _displayFont,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  height: 1.0,
+                  color: attention ? const Color(0xFFAC0C0C) : _ink,
+                )),
+            const SizedBox(height: 4),
+            Text(label,
+                style: const TextStyle(
+                  fontFamily: _bodyFont,
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w700,
+                  color: _inkMute,
+                )),
+          ],
+        ),
+      );
+
+  Widget _dashStatDivider() => Container(
+        width: 1,
+        height: 24,
+        color: const Color(0x1F1E282E),
+      );
+
+  Widget _dashHeroCard(Map<String, dynamic> data, DocumentReference ref) {
+    final name = (data['name'] as String?)?.trim() ?? '';
+    final city = (data['city'] as String?)?.trim() ?? '';
+    final province = (data['province'] as String?)?.trim() ?? '';
+    final loc = [city, province].where((x) => x.isNotEmpty).join(', ');
+    final status = (data['status'] as String?)?.trim() ?? '';
+    final category = (data['category'] ?? data['type'] ?? '').toString().trim();
+    final progress = _progress(data);
+    final pct = (progress * 100).round();
+    final act = _activityFor(data);
+
+    final phase = _dashInt(data, const ['phase', 'currentPhase']);
+    final phaseTotal = _dashInt(data, const ['phaseTotal', 'phaseCount']) ?? 6;
+    final next =
+        (data['nextMilestone'] ?? data['nextPhase'] ?? '').toString().trim();
+    final daysLeft = _daysLeft(data);
+    final snags = _dashInt(data, const ['openSnags', 'snagCount']);
+    final tasks = _dashInt(data, const ['openTasks']);
+    final docs =
+        _dashInt(data, const ['docCount', 'documentCount', 'documentsCount']);
+    final team = _dashInt(data, const ['teamCount', 'memberCount', 'teamSize']);
+
+    final phaseBits = <String>[
+      if (phase != null) 'Phase $phase of $phaseTotal',
+      if (next.isNotEmpty) next,
+    ];
+
+    return InkWell(
+      onTap: () => _goToProject(ref),
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFE7E247),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                if (status.isNotEmpty)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _ink,
+                      borderRadius: BorderRadius.circular(_rPill),
+                    ),
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      const Icon(Icons.bolt,
+                          size: 12, color: Color(0xFFE7E247)),
+                      const SizedBox(width: 4),
+                      Text(_capitalize(status),
+                          style: const TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            color: _paper,
+                          )),
+                    ]),
+                  ),
+                const Spacer(),
+                if (category.isNotEmpty)
+                  Text(category.toUpperCase(),
+                      style: TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
+                        color: _ink.withOpacity(0.55),
+                      )),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(name.isEmpty ? 'Untitled project' : name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontFamily: _displayFont,
+                  fontSize: 23,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.5,
+                  color: _ink,
+                )),
+            const SizedBox(height: 5),
+            Row(children: [
+              Icon(Icons.location_on, size: 13, color: _ink.withOpacity(0.6)),
+              const SizedBox(width: 5),
+              Expanded(
+                child: Text(loc.isEmpty ? 'No location set' : loc,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: _ink.withOpacity(0.7),
+                    )),
+              ),
+            ]),
+            const SizedBox(height: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text('$pct%',
+                    style: const TextStyle(
+                      fontFamily: _displayFont,
+                      fontSize: 36,
+                      fontWeight: FontWeight.w900,
+                      height: 1.0,
+                      color: _ink,
+                    )),
+                if (phaseBits.isNotEmpty) ...[
+                  const SizedBox(width: 9),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 3),
+                      child: Text(phaseBits.join(' · '),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: _ink.withOpacity(0.65),
+                          )),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 9),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: Container(
+                height: 7,
+                color: const Color(0x241E282E),
+                child: FractionallySizedBox(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: progress,
+                  child: Container(color: _ink),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 11),
+              child: Row(
+                children: [
+                  _dashStat(daysLeft?.toString() ?? '—', 'Days left'),
+                  _dashStatDivider(),
+                  _dashStat(snags?.toString() ?? '—', 'Snags',
+                      attention: (snags ?? 0) > 0),
+                  _dashStatDivider(),
+                  _dashStat(tasks?.toString() ?? '—', 'Tasks'),
+                  _dashStatDivider(),
+                  _dashStat(docs?.toString() ?? '—', 'Docs'),
+                ],
+              ),
+            ),
+            if (team != null) ...[
+              const SizedBox(height: 14),
+              Row(children: [
+                const Icon(Icons.groups_rounded, size: 18, color: _ink),
+                const SizedBox(width: 7),
+                Expanded(
+                  child: Text('Team of $team',
+                      style: const TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: _inkMute,
+                      )),
+                ),
+                const Icon(Icons.chevron_right_rounded, size: 20, color: _ink),
+              ]),
+            ],
+            if (act != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                decoration: const BoxDecoration(
+                  border: Border(
+                      top: BorderSide(color: Color(0x1F1E282E), width: 1)),
+                ),
+                padding: const EdgeInsets.only(top: 12),
+                child: Row(children: [
+                  Icon(Icons.bolt, size: 15, color: _activityColor(data)),
+                  const SizedBox(width: 7),
+                  Expanded(
+                    child: Text(act,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: _heroActivityStyle.copyWith(
+                            color: _activityColor(data))),
+                  ),
+                ]),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Toned-down build card — quiet paper row: name, location/status (or shared
+  // by), a slim progress bar, and one activity line when there's recent action.
+  Widget _dashTonedCard(Map<String, dynamic> data, DocumentReference ref,
+      {String? sharedBy}) {
+    final bool shared = sharedBy != null;
+    final name = (data['name'] as String?)?.trim() ?? '';
+    final city = (data['city'] as String?)?.trim() ?? '';
+    final province = (data['province'] as String?)?.trim() ?? '';
+    final loc = [city, province].where((x) => x.isNotEmpty).join(', ');
+    final status = (data['status'] as String?)?.trim() ?? '';
+    final progress = _progress(data);
+    final pct = (progress * 100).round();
+    final act = _activityFor(data);
+    final ownedSub = [loc, _capitalize(status)]
+        .where((x) => x.trim().isNotEmpty)
+        .join(' · ');
+
+    return InkWell(
+      onTap: () => _goToProject(ref),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: _paper,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE4E9EC)),
+        ),
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(name.isEmpty ? 'Untitled project' : name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: _displayFont,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.2,
+                          color: _ink,
+                        )),
+                    const SizedBox(height: 2),
+                    if (shared)
+                      Row(children: [
+                        const Icon(Icons.ios_share_rounded,
+                            size: 12, color: _faint),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                              sharedBy.isEmpty
+                                  ? 'Shared with you'
+                                  : 'Shared by $sharedBy',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontFamily: _bodyFont,
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w500,
+                                color: _faint,
+                              )),
+                        ),
+                      ])
+                    else
+                      Text(ownedSub.isEmpty ? 'No location set' : ownedSub,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w500,
+                            color: _faint,
+                          )),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.chevron_right_rounded,
+                  size: 20, color: Color(0xFFCBD8DD)),
+            ]),
+            const SizedBox(height: 11),
+            Row(children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: Container(
+                    height: 6,
+                    color: _surface,
+                    child: FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: progress,
+                      child: Container(color: _ink),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text('$pct%',
+                  style: const TextStyle(
+                    fontFamily: _displayFont,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    color: _ink,
+                  )),
+            ]),
+            if (act != null) ...[
+              const SizedBox(height: 9),
+              Row(children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                      color: _activityColor(data), shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(act,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: _rowActivityStyle.copyWith(
+                          color: _activityColor(data))),
+                ),
+              ]),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 
   // ===================================================================
   // PROJECTS FEED — aggregated activity across all builds (rail).
@@ -2070,7 +2465,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             children: [
               _accentMarker(_yellow),
               const SizedBox(width: 10),
-              Expanded(child: Text('Projects Feed', style: _stepHeadlineStyle)),
+              Expanded(child: Text('Activity Feed', style: _stepHeadlineStyle)),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                 decoration: BoxDecoration(
@@ -2321,7 +2716,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         children: [
           _accentMarker(_yellow),
           const SizedBox(width: 10),
-          Expanded(child: Text('Projects Feed', style: _stepHeadlineStyle)),
+          Expanded(child: Text('Activity Feed', style: _stepHeadlineStyle)),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
             decoration: BoxDecoration(

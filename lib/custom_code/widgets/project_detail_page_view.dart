@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -3195,7 +3197,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                         _rOwnerCard(theme, ownerProfileRef),
                       ],
                       const SizedBox(height: 20),
-                      _rSectionLabel('MODULES'),
+                      _rSectionLabel('PROJECT MANAGEMENT'),
                       const SizedBox(height: 10),
                       _rModules(readOnly),
                       const SizedBox(height: 24),
@@ -3445,84 +3447,188 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   Widget _rModTile(IconData icon, String title, String sub, String visKey,
       bool readOnly, VoidCallback onTap,
       {bool featured = false}) {
-    // Full-width horizontal module row (84 tall): icon chip · a stacked block
-    // with the TITLE on its own full-width line and the subtitle + visibility
-    // chip on the line below (so the heading always has room). Featured tile =
-    // slate (white text).
-    final Color titleColor = _ink;
-    final Color subColor = _inkMute;
+    // Featured (Timeline) keeps the bold yellow hero with a programme bar.
+    if (featured) return _rTimelineTile(icon, visKey, readOnly, onTap);
+
+    // Lean status tile: paper card, module-identity accent bar, a live status
+    // line, and either a count badge (snags / quotes) or a visibility chip.
+    final int snags = _optInt(const ['openSnags', 'snagCount']) ?? 0;
+    final bool attention = visKey == 'snagList' && snags > 0;
+    final Color accent =
+        attention ? const Color(0xFFAC0C0C) : const Color(0xFF5D737E);
+    final String status = _modStatus(visKey, sub);
+    final String? badge = _modBadge(visKey);
+    final Color badgeColor = visKey == 'snagList'
+        ? const Color(0xFFAC0C0C)
+        : const Color(0xFF5D737E);
+    final String vis = _moduleVisFor(visKey);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(14),
         child: Container(
-          height: 84,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
           decoration: BoxDecoration(
-              color:
-                  featured ? const Color(0xFFE7E247) : const Color(0xFFF4F2D2),
-              borderRadius: BorderRadius.circular(14)),
+            color: _paper,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+                color: attention
+                    ? const Color(0xFFF0D5D5)
+                    : const Color(0xFFE4E9EC)),
+          ),
           child: Row(children: [
             Container(
-              width: 50,
-              height: 50,
-              alignment: Alignment.center,
+              width: 8,
+              height: 36,
               decoration: BoxDecoration(
-                color: featured ? const Color(0x1A1E282E) : _paper,
-                borderRadius: BorderRadius.circular(13),
-              ),
-              child: Icon(icon, size: 25, color: _ink),
+                  color: accent, borderRadius: BorderRadius.circular(5)),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: 13),
+            Icon(icon, size: 23, color: _ink),
+            const SizedBox(width: 13),
             Expanded(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+                      style: const TextStyle(
                           fontFamily: _displayFont,
-                          fontSize: 17,
+                          fontSize: 15.5,
                           fontWeight: FontWeight.w800,
-                          letterSpacing: -0.3,
-                          color: titleColor)),
-                  const SizedBox(height: 5),
+                          letterSpacing: -0.2,
+                          color: _ink)),
+                  const SizedBox(height: 2),
+                  Text(status,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF93A3AC))),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            if (readOnly)
+              const Icon(Icons.chevron_right_rounded,
+                  size: 20, color: _rChevron)
+            else if (badge != null)
+              Container(
+                constraints: const BoxConstraints(minWidth: 22),
+                height: 20,
+                alignment: Alignment.center,
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                decoration: BoxDecoration(
+                    color: badgeColor,
+                    borderRadius: BorderRadius.circular(999)),
+                child: Text(badge,
+                    style: const TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white)),
+              )
+            else if (visKey == 'getQuotes')
+              // Quotes visibility stays locked (no toggle).
+              _rVisChip('private', _surface)
+            else
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _toggleModuleVis(visKey),
+                child: _rVisChip(vis, vis == 'shared' ? _tealTint : _surface),
+              ),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  // Featured Timeline tile — yellow hero with a mini programme progress bar.
+  Widget _rTimelineTile(
+      IconData icon, String visKey, bool readOnly, VoidCallback onTap) {
+    final double p = _rProgress();
+    final int? phase = _optInt(const ['phase', 'currentPhase']);
+    final int total = _optInt(const ['phaseTotal', 'phaseCount']) ?? 6;
+    final String next =
+        (_projectData['nextMilestone'] ?? _projectData['nextPhase'] ?? '')
+            .toString()
+            .trim();
+    final parts = <String>[
+      if (phase != null) 'Phase $phase/$total',
+      if (next.isNotEmpty) 'Next: $next',
+    ];
+    final String status =
+        parts.isEmpty ? 'Programme & phases' : parts.join(' · ');
+    final String vis = _moduleVisFor(visKey);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+              color: const Color(0xFFE7E247),
+              borderRadius: BorderRadius.circular(14)),
+          child: Row(children: [
+            Container(
+              width: 46,
+              height: 46,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                  color: const Color(0x1A1E282E),
+                  borderRadius: BorderRadius.circular(12)),
+              child: Icon(icon, size: 24, color: _ink),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Row(children: [
-                    Expanded(
-                      child: Text(sub,
+                    const Expanded(
+                      child: Text('Timeline',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                              fontFamily: _bodyFont,
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w500,
-                              color: subColor)),
+                              fontFamily: _displayFont,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.3,
+                              color: _ink)),
                     ),
-                    if (!readOnly && visKey != 'getQuotes') ...[
-                      const SizedBox(width: 8),
+                    if (!readOnly)
                       GestureDetector(
                         behavior: HitTestBehavior.opaque,
                         onTap: () => _toggleModuleVis(visKey),
-                        child: _rVisChip(_moduleVisFor(visKey), _paper),
+                        child: _rVisChip(vis, _paper),
                       ),
-                    ] else if (visKey == 'getQuotes') ...[
-                      const SizedBox(width: 8),
-                      Row(mainAxisSize: MainAxisSize.min, children: const [
-                        Icon(Icons.lock_rounded,
-                            size: 11, color: Color(0xFF93A3AC)),
-                        SizedBox(width: 4),
-                        Text('Private · locked',
-                            style: TextStyle(
-                                fontFamily: _bodyFont,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF93A3AC))),
-                      ]),
-                    ],
                   ]),
+                  const SizedBox(height: 7),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(999),
+                    child: LinearProgressIndicator(
+                      value: p,
+                      minHeight: 5,
+                      backgroundColor: const Color(0x241E282E),
+                      valueColor: const AlwaysStoppedAnimation<Color>(_ink),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(status,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: _inkMute)),
                 ],
               ),
             ),
@@ -3530,6 +3636,52 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         ),
       ),
     );
+  }
+
+  // Optional int project-doc field lookup (first key that carries a number).
+  int? _optInt(List<String> keys) {
+    for (final k in keys) {
+      final v = _projectData[k];
+      if (v is num) return v.toInt();
+    }
+    return null;
+  }
+
+  // Live status line per module, falling back to the generic descriptor when
+  // the count field isn't present on the project doc.
+  String _modStatus(String visKey, String fallback) {
+    switch (visKey) {
+      case 'siteBook':
+        final c = _optInt(const ['siteBookCount', 'siteBookEntries']);
+        return c != null ? '$c entries' : fallback;
+      case 'toDo':
+        final o = _optInt(const ['openTasks']);
+        return o != null ? '$o open' : fallback;
+      case 'snagList':
+        final o = _optInt(const ['openSnags', 'snagCount']);
+        return o != null ? '$o open' : fallback;
+      case 'getQuotes':
+        final r = _optInt(const ['quotesReceived']);
+        final n = _optInt(const ['quotesNew']);
+        if (r != null && n != null) return '$r received · $n new';
+        if (r != null) return '$r received';
+        return fallback;
+      default:
+        return fallback;
+    }
+  }
+
+  // Trailing count badge (snags / new quotes) when there's something to flag.
+  String? _modBadge(String visKey) {
+    if (visKey == 'snagList') {
+      final o = _optInt(const ['openSnags', 'snagCount']);
+      return (o != null && o > 0) ? '$o' : null;
+    }
+    if (visKey == 'getQuotes') {
+      final n = _optInt(const ['quotesNew']);
+      return (n != null && n > 0) ? '$n' : null;
+    }
+    return null;
   }
 
   Widget _rModWide(IconData icon, String title, String sub, String visKey,
@@ -3633,7 +3785,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       ],
       [
         Icons.request_quote_outlined,
-        'Get Quotes',
+        'Quotes',
         'Compare trades',
         'getQuotes',
         widget.getQuotesRouteName,
@@ -3662,21 +3814,36 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       );
     }
 
+    final costKeys = {'projectCost', 'getQuotes'};
+    final mgmt = mods.where((m) => !costKeys.contains(m[3])).toList();
+    final cost = mods.where((m) => costKeys.contains(m[3])).toList();
+
+    Widget tile(List<dynamic> m) => _rModTile(
+          m[0] as IconData,
+          m[1] as String,
+          m[2] as String,
+          m[3] as String,
+          readOnly,
+          () => _safeNavigate(m[4] as String?, fallbackRoute: m[5] as String),
+          featured: m[6] as bool,
+        );
+
     final children = <Widget>[];
-    for (var i = 0; i < mods.length; i++) {
-      final m = mods[i];
-      children.add(_rModTile(
-        m[0] as IconData,
-        m[1] as String,
-        m[2] as String,
-        m[3] as String,
-        readOnly,
-        () => _safeNavigate(m[4] as String?, fallbackRoute: m[5] as String),
-        featured: m[6] as bool,
-      ));
-      if (i != mods.length - 1) children.add(const SizedBox(height: 10));
+    for (var i = 0; i < mgmt.length; i++) {
+      children.add(tile(mgmt[i]));
+      if (i != mgmt.length - 1) children.add(const SizedBox(height: 10));
     }
-    return Column(children: children);
+    if (cost.isNotEmpty) {
+      if (mgmt.isNotEmpty) children.add(const SizedBox(height: 20));
+      children.add(_rSectionLabel('PROJECT COST CONTROL'));
+      children.add(const SizedBox(height: 10));
+      for (var i = 0; i < cost.length; i++) {
+        children.add(tile(cost[i]));
+        if (i != cost.length - 1) children.add(const SizedBox(height: 10));
+      }
+    }
+    return Column(
+        crossAxisAlignment: CrossAxisAlignment.start, children: children);
   }
 
   Widget _rDocGroup(String label, int count) => Padding(
