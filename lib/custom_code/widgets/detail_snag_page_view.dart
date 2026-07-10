@@ -1326,8 +1326,8 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
       return _actionButton(
         label: 'Move to In Progress',
         icon: Icons.play_arrow_rounded,
-        bg: _teal,
-        fg: _paper,
+        bg: const Color(0xFFE7E247), // lime
+        fg: _ink,
         onTap: () => _setStatus('in_progress'),
       );
     }
@@ -1338,8 +1338,8 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
       return _actionButton(
         label: 'Mark as Fixed',
         icon: ready ? Icons.task_alt_rounded : Icons.lock_outline_rounded,
-        bg: ready ? _teal : _surface,
-        fg: ready ? _paper : _faint,
+        bg: ready ? const Color(0xFFE7E247) : _surface, // lime when ready
+        fg: ready ? _ink : _faint,
         border: ready ? null : _hairlineOnSurface,
         onTap: ready ? _closeWithFixedMedia : _pickFixedMedia,
       );
