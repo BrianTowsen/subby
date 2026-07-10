@@ -22,6 +22,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/services.dart'; // SystemChrome / SystemUiOverlayStyle (dark status bar over white form)
@@ -59,14 +61,14 @@ class _EditProjectViewState extends State<EditProjectView>
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF29343A);
+  static const Color _ink = Color(0xFF1E282E);
   static const Color _inkMute = Color(0xFF566670);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _hairline = Color(0xFFECF0F2);
   static const Color _hairlineOnSurface = Color(0xFFCBD8DD);
   // Brand accent — TEAL.
-  static const Color _teal = Color(0xFF29343A);
+  static const Color _teal = Color(0xFF1E282E);
   // Status
   static const Color _live =
       Color(0xFF566670); // clay — live / open-now / warning
@@ -1190,7 +1192,7 @@ class _EditProjectViewState extends State<EditProjectView>
   // Dark ink hero (matches ProjectTimelinePageView).
   Widget _hero(FlutterFlowTheme theme) => Container(
         width: double.infinity,
-        color: const Color(0xFF455861),
+        color: const Color(0xFF3A5966),
         padding: EdgeInsets.fromLTRB(
             20, 6 + MediaQuery.of(context).padding.top, 20, 18),
         child: Column(

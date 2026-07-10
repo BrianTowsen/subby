@@ -10,14 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -63,14 +55,14 @@ class DetailSnagPageView extends StatefulWidget {
 
 class _DetailSnagPageViewState extends State<DetailSnagPageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _ink = Color(0xFF29343A);
+  static const Color _ink = Color(0xFF1E282E);
   static const Color _inkMute = Color(0xFF566670);
   static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _hairline = Color(0xFFEAEEF0);
   static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
-  static const Color _teal = Color(0xFF29343A);
+  static const Color _teal = Color(0xFF1E282E);
   static const Color _tealTint =
       Color(0xFFECF0F2); // DS: lime tint → neutral surface
   static const Color _live =
@@ -79,7 +71,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
   static const Color _greenSurface = Color(0xFFE7EDF0);
   static const Color _greenBorder = Color(0xFFCBD8DD);
   static const Color _coral = Color(0xFF566670);
-  static const Color _navy = Color(0xFF29343A);
+  static const Color _navy = Color(0xFF1E282E);
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
   // ────────────────────────────────────────────────────────────────────
@@ -632,7 +624,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
     final meta = parts.join('  ·  ');
     return Container(
       width: double.infinity,
-      color: const Color(0xFF455861),
+      color: const Color(0xFF3A5966),
       padding: EdgeInsets.fromLTRB(
           20, 6 + MediaQuery.of(context).padding.top, 20, 18),
       child: Column(

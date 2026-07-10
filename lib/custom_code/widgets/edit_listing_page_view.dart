@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'dart:typed_data';
@@ -57,7 +59,7 @@ class EditListingPageView extends StatefulWidget {
 
 class _EditListingPageViewState extends State<EditListingPageView> {
   // ─── SUBBY PALETTE — DIRECTORY (amber / sunshine) ──────────────────
-  static const Color _amber = Color(0xFF29343A); // accent
+  static const Color _amber = Color(0xFF1E282E); // accent
   static const Color _inkMute = Color(0xFF566670); // labels
   static const Color _faint = Color(0xFF93A3AC); // subtitles / helpers
   static const Color _coral = Color(0xFF566670); // destructive

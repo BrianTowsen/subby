@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -49,7 +51,7 @@ class DetailSiteBookPageView extends StatefulWidget {
 
 class _DetailSiteBookPageViewState extends State<DetailSiteBookPageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _ink = Color(0xFF29343A);
+  static const Color _ink = Color(0xFF1E282E);
   static const Color _inkMute = Color(0xFF566670);
   static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
@@ -238,7 +240,7 @@ class _DetailSiteBookPageViewState extends State<DetailSiteBookPageView> {
         // ink masthead
         Container(
           width: double.infinity,
-          color: const Color(0xFF455861),
+          color: const Color(0xFF3A5966),
           padding: EdgeInsets.fromLTRB(_hPad, topInset + 10, _hPad, 18),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -495,7 +497,7 @@ class _DetailSiteBookPageViewState extends State<DetailSiteBookPageView> {
     final topInset = MediaQuery.of(context).viewPadding.top;
     return Container(
       width: double.infinity,
-      color: const Color(0xFF455861),
+      color: const Color(0xFF3A5966),
       padding: EdgeInsets.fromLTRB(_hPad, topInset + 10, _hPad, 18),
       child: Row(
         children: [

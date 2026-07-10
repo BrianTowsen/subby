@@ -10,10 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -40,7 +36,7 @@ class QuotesReceivedView extends StatefulWidget {
 }
 
 class _QuotesReceivedViewState extends State<QuotesReceivedView> {
-  static const Color _ink = Color(0xFF29343A);
+  static const Color _ink = Color(0xFF1E282E);
   static const Color _inkMute = Color(0xFF566670);
   static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
@@ -156,7 +152,7 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
           Container(
             width: double.infinity,
             color: const Color(
-                0xFF455861), // steel — matches DashboardPageView hero
+                0xFF3A5966), // steel — matches DashboardPageView hero
             padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

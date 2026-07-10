@@ -10,16 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -58,14 +48,14 @@ class AddSnagPageView extends StatefulWidget {
 
 class _AddSnagPageViewState extends State<AddSnagPageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _ink = Color(0xFF29343A);
+  static const Color _ink = Color(0xFF1E282E);
   static const Color _inkMute = Color(0xFF566670);
   static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _hairline = Color(0xFFEAEEF0);
   static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
-  static const Color _teal = Color(0xFF29343A);
+  static const Color _teal = Color(0xFF1E282E);
   static const Color _tealTint =
       Color(0xFFECF0F2); // DS: lime tint → neutral surface
   static const Color _live =
@@ -619,7 +609,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                                     fontFamily: _displayFont,
                                     fontSize: 15,
                                     fontWeight: FontWeight.w700,
-                                    color: Color(0xFF29343A))),
+                                    color: Color(0xFF1E282E))),
                             const SizedBox(height: 2),
                             Text(
                                 _assignedListingSubtitle.isEmpty
@@ -825,7 +815,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                                                 fontFamily: _displayFont,
                                                 fontSize: 15,
                                                 fontWeight: FontWeight.w700,
-                                                color: Color(0xFF29343A))),
+                                                color: Color(0xFF1E282E))),
                                         const SizedBox(height: 2),
                                         Text(subtitle,
                                             maxLines: 1,
@@ -1026,7 +1016,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
 
   Widget _addHero(String title, String subtitle) => Container(
         width: double.infinity,
-        color: const Color(0xFF455861),
+        color: const Color(0xFF3A5966),
         padding: EdgeInsets.fromLTRB(
             20, 6 + MediaQuery.of(context).padding.top, 20, 18),
         child: Column(

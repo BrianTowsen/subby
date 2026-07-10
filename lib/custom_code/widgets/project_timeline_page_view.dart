@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:intl/intl.dart';
@@ -52,7 +54,7 @@ class ProjectTimelinePageView extends StatefulWidget {
 
 class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
-  static const Color _ink = Color(0xFF29343A);
+  static const Color _ink = Color(0xFF1E282E);
   static const Color _inkMute = Color(0xFF566670);
   static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
@@ -68,10 +70,10 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   static const Color _ruleIdle = Color(0xFFB7C2C7);
   static const Color _childBg = Color(0xFFFBFCFD);
   static const Color _startBg = Color(0xFFF5F8F9);
-  static const Color _header = Color(0xFF455861); // hero header ink
+  static const Color _header = Color(0xFF3A5966); // hero header ink
 
   // Two-tone bar colours
-  static const Color _phaseColor = Color(0xFF29343A); // dark ink = phase
+  static const Color _phaseColor = Color(0xFF1E282E); // dark ink = phase
   static const Color _subColor = Color(0xFF8497A0); // lighter = sub-task
   static const Color _barYellow = Color(0xFFE7E247); // leaf phase bar (yellow)
 

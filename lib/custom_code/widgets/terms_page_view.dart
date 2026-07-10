@@ -10,14 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:intl/intl.dart';
 
 class TermsPageView extends StatefulWidget {
@@ -40,7 +32,7 @@ class _TermsPageViewState extends State<TermsPageView> {
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF29343A); // text, chrome
+  static const Color _ink = Color(0xFF1E282E); // text, chrome
   static const Color _inkMute = Color(0xFF566670);
   static const Color _faint = Color(0xFF93A3AC); // muted labels, chevrons
   static const Color _paper = Color(0xFFFFFFFF);
@@ -48,7 +40,7 @@ class _TermsPageViewState extends State<TermsPageView> {
   static const Color _hairline = Color(0xFFEAEEF0);
   static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
   // Brand accent — TEAL.
-  static const Color _teal = Color(0xFF29343A);
+  static const Color _teal = Color(0xFF1E282E);
   // Status
   static const Color _live = Color(0xFF5D737E); // orange — live / warning
   static const Color _coral = Color(0xFF5D737E);

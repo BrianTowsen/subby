@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 // =================== DashboardSettingsPageView (FULL FILE) ===================
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -40,7 +42,7 @@ class _DashboardSettingsPageViewState extends State<DashboardSettingsPageView> {
   // Inline = authoritative for this file. Grep `SUBBY PALETTE (LOCK)` to sync.
   //
   // Neutrals
-  static const Color _ink = Color(0xFF29343A);
+  static const Color _ink = Color(0xFF1E282E);
   static const Color _inkMute = Color(0xFF566670);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
@@ -48,7 +50,7 @@ class _DashboardSettingsPageViewState extends State<DashboardSettingsPageView> {
   static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
   // Brand accent — YELLOW. Always ink foreground, never white.
   static const Color _spark = Color(0xFFE7E247); // primary CTA / ranked accent
-  static const Color _sparkInk = Color(0xFF29343A);
+  static const Color _sparkInk = Color(0xFF1E282E);
   // Status
   static const Color _live =
       Color(0xFFAC0C0C); // red — live / warning / destructive
