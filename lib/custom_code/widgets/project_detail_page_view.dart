@@ -3450,12 +3450,92 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     // Featured (Timeline) keeps the bold yellow hero with a programme bar.
     if (featured) return _rTimelineTile(icon, visKey, readOnly, onTap);
 
-    // Same layout as the featured Timeline tile, on a light-grey surface:
-    // icon chip · title (with trailing visibility chip or count badge) · status.
-    final int snags = _optInt(const ['openSnags', 'snagCount']) ?? 0;
-    final bool attention = visKey == 'snagList' && snags > 0;
-    final String status = _modStatus(visKey, sub);
-    final String? badge = _modBadge(visKey);
+    // Live status + badge, computed from the module's real collection:
+    //   Site Book → site_book_entries · To-Do → tasks · Snag → snags ·
+    //   Quotes → projectRef/quotes. Project Cost stays static (cost excluded).
+    final ref = widget.projectRef;
+    Stream<QuerySnapshot<Map<String, dynamic>>>? stream;
+    if (ref != null) {
+      final fs = FirebaseFirestore.instance;
+      switch (visKey) {
+        case 'siteBook':
+          stream = fs
+              .collection('site_book_entries')
+              .where('projectRef', isEqualTo: ref)
+              .snapshots();
+          break;
+        case 'toDo':
+          stream = fs
+              .collection('tasks')
+              .where('projectRef', isEqualTo: ref)
+              .snapshots();
+          break;
+        case 'snagList':
+          stream = fs
+              .collection('snags')
+              .where('projectRef', isEqualTo: ref)
+              .snapshots();
+          break;
+        case 'getQuotes':
+          stream = ref.collection('quotes').snapshots();
+          break;
+      }
+    }
+
+    if (stream == null) {
+      return _modRow(icon, title, sub, null, false, visKey, readOnly, onTap);
+    }
+
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: stream,
+      builder: (context, snap) {
+        final docs = snap.data?.docs ?? const [];
+        String status = sub;
+        String? badge;
+        bool attention = false;
+        switch (visKey) {
+          case 'siteBook':
+            final n = docs.length;
+            status = n > 0 ? '$n ${n == 1 ? 'entry' : 'entries'}' : sub;
+            break;
+          case 'toDo':
+            final open = docs
+                .where(
+                    (d) => (d.data()['status'] ?? 'todo').toString() != 'done')
+                .length;
+            status = docs.isNotEmpty ? '$open open' : sub;
+            break;
+          case 'snagList':
+            final open = docs
+                .where((d) =>
+                    (d.data()['status'] ?? 'open').toString() != 'closed')
+                .length;
+            final fixed = docs.length - open;
+            attention = open > 0;
+            status = open > 0
+                ? '$open open · $fixed fixed'
+                : (docs.isNotEmpty ? '$fixed fixed' : sub);
+            if (open > 0) badge = '$open';
+            break;
+          case 'getQuotes':
+            final received = docs
+                .where(
+                    (d) => (d.data()['status'] ?? '').toString() == 'submitted')
+                .length;
+            status = received > 0 ? '$received received' : sub;
+            if (received > 0) badge = '$received';
+            break;
+        }
+        return _modRow(
+            icon, title, status, badge, attention, visKey, readOnly, onTap);
+      },
+    );
+  }
+
+  // Renders one grey status tile: icon chip · title (+ trailing badge or
+  // visibility chip) · live status line. Snags tint the chip red when open.
+  Widget _modRow(IconData icon, String title, String status, String? badge,
+      bool attention, String visKey, bool readOnly, VoidCallback onTap) {
     final Color badgeColor = visKey == 'snagList'
         ? const Color(0xFFAC0C0C)
         : const Color(0xFF5D737E);
@@ -3647,43 +3727,6 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     for (final k in keys) {
       final v = _projectData[k];
       if (v is num) return v.toInt();
-    }
-    return null;
-  }
-
-  // Live status line per module, falling back to the generic descriptor when
-  // the count field isn't present on the project doc.
-  String _modStatus(String visKey, String fallback) {
-    switch (visKey) {
-      case 'siteBook':
-        final c = _optInt(const ['siteBookCount', 'siteBookEntries']);
-        return c != null ? '$c entries' : fallback;
-      case 'toDo':
-        final o = _optInt(const ['openTasks']);
-        return o != null ? '$o open' : fallback;
-      case 'snagList':
-        final o = _optInt(const ['openSnags', 'snagCount']);
-        return o != null ? '$o open' : fallback;
-      case 'getQuotes':
-        final r = _optInt(const ['quotesReceived']);
-        final n = _optInt(const ['quotesNew']);
-        if (r != null && n != null) return '$r received · $n new';
-        if (r != null) return '$r received';
-        return fallback;
-      default:
-        return fallback;
-    }
-  }
-
-  // Trailing count badge (snags / new quotes) when there's something to flag.
-  String? _modBadge(String visKey) {
-    if (visKey == 'snagList') {
-      final o = _optInt(const ['openSnags', 'snagCount']);
-      return (o != null && o > 0) ? '$o' : null;
-    }
-    if (visKey == 'getQuotes') {
-      final n = _optInt(const ['quotesNew']);
-      return (n != null && n > 0) ? '$n' : null;
     }
     return null;
   }

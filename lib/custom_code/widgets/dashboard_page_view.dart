@@ -2053,6 +2053,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // tasks · docs · team · latest activity. All count fields are OPTIONAL and
   // fall back to "—" (or are hidden) when the project doc doesn't carry them.
   // ===================================================================
+  // ignore: unused_element
   int? _dashInt(Map<String, dynamic> d, List<String> keys) {
     for (final k in keys) {
       final v = d[k];
@@ -2074,36 +2075,176 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     return diff > 0 ? diff : 0;
   }
 
-  Widget _dashStat(String value, String label, {bool attention = false}) =>
-      Expanded(
-        child: Column(
-          children: [
-            Text(value,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontFamily: _displayFont,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  height: 1.0,
-                  color: attention ? const Color(0xFFAC0C0C) : _ink,
-                )),
-            const SizedBox(height: 4),
-            Text(label,
-                style: const TextStyle(
-                  fontFamily: _bodyFont,
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w700,
-                  color: _inkMute,
-                )),
-          ],
-        ),
+  Widget _dashStatInner(String value, String label, {bool attention = false}) =>
+      Column(
+        children: [
+          Text(value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: _displayFont,
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                height: 1.0,
+                color: attention ? const Color(0xFFAC0C0C) : _ink,
+              )),
+          const SizedBox(height: 4),
+          Text(label,
+              style: const TextStyle(
+                fontFamily: _bodyFont,
+                fontSize: 9.5,
+                fontWeight: FontWeight.w700,
+                color: _inkMute,
+              )),
+        ],
       );
+
+  // ignore: unused_element
+  Widget _dashStat(String value, String label, {bool attention = false}) =>
+      Expanded(child: _dashStatInner(value, label, attention: attention));
 
   Widget _dashStatDivider() => Container(
         width: 1,
         height: 24,
         color: const Color(0x1F1E282E),
+      );
+
+  // ── LIVE DATA ──────────────────────────────────────────────────────
+  // The card counts come from real collections (no denormalised fields):
+  //   snags  → collection('snags')            status != 'closed'
+  //   tasks  → collection('tasks')            status != 'done'
+  //   docs   → collection('project_documents')
+  //   team   → collection('project_listings')
+  // Days-left is derived from endDate; progress is projects.progress (written
+  // by the Timeline programme). Latest activity comes from collection('activity').
+  Query<Map<String, dynamic>> _statQuery(DocumentReference ref, String kind) {
+    final fs = FirebaseFirestore.instance;
+    switch (kind) {
+      case 'snags':
+        return fs.collection('snags').where('projectRef', isEqualTo: ref);
+      case 'tasks':
+        return fs.collection('tasks').where('projectRef', isEqualTo: ref);
+      case 'docs':
+        return fs
+            .collection('project_documents')
+            .where('projectRef', isEqualTo: ref);
+      case 'team':
+      default:
+        return fs
+            .collection('project_listings')
+            .where('projectRef', isEqualTo: ref);
+    }
+  }
+
+  int _countFor(
+      String kind, List<QueryDocumentSnapshot<Map<String, dynamic>>> docs) {
+    switch (kind) {
+      case 'snags':
+        return docs
+            .where((d) => (d.data()['status'] ?? 'open').toString() != 'closed')
+            .length;
+      case 'tasks':
+        return docs
+            .where((d) => (d.data()['status'] ?? 'todo').toString() != 'done')
+            .length;
+      default:
+        return docs.length;
+    }
+  }
+
+  // Expanded live stat tile — streams its collection and shows the live count.
+  Widget _liveStat(DocumentReference ref, String label, String kind) =>
+      Expanded(
+        child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: _statQuery(ref, kind).snapshots(),
+          builder: (context, snap) {
+            if (snap.hasError) return _dashStatInner('—', label);
+            final has = snap.hasData;
+            final n = has ? _countFor(kind, snap.data!.docs) : 0;
+            return _dashStatInner(has ? '$n' : '—', label,
+                attention: kind == 'snags' && n > 0);
+          },
+        ),
+      );
+
+  // Team footer — live count of project_listings (trades on this build).
+  Widget _dashTeamFooter(DocumentReference ref) =>
+      StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: _statQuery(ref, 'team').snapshots(),
+        builder: (context, snap) {
+          final n = snap.data?.docs.length ?? 0;
+          if (n == 0) return const SizedBox.shrink();
+          return Padding(
+            padding: const EdgeInsets.only(top: 14),
+            child: Row(children: [
+              const Icon(Icons.groups_rounded, size: 18, color: _ink),
+              const SizedBox(width: 7),
+              Expanded(
+                child: Text('Team of $n',
+                    style: const TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: _inkMute,
+                    )),
+              ),
+              const Icon(Icons.chevron_right_rounded, size: 20, color: _ink),
+            ]),
+          );
+        },
+      );
+
+  // Latest activity line — newest doc from the `activity` log for this build.
+  Widget _dashActivityLine(DocumentReference ref, Color borderColor) =>
+      StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: FirebaseFirestore.instance
+            .collection('activity')
+            .where('projectRef', isEqualTo: ref)
+            .orderBy('createdAt', descending: true)
+            .limit(1)
+            .snapshots(),
+        builder: (context, snap) {
+          if (snap.hasError) return const SizedBox.shrink();
+          final docs = snap.data?.docs ?? const [];
+          if (docs.isEmpty) return const SizedBox.shrink();
+          final d = docs.first.data();
+          final type = (d['type'] ?? '').toString();
+          final title = (d['title'] ?? '').toString().trim();
+          final ts = d['createdAt'];
+          final dt = ts is Timestamp ? ts.toDate() : null;
+          final label = title.isEmpty
+              ? _activityTypeLabel(type)
+              : '${_activityTypeLabel(type)}: $title';
+          final rel = dt != null ? _relativeTime(dt) : '';
+          final bool attn = type.toLowerCase().contains('snag');
+          final Color c = attn ? const Color(0xFFAC0C0C) : _yellow;
+          return Container(
+            decoration: BoxDecoration(
+                border: Border(top: BorderSide(color: borderColor, width: 1))),
+            margin: const EdgeInsets.only(top: 12),
+            padding: const EdgeInsets.only(top: 12),
+            child: Row(children: [
+              Icon(Icons.bolt, size: 15, color: c),
+              const SizedBox(width: 7),
+              Expanded(
+                child: Text(label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _heroActivityStyle.copyWith(color: c)),
+              ),
+              if (rel.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                Text(rel,
+                    style: TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w600,
+                      color: _ink.withOpacity(0.5),
+                    )),
+              ],
+            ]),
+          );
+        },
       );
 
   Widget _dashHeroCard(Map<String, dynamic> data, DocumentReference ref) {
@@ -2115,23 +2256,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     final category = (data['category'] ?? data['type'] ?? '').toString().trim();
     final progress = _progress(data);
     final pct = (progress * 100).round();
-    final act = _activityFor(data);
-
-    final phase = _dashInt(data, const ['phase', 'currentPhase']);
-    final phaseTotal = _dashInt(data, const ['phaseTotal', 'phaseCount']) ?? 6;
-    final next =
-        (data['nextMilestone'] ?? data['nextPhase'] ?? '').toString().trim();
     final daysLeft = _daysLeft(data);
-    final snags = _dashInt(data, const ['openSnags', 'snagCount']);
-    final tasks = _dashInt(data, const ['openTasks']);
-    final docs =
-        _dashInt(data, const ['docCount', 'documentCount', 'documentsCount']);
-    final team = _dashInt(data, const ['teamCount', 'memberCount', 'teamSize']);
-
-    final phaseBits = <String>[
-      if (phase != null) 'Phase $phase of $phaseTotal',
-      if (next.isNotEmpty) next,
-    ];
 
     return InkWell(
       onTap: () => _goToProject(ref),
@@ -2208,36 +2333,14 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               ),
             ]),
             const SizedBox(height: 16),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text('$pct%',
-                    style: const TextStyle(
-                      fontFamily: _displayFont,
-                      fontSize: 36,
-                      fontWeight: FontWeight.w900,
-                      height: 1.0,
-                      color: _ink,
-                    )),
-                if (phaseBits.isNotEmpty) ...[
-                  const SizedBox(width: 9),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 3),
-                      child: Text(phaseBits.join(' · '),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontFamily: _bodyFont,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: _ink.withOpacity(0.65),
-                          )),
-                    ),
-                  ),
-                ],
-              ],
-            ),
+            Text('$pct%',
+                style: const TextStyle(
+                  fontFamily: _displayFont,
+                  fontSize: 36,
+                  fontWeight: FontWeight.w900,
+                  height: 1.0,
+                  color: _ink,
+                )),
             const SizedBox(height: 9),
             ClipRRect(
               borderRadius: BorderRadius.circular(999),
@@ -2260,55 +2363,20 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 11),
               child: Row(
                 children: [
-                  _dashStat(daysLeft?.toString() ?? '—', 'Days left'),
+                  Expanded(
+                      child: _dashStatInner(
+                          daysLeft?.toString() ?? '—', 'Days left')),
                   _dashStatDivider(),
-                  _dashStat(snags?.toString() ?? '—', 'Snags',
-                      attention: (snags ?? 0) > 0),
+                  _liveStat(ref, 'Snags', 'snags'),
                   _dashStatDivider(),
-                  _dashStat(tasks?.toString() ?? '—', 'Tasks'),
+                  _liveStat(ref, 'Tasks', 'tasks'),
                   _dashStatDivider(),
-                  _dashStat(docs?.toString() ?? '—', 'Docs'),
+                  _liveStat(ref, 'Docs', 'docs'),
                 ],
               ),
             ),
-            if (team != null) ...[
-              const SizedBox(height: 14),
-              Row(children: [
-                const Icon(Icons.groups_rounded, size: 18, color: _ink),
-                const SizedBox(width: 7),
-                Expanded(
-                  child: Text('Team of $team',
-                      style: const TextStyle(
-                        fontFamily: _bodyFont,
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        color: _inkMute,
-                      )),
-                ),
-                const Icon(Icons.chevron_right_rounded, size: 20, color: _ink),
-              ]),
-            ],
-            if (act != null) ...[
-              const SizedBox(height: 12),
-              Container(
-                decoration: const BoxDecoration(
-                  border: Border(
-                      top: BorderSide(color: Color(0x1F1E282E), width: 1)),
-                ),
-                padding: const EdgeInsets.only(top: 12),
-                child: Row(children: [
-                  Icon(Icons.bolt, size: 15, color: _activityColor(data)),
-                  const SizedBox(width: 7),
-                  Expanded(
-                    child: Text(act,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: _heroActivityStyle.copyWith(
-                            color: _activityColor(data))),
-                  ),
-                ]),
-              ),
-            ],
+            _dashTeamFooter(ref),
+            _dashActivityLine(ref, const Color(0x1F1E282E)),
           ],
         ),
       ),
@@ -2329,26 +2397,11 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     final category = (data['category'] ?? data['type'] ?? '').toString().trim();
     final progress = _progress(data);
     final pct = (progress * 100).round();
-    final act = _activityFor(data);
-
-    final phase = _dashInt(data, const ['phase', 'currentPhase']);
-    final phaseTotal = _dashInt(data, const ['phaseTotal', 'phaseCount']) ?? 6;
-    final next =
-        (data['nextMilestone'] ?? data['nextPhase'] ?? '').toString().trim();
     final daysLeft = _daysLeft(data);
-    final snags = _dashInt(data, const ['openSnags', 'snagCount']);
-    final tasks = _dashInt(data, const ['openTasks']);
-    final docs =
-        _dashInt(data, const ['docCount', 'documentCount', 'documentsCount']);
-    final team = _dashInt(data, const ['teamCount', 'memberCount', 'teamSize']);
-
-    final phaseBits = <String>[
-      if (phase != null) 'Phase $phase of $phaseTotal',
-      if (next.isNotEmpty) next,
-    ];
     final String eyebrow = shared ? 'SHARED WITH YOU' : category.toUpperCase();
+    final String sharedName = (sharedBy ?? '').trim();
     final String sharedLine = [
-      if (sharedBy!.isNotEmpty) 'Shared by $sharedBy' else 'Shared with you',
+      sharedName.isNotEmpty ? 'Shared by $sharedName' : 'Shared with you',
       if (loc.isNotEmpty) loc,
     ].join(' · ');
 
@@ -2431,36 +2484,14 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               ),
             ]),
             const SizedBox(height: 16),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text('$pct%',
-                    style: const TextStyle(
-                      fontFamily: _displayFont,
-                      fontSize: 36,
-                      fontWeight: FontWeight.w900,
-                      height: 1.0,
-                      color: _ink,
-                    )),
-                if (phaseBits.isNotEmpty) ...[
-                  const SizedBox(width: 9),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 3),
-                      child: Text(phaseBits.join(' · '),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontFamily: _bodyFont,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: _ink.withOpacity(0.6),
-                          )),
-                    ),
-                  ),
-                ],
-              ],
-            ),
+            Text('$pct%',
+                style: const TextStyle(
+                  fontFamily: _displayFont,
+                  fontSize: 36,
+                  fontWeight: FontWeight.w900,
+                  height: 1.0,
+                  color: _ink,
+                )),
             const SizedBox(height: 9),
             ClipRRect(
               borderRadius: BorderRadius.circular(999),
@@ -2483,55 +2514,20 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 11),
               child: Row(
                 children: [
-                  _dashStat(daysLeft?.toString() ?? '—', 'Days left'),
+                  Expanded(
+                      child: _dashStatInner(
+                          daysLeft?.toString() ?? '—', 'Days left')),
                   _dashStatDivider(),
-                  _dashStat(snags?.toString() ?? '—', 'Snags',
-                      attention: (snags ?? 0) > 0),
+                  _liveStat(ref, 'Snags', 'snags'),
                   _dashStatDivider(),
-                  _dashStat(tasks?.toString() ?? '—', 'Tasks'),
+                  _liveStat(ref, 'Tasks', 'tasks'),
                   _dashStatDivider(),
-                  _dashStat(docs?.toString() ?? '—', 'Docs'),
+                  _liveStat(ref, 'Docs', 'docs'),
                 ],
               ),
             ),
-            if (team != null) ...[
-              const SizedBox(height: 14),
-              Row(children: [
-                const Icon(Icons.groups_rounded, size: 18, color: _ink),
-                const SizedBox(width: 7),
-                Expanded(
-                  child: Text('Team of $team',
-                      style: const TextStyle(
-                        fontFamily: _bodyFont,
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        color: _inkMute,
-                      )),
-                ),
-                const Icon(Icons.chevron_right_rounded, size: 20, color: _ink),
-              ]),
-            ],
-            if (act != null) ...[
-              const SizedBox(height: 12),
-              Container(
-                decoration: const BoxDecoration(
-                  border: Border(
-                      top: BorderSide(color: Color(0x1A1E282E), width: 1)),
-                ),
-                padding: const EdgeInsets.only(top: 12),
-                child: Row(children: [
-                  Icon(Icons.bolt, size: 15, color: _activityColor(data)),
-                  const SizedBox(width: 7),
-                  Expanded(
-                    child: Text(act,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: _heroActivityStyle.copyWith(
-                            color: _activityColor(data))),
-                  ),
-                ]),
-              ),
-            ],
+            _dashTeamFooter(ref),
+            _dashActivityLine(ref, const Color(0x1A1E282E)),
           ],
         ),
       ),
