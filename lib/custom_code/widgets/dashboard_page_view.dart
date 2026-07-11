@@ -10,6 +10,16 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
+import 'index.dart'; // Imports other custom widgets
+
+import 'index.dart'; // Imports other custom widgets
+
+import 'index.dart'; // Imports other custom widgets
+
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -2233,7 +2243,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               borderRadius: BorderRadius.circular(999),
               child: Container(
                 height: 7,
-                color: const Color(0x241E282E),
+                color: Colors.white.withOpacity(0.55),
                 child: FractionallySizedBox(
                   alignment: Alignment.centerLeft,
                   widthFactor: progress,
@@ -2306,7 +2316,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   }
 
   // Toned-down build card — quiet paper row: name, location/status (or shared
-  // by), a slim progress bar, and one activity line when there's recent action.
+  // Secondary build card — the SAME rich layout as the hero, on a light-grey
+  // surface (white stat strip) instead of the bold yellow. Owned and shared.
   Widget _dashTonedCard(Map<String, dynamic> data, DocumentReference ref,
       {String? sharedBy}) {
     final bool shared = sharedBy != null;
@@ -2315,122 +2326,211 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     final province = (data['province'] as String?)?.trim() ?? '';
     final loc = [city, province].where((x) => x.isNotEmpty).join(', ');
     final status = (data['status'] as String?)?.trim() ?? '';
+    final category = (data['category'] ?? data['type'] ?? '').toString().trim();
     final progress = _progress(data);
     final pct = (progress * 100).round();
     final act = _activityFor(data);
-    final ownedSub = [loc, _capitalize(status)]
-        .where((x) => x.trim().isNotEmpty)
-        .join(' · ');
+
+    final phase = _dashInt(data, const ['phase', 'currentPhase']);
+    final phaseTotal = _dashInt(data, const ['phaseTotal', 'phaseCount']) ?? 6;
+    final next =
+        (data['nextMilestone'] ?? data['nextPhase'] ?? '').toString().trim();
+    final daysLeft = _daysLeft(data);
+    final snags = _dashInt(data, const ['openSnags', 'snagCount']);
+    final tasks = _dashInt(data, const ['openTasks']);
+    final docs =
+        _dashInt(data, const ['docCount', 'documentCount', 'documentsCount']);
+    final team = _dashInt(data, const ['teamCount', 'memberCount', 'teamSize']);
+
+    final phaseBits = <String>[
+      if (phase != null) 'Phase $phase of $phaseTotal',
+      if (next.isNotEmpty) next,
+    ];
+    final String eyebrow = shared ? 'SHARED WITH YOU' : category.toUpperCase();
+    final String sharedLine = [
+      if (sharedBy!.isNotEmpty) 'Shared by $sharedBy' else 'Shared with you',
+      if (loc.isNotEmpty) loc,
+    ].join(' · ');
 
     return InkWell(
       onTap: () => _goToProject(ref),
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(18),
       child: Container(
         decoration: BoxDecoration(
-          color: _paper,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE4E9EC)),
+          color: const Color(0xFFEDF1F3),
+          borderRadius: BorderRadius.circular(18),
         ),
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(name.isEmpty ? 'Untitled project' : name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontFamily: _displayFont,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.2,
-                          color: _ink,
-                        )),
-                    const SizedBox(height: 2),
-                    if (shared)
-                      Row(children: [
-                        const Icon(Icons.ios_share_rounded,
-                            size: 12, color: _faint),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                              sharedBy.isEmpty
-                                  ? 'Shared with you'
-                                  : 'Shared by $sharedBy',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontFamily: _bodyFont,
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w500,
-                                color: _faint,
-                              )),
-                        ),
-                      ])
-                    else
-                      Text(ownedSub.isEmpty ? 'No location set' : ownedSub,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+            Row(
+              children: [
+                if (status.isNotEmpty)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _ink,
+                      borderRadius: BorderRadius.circular(_rPill),
+                    ),
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      const Icon(Icons.bolt,
+                          size: 12, color: Color(0xFF5D737E)),
+                      const SizedBox(width: 4),
+                      Text(_capitalize(status),
                           style: const TextStyle(
                             fontFamily: _bodyFont,
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w500,
-                            color: _faint,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            color: _paper,
                           )),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Icon(Icons.chevron_right_rounded,
-                  size: 20, color: Color(0xFFCBD8DD)),
-            ]),
-            const SizedBox(height: 11),
+                    ]),
+                  ),
+                const Spacer(),
+                if (eyebrow.isNotEmpty)
+                  Text(eyebrow,
+                      style: TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
+                        color: _ink.withOpacity(0.5),
+                      )),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(name.isEmpty ? 'Untitled project' : name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontFamily: _displayFont,
+                  fontSize: 23,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.5,
+                  color: _ink,
+                )),
+            const SizedBox(height: 5),
             Row(children: [
+              Icon(shared ? Icons.ios_share_rounded : Icons.location_on,
+                  size: 13, color: _ink.withOpacity(0.55)),
+              const SizedBox(width: 5),
               Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
-                  child: Container(
-                    height: 6,
-                    color: _surface,
-                    child: FractionallySizedBox(
-                      alignment: Alignment.centerLeft,
-                      widthFactor: progress,
-                      child: Container(color: _ink),
+                child: Text(
+                    shared
+                        ? sharedLine
+                        : (loc.isEmpty ? 'No location set' : loc),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: _ink.withOpacity(0.65),
+                    )),
+              ),
+            ]),
+            const SizedBox(height: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text('$pct%',
+                    style: const TextStyle(
+                      fontFamily: _displayFont,
+                      fontSize: 36,
+                      fontWeight: FontWeight.w900,
+                      height: 1.0,
+                      color: _ink,
+                    )),
+                if (phaseBits.isNotEmpty) ...[
+                  const SizedBox(width: 9),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 3),
+                      child: Text(phaseBits.join(' · '),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: _ink.withOpacity(0.6),
+                          )),
                     ),
                   ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 9),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: Container(
+                height: 7,
+                color: const Color(0xFFDCE3E6),
+                child: FractionallySizedBox(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: progress,
+                  child: Container(color: _ink),
                 ),
               ),
-              const SizedBox(width: 10),
-              Text('$pct%',
-                  style: const TextStyle(
-                    fontFamily: _displayFont,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                    color: _ink,
-                  )),
-            ]),
-            if (act != null) ...[
-              const SizedBox(height: 9),
+            ),
+            const SizedBox(height: 14),
+            Container(
+              decoration: BoxDecoration(
+                color: _paper,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 11),
+              child: Row(
+                children: [
+                  _dashStat(daysLeft?.toString() ?? '—', 'Days left'),
+                  _dashStatDivider(),
+                  _dashStat(snags?.toString() ?? '—', 'Snags',
+                      attention: (snags ?? 0) > 0),
+                  _dashStatDivider(),
+                  _dashStat(tasks?.toString() ?? '—', 'Tasks'),
+                  _dashStatDivider(),
+                  _dashStat(docs?.toString() ?? '—', 'Docs'),
+                ],
+              ),
+            ),
+            if (team != null) ...[
+              const SizedBox(height: 14),
               Row(children: [
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                      color: _activityColor(data), shape: BoxShape.circle),
-                ),
-                const SizedBox(width: 6),
+                const Icon(Icons.groups_rounded, size: 18, color: _ink),
+                const SizedBox(width: 7),
                 Expanded(
-                  child: Text(act,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: _rowActivityStyle.copyWith(
-                          color: _activityColor(data))),
+                  child: Text('Team of $team',
+                      style: const TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: _inkMute,
+                      )),
                 ),
+                const Icon(Icons.chevron_right_rounded, size: 20, color: _ink),
               ]),
+            ],
+            if (act != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                decoration: const BoxDecoration(
+                  border: Border(
+                      top: BorderSide(color: Color(0x1A1E282E), width: 1)),
+                ),
+                padding: const EdgeInsets.only(top: 12),
+                child: Row(children: [
+                  Icon(Icons.bolt, size: 15, color: _activityColor(data)),
+                  const SizedBox(width: 7),
+                  Expanded(
+                    child: Text(act,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: _heroActivityStyle.copyWith(
+                            color: _activityColor(data))),
+                  ),
+                ]),
+              ),
             ],
           ],
         ),

@@ -3450,12 +3450,10 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     // Featured (Timeline) keeps the bold yellow hero with a programme bar.
     if (featured) return _rTimelineTile(icon, visKey, readOnly, onTap);
 
-    // Lean status tile: paper card, module-identity accent bar, a live status
-    // line, and either a count badge (snags / quotes) or a visibility chip.
+    // Same layout as the featured Timeline tile, on a light-grey surface:
+    // icon chip · title (with trailing visibility chip or count badge) · status.
     final int snags = _optInt(const ['openSnags', 'snagCount']) ?? 0;
     final bool attention = visKey == 'snagList' && snags > 0;
-    final Color accent =
-        attention ? const Color(0xFFAC0C0C) : const Color(0xFF5D737E);
     final String status = _modStatus(visKey, sub);
     final String? badge = _modBadge(visKey);
     final Color badgeColor = visKey == 'snagList'
@@ -3463,45 +3461,80 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         : const Color(0xFF5D737E);
     final String vis = _moduleVisFor(visKey);
 
+    Widget trailing;
+    if (readOnly) {
+      trailing =
+          const Icon(Icons.chevron_right_rounded, size: 20, color: _rChevron);
+    } else if (badge != null) {
+      trailing = Container(
+        constraints: const BoxConstraints(minWidth: 22),
+        height: 20,
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        decoration: BoxDecoration(
+            color: badgeColor, borderRadius: BorderRadius.circular(999)),
+        child: Text(badge,
+            style: const TextStyle(
+                fontFamily: _bodyFont,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: Colors.white)),
+      );
+    } else if (visKey == 'getQuotes') {
+      // Quotes visibility stays locked (no toggle).
+      trailing = _rVisChip('private', _surface);
+    } else {
+      trailing = GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => _toggleModuleVis(visKey),
+        child: _rVisChip(vis, vis == 'shared' ? _tealTint : _surface),
+      );
+    }
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(14),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: _paper,
+            color: const Color(0xFFEDF1F3),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-                color: attention
-                    ? const Color(0xFFF0D5D5)
-                    : const Color(0xFFE4E9EC)),
           ),
           child: Row(children: [
             Container(
-              width: 8,
-              height: 36,
+              width: 46,
+              height: 46,
+              alignment: Alignment.center,
               decoration: BoxDecoration(
-                  color: accent, borderRadius: BorderRadius.circular(5)),
+                color: attention ? const Color(0xFFF7E4E4) : _paper,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon,
+                  size: 24, color: attention ? const Color(0xFFAC0C0C) : _ink),
             ),
-            const SizedBox(width: 13),
-            Icon(icon, size: 23, color: _ink),
-            const SizedBox(width: 13),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontFamily: _displayFont,
-                          fontSize: 15.5,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.2,
-                          color: _ink)),
-                  const SizedBox(height: 2),
+                  Row(children: [
+                    Expanded(
+                      child: Text(title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontFamily: _displayFont,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.3,
+                              color: _ink)),
+                    ),
+                    const SizedBox(width: 8),
+                    trailing,
+                  ]),
+                  const SizedBox(height: 5),
                   Text(status,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -3513,35 +3546,6 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                 ],
               ),
             ),
-            const SizedBox(width: 10),
-            if (readOnly)
-              const Icon(Icons.chevron_right_rounded,
-                  size: 20, color: _rChevron)
-            else if (badge != null)
-              Container(
-                constraints: const BoxConstraints(minWidth: 22),
-                height: 20,
-                alignment: Alignment.center,
-                padding: const EdgeInsets.symmetric(horizontal: 6),
-                decoration: BoxDecoration(
-                    color: badgeColor,
-                    borderRadius: BorderRadius.circular(999)),
-                child: Text(badge,
-                    style: const TextStyle(
-                        fontFamily: _bodyFont,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white)),
-              )
-            else if (visKey == 'getQuotes')
-              // Quotes visibility stays locked (no toggle).
-              _rVisChip('private', _surface)
-            else
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => _toggleModuleVis(visKey),
-                child: _rVisChip(vis, vis == 'shared' ? _tealTint : _surface),
-              ),
           ]),
         ),
       ),
@@ -3616,7 +3620,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                     child: LinearProgressIndicator(
                       value: p,
                       minHeight: 5,
-                      backgroundColor: const Color(0x241E282E),
+                      backgroundColor: Colors.white.withOpacity(0.6),
                       valueColor: const AlwaysStoppedAnimation<Color>(_ink),
                     ),
                   ),
