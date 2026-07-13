@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -246,7 +248,7 @@ class _DetailSiteBookPageViewState extends State<DetailSiteBookPageView> {
         // ink masthead
         Container(
           width: double.infinity,
-          color: const Color(0xFF808789),
+          color: const Color(0xFF3F5C69),
           padding: EdgeInsets.fromLTRB(_hPad, topInset + 10, _hPad, 18),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -503,7 +505,7 @@ class _DetailSiteBookPageViewState extends State<DetailSiteBookPageView> {
     final topInset = MediaQuery.of(context).viewPadding.top;
     return Container(
       width: double.infinity,
-      color: const Color(0xFF808789),
+      color: const Color(0xFF3F5C69),
       padding: EdgeInsets.fromLTRB(_hPad, topInset + 10, _hPad, 18),
       child: Row(
         children: [

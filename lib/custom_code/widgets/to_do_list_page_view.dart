@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -167,7 +169,7 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
-        backgroundColor: const Color(0xFF808789), // slate
+        backgroundColor: const Color(0xFF3F5C69), // slate
         content: Text(msg,
             style: const TextStyle(
                 fontFamily: _bodyFont,
@@ -897,7 +899,7 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
     final top = MediaQuery.of(context).padding.top;
     return Container(
       width: double.infinity,
-      color: const Color(0xFF808789),
+      color: const Color(0xFF3F5C69),
       padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

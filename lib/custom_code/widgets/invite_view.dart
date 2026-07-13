@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -201,7 +203,7 @@ class _InviteViewState extends State<InviteView> {
         children: [
           Container(
             width: double.infinity,
-            color: const Color(0xFF808789), // steel — matches app hero headers
+            color: const Color(0xFF3F5C69), // steel — matches app hero headers
             padding: EdgeInsets.fromLTRB(20, top + 14, 20, 20),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
