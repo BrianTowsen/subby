@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -990,7 +992,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          backgroundColor: _green, // slate
+          backgroundColor: const Color(0xFF808789), // slate
           content: Text(msg,
               style: const TextStyle(
                   fontFamily: _bodyFont,
@@ -1021,7 +1023,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
 
   Widget _addHero(String title, String subtitle) => Container(
         width: double.infinity,
-        color: const Color(0xFF3A5966),
+        color: const Color(0xFF808789),
         padding: EdgeInsets.fromLTRB(
             20, 6 + MediaQuery.of(context).padding.top, 20, 18),
         child: Column(

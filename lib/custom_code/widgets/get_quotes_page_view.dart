@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -465,7 +467,7 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
     final topInset = MediaQuery.of(context).padding.top;
     return Container(
       width: double.infinity,
-      color: const Color(0xFF3A5966), // steel — matches DashboardPageView hero
+      color: const Color(0xFF808789), // steel — matches DashboardPageView hero
       padding: EdgeInsets.fromLTRB(20, topInset + 6, 20, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

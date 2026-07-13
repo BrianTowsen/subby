@@ -10,24 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -974,7 +956,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
 
   // Standard app snackbar — slate background, white text.
   SnackBar _inkSnack(String message) => SnackBar(
-        backgroundColor: const Color(0xFF4E504F), // slate
+        backgroundColor: const Color(0xFF808789), // slate
 
         content: Text(
           message,
@@ -1151,7 +1133,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
   // Dark ink hero (matches ProjectTimelinePageView).
   Widget _hero() => Container(
         width: double.infinity,
-        color: const Color(0xFF3A5966),
+        color: const Color(0xFF808789),
         padding: EdgeInsets.fromLTRB(
             20, 6 + MediaQuery.of(context).padding.top, 20, 18),
         child: Column(

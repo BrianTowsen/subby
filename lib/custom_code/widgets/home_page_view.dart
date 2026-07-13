@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -63,7 +65,7 @@ class _HomePageViewState extends State<HomePageView> {
   static const Color _faint = Color(0xFF93A3AC); // subtitles / inactive
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
-  static const Color _steel = Color(0xFF3A5966); // masthead hero
+  static const Color _steel = Color(0xFF808789); // masthead hero
   static const Color _lime = Color(0xFFE7E247); // primary accent
   static const Color _slate = Color(0xFF4E504F); // leading icons
   static const Color _hairline = Color(0xFFEAEEF0);
