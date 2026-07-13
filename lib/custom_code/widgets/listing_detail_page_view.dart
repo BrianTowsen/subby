@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -1146,23 +1148,29 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                         ),
                         borderRadius: BorderRadius.circular(14),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 14, horizontal: 6),
                           decoration: BoxDecoration(
                               color: _paper,
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(color: _ink, width: 1.5)),
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(Icons.request_quote_outlined,
                                   size: 18, color: _ink),
-                              SizedBox(width: 8),
-                              Text('Get Quote',
-                                  style: TextStyle(
-                                      fontFamily: _bodyFont,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w800,
-                                      color: _ink)),
+                              SizedBox(width: 6),
+                              Flexible(
+                                child: Text('Get Quote',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                        fontFamily: _bodyFont,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w800,
+                                        color: _ink)),
+                              ),
                             ],
                           ),
                         ),
@@ -1180,22 +1188,28 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                         ),
                         borderRadius: BorderRadius.circular(14),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 14, horizontal: 6),
                           decoration: BoxDecoration(
                               color: _lime,
                               borderRadius: BorderRadius.circular(14)),
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(Icons.playlist_add_rounded,
                                   size: 18, color: _ink),
-                              SizedBox(width: 8),
-                              Text('Add to Project',
-                                  style: TextStyle(
-                                      fontFamily: _bodyFont,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w800,
-                                      color: _ink)),
+                              SizedBox(width: 6),
+                              Flexible(
+                                child: Text('Add to Project',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                        fontFamily: _bodyFont,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w800,
+                                        color: _ink)),
+                              ),
                             ],
                           ),
                         ),
