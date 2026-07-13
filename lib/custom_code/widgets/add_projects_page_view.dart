@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status bar icons over ink hero)
@@ -598,7 +600,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
     if (currentUserReference == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: const Color(0xFF808789),
+          backgroundColor: const Color(0xFF3F5C69),
           content: Text(
             'You must be logged in to create a project.',
             style: theme.bodyMedium.override(
@@ -644,7 +646,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: const Color(0xFF808789),
+          backgroundColor: const Color(0xFF3F5C69),
           content: Text(
             'Project created!',
             style: theme.bodyMedium.override(
@@ -663,7 +665,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: const Color(0xFF808789),
+          backgroundColor: const Color(0xFF3F5C69),
           content: Text(
             'Failed to save project: $e',
             style: theme.bodyMedium.override(
@@ -698,7 +700,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
   // Dark ink hero (matches ProjectTimelinePageView).
   Widget _hero() => Container(
         width: double.infinity,
-        color: const Color(0xFF808789),
+        color: const Color(0xFF3F5C69),
         padding: EdgeInsets.fromLTRB(
             20, MediaQuery.of(context).padding.top + 6, 20, 18),
         child: Column(

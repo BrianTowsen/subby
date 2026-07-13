@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -56,7 +58,7 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
   static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
-  static const Color _steel = Color(0xFF808789);
+  static const Color _steel = Color(0xFF3F5C69);
   static const Color _lime = Color(0xFFE7E247);
   static const Color _slate = Color(0xFF4E504F);
   static const Color _hairline = Color(0xFFEAEEF0);
