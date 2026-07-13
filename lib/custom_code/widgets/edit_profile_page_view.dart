@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 // ✅ Auth helpers (currentUserReference, currentUserEmail, etc.)
 import '/auth/firebase_auth/auth_util.dart';
 
@@ -41,8 +43,8 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
   // Brand accent — TEAL (field icons / focus). Primary action is ink.
   static const Color _teal = Color(0xFF1E282E);
   // Status
-  static const Color _live = Color(0xFF5D737E);
-  static const Color _coral = Color(0xFF5D737E);
+  static const Color _live = Color(0xFF4E504F);
+  static const Color _coral = Color(0xFF4E504F);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -504,7 +506,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                                   color: _ink,
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                      color: Color(0xFF5D737E), width: 2.2),
+                                      color: Color(0xFF4E504F), width: 2.2),
                                 ),
                                 child: ClipOval(
                                   child: (photoUrl.isNotEmpty)
@@ -648,7 +650,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
         _initials(displayName),
         style: theme.bodyMedium.override(
           fontFamily: _bodyFont,
-          color: Color(0xFF5D737E),
+          color: Color(0xFF4E504F),
           fontWeight: FontWeight.w900,
           fontSize: 20,
         ),

@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 // ✅ provides currentUserReference, currentUserEmail, etc.
 import '/auth/firebase_auth/auth_util.dart';
 
@@ -65,11 +67,11 @@ class _ProfilePageViewState extends State<ProfilePageView> {
   // Brand accent — TEAL.
   static const Color _teal = Color(0xFF1E282E);
   // Sunshine — avatar ring + initials.
-  static const Color _spark = Color(0xFF5D737E);
+  static const Color _spark = Color(0xFF4E504F);
   // Status
-  static const Color _live = Color(0xFF5D737E);
-  static const Color _coral = Color(0xFF5D737E);
-  static const Color _ok = Color(0xFF5D737E); // "live in Directory" dot
+  static const Color _live = Color(0xFF4E504F);
+  static const Color _coral = Color(0xFF4E504F);
+  static const Color _ok = Color(0xFF4E504F); // "live in Directory" dot
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';

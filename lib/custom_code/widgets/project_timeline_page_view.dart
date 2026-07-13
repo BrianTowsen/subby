@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:intl/intl.dart';
@@ -65,7 +67,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   static const Color _border = Color(0xFFEAEEF0);
   static const Color _line = Color(0xFFF2F5F6);
   static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
-  static const Color _green = Color(0xFF5D737E);
+  static const Color _green = Color(0xFF4E504F);
   static const Color _selTint = Color(0xFFE7EDF0);
   static const Color _danger = Color(0xFF93A3AC);
   static const Color _dash = Color(0xFFCBD8DD);

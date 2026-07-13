@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 class LocationSelectPageView extends StatefulWidget {
@@ -46,7 +48,7 @@ class _LocationSelectPageViewState extends State<LocationSelectPageView> {
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _steel = Color(0xFF3A5966);
   static const Color _lime = Color(0xFFE7E247);
-  static const Color _slate = Color(0xFF5D737E);
+  static const Color _slate = Color(0xFF4E504F);
   static const Color _hairline = Color(0xFFEAEEF0);
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';

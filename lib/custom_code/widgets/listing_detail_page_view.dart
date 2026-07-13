@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -42,12 +44,12 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
   static const Color _ink = Color(0xFF1E282E);
   static const Color _inkMute = Color(0xFF566670);
   static const Color _faint = Color(0xFF93A3AC);
-  static const Color _coral = Color(0xFF5D737E);
+  static const Color _coral = Color(0xFF4E504F);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _steel = Color(0xFF3A5966);
   static const Color _lime = Color(0xFFE7E247);
-  static const Color _slate = Color(0xFF5D737E);
+  static const Color _slate = Color(0xFF4E504F);
   static const Color _whatsapp = Color(0xFF25D366);
   static const Color _hairline = Color(0xFFEAEEF0);
   static const Color _rule = Color(0xFFDCE3E6);
@@ -1279,7 +1281,7 @@ class _DetailTabsState extends State<_DetailTabs> {
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _lime = Color(0xFFE7E247);
   static const Color _hairline = Color(0xFFEAEEF0);
-  static const Color _slate = Color(0xFF5D737E);
+  static const Color _slate = Color(0xFF4E504F);
   static const String _bodyFont = 'Inter';
 
   static const List<String> _tabs = [

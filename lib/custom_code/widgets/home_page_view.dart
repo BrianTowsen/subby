@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -63,7 +65,7 @@ class _HomePageViewState extends State<HomePageView> {
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _steel = Color(0xFF3A5966); // masthead hero
   static const Color _lime = Color(0xFFE7E247); // primary accent
-  static const Color _slate = Color(0xFF5D737E); // leading icons
+  static const Color _slate = Color(0xFF4E504F); // leading icons
   static const Color _hairline = Color(0xFFEAEEF0);
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -820,8 +822,8 @@ class _HomePageViewState extends State<HomePageView> {
           errorBuilder: (context, error, stackTrace) => CustomPaint(
             size: const Size(36, 36),
             painter: const _SubbyMarkPainter(
-              peak: Color(0xFF5D737E), // Subby brand green
-              base: Color(0xFF5D737E),
+              peak: Color(0xFF4E504F), // Subby brand green
+              base: Color(0xFF4E504F),
             ),
           ),
         ),

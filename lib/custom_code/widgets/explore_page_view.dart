@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -35,7 +37,7 @@ class _ExplorePageViewState extends State<ExplorePageView> {
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _steel = Color(0xFF3A5966);
   static const Color _lime = Color(0xFFE7E247);
-  static const Color _slate = Color(0xFF5D737E);
+  static const Color _slate = Color(0xFF4E504F);
   static const Color _hairline = Color(0xFFEAEEF0);
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';

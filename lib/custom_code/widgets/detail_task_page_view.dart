@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -71,7 +73,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
       Color(0xFFAC0C0C); // delete-dialog red (matches DocumentUploadPageView)
   static const Color _navy = Color(0xFF1E282E);
   static const Color _green =
-      Color(0xFF5D737E); // DS: to-do / in-progress / info / mark-done
+      Color(0xFF4E504F); // DS: to-do / in-progress / info / mark-done
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
   // ────────────────────────────────────────────────────────────────────

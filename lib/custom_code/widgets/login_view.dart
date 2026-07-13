@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -55,8 +57,8 @@ class _LoginViewState extends State<LoginView> {
   // Brand accent — TEAL (field icons / focus). Primary action is ink.
   static const Color _teal = Color(0xFF1E282E);
   // Status
-  static const Color _live = Color(0xFF5D737E);
-  static const Color _coral = Color(0xFF5D737E);
+  static const Color _live = Color(0xFF4E504F);
+  static const Color _coral = Color(0xFF4E504F);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';

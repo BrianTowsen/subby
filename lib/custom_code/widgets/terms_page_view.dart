@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:intl/intl.dart';
 
 class TermsPageView extends StatefulWidget {
@@ -42,8 +44,8 @@ class _TermsPageViewState extends State<TermsPageView> {
   // Brand accent — TEAL.
   static const Color _teal = Color(0xFF1E282E);
   // Status
-  static const Color _live = Color(0xFF5D737E); // orange — live / warning
-  static const Color _coral = Color(0xFF5D737E);
+  static const Color _live = Color(0xFF4E504F); // orange — live / warning
+  static const Color _coral = Color(0xFF4E504F);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';

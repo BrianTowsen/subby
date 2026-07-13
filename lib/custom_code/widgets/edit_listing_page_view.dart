@@ -20,6 +20,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'dart:typed_data';
@@ -66,9 +68,9 @@ class _EditListingPageViewState extends State<EditListingPageView> {
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _orange = Color(
-      0xFF5D737E); // DS green: leading icons / active bookmark (was orange #EB7A02)
-  static const Color _green = Color(0xFF5D737E); // DS: verified / info
-  static const Color _gold = Color(0xFF5D737E); // DS: rating stars
+      0xFF4E504F); // DS green: leading icons / active bookmark (was orange #EB7A02)
+  static const Color _green = Color(0xFF4E504F); // DS: verified / info
+  static const Color _gold = Color(0xFF4E504F); // DS: rating stars
   static const Color _hairline = Color(0xFFEAEEF0);
   static const Color _rule = Color(0xFFDCE3E6);
   static const String _displayFont = 'Inter Tight';

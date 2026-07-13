@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -32,10 +34,10 @@ class _InviteViewState extends State<InviteView> {
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _border = Color(0xFFEAEEF0);
-  static const Color _green = Color(0xFF5D737E);
+  static const Color _green = Color(0xFF4E504F);
   static const Color _lime = Color(0xFFE7E247); // primary CTA / positive accent
   static const Color _sageBorder = Color(0xFFCBD8DD);
-  static const Color _cobalt = Color(0xFF5D737E);
+  static const Color _cobalt = Color(0xFF4E504F);
   static const String _body = 'Inter';
   static const String _kActiveProjectPath = 'subby_active_project_path';
 
