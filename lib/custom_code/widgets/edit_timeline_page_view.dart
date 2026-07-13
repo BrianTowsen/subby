@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:intl/intl.dart';
@@ -251,7 +253,9 @@ class _EditTimelinePageViewState extends State<EditTimelinePageView> {
         _projectName = name;
         if (sd is Timestamp) _start = sd.toDate();
         _isOwner = isOwner;
-        _readOnly = !isOwner;
+        // Team members may adjust the timeline; owner-only actions (privacy)
+        // gate on _isOwner instead of _readOnly.
+        _readOnly = false;
         _visibility = vis;
       });
     });
@@ -420,10 +424,11 @@ class _EditTimelinePageViewState extends State<EditTimelinePageView> {
   // Timeline privacy → projects.moduleVisibility['timeline'] (shared with
   // ProjectDetailPageView; the project-doc listener flips our icon back).
   void _toggleVisibility() {
+    if (!_isOwner) return; // only the project owner may change privacy
     final ref = _projectRef;
     final next = _visibility == 'shared' ? 'private' : 'shared';
     setState(() => _visibility = next); // optimistic
-    if (ref == null || _readOnly) return;
+    if (ref == null) return;
     ref.set(<String, dynamic>{
       'moduleVisibility': <String, dynamic>{'timeline': next},
     }, SetOptions(merge: true)).catchError((_) {});
@@ -1759,6 +1764,8 @@ class _EditTimelinePageViewState extends State<EditTimelinePageView> {
         ),
       );
 
+  // Team members can edit the timeline but not its privacy — show the
+  // owner-set visibility as a locked, non-tappable chip.
   Widget _viewOnlyPill() => Container(
         height: 38,
         padding: const EdgeInsets.symmetric(horizontal: 11),
@@ -1768,11 +1775,16 @@ class _EditTimelinePageViewState extends State<EditTimelinePageView> {
             borderRadius: BorderRadius.circular(999)),
         child: Row(
           mainAxisSize: MainAxisSize.min,
-          children: const [
-            Icon(Icons.visibility_outlined, size: 14, color: _paper),
-            SizedBox(width: 5),
-            Text('View only',
-                style: TextStyle(
+          children: [
+            Icon(
+                _visibility == 'shared'
+                    ? Icons.visibility_outlined
+                    : Icons.lock_outline_rounded,
+                size: 14,
+                color: _paper),
+            const SizedBox(width: 5),
+            Text(_visibility == 'shared' ? 'Shared' : 'Private',
+                style: const TextStyle(
                     fontFamily: _body,
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
