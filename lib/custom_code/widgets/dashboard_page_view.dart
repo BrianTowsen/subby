@@ -10,16 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -2078,16 +2068,33 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   Widget _dashStatInner(String value, String label, {bool attention = false}) =>
       Column(
         children: [
-          Text(value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontFamily: _displayFont,
-                fontSize: 18,
-                fontWeight: FontWeight.w900,
-                height: 1.0,
-                color: attention ? const Color(0xFFAC0C0C) : _ink,
-              )),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (attention) ...[
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(
+                      color: Color(0xFFAC0C0C), shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 4),
+              ],
+              Flexible(
+                child: Text(value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: _displayFont,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      height: 1.0,
+                      color: attention ? const Color(0xFFAC0C0C) : _ink,
+                    )),
+              ),
+            ],
+          ),
           const SizedBox(height: 4),
           Text(label,
               style: const TextStyle(
@@ -2345,8 +2352,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             ClipRRect(
               borderRadius: BorderRadius.circular(999),
               child: Container(
-                height: 7,
-                color: Colors.white.withOpacity(0.55),
+                height: 8,
+                color: Colors.white,
                 child: FractionallySizedBox(
                   alignment: Alignment.centerLeft,
                   widthFactor: progress,
@@ -2496,7 +2503,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             ClipRRect(
               borderRadius: BorderRadius.circular(999),
               child: Container(
-                height: 7,
+                height: 8,
                 color: const Color(0xFFDCE3E6),
                 child: FractionallySizedBox(
                   alignment: Alignment.centerLeft,
