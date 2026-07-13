@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -236,17 +238,37 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
     }
   }
 
-  // ✅ Is the signed-in user the one who created this snag? (Gates Delete.)
+  // ✅ Delete is gated to the PROJECT OWNER (team members can add, not delete).
+  //    Resolved once from the snag's projectRef → project.ownerRef.
+  DocumentReference? _projectOwnerRef;
+  bool _projectOwnerResolved = false;
+
+  Future<void> _ensureProjectOwner(Map<String, dynamic> d) async {
+    if (_projectOwnerResolved) return;
+    final projRef = d['projectRef'] as DocumentReference?;
+    if (projRef == null) {
+      _projectOwnerResolved = true;
+      return;
+    }
+    try {
+      final snap = await projRef.get();
+      final pd = (snap.data() as Map<String, dynamic>? ?? <String, dynamic>{});
+      final owner = pd['ownerRef'];
+      _projectOwnerResolved = true;
+      if (owner is DocumentReference) {
+        _projectOwnerRef = owner;
+        if (mounted) setState(() {});
+      }
+    } catch (e) {
+      debugPrint('⚠️ resolve project owner failed: $e');
+    }
+  }
+
+  // ✅ Only the project owner may delete this snag. (Gates Delete.)
   bool _isOwner(Map<String, dynamic> d) {
     final me = currentUserReference;
-    if (me == null) return false;
-    final createdByRef = d['createdBy'] as DocumentReference?;
-    if (createdByRef != null) return createdByRef.path == me.path;
-    final createdByName = (d['createdByName'] ?? '').toString().trim();
-    final myName = (currentUserDisplayName).trim();
-    return createdByName.isNotEmpty &&
-        myName.isNotEmpty &&
-        createdByName == myName;
+    if (me == null || _projectOwnerRef == null) return false;
+    return _projectOwnerRef!.path == me.path;
   }
 
   // =========================================================
@@ -556,8 +578,10 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
 
           // Retry the read-receipt stamp off the live snapshot (auth + Firestore
           // are warm once data has arrived) until it conclusively resolves.
-          WidgetsBinding.instance
-              .addPostFrameCallback((_) => _maybeStampReadReceipt(ref, d));
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _maybeStampReadReceipt(ref, d);
+            _ensureProjectOwner(d);
+          });
           return _content(ref, d);
         },
       ),
