@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -76,7 +78,7 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
-  static const Color _sage = Color(0xFF5D737E);
+  static const Color _sage = Color(0xFF4E504F);
   static const Color _tint = Color(0xFFE7EDF0);
   static const Color _tintBorder = Color(0xFFCBD8DD);
   static const Color _fieldBorder = Color(0xFFE1E7EA);

@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -32,7 +34,7 @@ class _SavedPageViewState extends State<SavedPageView> {
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _steel = Color(0xFF3A5966);
   static const Color _lime = Color(0xFFE7E247);
-  static const Color _slate = Color(0xFF5D737E);
+  static const Color _slate = Color(0xFF4E504F);
   static const Color _hairline = Color(0xFFEAEEF0);
   static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
   static const String _displayFont = 'Inter Tight';

@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -151,8 +153,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   static const Color _heroBg = Color(0xFF3A5966); // welcome header background
 
   // Accents
-  static const Color _yellow = Color(0xFF5D737E); // sage — "on site" / on track
-  static const Color _teal = Color(0xFF5D737E); // info / shared / "needs you"
+  static const Color _yellow = Color(0xFF4E504F); // sage — "on site" / on track
+  static const Color _teal = Color(0xFF4E504F); // info / shared / "needs you"
   static const Color _ringTrack = Color(0xFFECF0F2);
   static const Color _orange = Color(0xFF566670); // attention / snagging (clay)
   static const Color _orangeTint = Color(0xFFE7EDF0);
@@ -928,8 +930,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           errorBuilder: (context, error, stackTrace) => CustomPaint(
             size: const Size(36, 36),
             painter: const _SubbyMarkPainter(
-              peak: Color(0xFF5D737E), // Subby brand green
-              base: Color(0xFF5D737E),
+              peak: Color(0xFF4E504F), // Subby brand green
+              base: Color(0xFF4E504F),
             ),
           ),
         ),
@@ -2436,7 +2438,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                     ),
                     child: Row(mainAxisSize: MainAxisSize.min, children: [
                       const Icon(Icons.bolt,
-                          size: 12, color: Color(0xFF5D737E)),
+                          size: 12, color: Color(0xFF4E504F)),
                       const SizedBox(width: 4),
                       Text(_capitalize(status),
                           style: const TextStyle(
@@ -2572,20 +2574,20 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF5D737E).withOpacity(0.12),
+                  color: const Color(0xFF4E504F).withOpacity(0.12),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.bolt, size: 13, color: Color(0xFF5D737E)),
+                    const Icon(Icons.bolt, size: 13, color: Color(0xFF4E504F)),
                     const SizedBox(width: 4),
                     Text('$count today',
                         style: const TextStyle(
                           fontFamily: _bodyFont,
                           fontSize: 11,
                           fontWeight: FontWeight.w900,
-                          color: Color(0xFF5D737E),
+                          color: Color(0xFF4E504F),
                         )),
                   ],
                 ),
@@ -2646,7 +2648,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               shape: BoxShape.circle,
               border: Border.all(color: const Color(0xFFCBD8DD), width: 1.5),
             ),
-            child: const Icon(Icons.bolt, size: 16, color: Color(0xFF5D737E)),
+            child: const Icon(Icons.bolt, size: 16, color: Color(0xFF4E504F)),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -2881,7 +2883,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                       Border.all(color: const Color(0xFFCBD8DD), width: 1.5),
                 ),
                 child: Icon(_activityIcon(r.type),
-                    size: 16, color: const Color(0xFF5D737E)),
+                    size: 16, color: const Color(0xFF4E504F)),
               ),
               const SizedBox(width: 14),
               Expanded(

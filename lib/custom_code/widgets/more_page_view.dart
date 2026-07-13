@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 class MorePageView extends StatefulWidget {
   const MorePageView({
     Key? key,
@@ -40,7 +42,7 @@ class _MorePageViewState extends State<MorePageView> {
   // Brand accent — TEAL.
   static const Color _teal = Color(0xFF1E282E);
   // Status
-  static const Color _live = Color(0xFF5D737E); // orange — live / warning
+  static const Color _live = Color(0xFF4E504F); // orange — live / warning
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';

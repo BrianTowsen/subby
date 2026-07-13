@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -62,7 +64,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
       Color(0xFFECF0F2); // DS: lime tint → neutral surface
   static const Color _live =
       Color(0xFF566670); // DS: lime → clay (high / attention)
-  static const Color _green = Color(0xFF5D737E); // DS: in-progress / info
+  static const Color _green = Color(0xFF4E504F); // DS: in-progress / info
   static const Color _coral = Color(0xFF566670);
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';

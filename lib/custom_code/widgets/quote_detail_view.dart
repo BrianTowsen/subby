@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -33,7 +35,7 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _border = Color(0xFFEAEEF0);
   static const Color _line = Color(0xFFF2F5F6);
-  static const Color _green = Color(0xFF5D737E);
+  static const Color _green = Color(0xFF4E504F);
   static const Color _lime = Color(0xFFE7E247); // primary CTA / positive accent
   static const Color _coral = Color(0xFF566670);
   static const String _display = 'Inter Tight';

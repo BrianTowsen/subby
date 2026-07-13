@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -68,7 +70,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
       Color(0xFF566670); // DS: → clay (destructive/error)
   static const Color _navy = Color(0xFF1E282E);
   static const Color _green =
-      Color(0xFF5D737E); // DS: to-do / in-progress / info
+      Color(0xFF4E504F); // DS: to-do / in-progress / info
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
   // ────────────────────────────────────────────────────────────────────
