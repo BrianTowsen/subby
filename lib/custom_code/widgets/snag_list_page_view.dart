@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -691,7 +693,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
     if (route.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: _green, // slate
+          backgroundColor: const Color(0xFF808789), // slate
           content: Text(
             'Add Snag page not linked yet.',
             style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -720,7 +722,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
     final top = MediaQuery.of(context).padding.top;
     return Container(
       width: double.infinity,
-      color: const Color(0xFF3A5966),
+      color: const Color(0xFF808789),
       padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

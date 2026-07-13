@@ -20,6 +20,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:intl/intl.dart';
@@ -74,7 +76,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   static const Color _ruleIdle = Color(0xFFB7C2C7);
   static const Color _childBg = Color(0xFFFBFCFD);
   static const Color _startBg = Color(0xFFF5F8F9);
-  static const Color _header = Color(0xFF3A5966); // hero header ink
+  static const Color _header = Color(0xFF808789); // hero header ink
 
   // Two-tone bar colours
   static const Color _phaseColor = Color(0xFF1E282E); // dark ink = phase

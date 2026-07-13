@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -352,7 +354,7 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
-        backgroundColor: _sage,
+        backgroundColor: const Color(0xFF808789),
         content: Text(msg,
             style: const TextStyle(
                 fontFamily: _bodyFont,
@@ -458,7 +460,7 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
 
   Widget _addHero(String title, String subtitle) => Container(
         width: double.infinity,
-        color: const Color(0xFF3A5966),
+        color: const Color(0xFF808789),
         padding: EdgeInsets.fromLTRB(
             _hPad, 6 + MediaQuery.of(context).padding.top, _hPad, 18),
         child: Column(
