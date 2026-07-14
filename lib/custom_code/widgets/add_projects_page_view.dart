@@ -12,12 +12,6 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status bar icons over ink hero)
@@ -85,8 +79,14 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
   bool _archived = false;
   bool _saving = false;
 
-  // ─── Swipe-to-dismiss (follow the thumb, snap back or close) ────────
+  // ─── Edge-swipe-to-dismiss (follow the thumb, snap back or close) ───
+  // Only a drag that STARTS within [_edgeWidth] px of the left edge counts as
+  // a back-swipe; drags beginning in the middle of the screen are ignored so
+  // they never accidentally dismiss the page (and stay free for other
+  // gestures like list scrubbing / text selection).
+  static const double _edgeWidth = 30;
   double _dragX = 0;
+  bool _edgeEngaged = false;
   late final AnimationController _snapCtrl = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 220),
@@ -103,9 +103,16 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
     super.dispose();
   }
 
-  // Only rightward drags count; deferToChild lets text fields / dropdowns
-  // claim their own horizontal gestures first.
+  // Gate the gesture at its start: engage only when the finger lands near the
+  // left edge. deferToChild still lets text fields / dropdowns claim their own
+  // horizontal gestures first.
+  void _onDragStart(DragStartDetails d) {
+    _edgeEngaged = d.localPosition.dx <= _edgeWidth;
+  }
+
+  // Only rightward drags count, and only when the swipe began at the edge.
   void _onDragUpdate(DragUpdateDetails d) {
+    if (!_edgeEngaged) return;
     if (_snapCtrl.isAnimating) _snapCtrl.stop();
     setState(() {
       _dragX = (_dragX + d.delta.dx).clamp(0.0, double.infinity);
@@ -113,6 +120,9 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
   }
 
   void _onDragEnd(DragEndDetails d) {
+    if (!_edgeEngaged) return;
+    _edgeEngaged = false;
+
     final double width = MediaQuery.sizeOf(context).width;
     final double v = d.primaryVelocity ?? 0;
     final bool shouldClose = _dragX > width * 0.30 || v > 700;
@@ -768,6 +778,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
       ),
       child: GestureDetector(
         behavior: HitTestBehavior.deferToChild,
+        onHorizontalDragStart: _onDragStart,
         onHorizontalDragUpdate: _onDragUpdate,
         onHorizontalDragEnd: _onDragEnd,
         child: Transform.translate(

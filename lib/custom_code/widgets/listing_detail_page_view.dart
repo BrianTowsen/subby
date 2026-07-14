@@ -10,16 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -1136,8 +1126,11 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                   ),
                 ),
                 // ── CTA bar ──
+                // NOTE: no fixed height — the bar sizes to its content plus
+                // the bottom safe-area inset, so the buttons keep their full
+                // 52px height on devices with a home-indicator inset (a fixed
+                // height minus a large inset was squashing them).
                 Container(
-                  height: _bottomCtaContainerHeight,
                   padding: EdgeInsets.fromLTRB(_hPad, 14, _hPad,
                       14 + MediaQuery.of(context).padding.bottom),
                   decoration: const BoxDecoration(
@@ -1154,8 +1147,9 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                         ),
                         borderRadius: BorderRadius.circular(14),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 14, horizontal: 6),
+                          height: 52,
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
                           decoration: BoxDecoration(
                               color: _paper,
                               borderRadius: BorderRadius.circular(14),
@@ -1194,8 +1188,9 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                         ),
                         borderRadius: BorderRadius.circular(14),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 14, horizontal: 6),
+                          height: 52,
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
                           decoration: BoxDecoration(
                               color: _lime,
                               borderRadius: BorderRadius.circular(14)),
