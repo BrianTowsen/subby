@@ -10,7 +10,10 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
@@ -1301,13 +1304,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                   switchOutCurve: Curves.easeIn,
                   transitionBuilder: (child, anim) => FadeTransition(
                     opacity: anim,
-                    child: SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(0, 0.035),
-                        end: Offset.zero,
-                      ).animate(anim),
-                      child: child,
-                    ),
+                    child: child,
                   ),
                   child: KeyedSubtree(
                     key: ValueKey<int>(_tab),
@@ -1327,10 +1324,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                 curve: Curves.easeOutCubic,
                 builder: (context, t, child) => Opacity(
                   opacity: t,
-                  child: Transform.translate(
-                    offset: Offset(0, (1 - t) * 28),
-                    child: child,
-                  ),
+                  child: child,
                 ),
                 child: _paymentEditor(_editingPayment!),
               ),
@@ -2718,7 +2712,6 @@ class _ProjectCostViewState extends State<ProjectCostView> {
         rows.add(_costSectionRow(_sections[i].name, b, inv, pd));
     }
     final variance = budget - forecast; // negative = over
-    final fbase = forecast > 0 ? forecast : 1;
     final pctSpent = budget > 0 ? (invoiced / budget * 100).round() : 0;
     final over = variance < -0.5;
 
@@ -2747,7 +2740,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
           child: ListView(
             padding: EdgeInsets.fromLTRB(14, 14, 14, 24 + bottomInset),
             children: [
-              _costSummaryCard(budget, invoiced, paid, ctc, fbase.toDouble()),
+              _costSummaryCard(budget, invoiced, paid, ctc, pctSpent, over),
               const SizedBox(height: 12),
               _varianceBanner(over, variance, forecast, budget),
               const SizedBox(height: 16),
@@ -2784,68 +2777,82 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     );
   }
 
-  Widget _costSummaryCard(
-      double budget, double invoiced, double paid, double ctc, double fbase) {
-    final paidW = (paid / fbase).clamp(0.0, 1.0);
-    final invUnpaidW = ((invoiced - paid) / fbase).clamp(0.0, 1.0);
+  Widget _costSummaryCard(double budget, double invoiced, double paid,
+      double ctc, int pctSpent, bool over) {
+    final base = budget > 0 ? budget : 1.0;
+    final pPaid = (paid / base).clamp(0.0, 1.0);
+    final pInv = (invoiced / base).clamp(0.0, 1.0);
+    final tag =
+        over ? 'OVER BUDGET' : (pctSpent >= 90 ? 'NEAR LIMIT' : 'ON TRACK');
+    // A little brand yellow on the healthy state; clay red when over.
+    final Color tagBg = over ? _warn.withOpacity(0.06) : _brandYellow;
+    final Color tagFg = over ? _warn : _ink;
+
     return Container(
       decoration: BoxDecoration(
         color: _paper,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _border),
       ),
-      padding: const EdgeInsets.fromLTRB(14, 15, 14, 14),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: SizedBox(
-              height: 12,
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: (paidW * 1000).round().clamp(0, 1000),
-                    child: Container(color: _ink),
-                  ),
-                  const SizedBox(width: 3),
-                  Expanded(
-                    flex: (invUnpaidW * 1000).round().clamp(0, 1000),
-                    child: Container(color: _green),
-                  ),
-                  const SizedBox(width: 3),
-                  Expanded(
-                    flex: ((1 - paidW - invUnpaidW) * 1000)
-                        .round()
-                        .clamp(0, 1000),
-                    child: Container(color: _band),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 16,
-            runSpacing: 4,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _legend(_ink, 'Paid'),
-              _legend(_green, 'Unpaid'),
-              _legend(const Color(0xFFE4EAED), 'To complete'),
+              const Text('BUDGET UTILISATION',
+                  style: TextStyle(
+                    fontFamily: _body,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                    color: _faint,
+                  )),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                decoration: BoxDecoration(
+                    color: tagBg, borderRadius: BorderRadius.circular(999)),
+                child: Text(tag,
+                    style: TextStyle(
+                      fontFamily: _body,
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.4,
+                      color: tagFg,
+                    )),
+              ),
             ],
           ),
           const SizedBox(height: 14),
           Row(
             children: [
-              Expanded(child: _statCell('BUDGET', _money(budget), _ink)),
-              Expanded(child: _statCell('PAYMENTS', _money(invoiced), _ink)),
+              _ring(pPaid, pInv, pctSpent),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  children: [
+                    _legendValue(_ink, 'Paid', _money(paid), _ink),
+                    const SizedBox(height: 12),
+                    _legendValue(
+                        _green, 'Unpaid', _money(invoiced - paid), _ink),
+                    const SizedBox(height: 12),
+                    _legendValue(const Color(0xFFE4EAED), 'To complete',
+                        _money(ctc), _green),
+                  ],
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 12),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 13),
+            child: Divider(height: 1, thickness: 1, color: _border),
+          ),
           Row(
             children: [
-              Expanded(child: _statCell('PAID', _money(paid), _ink)),
-              Expanded(child: _statCell('TO COMPLETE', _money(ctc), _green)),
+              Expanded(child: _statCell('TOTAL BUDGET', _money(budget), _ink)),
+              Expanded(
+                  child: _statCell('PAYMENTS TO DATE', _money(invoiced), _ink)),
             ],
           ),
         ],
@@ -2853,22 +2860,88 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     );
   }
 
-  Widget _legend(Color c, String t) => Row(
-        mainAxisSize: MainAxisSize.min,
+  // Donut ring — paid (ink), unpaid (green), remaining (light), % in the hole.
+  Widget _ring(double pPaid, double pInv, int pctSpent) {
+    final p1 = pPaid.clamp(0.0, 1.0);
+    final p2 = pInv.clamp(p1, 1.0);
+    return Container(
+      width: 104,
+      height: 104,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: SweepGradient(
+          startAngle: -math.pi / 2,
+          endAngle: math.pi * 1.5,
+          stops: [0, p1, p1, p2, p2, 1],
+          colors: const [
+            _ink,
+            _ink,
+            _green,
+            _green,
+            Color(0xFFE4EAED),
+            Color(0xFFE4EAED),
+          ],
+        ),
+      ),
+      child: Center(
+        child: Container(
+          width: 80,
+          height: 80,
+          decoration:
+              const BoxDecoration(color: _paper, shape: BoxShape.circle),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('$pctSpent%',
+                  style: const TextStyle(
+                    fontFamily: _display,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -1,
+                    height: 1,
+                    color: _ink,
+                  )),
+              const SizedBox(height: 3),
+              const Text('COMMITTED',
+                  style: TextStyle(
+                    fontFamily: _body,
+                    fontSize: 8.5,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.6,
+                    color: _faint,
+                  )),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _legendValue(
+          Color dot, String label, String value, Color valueColor) =>
+      Row(
         children: [
           Container(
-            width: 9,
-            height: 9,
-            decoration:
-                BoxDecoration(color: c, borderRadius: BorderRadius.circular(3)),
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+                color: dot, borderRadius: BorderRadius.circular(3)),
           ),
-          const SizedBox(width: 6),
-          Text(t,
+          const SizedBox(width: 8),
+          Text(label,
               style: const TextStyle(
                 fontFamily: _body,
-                fontSize: 10.5,
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
                 color: _inkMute,
+              )),
+          const Spacer(),
+          Text(value,
+              style: TextStyle(
+                fontFamily: _display,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: valueColor,
               )),
         ],
       );
