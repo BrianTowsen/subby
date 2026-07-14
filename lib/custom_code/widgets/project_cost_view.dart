@@ -3382,6 +3382,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
         decoration: BoxDecoration(
           color: _paper,
           borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _border),
         ),
         child: child,
       );
@@ -3444,6 +3445,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       decoration: BoxDecoration(
         color: _paper,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _border),
       ),
       child: Row(
         children: [
@@ -3526,6 +3528,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       decoration: BoxDecoration(
         color: _paper,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _border),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 14),
       child: DropdownButtonHideUnderline(
@@ -3600,6 +3603,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       decoration: BoxDecoration(
         color: _paper,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _border),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 14),
       child: DropdownButtonHideUnderline(

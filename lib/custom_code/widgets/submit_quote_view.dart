@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -24,17 +26,26 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 /// SubmitQuoteView — a trade submits a quote to a project.
-/// Upload-first, then the key figures (amount + VAT, lead time, deposit) and
+/// Upload-first, then the key figures (amount + VAT, lead time, deposit),
+/// the SCOPE OF WORK (the standard cost sections from ProjectCostView), and
 /// inclusions/exclusions. Writes to projects/{id}/quotes/{tradeUid}.
+///
+/// After a successful submit the trade is returned to the Dashboard
+/// (dashboardRouteName — defaults to 'DashboardPage').
 class SubmitQuoteView extends StatefulWidget {
   const SubmitQuoteView({
     super.key,
     this.width,
     this.height,
+
+    /// FlutterFlow route name of the dashboard page (DashboardPageView).
+    /// The trade is sent here after submitting.
+    this.dashboardRouteName,
   });
 
   final double? width;
   final double? height;
+  final String? dashboardRouteName;
 
   @override
   State<SubmitQuoteView> createState() => _SubmitQuoteViewState();
@@ -53,12 +64,48 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
   static const Color _sage = Color(0xFFF2F5F6);
   static const Color _sageBorder = Color(0xFFCBD8DD);
   static const Color _coral = Color(0xFF566670);
+  static const Color _hairline = Color(0xFFDCE3E6);
+  static const Color _band = Color(0xFFF2F5F6);
   static const String _display = 'Inter Tight';
   static const String _body = 'Inter';
 
   static const String _kActiveProjectPath = 'subby_active_project_path';
   static const String _kActiveQuotePath = 'subby_active_quote_path';
   static const int _vatPct = 15;
+  static const String _fallbackDashboardRoute = 'DashboardPage';
+
+  // Standard residential trade cost sections — sourced from
+  // ProjectCostView._baseSections so the quote scope maps 1:1 onto the
+  // owner's cost estimate sections.
+  static const List<String> _scopeOptions = [
+    'Professional Fees',
+    'Preliminaries & General',
+    'Site Preparation',
+    'Site Establishment',
+    'Earthworks & Excavation',
+    'Brickwork & Concrete',
+    'Structural Steel Works',
+    'Roofing',
+    'Windows & Door Frames',
+    'Plumbing & Drainage',
+    'Electrical Works',
+    'Plastering & Screeds',
+    'Waterproofing',
+    'Ceilings & Partitioning',
+    'Internal Carpentry & Joinery',
+    'Kitchen (Built-in Units)',
+    'Built-in Cupboards',
+    'Tiling',
+    'Special Items',
+    'Steel Works',
+    'Sanitary Fittings',
+    'Painting & Wall Covering',
+    'Electrical Fittings',
+    'Floor Covering',
+    'External Site Works',
+    'Landscaping',
+    'Cleaning & Handover',
+  ];
 
   DocumentReference<Map<String, dynamic>>? _projectRef;
   DocumentReference<Map<String, dynamic>>? _quoteRef;
@@ -67,26 +114,101 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
 
   final TextEditingController _amountCtl = TextEditingController();
   final TextEditingController _notesCtl = TextEditingController();
+
+  // Numeric fields use a decimal pad (no return key on iOS). A floating
+  // "Done" accessory bar (iOS blue with a tick) gives them the same
+  // blue-tick affordance every other numeric field in the app uses.
+  final FocusNode _amountFocus = FocusNode();
+  OverlayEntry? _kbBar;
+
   bool _vatIncluded = true;
   int _leadWeeks = 2;
   int _depositPct = 40;
   bool _fileAttached = false;
   String _fileName = '';
   String _fileUrl = '';
+  final Set<String> _scope = {};
   bool _saving = false;
 
   @override
   void initState() {
     super.initState();
+    _amountFocus.addListener(_onNumFocusChange);
     _loadActiveProject();
   }
 
   @override
   void dispose() {
     _projSub?.cancel();
+    _hideKbBar();
+    _amountFocus.dispose();
     _amountCtl.dispose();
     _notesCtl.dispose();
     super.dispose();
+  }
+
+  // ── Keyboard "Done" accessory bar (blue tick) ────────────────────────
+  void _onNumFocusChange() {
+    if (_amountFocus.hasFocus) {
+      _showKbBar();
+    } else {
+      Future.microtask(() {
+        if (!_amountFocus.hasFocus) _hideKbBar();
+      });
+    }
+  }
+
+  void _showKbBar() {
+    if (_kbBar != null || !mounted) return;
+    _kbBar = OverlayEntry(builder: (ctx) {
+      final inset = MediaQuery.of(ctx).viewInsets.bottom;
+      return Positioned(
+        left: 0,
+        right: 0,
+        bottom: inset,
+        child: Material(
+          color: _band,
+          child: Container(
+            height: 46,
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: const BoxDecoration(
+              border: Border(top: BorderSide(color: _hairline)),
+            ),
+            child: GestureDetector(
+              onTap: () => FocusScope.of(context).unfocus(),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0A84FF), // iOS blue
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(Icons.check_rounded, size: 16, color: _paper),
+                    SizedBox(width: 5),
+                    Text('Done',
+                        style: TextStyle(
+                            fontFamily: _body,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: _paper)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    });
+    Overlay.of(context).insert(_kbBar!);
+  }
+
+  void _hideKbBar() {
+    _kbBar?.remove();
+    _kbBar = null;
   }
 
   Future<void> _loadActiveProject() async {
@@ -107,6 +229,23 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
     }
     if (ref == null) return;
     _projectRef = ref;
+
+    // Pre-select any scope the trade already picked in QuoteRequestView.
+    final qref = _quoteRef;
+    if (qref != null) {
+      try {
+        final snap = await qref.get();
+        final sc = snap.data()?['scope'];
+        if (sc is List && mounted) {
+          setState(() {
+            _scope
+              ..clear()
+              ..addAll(sc.map((e) => e.toString()));
+          });
+        }
+      } catch (_) {}
+    }
+
     _projSub = ref.snapshots().listen((snap) {
       final raw = snap.data();
       final data = raw is Map<String, dynamic> ? raw : <String, dynamic>{};
@@ -147,13 +286,11 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
       final picked = result.files.first;
       final name = picked.name;
 
-      // Show the chip immediately with the local name.
       setState(() {
         _fileAttached = true;
         _fileName = name;
       });
 
-      // Upload to Storage (quotes/<uid>/<timestamp>-<name>) if we have bytes.
       final bytes = picked.bytes;
       final uid = currentUserReference?.id ?? 'anon';
       if (bytes != null) {
@@ -179,7 +316,6 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
     }
   }
 
-  // Detaches the currently attached file.
   void _removeFile() {
     setState(() {
       _fileAttached = false;
@@ -191,6 +327,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
   Future<void> _submit() async {
     final qref = _quoteRef;
     if (qref == null || _saving) return;
+    FocusScope.of(context).unfocus();
     setState(() => _saving = true);
     try {
       // Writes to the SAME doc InviteView created (listing-id keyed) —
@@ -202,6 +339,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
         'total': _total,
         'leadWeeks': _leadWeeks,
         'depositPct': _depositPct,
+        'scope': _scope.toList(),
         'notes': _notesCtl.text.trim(),
         'fileName': _fileName,
         'fileUrl': _fileUrl,
@@ -219,8 +357,11 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
                   fontWeight: FontWeight.w700,
                   color: _paper)),
         ));
-      final nav = Navigator.of(context);
-      if (nav.canPop()) nav.pop();
+      // Return to the Dashboard, clearing the quote flow off the stack.
+      final route = (widget.dashboardRouteName ?? '').trim().isEmpty
+          ? _fallbackDashboardRoute
+          : widget.dashboardRouteName!.trim();
+      context.goNamed(route);
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -304,7 +445,38 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
                 const SizedBox(height: 10),
                 _figuresCard(),
                 const SizedBox(height: 20),
-                _label('3 · INCLUSIONS / EXCLUSIONS'),
+                Row(children: [
+                  _label('3 · SCOPE OF WORK'),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                        color: const Color(0xFFE7EDF0),
+                        borderRadius: BorderRadius.circular(999)),
+                    child: Text(
+                        '${_scope.length} section${_scope.length == 1 ? '' : 's'}',
+                        style: const TextStyle(
+                            fontFamily: 'Roboto Mono',
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: _green)),
+                  ),
+                ]),
+                const SizedBox(height: 6),
+                const Text('Which cost sections does this quote cover?',
+                    style: TextStyle(
+                        fontFamily: _body,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: _faint)),
+                const SizedBox(height: 10),
+                Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [for (final s in _scopeOptions) _chip(s)]),
+                const SizedBox(height: 20),
+                _label('4 · INCLUSIONS / EXCLUSIONS'),
                 const SizedBox(height: 10),
                 Container(
                   decoration: BoxDecoration(
@@ -316,7 +488,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
                   child: TextField(
                     controller: _notesCtl,
                     maxLines: 4,
-                    textInputAction: TextInputAction.done,
+                    textInputAction: TextInputAction.done, // blue tick
                     onChanged: (_) => setState(() {}),
                     style: const TextStyle(
                         fontFamily: _body,
@@ -425,6 +597,33 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
           fontWeight: FontWeight.w800,
           letterSpacing: 0.6,
           color: _inkMute));
+
+  // Scope chip — mirrors QuoteRequestView._chip.
+  Widget _chip(String s) {
+    final on = _scope.contains(s);
+    return GestureDetector(
+      onTap: () => setState(() => on ? _scope.remove(s) : _scope.add(s)),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        decoration: BoxDecoration(
+          color: on ? _ink : _surface,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          if (on) ...[
+            const Icon(Icons.check_rounded, size: 15, color: _paper),
+            const SizedBox(width: 6)
+          ],
+          Text(s,
+              style: TextStyle(
+                  fontFamily: _body,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: on ? _paper : _inkMute)),
+        ]),
+      ),
+    );
+  }
 
   Widget _uploadBox() {
     if (_fileAttached) {
@@ -561,6 +760,9 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
                       Expanded(
                         child: TextField(
                           controller: _amountCtl,
+                          focusNode: _amountFocus,
+                          // The floating "Done" bar supplies the blue tick
+                          // that the decimal pad lacks.
                           textInputAction: TextInputAction.done,
                           keyboardType: const TextInputType.numberWithOptions(
                               decimal: true),

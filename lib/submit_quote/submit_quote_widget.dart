@@ -50,6 +50,7 @@ class _SubmitQuoteWidgetState extends State<SubmitQuoteWidget> {
           child: custom_widgets.SubmitQuoteView(
             width: MediaQuery.sizeOf(context).width * 1.0,
             height: MediaQuery.sizeOf(context).height * 1.0,
+            dashboardRouteName: 'dashboardPage',
           ),
         ),
       ),
