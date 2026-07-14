@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:intl/intl.dart';
@@ -2659,14 +2661,14 @@ class _EditTimelinePageViewState extends State<EditTimelinePageView> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Icon(Icons.delete_outline_rounded,
-                              size: 18, color: _faint),
+                              size: 18, color: _inkMute),
                           const SizedBox(width: 7),
                           Text(isChild ? 'Delete sub-task' : 'Delete section',
                               style: const TextStyle(
                                   fontFamily: _body,
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w800,
-                                  color: _faint)),
+                                  color: _inkMute)),
                         ],
                       ),
                     ),

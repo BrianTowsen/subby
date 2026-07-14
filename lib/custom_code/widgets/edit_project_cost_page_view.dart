@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -1007,14 +1009,14 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: const [
                         Icon(Icons.delete_outline_rounded,
-                            size: 18, color: _faint),
+                            size: 18, color: _inkMute),
                         SizedBox(width: 7),
                         Text('Delete line item',
                             style: TextStyle(
                                 fontFamily: _body,
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.w800,
-                                color: _faint)),
+                                color: _inkMute)),
                       ],
                     ),
                   ),

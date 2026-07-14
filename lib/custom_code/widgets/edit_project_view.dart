@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/services.dart'; // SystemChrome / SystemUiOverlayStyle (dark status bar over white form)
@@ -1339,6 +1341,30 @@ class _EditProjectViewState extends State<EditProjectView>
                       children: [
                         Text('PROJECT DETAILS', style: _uLabelStyle(theme)),
                         const SizedBox(height: 10),
+                        // Project name — soft filled card (surface bg, no
+                        // border) matching EditProfilePageView's user card.
+                        Container(
+                          decoration: BoxDecoration(
+                            color: _surface,
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: _uText(
+                            theme: theme,
+                            label: 'Project name',
+                            controller: _nameCtrl,
+                            icon: Icons.home_work_outlined,
+                            hint: 'e.g. Winston Ridge Renovation',
+                            validator: (v) {
+                              if ((v ?? '').trim().isEmpty) {
+                                return 'Project name is required';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 16),
                         Container(
                           decoration: BoxDecoration(
                             color: _paper,
@@ -1350,19 +1376,6 @@ class _EditProjectViewState extends State<EditProjectView>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _uText(
-                                theme: theme,
-                                label: 'Project name',
-                                controller: _nameCtrl,
-                                icon: Icons.home_work_outlined,
-                                hint: 'e.g. Winston Ridge Renovation',
-                                validator: (v) {
-                                  if ((v ?? '').trim().isEmpty) {
-                                    return 'Project name is required';
-                                  }
-                                  return null;
-                                },
-                              ),
                               _uScope(theme),
                               _uSelect(
                                 theme: theme,
