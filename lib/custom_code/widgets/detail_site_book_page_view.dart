@@ -10,18 +10,9 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '/auth/firebase_auth/auth_util.dart'; // currentUserReference (owner gate)
 
 // ======================= DetailSiteBookPageView =============================
 //
@@ -64,6 +55,8 @@ class _DetailSiteBookPageViewState extends State<DetailSiteBookPageView> {
   static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
+  static const Color _warn =
+      Color(0xFFAC0C0C); // delete-dialog red (matches DetailTaskPageView)
 
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -117,6 +110,220 @@ class _DetailSiteBookPageViewState extends State<DetailSiteBookPageView> {
   }
 
   void _back() => context.safePop();
+
+  // =====================================================================
+  // DELETE — gated to the PROJECT OWNER (matches DetailTaskPageView).
+  //
+  // The owner is resolved once from the entry's projectRef → project.ownerRef
+  // and compared against the signed-in user. Only then does the masthead show
+  // the delete affordance, and only the owner's tap can remove the doc.
+  // =====================================================================
+  DocumentReference? _projectOwnerRef;
+  bool _projectOwnerResolved = false;
+
+  Future<void> _ensureProjectOwner(Map<String, dynamic> d) async {
+    if (_projectOwnerResolved) return;
+    final projRef = d['projectRef'] as DocumentReference?;
+    if (projRef == null) {
+      _projectOwnerResolved = true;
+      return;
+    }
+    try {
+      final snap = await projRef.get();
+      final pd = (snap.data() as Map<String, dynamic>? ?? <String, dynamic>{});
+      final owner = pd['ownerRef'];
+      _projectOwnerResolved = true;
+      if (owner is DocumentReference) {
+        _projectOwnerRef = owner;
+        if (mounted) setState(() {});
+      }
+    } catch (e) {
+      debugPrint('⚠️ resolve project owner failed: $e');
+    }
+  }
+
+  // Only the project owner may delete this entry.
+  bool _isOwner() {
+    final me = currentUserReference;
+    if (me == null || _projectOwnerRef == null) return false;
+    return _projectOwnerRef!.path == me.path;
+  }
+
+  Future<void> _confirmDelete() async {
+    FocusScope.of(context).unfocus();
+    await _showDeleteDialog(
+      icon: Icons.delete_rounded,
+      title: 'Delete this entry?',
+      message:
+          'This site entry and its photos will be permanently removed. This can’t be undone.',
+      confirmLabel: 'Delete entry',
+      onConfirm: _deleteEntry,
+    );
+  }
+
+  Future<void> _deleteEntry() async {
+    final ref = _ref;
+    if (ref == null) return;
+    try {
+      await ref.delete();
+      if (!mounted) return;
+      _toast('Entry deleted.');
+      _back();
+    } catch (e) {
+      debugPrint('🔥 Delete site entry failed: $e');
+      if (mounted) _toast('Could not delete. Please try again.');
+    }
+  }
+
+  void _toast(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        backgroundColor: const Color(0xFF3F5C69), // slate
+        content: Text(msg,
+            style: const TextStyle(
+                fontFamily: _bodyFont,
+                color: _paper,
+                fontWeight: FontWeight.w700)),
+      ));
+  }
+
+  // Centred destructive confirm dialog — shared "delete warning" module
+  // (clay badge, 22-radius card, filled clay confirm + outlined cancel over a
+  // 55%-black scrim), identical to DetailTaskPageView._showDeleteDialog.
+  Future<void> _showDeleteDialog({
+    required String title,
+    required String message,
+    required String confirmLabel,
+    required IconData icon,
+    required Future<void> Function() onConfirm,
+  }) async {
+    await showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.55),
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          insetPadding: EdgeInsets.zero,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _paper,
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.30),
+                  blurRadius: 54,
+                  offset: const Offset(0, 22),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 62,
+                  height: 62,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: _warn.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                    border:
+                        Border.all(color: _warn.withOpacity(0.22), width: 1),
+                  ),
+                  child: Icon(icon, color: _warn, size: 30),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontFamily: _displayFont,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.4,
+                    fontSize: 18,
+                    color: _ink,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontFamily: _bodyFont,
+                    fontWeight: FontWeight.w500,
+                    height: 1.5,
+                    fontSize: 14,
+                    color: _inkMute,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      await onConfirm();
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _warn,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        confirmLabel,
+                        style: const TextStyle(
+                          fontFamily: _bodyFont,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: _paper,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => Navigator.pop(ctx),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _paper,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: const Color(0xFFCBD8DD), width: 1.4),
+                      ),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: _ink,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   // -----------------------------
   // Helpers
@@ -213,6 +420,10 @@ class _DetailSiteBookPageViewState extends State<DetailSiteBookPageView> {
                   final data =
                       (snap.data?.data() as Map<String, dynamic>?) ?? const {};
                   if (data.isEmpty) return _notFound();
+                  // Resolve the project owner off the live snapshot so the
+                  // delete affordance appears only for the owner.
+                  WidgetsBinding.instance
+                      .addPostFrameCallback((_) => _ensureProjectOwner(data));
                   return _detail(data);
                 },
               ),
@@ -267,6 +478,12 @@ class _DetailSiteBookPageViewState extends State<DetailSiteBookPageView> {
                               color: _paper.withOpacity(0.5))),
                     ),
                   ),
+                  // ✅ Owner-only delete affordance (matches DetailTaskPageView).
+                  if (_isOwner()) ...[
+                    _circleBtn(Icons.delete_outline_rounded, _confirmDelete,
+                        size: 18),
+                    const SizedBox(width: 8),
+                  ],
                   if (weather.isNotEmpty)
                     Container(
                       height: 38,
