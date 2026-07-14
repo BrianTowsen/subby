@@ -10,10 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -37,26 +33,22 @@ class CreateAccountPageView extends StatefulWidget {
 }
 
 class _CreateAccountPageViewState extends State<CreateAccountPageView> {
-  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // ─── SUBBY PALETTE (LOCK) — synced with DashboardPageView v6 ───────────
   static const Color _ink = Color(0xFF1E282E);
   static const Color _inkMute = Color(0xFF566670);
+  static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
-  static const Color _hairline = Color(0xFFECF0F2);
-  static const Color _hairlineOnSurface = Color(0xFFCBD8DD);
-  // Brand accent — TEAL (field icons / focus).
-  static const Color _teal = Color(0xFF1E282E);
-  // Status
-  static const Color _live = Color(0xFF4E504F);
-  static const Color _coral = Color(0xFF4E504F);
-  // Type
+  static const Color _hairline = Color(0xFFEAEEF0);
+  static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
+  static const Color _steel = Color(0xFF3F5C69); // hero header background
+  static const Color _accent = Color(0xFFE7E247); // primary CTA fill
+  static const Color _coral = Color(0xFF566670);
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
-  static const String _monoFont = 'Inter';
   // ────────────────────────────────────────────────────────────────────
 
-  static const double _hPad = 24;
-  static const double _vPad = 14;
+  static const double _hPad = 20;
   static const double _radius = 12;
 
   final _displayNameCtrl = TextEditingController();
@@ -75,13 +67,8 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
   String _status = '';
 
   // =========================================================
-  // ✅ TYPOGRAPHY
+  // TYPOGRAPHY
   // =========================================================
-  TextStyle _subtitleStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: _bodyFont,
-        color: _inkMute,
-      );
-
   TextStyle _uLabelStyle(FlutterFlowTheme t) => t.bodySmall.override(
         fontFamily: _bodyFont,
         color: _inkMute,
@@ -110,13 +97,6 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
         fontFamily: _bodyFont,
         color: _ink,
       );
-
-  TextStyle _buttonTextStyle(FlutterFlowTheme t, {required Color color}) =>
-      t.labelLarge.override(
-        fontFamily: _bodyFont,
-        color: color,
-        fontWeight: FontWeight.w900,
-      );
   // =========================================================
 
   @override
@@ -139,11 +119,9 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
     setState(() => _error = msg);
   }
 
-  // ✅ Subby-style snackbar (floating, bordered, secondaryBackground)
   void _showSubbySnack(String msg, {bool isError = false}) {
     if (!mounted) return;
     final theme = FlutterFlowTheme.of(context);
-
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
@@ -177,9 +155,7 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
                 ),
               ),
               const SizedBox(width: 10),
-              Expanded(
-                child: Text(msg, style: _snackTextStyle(theme)),
-              ),
+              Expanded(child: Text(msg, style: _snackTextStyle(theme))),
             ],
           ),
         ),
@@ -187,7 +163,7 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
   }
 
   // =========================================================
-  // ✅ OPTION C — MINIMAL UNDERLINE FIELD
+  // MINIMAL UNDERLINE FIELD — keyboard action = Done (blue tick)
   // =========================================================
   Widget _uField(
     FlutterFlowTheme theme, {
@@ -202,9 +178,9 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
     Widget? trailing,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: 18),
       decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: _hairline, width: 1)),
+        border: Border(bottom: BorderSide(color: _hairlineOnSurface, width: 1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -213,16 +189,17 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
           const SizedBox(height: 8),
           Row(
             children: [
-              Icon(icon, size: 19, color: _teal),
+              Icon(icon, size: 19, color: _ink),
               const SizedBox(width: 10),
               Expanded(
                 child: TextField(
                   controller: controller,
                   focusNode: focusNode,
                   keyboardType: keyboardType,
+                  textInputAction: TextInputAction.done,
                   textCapitalization: textCapitalization,
                   obscureText: obscureText,
-                  cursorColor: _teal,
+                  cursorColor: _steel,
                   style: _fieldTextStyle(theme),
                   decoration: InputDecoration(
                     isDense: true,
@@ -246,7 +223,6 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
   Widget _errorBanner(FlutterFlowTheme theme) {
     final msg = (_error ?? '').trim();
     if (msg.isEmpty) return const SizedBox.shrink();
-
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(top: 16),
@@ -258,17 +234,14 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
       ),
       child: Row(
         children: [
-          Icon(Icons.error_outline, size: 18, color: _coral),
+          const Icon(Icons.error_outline, size: 18, color: _coral),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              msg,
-              style: theme.bodyMedium.override(
-                fontFamily: _bodyFont,
-                color: _coral,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+            child: Text(msg,
+                style: const TextStyle(
+                    fontFamily: _bodyFont,
+                    color: _coral,
+                    fontWeight: FontWeight.w700)),
           ),
         ],
       ),
@@ -278,7 +251,6 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
   Widget _statusBanner(FlutterFlowTheme theme) {
     final msg = _status.trim();
     if (msg.isEmpty) return const SizedBox.shrink();
-
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(top: 10),
@@ -288,18 +260,14 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: _hairline),
       ),
-      child: Text(
-        msg,
-        style: theme.bodyMedium.override(
-          fontFamily: _bodyFont,
-          fontWeight: FontWeight.w700,
-          color: _ink,
-        ),
-      ),
+      child: Text(msg,
+          style: const TextStyle(
+              fontFamily: _bodyFont, fontWeight: FontWeight.w700, color: _ink)),
     );
   }
 
-  Widget _primaryPillButton(
+  // ACCENT (yellow) primary button — ink label.
+  Widget _accentButton(
     FlutterFlowTheme theme, {
     required String label,
     required VoidCallback? onPressed,
@@ -307,7 +275,6 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
     IconData? icon,
   }) {
     final disabled = onPressed == null || loading;
-
     return GestureDetector(
       onTap: disabled ? null : onPressed,
       child: AnimatedOpacity(
@@ -317,8 +284,8 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
           height: 54,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: _ink,
-            borderRadius: BorderRadius.circular(999),
+            color: _accent,
+            borderRadius: BorderRadius.circular(_radius),
           ),
           alignment: Alignment.center,
           child: loading
@@ -327,20 +294,22 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
                   height: 22,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(_paper),
+                    valueColor: AlwaysStoppedAnimation<Color>(_ink),
                   ),
                 )
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (icon != null) ...[
-                      Icon(icon, size: 18, color: _paper),
+                      Icon(icon, size: 18, color: _ink),
                       const SizedBox(width: 8),
                     ],
-                    Text(
-                      label,
-                      style: _buttonTextStyle(theme, color: _paper),
-                    ),
+                    Text(label,
+                        style: const TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
+                            color: _ink)),
                   ],
                 ),
         ),
@@ -348,27 +317,73 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
     );
   }
 
-  Widget _circleBack(FlutterFlowTheme t) {
-    return GestureDetector(
-      onTap: () => context.safePop(),
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: _surface,
-          shape: BoxShape.circle,
-          border: Border.all(color: _hairline, width: 1),
+  // ---------------------------
+  // NEW STYLE — steel hero
+  // ---------------------------
+  Widget _heroCircle(IconData icon, VoidCallback onTap) => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            width: 38,
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+                color: _paper.withOpacity(0.14), shape: BoxShape.circle),
+            child: Icon(icon, size: 16, color: _paper),
+          ),
         ),
-        alignment: Alignment.center,
-        child: const Icon(Icons.arrow_back_ios_new_rounded,
-            size: 15, color: _inkMute),
-      ),
-    );
-  }
+      );
+
+  Widget _hero() => Container(
+        width: double.infinity,
+        color: _steel,
+        padding: EdgeInsets.fromLTRB(
+            _hPad, MediaQuery.of(context).padding.top + 8, _hPad, 22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _heroCircle(
+                    Icons.arrow_back_ios_new_rounded, () => context.safePop()),
+                Expanded(
+                  child: Center(
+                    child: Text('GET STARTED',
+                        style: TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.7,
+                            color: _paper.withOpacity(0.55))),
+                  ),
+                ),
+                const SizedBox(width: 38, height: 38),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Text('Create account',
+                style: TextStyle(
+                    fontFamily: _displayFont,
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -1,
+                    height: 1.0,
+                    color: _paper)),
+            const SizedBox(height: 8),
+            Text('Set up your Subby account in seconds.',
+                style: TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: _paper.withOpacity(0.6))),
+          ],
+        ),
+      );
 
   Future<void> _createAccount() async {
     if (_saving) return;
-
     _setError(null);
     setState(() {
       _status = 'Creating account…';
@@ -376,7 +391,7 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
     });
 
     final displayName = _displayNameCtrl.text.trim();
-    final email = _emailCtrl.text.trim().toLowerCase(); // ✅ normalize
+    final email = _emailCtrl.text.trim().toLowerCase();
     final pw = _passwordCtrl.text;
 
     if (displayName.isEmpty) {
@@ -389,7 +404,6 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
       _displayNameFocus.requestFocus();
       return;
     }
-
     if (email.isEmpty || !email.contains('@')) {
       setState(() {
         _saving = false;
@@ -400,7 +414,6 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
       _emailFocus.requestFocus();
       return;
     }
-
     if (pw.isEmpty || pw.length < 6) {
       setState(() {
         _saving = false;
@@ -417,19 +430,15 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
         email: email,
         password: pw,
       );
-
       final user = cred.user;
       if (user == null) {
         throw Exception('Account created but user is null.');
       }
-
-      // Keep FirebaseAuth displayName in sync (optional but useful)
       try {
         await user.updateDisplayName(displayName);
       } catch (_) {}
 
       final now = Timestamp.now();
-
       await _userRef(user.uid).set({
         'uid': user.uid,
         'email': email,
@@ -441,7 +450,6 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
       }, SetOptions(merge: true));
 
       if (!mounted) return;
-
       final target = widget.afterCompleteRouteName ?? 'homePage';
       setState(() => _status = 'Saved ✅ Redirecting…');
       _showSubbySnack('Account created. Redirecting…');
@@ -449,12 +457,7 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
     } on FirebaseAuthException catch (e) {
       final msg = (e.message ?? e.code).toString();
       debugPrint('CreateAccountPageView: FirebaseAuthException: $msg');
-
-      setState(() {
-        _status = '';
-      });
-
-      // Friendlier common errors
+      setState(() => _status = '');
       String pretty = msg;
       if (e.code == 'email-already-in-use') {
         pretty = 'That email is already in use. Try logging in instead.';
@@ -463,14 +466,11 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
       } else if (e.code == 'weak-password') {
         pretty = 'That password is too weak.';
       }
-
       _setError(pretty);
       _showSubbySnack(pretty, isError: true);
     } catch (e) {
       debugPrint('CreateAccountPageView: Create error: $e');
-      setState(() {
-        _status = '';
-      });
+      setState(() => _status = '');
       _setError('Could not create your account. Please try again.');
       _showSubbySnack('Could not create account.', isError: true);
     } finally {
@@ -481,127 +481,140 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
-
     final double width = widget.width ?? MediaQuery.sizeOf(context).width;
     final double height = widget.height ?? MediaQuery.sizeOf(context).height;
 
-    // ---------------------------------------------------------
-    // ✅ OPTION C — MINIMAL UNDERLINE
-    // ---------------------------------------------------------
     return SizedBox(
       width: width,
       height: height,
-      child: SafeArea(
-        child: Container(
-          color: _paper,
-          child: GestureDetector(
-            onTap: () => FocusScope.of(context).unfocus(),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ===== TOP ROW: back =====
-                  Row(children: [_circleBack(theme), const Spacer()]),
-
-                  const SizedBox(height: 20),
-
-                  // ===== TITLE =====
-                  Text(
-                    'Create account',
-                    style: theme.titleLarge.override(
-                      fontFamily: _displayFont,
-                      color: _ink,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 30,
-                      lineHeight: 1.05,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Set up your Subby account.',
-                    style: _subtitleStyle(theme).copyWith(fontSize: 13),
-                  ),
-
-                  const SizedBox(height: 30),
-
-                  // ===== FIELDS =====
-                  _uField(
-                    theme,
-                    label: 'Display name',
-                    controller: _displayNameCtrl,
-                    focusNode: _displayNameFocus,
-                    icon: Icons.person_outline_rounded,
-                    hint: 'e.g. Brian Towsen',
-                    textCapitalization: TextCapitalization.words,
-                  ),
-                  _uField(
-                    theme,
-                    label: 'Email',
-                    controller: _emailCtrl,
-                    focusNode: _emailFocus,
-                    icon: Icons.mail_outline_rounded,
-                    hint: 'you@example.com',
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-                  _uField(
-                    theme,
-                    label: 'Password',
-                    controller: _passwordCtrl,
-                    focusNode: _passwordFocus,
-                    icon: Icons.lock_outline_rounded,
-                    hint: 'Create a password',
-                    obscureText: _obscurePw,
-                    trailing: InkWell(
-                      onTap: () => setState(() => _obscurePw = !_obscurePw),
-                      borderRadius: BorderRadius.circular(8),
-                      child: Padding(
-                        padding: const EdgeInsets.all(4),
-                        child: Icon(
-                          _obscurePw
-                              ? Icons.visibility_off_rounded
-                              : Icons.visibility_rounded,
-                          color: _inkMute,
-                          size: 20,
+      child: Container(
+        color: _paper,
+        child: Column(
+          children: [
+            _hero(),
+            Expanded(
+              child: GestureDetector(
+                onTap: () => FocusScope.of(context).unfocus(),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(_hPad, 16, _hPad, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _uField(
+                        theme,
+                        label: 'Display name',
+                        controller: _displayNameCtrl,
+                        focusNode: _displayNameFocus,
+                        icon: Icons.person_outline_rounded,
+                        hint: 'e.g. Brian Towsen',
+                        textCapitalization: TextCapitalization.words,
+                      ),
+                      _uField(
+                        theme,
+                        label: 'Email',
+                        controller: _emailCtrl,
+                        focusNode: _emailFocus,
+                        icon: Icons.mail_outline_rounded,
+                        hint: 'you@example.com',
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                      _uField(
+                        theme,
+                        label: 'Password',
+                        controller: _passwordCtrl,
+                        focusNode: _passwordFocus,
+                        icon: Icons.lock_outline_rounded,
+                        hint: 'Create a password',
+                        obscureText: _obscurePw,
+                        trailing: InkWell(
+                          onTap: () => setState(() => _obscurePw = !_obscurePw),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: Icon(
+                              _obscurePw
+                                  ? Icons.visibility_off_rounded
+                                  : Icons.visibility_rounded,
+                              color: _inkMute,
+                              size: 20,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-
-                  _errorBanner(theme),
-                  _statusBanner(theme),
-
-                  const SizedBox(height: 30),
-
-                  _primaryPillButton(
-                    theme,
-                    label: 'Create account',
-                    icon: Icons.check_circle_outline,
-                    loading: _saving,
-                    onPressed: _saving ? null : _createAccount,
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  Center(
-                    child: TextButton(
-                      onPressed: () => context.goNamed(
-                        widget.loginRouteName ?? 'loginPage',
-                      ),
-                      child: Text(
-                        'Already have an account? Log in',
-                        style: theme.labelMedium.override(
-                          fontFamily: _bodyFont,
-                          color: _inkMute,
-                          fontWeight: FontWeight.w800,
+                      const SizedBox(height: 14),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: _surface,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.info_outline_rounded,
+                                size: 17, color: _steel),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Use at least 6 characters for your password.',
+                                style: const TextStyle(
+                                    fontFamily: _bodyFont,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: _inkMute),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
+                      _errorBanner(theme),
+                      _statusBanner(theme),
+                      const SizedBox(height: 24),
+                      _accentButton(
+                        theme,
+                        label: 'Create account',
+                        icon: Icons.check_circle_outline,
+                        loading: _saving,
+                        onPressed: _saving ? null : _createAccount,
+                      ),
+                      const SizedBox(height: 16),
+                      Center(
+                        child: GestureDetector(
+                          onTap: () => context.goNamed(
+                            widget.loginRouteName ?? 'loginPage',
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            child: RichText(
+                              text: const TextSpan(
+                                text: 'Already have an account? ',
+                                style: TextStyle(
+                                    fontFamily: _bodyFont,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: _faint),
+                                children: [
+                                  TextSpan(
+                                    text: 'Log in',
+                                    style: TextStyle(
+                                        fontFamily: _bodyFont,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w800,
+                                        color: _steel),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
