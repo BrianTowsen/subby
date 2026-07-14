@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -95,7 +97,8 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
 
   TextStyle _snackTextStyle(FlutterFlowTheme t) => t.bodySmall.override(
         fontFamily: _bodyFont,
-        color: _ink,
+        color: _paper,
+        fontWeight: FontWeight.w700,
       );
   // =========================================================
 
@@ -130,13 +133,10 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           elevation: 0,
-          backgroundColor: _surface,
+          backgroundColor: const Color(0xFF3F5C69),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: BorderSide(
-              color: isError ? _coral.withOpacity(0.35) : _hairline,
-              width: 1,
-            ),
+            side: BorderSide.none,
           ),
           duration: const Duration(milliseconds: 1600),
           content: Row(
@@ -145,13 +145,13 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: (isError ? _coral : _ink).withOpacity(0.12),
+                  color: _paper.withOpacity(0.16),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   isError ? Icons.error_outline_rounded : Icons.check_rounded,
                   size: 16,
-                  color: isError ? _coral : _ink,
+                  color: _paper,
                 ),
               ),
               const SizedBox(width: 10),

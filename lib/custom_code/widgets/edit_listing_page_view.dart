@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'dart:typed_data';
@@ -211,7 +213,7 @@ class _EditListingPageViewState extends State<EditListingPageView> {
       ..showSnackBar(SnackBar(
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        backgroundColor: error ? _coral : _ink,
+        backgroundColor: const Color(0xFF3F5C69),
         content: Text(message,
             style: const TextStyle(
                 fontFamily: _bodyFont,

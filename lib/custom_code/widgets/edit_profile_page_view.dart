@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 // ✅ Auth helpers (currentUserReference, currentUserEmail, etc.)
 import '/auth/firebase_auth/auth_util.dart';
 
@@ -84,7 +86,8 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
 
   TextStyle _snackTextStyle(FlutterFlowTheme t) => t.bodySmall.override(
         fontFamily: _bodyFont,
-        color: _ink,
+        color: _paper,
+        fontWeight: FontWeight.w700,
       );
 
   Widget _heroCircle(IconData icon, VoidCallback onTap) => Material(
@@ -114,10 +117,10 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           elevation: 0,
-          backgroundColor: _surface,
+          backgroundColor: const Color(0xFF3F5C69),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(color: _hairline, width: 1),
+            side: BorderSide.none,
           ),
           duration: const Duration(milliseconds: 1700),
           content: Row(
@@ -126,11 +129,11 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                    color: _ink.withOpacity(0.08), shape: BoxShape.circle),
+                    color: _paper.withOpacity(0.16), shape: BoxShape.circle),
                 child: Icon(
                   success ? Icons.check_rounded : Icons.info_outline_rounded,
                   size: 16,
-                  color: _ink,
+                  color: _paper,
                 ),
               ),
               const SizedBox(width: 10),

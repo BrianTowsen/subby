@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -179,7 +181,7 @@ class _AddListingPageViewState extends State<AddListingPageView> {
       ..showSnackBar(SnackBar(
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        backgroundColor: _ink,
+        backgroundColor: const Color(0xFF3F5C69),
         content: Text(msg,
             style: const TextStyle(
                 fontFamily: _bodyFont,
