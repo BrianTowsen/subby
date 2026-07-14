@@ -10,20 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'dart:typed_data';
@@ -62,23 +48,24 @@ class EditListingPageView extends StatefulWidget {
 }
 
 class _EditListingPageViewState extends State<EditListingPageView> {
-  // ─── SUBBY PALETTE — DIRECTORY (amber / sunshine) ──────────────────
-  static const Color _amber = Color(0xFF1E282E); // accent
-  static const Color _inkMute = Color(0xFF566670); // labels
-  static const Color _faint = Color(0xFF93A3AC); // subtitles / helpers
+  // ─── SUBBY PALETTE — DIRECTORY (Get-Quotes system) ─────────────────
+  static const Color _ink = Color(0xFF1E282E);
+  static const Color _inkMute = Color(0xFF566670);
+  static const Color _faint = Color(0xFF93A3AC);
   static const Color _coral = Color(0xFF566670); // destructive
+  static const Color _warn =
+      Color(0xFFAC0C0C); // warning / destructive accent (brown)
+  static const Color _rule = Color(0xFFCBD8DD);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
-  static const Color _orange = Color(
-      0xFF4E504F); // DS green: leading icons / active bookmark (was orange #EB7A02)
-  static const Color _green = Color(0xFF4E504F); // DS: verified / info
-  static const Color _gold = Color(0xFF4E504F); // DS: rating stars
+  static const Color _steel = Color(0xFF3F5C69);
+  static const Color _lime = Color(0xFFE7E247);
+  static const Color _slate = Color(0xFF4E504F);
   static const Color _hairline = Color(0xFFEAEEF0);
-  static const Color _rule = Color(0xFFDCE3E6);
+  static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
-  static const double _hPad = 24;
-  static const double _vPad = 14;
+  static const double _hPad = 22;
 
   // ---------------------------------------------------------
   // Form state
@@ -107,72 +94,16 @@ class _EditListingPageViewState extends State<EditListingPageView> {
   String? _heroFileName;
   bool _removeHero = false;
 
-  // ---------------------------------------------------------
-  // Typography
-  // ---------------------------------------------------------
-  TextStyle get _titleStyle => const TextStyle(
-        fontFamily: _displayFont,
-        fontSize: 30,
-        fontWeight: FontWeight.w900,
-        color: _amber,
-        height: 1.05,
-      );
+  static const String _placeholderProvince = 'Select province';
+  static const String _placeholderRegion = 'Select region';
+  static const String _placeholderSpeciality = 'Select speciality';
 
-  TextStyle get _subtitleStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: _faint,
-      );
-
-  TextStyle get _uLabelStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 11,
-        fontWeight: FontWeight.w800,
-        letterSpacing: 0.6,
-        color: _inkMute,
-      );
-
-  TextStyle get _valueStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 16,
-        fontWeight: FontWeight.w700,
-        color: _amber,
-      );
-
-  TextStyle get _hintStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        color: Color(0xFF93A3AC),
-      );
-
-  TextStyle get _helperStyle => const TextStyle(
-        fontFamily: _bodyFont,
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: _faint,
-      );
-
-  static const BoxDecoration _uRule = BoxDecoration(
-    border: Border(bottom: BorderSide(color: _rule, width: 1)),
-  );
-
-  // ---------------------------------------------------------
-  // Data
-  // ---------------------------------------------------------
   static const List<String> _listingTypes = [
     'Professionals',
     'Trades',
     'Suppliers',
     'Associations',
   ];
-
-  String get _listingTypeLabel => _listingType;
-
-  static const String _placeholderProvince = 'Select province';
-  static const String _placeholderRegion = 'Select region';
-  static const String _placeholderSpeciality = 'Select speciality';
 
   static const List<String> _provinces = [
     _placeholderProvince,
@@ -215,34 +146,12 @@ class _EditListingPageViewState extends State<EditListingPageView> {
       'Ballito',
       'Richards Bay',
     ],
-    'Eastern Cape': [
-      'Gqeberha (Port Elizabeth)',
-      'East London',
-      'Mthatha',
-    ],
-    'Free State': [
-      'Bloemfontein',
-      'Welkom',
-    ],
-    'North West': [
-      'Rustenburg',
-      'Mahikeng',
-      'Potchefstroom',
-    ],
-    'Limpopo': [
-      'Polokwane',
-      'Tzaneen',
-      'Thohoyandou',
-    ],
-    'Mpumalanga': [
-      'Nelspruit (Mbombela)',
-      'Witbank (eMalahleni)',
-      'Secunda',
-    ],
-    'Northern Cape': [
-      'Kimberley',
-      'Upington',
-    ],
+    'Eastern Cape': ['Gqeberha (Port Elizabeth)', 'East London', 'Mthatha'],
+    'Free State': ['Bloemfontein', 'Welkom'],
+    'North West': ['Rustenburg', 'Mahikeng', 'Potchefstroom'],
+    'Limpopo': ['Polokwane', 'Tzaneen', 'Thohoyandou'],
+    'Mpumalanga': ['Nelspruit (Mbombela)', 'Witbank (eMalahleni)', 'Secunda'],
+    'Northern Cape': ['Kimberley', 'Upington'],
   };
 
   static const Map<String, List<String>> _subcategories = {
@@ -281,48 +190,36 @@ class _EditListingPageViewState extends State<EditListingPageView> {
     ],
   };
 
-  List<String> get _currentRegions {
-    if (_selectedProvince == _placeholderProvince) {
-      return const <String>[_placeholderRegion];
-    }
-    final list = _regionsByProvince[_selectedProvince] ?? const <String>[];
-    if (list.isEmpty) return const <String>[_placeholderRegion];
-    return <String>[_placeholderRegion, ...list];
-  }
+  List<String> get _currentRegions =>
+      _regionsByProvince[_selectedProvince] ?? const <String>[];
 
-  List<String> get _currentSpecialities {
-    final list = _subcategories[_listingTypeLabel] ?? const <String>[];
-    if (list.isEmpty) return const <String>[_placeholderSpeciality];
-    return <String>[_placeholderSpeciality, ...list];
-  }
+  String get _listingTypeLabel => _listingType;
 
   // ---------------------------------------------------------
   // Firestore helpers
   // ---------------------------------------------------------
-  List<String> _parseList(String raw) =>
-      raw.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+  List<String> _parseList(String raw) => raw
+      .split(RegExp(r'[,\n]'))
+      .map((e) => e.trim())
+      .where((e) => e.isNotEmpty)
+      .toList();
 
   void _toast(String message, {bool error = false}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          backgroundColor: error ? _coral : _amber,
-          content: Text(
-            message,
+      ..showSnackBar(SnackBar(
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        backgroundColor: error ? _coral : _ink,
+        content: Text(message,
             style: const TextStyle(
-              fontFamily: _bodyFont,
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
-          ),
-          duration: const Duration(milliseconds: 1600),
-        ),
-      );
+                fontFamily: _bodyFont,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: Colors.white)),
+        duration: const Duration(milliseconds: 1600),
+      ));
   }
 
   Future<DocumentReference?> _findMyListingRef() async {
@@ -434,27 +331,24 @@ class _EditListingPageViewState extends State<EditListingPageView> {
   }
 
   bool _validate() {
-    final name = _nameCtrl.text.trim();
-    final about = _aboutCtrl.text.trim();
-
-    if (name.isEmpty) {
+    if (_nameCtrl.text.trim().isEmpty) {
       _toast('Please enter your business name.', error: true);
       return false;
     }
+    if (_selectedSpeciality == _placeholderSpeciality) {
+      _toast('Please pick a speciality.', error: true);
+      return false;
+    }
+    if (_aboutCtrl.text.trim().isEmpty) {
+      _toast('Please add a short description.', error: true);
+      return false;
+    }
     if (_selectedProvince == _placeholderProvince) {
-      _toast('Please select a province.', error: true);
+      _toast('Please pick a province.', error: true);
       return false;
     }
     if (_selectedRegion == _placeholderRegion) {
-      _toast('Please select a city / region.', error: true);
-      return false;
-    }
-    if (_selectedSpeciality == _placeholderSpeciality) {
-      _toast('Please select a speciality.', error: true);
-      return false;
-    }
-    if (about.isEmpty) {
-      _toast('Please add a short description (About).', error: true);
+      _toast('Please pick a city / region.', error: true);
       return false;
     }
     return true;
@@ -566,57 +460,12 @@ class _EditListingPageViewState extends State<EditListingPageView> {
   Future<void> _deleteListing(DocumentReference ref) async {
     if (_saving || _deleting) return;
 
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: _paper,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        title: const Text(
-          'Delete listing?',
-          style: TextStyle(
-            fontFamily: _displayFont,
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
-            color: _amber,
-          ),
-        ),
-        content: const Text(
-          'This permanently removes your listing. This cannot be undone.',
-          style: TextStyle(
-            fontFamily: _bodyFont,
-            fontSize: 14,
-            color: _inkMute,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(
-                fontFamily: _bodyFont,
-                fontSize: 14,
-                color: _inkMute,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text(
-              'Delete',
-              style: TextStyle(
-                fontFamily: _bodyFont,
-                fontSize: 14,
-                color: _coral,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-        ],
-      ),
+    final confirmed = await _showDeleteDialog(
+      icon: Icons.delete_rounded,
+      title: 'Delete this listing?',
+      message:
+          'Your listing and its cover photo will be permanently removed. This can’t be undone.',
+      confirmLabel: 'Delete listing',
     );
 
     if (confirmed != true || !mounted) return;
@@ -658,6 +507,136 @@ class _EditListingPageViewState extends State<EditListingPageView> {
     }
   }
 
+  // Centered destructive confirm dialog — shared "delete warning" module
+  // (matches DocumentUploadPageView._showDeleteDialog).
+  Future<bool?> _showDeleteDialog({
+    required IconData icon,
+    required String title,
+    required String message,
+    required String confirmLabel,
+  }) {
+    return showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.55),
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          insetPadding: EdgeInsets.zero,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _paper,
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.30),
+                  blurRadius: 54,
+                  offset: const Offset(0, 22),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 62,
+                  height: 62,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: _warn.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                    border:
+                        Border.all(color: _warn.withOpacity(0.22), width: 1),
+                  ),
+                  child: Icon(icon, color: _warn, size: 30),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontFamily: _displayFont,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.4,
+                    color: _ink,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    height: 1.5,
+                    color: _inkMute,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => Navigator.pop(ctx, true),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _warn,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        confirmLabel,
+                        style: const TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: _paper,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => Navigator.pop(ctx, false),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _paper,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: _rule, width: 1.4),
+                      ),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: _ink,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
     _nameCtrl.dispose();
@@ -672,10 +651,85 @@ class _EditListingPageViewState extends State<EditListingPageView> {
     super.dispose();
   }
 
+  // ---------------------------------------------------------
+  // Bottom-sheet picker (matches Add Listing)
+  // ---------------------------------------------------------
+  Future<String?> _pickFromSheet(
+      String title, List<String> items, String current) {
+    return showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: _paper,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (ctx) => SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 18, 22, 8),
+              child: Text(title,
+                  style: const TextStyle(
+                    fontFamily: _displayFont,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.3,
+                    color: _ink,
+                  )),
+            ),
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                children: items.where((e) => !e.startsWith('Select ')).map((e) {
+                  final selected = e == current;
+                  return InkWell(
+                    onTap: () => Navigator.of(ctx).pop(e),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? const Color(0xFFF3F6F7)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(children: [
+                        Expanded(
+                          child: Text(e,
+                              style: TextStyle(
+                                fontFamily: _bodyFont,
+                                fontSize: 16,
+                                fontWeight: selected
+                                    ? FontWeight.w700
+                                    : FontWeight.w600,
+                                color: selected ? _ink : _inkMute,
+                              )),
+                        ),
+                        if (selected)
+                          const Icon(Icons.check_circle_rounded,
+                              color: _ink, size: 20),
+                      ]),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 14),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final double width = widget.width ?? MediaQuery.sizeOf(context).width;
     final double height = widget.height ?? MediaQuery.sizeOf(context).height;
+    final double topInset = MediaQuery.of(context).padding.top;
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -683,189 +737,251 @@ class _EditListingPageViewState extends State<EditListingPageView> {
         width: width,
         height: height,
         child: Container(
-          color: _paper,
-          child: SafeArea(
-            child: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>?>(
-              future: _loadListingDoc(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: _amber),
-                  );
-                }
+          color: _steel,
+          child: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>?>(
+            future: _loadListingDoc(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(color: _paper),
+                );
+              }
 
-                final doc = snapshot.data;
-                if (doc == null) return _buildEmptyState();
+              final doc = snapshot.data;
+              if (doc == null) return _buildEmptyState(topInset);
 
-                _hydrateFromDoc(doc);
-                final listingRef = doc.reference;
+              _hydrateFromDoc(doc);
+              final listingRef = doc.reference;
 
-                return SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding:
-                      const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, _vPad),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _backButton(),
-                      const SizedBox(height: 20),
-                      Text('Edit listing', style: _titleStyle),
-                      const SizedBox(height: 8),
-                      Text('Update your directory profile.',
-                          style: _subtitleStyle),
-                      const SizedBox(height: 30),
-                      _uSelect(
-                        label: 'Listing type',
-                        icon: Icons.workspace_premium_outlined,
-                        value: _listingType,
-                        items: _listingTypes,
-                        onChanged: (v) => setState(() {
-                          _listingType = v;
-                          _selectedSpeciality = _placeholderSpeciality;
-                        }),
-                      ),
-                      _photoRow(),
-                      _uText(
-                        label: 'Name *',
-                        controller: _nameCtrl,
-                        icon: Icons.storefront_outlined,
-                        hint: 'e.g. Acme Builders',
-                      ),
-                      _uSelect(
-                        label: 'Speciality *',
-                        icon: Icons.handyman_outlined,
-                        value: _selectedSpeciality,
-                        items: _currentSpecialities,
-                        onChanged: (v) =>
-                            setState(() => _selectedSpeciality = v),
-                      ),
-                      _uText(
-                        label: 'About *',
-                        controller: _aboutCtrl,
-                        icon: Icons.notes_outlined,
-                        hint: 'Short description of your services…',
-                        maxLines: 4,
-                      ),
-                      _uText(
-                        label: 'Services',
-                        controller: _servicesCtrl,
-                        icon: Icons.checklist_rounded,
-                        hint: 'New installations, Geyser repairs, COC…',
-                        maxLines: 2,
-                      ),
-                      _uText(
-                        label: 'Associations',
-                        controller: _associationsCtrl,
-                        icon: Icons.verified_outlined,
-                        hint: 'Master Builders Association, ECA…',
-                      ),
-                      _uText(
-                        label: 'Phone number',
-                        controller: _phoneCtrl,
-                        icon: Icons.call_outlined,
-                        hint: 'e.g. 082 123 4567',
-                        keyboardType: TextInputType.phone,
-                      ),
-                      _uText(
-                        label: 'WhatsApp number',
-                        controller: _whatsCtrl,
-                        icon: Icons.chat_outlined,
-                        hint: 'e.g. 082 123 4567',
-                        keyboardType: TextInputType.phone,
-                      ),
-                      _uText(
-                        label: 'Email',
-                        controller: _emailCtrl,
-                        icon: Icons.mail_outlined,
-                        hint: 'e.g. hello@company.co.za',
-                        keyboardType: TextInputType.emailAddress,
-                      ),
-                      _uText(
-                        label: 'Opening hours',
-                        controller: _hoursCtrl,
-                        icon: Icons.schedule_rounded,
-                        hint: 'e.g. 07:00 – 18:00',
-                      ),
-                      _uSelect(
-                        label: 'Province *',
-                        icon: Icons.map_outlined,
-                        value: _selectedProvince,
-                        items: _provinces,
-                        onChanged: (v) => setState(() {
-                          _selectedProvince = v;
-                          _selectedRegion = _placeholderRegion;
-                        }),
-                      ),
-                      _uSelect(
-                        label: 'City / Region *',
-                        icon: Icons.location_city_outlined,
-                        value: _currentRegions.contains(_selectedRegion)
-                            ? _selectedRegion
-                            : _placeholderRegion,
-                        items: _currentRegions,
-                        onChanged: (v) => setState(() => _selectedRegion = v),
-                      ),
-                      const SizedBox(height: 30),
-                      _primaryButton(
-                        label: _saving ? 'Saving…' : 'Save changes',
-                        icon: _saving
-                            ? Icons.hourglass_top_rounded
-                            : Icons.check_rounded,
-                        onTap: (_saving || _deleting)
-                            ? null
-                            : () => _save(listingRef),
-                      ),
-                      const SizedBox(height: 16),
-                      Center(
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: (_saving || _deleting)
-                                ? null
-                                : () => _deleteListing(listingRef),
-                            borderRadius: BorderRadius.circular(8),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    _deleting
-                                        ? Icons.hourglass_top_rounded
-                                        : Icons.delete_outline_rounded,
-                                    size: 18,
-                                    color: _coral,
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _masthead(topInset),
+                  Expanded(
+                    child: Container(
+                      color: _paper,
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: EdgeInsets.fromLTRB(_hPad, 22, _hPad,
+                            24 + MediaQuery.of(context).padding.bottom),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _uLabel('LISTING TYPE'),
+                            const SizedBox(height: 10),
+                            _selectCard(
+                              icon: Icons.workspace_premium_outlined,
+                              value: _listingType,
+                              onTap: () async {
+                                final v = await _pickFromSheet('Listing type',
+                                    _listingTypes, _listingType);
+                                if (v != null) {
+                                  setState(() {
+                                    _listingType = v;
+                                    _selectedSpeciality =
+                                        _placeholderSpeciality;
+                                  });
+                                }
+                              },
+                            ),
+                            const SizedBox(height: 20),
+                            _uLabel('COVER PHOTO'),
+                            const SizedBox(height: 10),
+                            _coverRow(),
+                            const SizedBox(height: 20),
+                            _uLabel('DETAILS'),
+                            const SizedBox(height: 10),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: _paper,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: _hairline),
+                              ),
+                              clipBehavior: Clip.antiAlias,
+                              child: Column(children: [
+                                _textField('Name *', Icons.storefront_outlined,
+                                    _nameCtrl, 'e.g. Acme Builders'),
+                                _pickerField(
+                                  'Speciality *',
+                                  Icons.handyman_outlined,
+                                  _selectedSpeciality,
+                                  () async {
+                                    final list = _subcategories[_listingType] ??
+                                        const [];
+                                    final v = await _pickFromSheet('Speciality',
+                                        list, _selectedSpeciality);
+                                    if (v != null) {
+                                      setState(() => _selectedSpeciality = v);
+                                    }
+                                  },
+                                ),
+                                _textField(
+                                    'About *',
+                                    Icons.notes_outlined,
+                                    _aboutCtrl,
+                                    'Short description of your services…',
+                                    maxLines: 3),
+                                _textField(
+                                    'Services',
+                                    Icons.checklist_rounded,
+                                    _servicesCtrl,
+                                    'New installations, Geyser repairs, COC…',
+                                    maxLines: 2),
+                                _textField(
+                                    'Associations',
+                                    Icons.verified_outlined,
+                                    _associationsCtrl,
+                                    'Master Builders Association, ECA…'),
+                                _textField('Phone number', Icons.call_outlined,
+                                    _phoneCtrl, 'e.g. 082 123 4567',
+                                    keyboard: TextInputType.phone),
+                                _textField(
+                                    'WhatsApp number',
+                                    Icons.chat_outlined,
+                                    _whatsCtrl,
+                                    'e.g. 082 123 4567',
+                                    keyboard: TextInputType.phone),
+                                _textField('Email', Icons.mail_outlined,
+                                    _emailCtrl, 'e.g. hello@company.co.za',
+                                    keyboard: TextInputType.emailAddress),
+                                _textField(
+                                    'Opening hours',
+                                    Icons.schedule_rounded,
+                                    _hoursCtrl,
+                                    'e.g. 07:00 – 18:00'),
+                                _pickerField(
+                                  'Province *',
+                                  Icons.map_outlined,
+                                  _selectedProvince,
+                                  () async {
+                                    final v = await _pickFromSheet('Province',
+                                        _provinces, _selectedProvince);
+                                    if (v != null) {
+                                      setState(() {
+                                        _selectedProvince = v;
+                                        _selectedRegion = _placeholderRegion;
+                                      });
+                                    }
+                                  },
+                                ),
+                                _pickerField(
+                                  'City / Region *',
+                                  Icons.location_city_outlined,
+                                  _selectedRegion,
+                                  () async {
+                                    if (_currentRegions.isEmpty) {
+                                      _toast('Pick a province first.');
+                                      return;
+                                    }
+                                    final v = await _pickFromSheet(
+                                        'City / Region',
+                                        _currentRegions,
+                                        _selectedRegion);
+                                    if (v != null) {
+                                      setState(() => _selectedRegion = v);
+                                    }
+                                  },
+                                  divider: false,
+                                ),
+                              ]),
+                            ),
+                            const SizedBox(height: 24),
+                            InkWell(
+                              onTap: (_saving || _deleting)
+                                  ? null
+                                  : () => _save(listingRef),
+                              borderRadius: BorderRadius.circular(14),
+                              child: Opacity(
+                                opacity: _saving ? 0.6 : 1,
+                                child: Container(
+                                  width: double.infinity,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 15),
+                                  decoration: BoxDecoration(
+                                      color: _lime,
+                                      borderRadius: BorderRadius.circular(14)),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                          _saving
+                                              ? Icons.hourglass_top_rounded
+                                              : Icons.check_rounded,
+                                          size: 18,
+                                          color: _ink),
+                                      const SizedBox(width: 8),
+                                      Text(_saving ? 'Saving…' : 'Save changes',
+                                          style: const TextStyle(
+                                              fontFamily: _bodyFont,
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w800,
+                                              color: _ink)),
+                                    ],
                                   ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    _deleting ? 'Deleting…' : 'Delete listing',
-                                    style: const TextStyle(
-                                      fontFamily: _bodyFont,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w800,
-                                      color: _coral,
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
                             ),
-                          ),
+                            const SizedBox(height: 14),
+                            Center(
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: (_saving || _deleting)
+                                      ? null
+                                      : () => _deleteListing(listingRef),
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 8),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          _deleting
+                                              ? Icons.hourglass_top_rounded
+                                              : Icons.delete_outline_rounded,
+                                          size: 18,
+                                          color: _coral,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          _deleting
+                                              ? 'Deleting…'
+                                              : 'Delete listing',
+                                          style: const TextStyle(
+                                            fontFamily: _bodyFont,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w800,
+                                            color: _coral,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Center(
+                              child: Text(
+                                'Keep your description short and specific to rank better.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: _bodyFont,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: _faint,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      Center(
-                        child: Text(
-                          'Keep your description short and specific to rank better.',
-                          textAlign: TextAlign.center,
-                          style: _helperStyle,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                );
-              },
-            ),
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -875,143 +991,46 @@ class _EditListingPageViewState extends State<EditListingPageView> {
   // =========================================================
   // UI helpers
   // =========================================================
-  Widget _backButton() {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => context.pop(),
-        customBorder: const CircleBorder(),
-        child: Container(
-          width: 36,
-          height: 36,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: _surface,
-            shape: BoxShape.circle,
-            border: Border.all(color: _hairline),
-          ),
-          child: const Icon(Icons.arrow_back_ios_new_rounded,
-              size: 15, color: _inkMute),
-        ),
-      ),
-    );
-  }
+  Widget _uLabel(String text) => Text(text,
+      style: const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 11,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0.6,
+        color: _inkMute,
+      ));
 
-  Widget _uText({
-    required String label,
-    required TextEditingController controller,
-    required IconData icon,
-    required String hint,
-    int maxLines = 1,
-    TextInputType? keyboardType,
-  }) {
-    final multiline = maxLines > 1;
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: _uRule,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label.toUpperCase(), style: _uLabelStyle),
-          const SizedBox(height: 8),
-          Row(
-            crossAxisAlignment: multiline
-                ? CrossAxisAlignment.start
-                : CrossAxisAlignment.center,
-            children: [
-              Padding(
-                padding: EdgeInsets.only(top: multiline ? 3 : 0),
-                child: Icon(icon, size: 19, color: _orange),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  enabled: !_saving,
-                  cursorColor: _amber,
-                  maxLines: maxLines,
-                  keyboardType: keyboardType,
-                  style: _valueStyle,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
-                    hintText: hint,
-                    hintStyle: _hintStyle,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _uSelect({
-    required String label,
+  Widget _selectCard({
     required IconData icon,
     required String value,
-    required List<String> items,
-    required ValueChanged<String> onChanged,
-  }) {
-    final safeValue = items.contains(value) ? value : items.first;
-    final isPlaceholder = safeValue.startsWith('Select ');
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: _uRule,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label.toUpperCase(), style: _uLabelStyle),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Icon(icon, size: 19, color: _orange),
-              const SizedBox(width: 10),
-              Expanded(
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: safeValue,
-                    isExpanded: true,
-                    isDense: true,
-                    dropdownColor: _paper,
-                    icon:
-                        const Icon(Icons.expand_more_rounded, color: _inkMute),
-                    style: isPlaceholder ? _hintStyle : _valueStyle,
-                    items: items
-                        .map(
-                          (e) => DropdownMenuItem<String>(
-                            value: e,
-                            child: Text(
-                              e,
-                              overflow: TextOverflow.ellipsis,
-                              style: e.startsWith('Select ')
-                                  ? _hintStyle
-                                  : _valueStyle,
-                            ),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: _saving
-                        ? null
-                        : (v) {
-                            if (v == null) return;
-                            onChanged(v);
-                          },
-                  ),
-                ),
-              ),
-            ],
+    required VoidCallback onTap,
+  }) =>
+      InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: _paper,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: _hairline),
           ),
-        ],
-      ),
-    );
-  }
+          child: Row(children: [
+            Icon(icon, size: 20, color: _slate),
+            const SizedBox(width: 12),
+            Expanded(
+                child: Text(value,
+                    style: const TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: _ink))),
+            const Icon(Icons.expand_more_rounded, color: _faint),
+          ]),
+        ),
+      );
 
-  Widget _photoRow() {
+  Widget _coverRow() {
     final hasNew = _heroBytes != null && _heroBytes!.isNotEmpty;
     final hasExisting = !_removeHero && _existingHeroUrl.isNotEmpty;
     final showImage = hasNew || hasExisting;
@@ -1019,53 +1038,65 @@ class _EditListingPageViewState extends State<EditListingPageView> {
     Widget thumb() {
       if (hasNew) {
         return ClipRRect(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(14),
           child: Image.memory(_heroBytes!,
-              width: 44, height: 44, fit: BoxFit.cover),
+              width: 76, height: 76, fit: BoxFit.cover),
         );
       }
       if (hasExisting) {
         return ClipRRect(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(14),
           child: Image.network(_existingHeroUrl,
-              width: 44, height: 44, fit: BoxFit.cover),
+              width: 76, height: 76, fit: BoxFit.cover),
         );
       }
-      return const Icon(Icons.add_a_photo_outlined, size: 19, color: _orange);
+      return Container(
+        width: 76,
+        height: 76,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: _paper,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _hairlineOnSurface, width: 1.5),
+        ),
+        child: const Icon(Icons.add_a_photo_outlined, size: 24, color: _faint),
+      );
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: _uRule,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('COVER PHOTO', style: _uLabelStyle),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              thumb(),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  showImage ? 'Current cover' : 'Add a cover photo',
-                  style: showImage ? _valueStyle : _hintStyle,
-                ),
+    return Row(children: [
+      InkWell(
+        onTap: _saving ? null : _pickHeroPhoto,
+        borderRadius: BorderRadius.circular(14),
+        child: thumb(),
+      ),
+      const SizedBox(width: 14),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              showImage ? 'Current cover' : 'Add a cover photo',
+              style: TextStyle(
+                fontFamily: _bodyFont,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: showImage ? _ink : _faint,
               ),
+            ),
+            const SizedBox(height: 8),
+            Row(children: [
               GestureDetector(
                 onTap: _saving ? null : _pickHeroPhoto,
-                child: const Text(
-                  'Change',
-                  style: TextStyle(
-                    fontFamily: _bodyFont,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: _amber,
-                  ),
-                ),
+                child: const Text('Change',
+                    style: TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: _ink,
+                    )),
               ),
               if (showImage) ...[
-                const SizedBox(width: 14),
+                const SizedBox(width: 16),
                 GestureDetector(
                   onTap: _saving
                       ? null
@@ -1074,97 +1105,240 @@ class _EditListingPageViewState extends State<EditListingPageView> {
                             _heroFileName = null;
                             _removeHero = true;
                           }),
-                  child: const Text(
-                    'Remove',
-                    style: TextStyle(
-                      fontFamily: _bodyFont,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: _faint,
-                    ),
-                  ),
+                  child: const Text('Remove',
+                      style: TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: _faint,
+                      )),
                 ),
               ],
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _primaryButton({
-    required String label,
-    required IconData icon,
-    required VoidCallback? onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(999),
-        child: Opacity(
-          opacity: onTap == null ? 0.7 : 1,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            decoration: BoxDecoration(
-              color: _amber,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 18, color: _paper),
-                const SizedBox(width: 8),
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontFamily: _bodyFont,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                    color: _paper,
-                  ),
-                ),
-              ],
-            ),
-          ),
+            ]),
+          ],
         ),
       ),
+    ]);
+  }
+
+  Widget _pickerField(
+      String label, IconData icon, String value, VoidCallback onTap,
+      {bool divider = true}) {
+    final isPlaceholder = value.startsWith('Select ');
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+        decoration: BoxDecoration(
+          border: divider
+              ? const Border(bottom: BorderSide(color: _hairline))
+              : null,
+        ),
+        child: Row(children: [
+          Icon(icon, size: 19, color: _slate),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: const TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: _faint)),
+                const SizedBox(height: 2),
+                Text(value,
+                    style: TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: isPlaceholder ? _faint : _ink)),
+              ],
+            ),
+          ),
+          const Icon(Icons.expand_more_rounded, color: _faint),
+        ]),
+      ),
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: _hPad),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.storefront_outlined, size: 40, color: _faint),
-            const SizedBox(height: 12),
-            const Text(
-              'No listing found',
-              style: TextStyle(
-                fontFamily: _displayFont,
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-                color: _amber,
+  Widget _textField(
+    String label,
+    IconData icon,
+    TextEditingController controller,
+    String hint, {
+    int maxLines = 1,
+    TextInputType? keyboard,
+    bool divider = true,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+      decoration: BoxDecoration(
+        border:
+            divider ? const Border(bottom: BorderSide(color: _hairline)) : null,
+      ),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Icon(icon, size: 19, color: _slate),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label,
+                  style: const TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: _faint)),
+              const SizedBox(height: 2),
+              TextField(
+                controller: controller,
+                maxLines: maxLines,
+                keyboardType: keyboard,
+                enabled: !_saving,
+                cursorColor: _ink,
+                style: const TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: _ink),
+                decoration: InputDecoration(
+                  isDense: true,
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                  hintText: hint,
+                  hintStyle: const TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: _faint),
+                ),
               ),
-              textAlign: TextAlign.center,
-            ),
+            ],
+          ),
+        ),
+      ]),
+    );
+  }
+
+  Widget _masthead(double topInset) => Container(
+        width: double.infinity,
+        color: _steel,
+        padding: EdgeInsets.fromLTRB(_hPad, topInset + 10, _hPad, 30),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => context.safePop(),
+                  borderRadius: BorderRadius.circular(999),
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                        color: _paper.withOpacity(0.12),
+                        shape: BoxShape.circle),
+                    child: const Icon(Icons.arrow_back_ios_new_rounded,
+                        size: 16, color: _paper),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Center(
+                  child: Text('EDIT LISTING',
+                      style: TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.7,
+                        color: _paper.withOpacity(0.5),
+                      )),
+                ),
+              ),
+              const SizedBox(width: 38),
+            ]),
+            const SizedBox(height: 16),
+            const Text('Edit listing',
+                style: TextStyle(
+                  fontFamily: _displayFont,
+                  fontSize: 34,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -1,
+                  height: 1.0,
+                  color: _paper,
+                )),
             const SizedBox(height: 8),
-            Text(
-              'We couldn’t find a listing linked to your account.',
-              style: _helperStyle,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 18),
-            _primaryButton(
-              label: 'Go back',
-              icon: Icons.arrow_back_rounded,
-              onTap: () => context.pop(),
-            ),
+            Text('Update your directory profile.',
+                style: TextStyle(
+                  fontFamily: _bodyFont,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: _paper.withOpacity(0.55),
+                )),
           ],
+        ),
+      );
+
+  Widget _buildEmptyState(double topInset) {
+    return Container(
+      color: _paper,
+      child: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: _hPad),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.storefront_outlined, size: 40, color: _faint),
+                const SizedBox(height: 12),
+                const Text(
+                  'No listing found',
+                  style: TextStyle(
+                    fontFamily: _displayFont,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    color: _ink,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'We couldn’t find a listing linked to your account.',
+                  style: TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: _faint,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 18),
+                InkWell(
+                  onTap: () => context.safePop(),
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 22, vertical: 13),
+                    decoration: BoxDecoration(
+                        color: _lime, borderRadius: BorderRadius.circular(14)),
+                    child: const Text('Go back',
+                        style: TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: _ink)),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

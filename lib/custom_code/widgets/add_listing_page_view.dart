@@ -10,14 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -752,14 +744,14 @@ class _AddListingPageViewState extends State<AddListingPageView> {
               ),
               const SizedBox(width: 38),
             ]),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             const Text('Add listing',
                 style: TextStyle(
                   fontFamily: _displayFont,
-                  fontSize: 28,
+                  fontSize: 34,
                   fontWeight: FontWeight.w900,
-                  letterSpacing: -0.6,
-                  height: 1.08,
+                  letterSpacing: -1,
+                  height: 1.0,
                   color: _paper,
                 )),
             const SizedBox(height: 8),
