@@ -10,14 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -79,6 +71,8 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
   static const Color _greenSurface = Color(0xFFE7EDF0);
   static const Color _greenBorder = Color(0xFFCBD8DD);
   static const Color _coral = Color(0xFF566670);
+  static const Color _warn =
+      Color(0xFFAC0C0C); // delete-dialog red (matches DetailTaskPageView)
   static const Color _navy = Color(0xFF1E282E);
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
@@ -1495,9 +1489,9 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
         return Dialog(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 34),
+          insetPadding: EdgeInsets.zero,
           child: Container(
-            width: 322,
+            width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: _paper,
@@ -1518,12 +1512,12 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
                   height: 62,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: _coral.withOpacity(0.12),
+                    color: _warn.withOpacity(0.12),
                     shape: BoxShape.circle,
                     border:
-                        Border.all(color: _coral.withOpacity(0.22), width: 1),
+                        Border.all(color: _warn.withOpacity(0.22), width: 1),
                   ),
-                  child: Icon(icon, color: _coral, size: 30),
+                  child: Icon(icon, color: _warn, size: 30),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -1563,7 +1557,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: _coral,
+                        color: _warn,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
