@@ -10,14 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -1290,34 +1282,51 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _uText(
-                            label: 'Title',
-                            controller: _titleCtrl,
-                            icon: Icons.title_rounded,
-                            hint: 'e.g. Confirm tiler site visit',
-                            validator: (v) => (v ?? '').trim().isEmpty
-                                ? 'Give the task a title'
-                                : null,
+                          Text('DETAILS', style: _uLabel()),
+                          const SizedBox(height: 10),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: _paper,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: _hairline),
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _uText(
+                                  label: 'Title',
+                                  controller: _titleCtrl,
+                                  icon: Icons.title_rounded,
+                                  hint: 'e.g. Confirm tiler site visit',
+                                  validator: (v) => (v ?? '').trim().isEmpty
+                                      ? 'Give the task a title'
+                                      : null,
+                                ),
+                                _uText(
+                                  label: 'Notes',
+                                  controller: _descCtrl,
+                                  icon: Icons.notes_rounded,
+                                  hint: 'Any detail or context…',
+                                  maxLines: 3,
+                                ),
+                                _dueDateField(),
+                                _priorityField(),
+                                _assignRow(
+                                  label: 'Assign to team member',
+                                  isPerson: false,
+                                  has: _listingRef != null ||
+                                      _listingName.isNotEmpty,
+                                  name: _listingName,
+                                  subtitle: _listingSubtitle,
+                                  onTap: () => _pickAssignee(isPerson: false),
+                                ),
+                                _checklistField(),
+                                _attachmentsField(),
+                              ],
+                            ),
                           ),
-                          _uText(
-                            label: 'Notes',
-                            controller: _descCtrl,
-                            icon: Icons.notes_rounded,
-                            hint: 'Any detail or context…',
-                            maxLines: 3,
-                          ),
-                          _dueDateField(),
-                          _priorityField(),
-                          _assignRow(
-                            label: 'Assign to team member',
-                            isPerson: false,
-                            has: _listingRef != null || _listingName.isNotEmpty,
-                            name: _listingName,
-                            subtitle: _listingSubtitle,
-                            onTap: () => _pickAssignee(isPerson: false),
-                          ),
-                          _checklistField(),
-                          _attachmentsField(),
                         ],
                       ),
                     ),

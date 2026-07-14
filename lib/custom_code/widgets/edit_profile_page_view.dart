@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 // ✅ Auth helpers (currentUserReference, currentUserEmail, etc.)
 import '/auth/firebase_auth/auth_util.dart';
 
@@ -152,11 +154,14 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
     TextInputType? keyboardType,
     ValueChanged<String>? onSubmitted,
     String? Function(String?)? validator,
+    bool divider = true,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 18),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: _hairlineOnSurface, width: 1)),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        border: divider
+            ? const Border(bottom: BorderSide(color: _hairline, width: 1))
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -376,7 +381,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
             const Text('Edit profile',
                 style: TextStyle(
                     fontFamily: _displayFont,
-                    fontSize: 32,
+                    fontSize: 34,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -1,
                     height: 1.0,
@@ -513,24 +518,14 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
     );
   }
 
-  Widget _sectionHeader(String title) => Row(
-        children: [
-          Container(
-            width: 9,
-            height: 18,
-            decoration: BoxDecoration(
-                color: _ink, borderRadius: BorderRadius.circular(5)),
-          ),
-          const SizedBox(width: 10),
-          Text(title,
-              style: const TextStyle(
-                  fontFamily: _displayFont,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 17,
-                  letterSpacing: -0.3,
-                  color: _ink)),
-        ],
-      );
+  Widget _sectionHeader(String title) => Text(title.toUpperCase(),
+      style: const TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 11,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0.6,
+        color: _inkMute,
+      ));
 
   Widget _messageState(
     FlutterFlowTheme theme,
@@ -655,53 +650,64 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                               _avatarBlock(theme, displayName, email, photoUrl),
                               const SizedBox(height: 26),
                               _sectionHeader('Details'),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 10),
                               Form(
                                 key: _formKey,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _uText(
-                                      theme: theme,
-                                      label: 'Display name',
-                                      controller: _nameController,
-                                      focusNode: _nameFocus,
-                                      icon: Icons.person_outline_rounded,
-                                      hint: 'Your name',
-                                      onSubmitted: (_) => FocusScope.of(context)
-                                          .requestFocus(_phoneFocus),
-                                      validator: (v) {
-                                        final s = (v ?? '').trim();
-                                        if (s.isEmpty) {
-                                          return 'Please enter your name.';
-                                        }
-                                        if (s.length < 2) {
-                                          return 'Name is too short.';
-                                        }
-                                        return null;
-                                      },
-                                    ),
-                                    _uText(
-                                      theme: theme,
-                                      label: 'Phone number',
-                                      controller: _phoneController,
-                                      focusNode: _phoneFocus,
-                                      icon: Icons.phone_outlined,
-                                      hint: 'e.g. 0813151789',
-                                      keyboardType: TextInputType.phone,
-                                      onSubmitted: (_) => _saveProfile(),
-                                      validator: (v) {
-                                        final s = (v ?? '').trim();
-                                        if (s.isEmpty) {
-                                          return 'Please enter your phone number.';
-                                        }
-                                        if (s.length < 8) {
-                                          return 'Phone number looks too short.';
-                                        }
-                                        return null;
-                                      },
-                                    ),
-                                  ],
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: _paper,
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(color: _hairline),
+                                  ),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      _uText(
+                                        theme: theme,
+                                        label: 'Display name',
+                                        controller: _nameController,
+                                        focusNode: _nameFocus,
+                                        icon: Icons.person_outline_rounded,
+                                        hint: 'Your name',
+                                        onSubmitted: (_) =>
+                                            FocusScope.of(context)
+                                                .requestFocus(_phoneFocus),
+                                        validator: (v) {
+                                          final s = (v ?? '').trim();
+                                          if (s.isEmpty) {
+                                            return 'Please enter your name.';
+                                          }
+                                          if (s.length < 2) {
+                                            return 'Name is too short.';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                      _uText(
+                                        theme: theme,
+                                        label: 'Phone number',
+                                        controller: _phoneController,
+                                        focusNode: _phoneFocus,
+                                        icon: Icons.phone_outlined,
+                                        hint: 'e.g. 0813151789',
+                                        keyboardType: TextInputType.phone,
+                                        onSubmitted: (_) => _saveProfile(),
+                                        divider: false,
+                                        validator: (v) {
+                                          final s = (v ?? '').trim();
+                                          if (s.isEmpty) {
+                                            return 'Please enter your phone number.';
+                                          }
+                                          if (s.length < 8) {
+                                            return 'Phone number looks too short.';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 28),

@@ -10,14 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -1155,31 +1147,47 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                         children: [
                           _mediaSection(),
                           const SizedBox(height: 6),
-                          _uText(
-                            label: 'Title',
-                            controller: _titleCtrl,
-                            icon: Icons.title_rounded,
-                            hint: 'e.g. Cracked tile in ensuite',
-                            validator: (v) => (v ?? '').trim().isEmpty
-                                ? 'Give the snag a title'
-                                : null,
+                          Text('DETAILS', style: _uLabel()),
+                          const SizedBox(height: 10),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: _paper,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: _hairline),
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _uText(
+                                  label: 'Title',
+                                  controller: _titleCtrl,
+                                  icon: Icons.title_rounded,
+                                  hint: 'e.g. Cracked tile in ensuite',
+                                  validator: (v) => (v ?? '').trim().isEmpty
+                                      ? 'Give the snag a title'
+                                      : null,
+                                ),
+                                _uText(
+                                  label: 'Description',
+                                  controller: _descCtrl,
+                                  icon: Icons.notes_rounded,
+                                  hint: 'What is wrong, and where exactly…',
+                                  maxLines: 3,
+                                ),
+                                _uText(
+                                  label: 'Area / Room',
+                                  controller: _areaCtrl,
+                                  icon: Icons.place_outlined,
+                                  hint: 'e.g. Master Ensuite',
+                                ),
+                                _severityField(),
+                                _dueDateField(),
+                                _assignField(),
+                              ],
+                            ),
                           ),
-                          _uText(
-                            label: 'Description',
-                            controller: _descCtrl,
-                            icon: Icons.notes_rounded,
-                            hint: 'What is wrong, and where exactly…',
-                            maxLines: 3,
-                          ),
-                          _uText(
-                            label: 'Area / Room',
-                            controller: _areaCtrl,
-                            icon: Icons.place_outlined,
-                            hint: 'e.g. Master Ensuite',
-                          ),
-                          _severityField(),
-                          _dueDateField(),
-                          _assignField(),
                         ],
                       ),
                     ),
