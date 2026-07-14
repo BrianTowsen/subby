@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,10 +25,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// QuoteDetailView — owner views one quote in full (Accept / Decline).
 ///
 /// Reads the active project + active quote id from prefs.
+///
+/// After ACCEPTING (awarding) a quote the owner is returned to Quotes
+/// Received (quotesReceivedRouteName — defaults to 'QuotesReceived') so they
+/// land back on the tender list with the award reflected.
 class QuoteDetailView extends StatefulWidget {
-  const QuoteDetailView({super.key, this.width, this.height});
+  const QuoteDetailView(
+      {super.key, this.width, this.height, this.quotesReceivedRouteName});
   final double? width;
   final double? height;
+
+  /// FlutterFlow route name of the Quotes Received page (QuotesReceivedView).
+  final String? quotesReceivedRouteName;
   @override
   State<QuoteDetailView> createState() => _QuoteDetailViewState();
 }
@@ -47,6 +57,7 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
   static const String _kActiveProjectPath = 'subby_active_project_path';
   static const String _kActiveQuoteId = 'subby_active_quote_id';
   static const String _kActiveQuotePath = 'subby_active_quote_path';
+  static const String _fallbackQuotesReceivedRoute = 'QuotesReceived';
 
   DocumentReference<Map<String, dynamic>>? _quoteRef;
   bool _loading = true;
@@ -100,6 +111,16 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
       }
     } catch (_) {}
     if (!mounted) return;
+
+    // After AWARDING, return the owner to Quotes Received so they land back on
+    // the tender list showing the award. A decline just pops.
+    if (status == 'accepted') {
+      final route = (widget.quotesReceivedRouteName ?? '').trim().isEmpty
+          ? _fallbackQuotesReceivedRoute
+          : widget.quotesReceivedRouteName!.trim();
+      context.goNamed(route);
+      return;
+    }
     final nav = Navigator.of(context);
     if (nav.canPop()) nav.pop();
   }

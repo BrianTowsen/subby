@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -1292,15 +1294,11 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                 Expanded(
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(999),
-                    child: Container(
-                      height: 8,
-                      color: _paper,
-                      child: FractionallySizedBox(
-                        alignment: Alignment.centerLeft,
-                        widthFactor: progress,
-                        child: Container(color: _ink),
-                      ),
-                    ),
+                    child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 8,
+                        backgroundColor: _paper,
+                        valueColor: const AlwaysStoppedAnimation<Color>(_ink)),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -1396,15 +1394,12 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                   Expanded(
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(999),
-                      child: Container(
-                        height: 7,
-                        color: _paper,
-                        child: FractionallySizedBox(
-                          alignment: Alignment.centerLeft,
-                          widthFactor: progress,
-                          child: Container(color: _ink),
-                        ),
-                      ),
+                      child: LinearProgressIndicator(
+                          value: progress,
+                          minHeight: 7,
+                          backgroundColor: _paper,
+                          valueColor:
+                              const AlwaysStoppedAnimation<Color>(_ink)),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -2359,15 +2354,11 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             const SizedBox(height: 9),
             ClipRRect(
               borderRadius: BorderRadius.circular(999),
-              child: Container(
-                height: 8,
-                color: Colors.white,
-                child: FractionallySizedBox(
-                  alignment: Alignment.centerLeft,
-                  widthFactor: progress,
-                  child: Container(color: _ink),
-                ),
-              ),
+              child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 8,
+                  backgroundColor: Colors.white,
+                  valueColor: const AlwaysStoppedAnimation<Color>(_ink)),
             ),
             const SizedBox(height: 14),
             Container(
@@ -2510,15 +2501,11 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             const SizedBox(height: 9),
             ClipRRect(
               borderRadius: BorderRadius.circular(999),
-              child: Container(
-                height: 8,
-                color: const Color(0xFFDCE3E6),
-                child: FractionallySizedBox(
-                  alignment: Alignment.centerLeft,
-                  widthFactor: progress,
-                  child: Container(color: _ink),
-                ),
-              ),
+              child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 8,
+                  backgroundColor: const Color(0xFFDCE3E6),
+                  valueColor: const AlwaysStoppedAnimation<Color>(_ink)),
             ),
             const SizedBox(height: 14),
             Container(
@@ -3148,15 +3135,11 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                 Expanded(
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(999),
-                    child: Container(
-                      height: 8,
-                      color: _paper,
-                      child: FractionallySizedBox(
-                        alignment: Alignment.centerLeft,
-                        widthFactor: progress,
-                        child: Container(color: _ink),
-                      ),
-                    ),
+                    child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 8,
+                        backgroundColor: _paper,
+                        valueColor: const AlwaysStoppedAnimation<Color>(_ink)),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -3281,15 +3264,12 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                   Expanded(
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(999),
-                      child: Container(
-                        height: 7,
-                        color: _paper,
-                        child: FractionallySizedBox(
-                          alignment: Alignment.centerLeft,
-                          widthFactor: progress,
-                          child: Container(color: _ink),
-                        ),
-                      ),
+                      child: LinearProgressIndicator(
+                          value: progress,
+                          minHeight: 7,
+                          backgroundColor: _paper,
+                          valueColor:
+                              const AlwaysStoppedAnimation<Color>(_ink)),
                     ),
                   ),
                   const SizedBox(width: 10),

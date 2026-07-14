@@ -50,6 +50,7 @@ class _QuoteDetailWidgetState extends State<QuoteDetailWidget> {
           child: custom_widgets.QuoteDetailView(
             width: MediaQuery.sizeOf(context).width * 1.0,
             height: MediaQuery.sizeOf(context).height * 1.0,
+            quotesReceivedRouteName: 'QuotesReceived',
           ),
         ),
       ),
