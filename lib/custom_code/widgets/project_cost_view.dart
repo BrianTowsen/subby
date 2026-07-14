@@ -10,24 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -101,27 +83,25 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     'Site Preparation',
     'Site Establishment',
     'Earthworks & Excavation',
-    'Concrete Works (Foundations)',
-    'Brickwork & Blockwork',
-    'Damp Proofing & Waterproofing',
+    'Brickwork & Concrete',
     'Structural Steel Works',
-    'Roofing & Trusses',
+    'Roofing',
     'Windows & Door Frames',
-    'Glazing',
     'Plumbing & Drainage',
-    'Sanitary Fittings',
     'Electrical Works',
-    'Electrical Fittings',
     'Plastering & Screeds',
+    'Waterproofing',
     'Ceilings & Partitioning',
     'Internal Carpentry & Joinery',
     'Kitchen (Built-in Units)',
     'Built-in Cupboards',
     'Tiling',
-    'Floor Covering',
     'Special Items',
-    'Painting & Decorating',
-    'Balustrades & Railings',
+    'Steel Works',
+    'Sanitary Fittings',
+    'Painting & Wall Covering',
+    'Electrical Fittings',
+    'Floor Covering',
     'External Site Works',
     'Landscaping',
     'Cleaning & Handover',
@@ -190,6 +170,11 @@ class _ProjectCostViewState extends State<ProjectCostView> {
   num _contingencyPct = 10;
   final TextEditingController _contCtl = TextEditingController(text: '10');
 
+  // Numeric fields use a decimal pad (no return key on iOS) — a floating
+  // "Done" accessory bar gives them the same blue tick / dismiss.
+  final FocusNode _contFocus = FocusNode();
+  OverlayEntry? _kbBar;
+
   int _tab = 0; // 0 = Cost Estimate, 1 = Payments, 2 = Cost Control
   bool _manage = false; // manage-sections overlay
   int? _paymentFilter; // null = all; otherwise section index
@@ -198,6 +183,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
   // Payment-editor controllers (synced to the edited payment).
   final TextEditingController _paySupplierCtl = TextEditingController();
   final TextEditingController _payAmountCtl = TextEditingController();
+  final FocusNode _payAmountFocus = FocusNode();
 
   DocumentReference<Map<String, dynamic>>? _projectRef;
   DocumentReference<Map<String, dynamic>>? _estimateRef;
@@ -217,6 +203,73 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     for (var i = 0; i < _baseSections.length; i++) {
       _sections.add(_EstSection(name: _baseSections[i]));
     }
+    _contFocus.addListener(_onNumFocusChange);
+    _payAmountFocus.addListener(_onNumFocusChange);
+  }
+
+  // ── Keyboard "Done" accessory bar (numeric decimal pad has no return key) ──
+  void _onNumFocusChange() {
+    final anyFocused = _contFocus.hasFocus || _payAmountFocus.hasFocus;
+    if (anyFocused) {
+      _showKbBar();
+    } else {
+      Future.microtask(() {
+        if (!_contFocus.hasFocus && !_payAmountFocus.hasFocus) _hideKbBar();
+      });
+    }
+  }
+
+  void _showKbBar() {
+    if (_kbBar != null || !mounted) return;
+    _kbBar = OverlayEntry(builder: (ctx) {
+      final inset = MediaQuery.of(ctx).viewInsets.bottom;
+      return Positioned(
+        left: 0,
+        right: 0,
+        bottom: inset,
+        child: Material(
+          color: _band,
+          child: Container(
+            height: 46,
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: const BoxDecoration(
+              border: Border(top: BorderSide(color: _hairline)),
+            ),
+            child: GestureDetector(
+              onTap: () => FocusScope.of(context).unfocus(),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0A84FF), // iOS blue
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(Icons.check_rounded, size: 16, color: _paper),
+                    SizedBox(width: 5),
+                    Text('Done',
+                        style: TextStyle(
+                            fontFamily: _body,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: _paper)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    });
+    Overlay.of(context).insert(_kbBar!);
+  }
+
+  void _hideKbBar() {
+    _kbBar?.remove();
+    _kbBar = null;
   }
 
   bool _resolvedRef = false;
@@ -261,6 +314,9 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     _projSub?.cancel();
     _estSub?.cancel();
     _saveTimer?.cancel();
+    _hideKbBar();
+    _contFocus.dispose();
+    _payAmountFocus.dispose();
     _contCtl.dispose();
     _paySupplierCtl.dispose();
     _payAmountCtl.dispose();
@@ -1470,30 +1526,36 @@ class _ProjectCostViewState extends State<ProjectCostView> {
         Expanded(
           child: ListView(
             padding: EdgeInsets.fromLTRB(14, 18, 14, 24 + bottomInset),
-            children: [
-              _sectionsHeaderRow(),
-              const SizedBox(height: 14),
-              Container(
-                decoration: BoxDecoration(
-                  color: _paper,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: _border),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Column(
-                  children: [
-                    for (var i = 0; i < _sections.length; i++)
-                      _sectionBlock(i, _sections[i]),
+            children: _sections.isEmpty
+                ? [
+                    _sectionsHeaderRow(),
+                    const SizedBox(height: 14),
+                    _emptySections(),
+                  ]
+                : [
+                    _sectionsHeaderRow(),
+                    const SizedBox(height: 14),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: _paper,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: _border),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        children: [
+                          for (var i = 0; i < _sections.length; i++)
+                            _sectionBlock(i, _sections[i]),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    if (!_readOnly) _addSectionButton(),
+                    const SizedBox(height: 14),
+                    _breakdownCard(net, contAmount, vat, total),
+                    const SizedBox(height: 14),
+                    _savedCue(),
                   ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              if (!_readOnly) _addSectionButton(),
-              const SizedBox(height: 14),
-              _breakdownCard(net, contAmount, vat, total),
-              const SizedBox(height: 14),
-              _savedCue(),
-            ],
           ),
         ),
       ],
@@ -1574,6 +1636,77 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     );
   }
 
+  // Empty-state — shown when the section list has been fully cleared. Gives the
+  // user a way back in (guards against building an estimate over an empty list).
+  Widget _emptySections() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(22, 40, 22, 40),
+      decoration: BoxDecoration(
+        color: _paper,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _border),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 54,
+            height: 54,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+                color: _band, borderRadius: BorderRadius.circular(14)),
+            child: const Icon(Icons.list_alt_rounded, size: 26, color: _zero),
+          ),
+          const SizedBox(height: 14),
+          const Text('No sections yet',
+              style: TextStyle(
+                  fontFamily: _display,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  color: _ink)),
+          const SizedBox(height: 6),
+          const SizedBox(
+            width: 250,
+            child: Text(
+                'Your section list is empty. Add your first section to start building the estimate from scratch.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontFamily: _body,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    height: 1.45,
+                    color: _faint)),
+          ),
+          if (!_readOnly) ...[
+            const SizedBox(height: 18),
+            InkWell(
+              onTap: _addSection,
+              borderRadius: BorderRadius.circular(999),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                decoration: BoxDecoration(
+                    color: _ink, borderRadius: BorderRadius.circular(999)),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(Icons.add_rounded, size: 18, color: _paper),
+                    SizedBox(width: 7),
+                    Text('Add first section',
+                        style: TextStyle(
+                            fontFamily: _body,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: _paper)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _sectionBlock(int index, _EstSection s) {
     double sub = 0;
     for (final l in s.lines) {
@@ -1636,25 +1769,18 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                     )),
               ),
               Expanded(
-                child: TextField(
-                  controller: s.nameCtl,
-                  readOnly: _readOnly,
-                  textInputAction: TextInputAction.done,
-                  onChanged: (v) {
-                    setState(() => s.name = v);
-                    _persist();
-                  },
-                  style: const TextStyle(
-                    fontFamily: _body,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: _ink,
-                  ),
-                  decoration: const InputDecoration(
-                    isCollapsed: true,
-                    border: InputBorder.none,
-                    hintText: 'Section name',
-                    hintStyle: TextStyle(color: _faint),
+                child: InkWell(
+                  onTap: () => _toggleSection(s),
+                  child: Text(
+                    s.name.trim().isEmpty ? 'Section name' : s.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: _body,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: s.name.trim().isEmpty ? _faint : _ink,
+                    ),
                   ),
                 ),
               ),
@@ -2182,6 +2308,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                   height: 30,
                   child: TextField(
                     controller: _contCtl,
+                    focusNode: _contFocus,
                     readOnly: _readOnly,
                     onChanged: _onContingencyChanged,
                     textAlign: TextAlign.center,
@@ -3024,6 +3151,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                         Expanded(
                           child: TextField(
                             controller: _payAmountCtl,
+                            focusNode: _payAmountFocus,
                             readOnly: _readOnly,
                             keyboardType: const TextInputType.numberWithOptions(
                                 decimal: true),

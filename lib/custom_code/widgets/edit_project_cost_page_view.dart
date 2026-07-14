@@ -10,8 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -149,6 +147,12 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
   final TextEditingController _rateCtl = TextEditingController();
   final ScrollController _scrollCtl = ScrollController();
 
+  // Numeric fields use a decimal pad, which has no return key on iOS — so a
+  // floating "Done" accessory bar gives them the same blue tick / dismiss.
+  final FocusNode _qtyFocus = FocusNode();
+  final FocusNode _rateFocus = FocusNode();
+  OverlayEntry? _kbBar;
+
   @override
   void initState() {
     super.initState();
@@ -157,6 +161,74 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
       _sections.add(_EstSection(name: name));
     }
     if (_sections.isNotEmpty) _sections[0].lines.add(_EstLine());
+    _qtyFocus.addListener(_onNumFocusChange);
+    _rateFocus.addListener(_onNumFocusChange);
+  }
+
+  // ── Keyboard "Done" accessory bar (numeric decimal pad has no return key) ──
+  void _onNumFocusChange() {
+    final anyFocused = _qtyFocus.hasFocus || _rateFocus.hasFocus;
+    if (anyFocused) {
+      _showKbBar();
+    } else {
+      // Defer so focus can transfer between the two numeric fields without flicker.
+      Future.microtask(() {
+        if (!_qtyFocus.hasFocus && !_rateFocus.hasFocus) _hideKbBar();
+      });
+    }
+  }
+
+  void _showKbBar() {
+    if (_kbBar != null || !mounted) return;
+    _kbBar = OverlayEntry(builder: (ctx) {
+      final inset = MediaQuery.of(ctx).viewInsets.bottom;
+      return Positioned(
+        left: 0,
+        right: 0,
+        bottom: inset,
+        child: Material(
+          color: _band,
+          child: Container(
+            height: 46,
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: const BoxDecoration(
+              border: Border(top: BorderSide(color: _hairlineOnSurface)),
+            ),
+            child: GestureDetector(
+              onTap: () => FocusScope.of(context).unfocus(),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0A84FF), // iOS blue
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(Icons.check_rounded, size: 16, color: _paper),
+                    SizedBox(width: 5),
+                    Text('Done',
+                        style: TextStyle(
+                            fontFamily: _body,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: _paper)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    });
+    Overlay.of(context).insert(_kbBar!);
+  }
+
+  void _hideKbBar() {
+    _kbBar?.remove();
+    _kbBar = null;
   }
 
   bool _resolvedRef = false;
@@ -213,6 +285,9 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
     _projSub?.cancel();
     _estSub?.cancel();
     _saveTimer?.cancel();
+    _hideKbBar();
+    _qtyFocus.dispose();
+    _rateFocus.dispose();
     _descCtl.dispose();
     _qtyCtl.dispose();
     _rateCtl.dispose();
@@ -1156,6 +1231,7 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
                   width: 100,
                   child: TextField(
                     controller: _qtyCtl,
+                    focusNode: _qtyFocus,
                     readOnly: _readOnly,
                     textInputAction: TextInputAction.done,
                     keyboardType:
@@ -1217,6 +1293,7 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
           Expanded(
             child: TextField(
               controller: _rateCtl,
+              focusNode: _rateFocus,
               readOnly: _readOnly,
               textInputAction: TextInputAction.done,
               keyboardType:
