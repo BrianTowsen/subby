@@ -10,10 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -49,26 +45,26 @@ class LoginView extends StatefulWidget {
 }
 
 class _LoginViewState extends State<LoginView> {
-  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // ─── SUBBY PALETTE (LOCK) — synced with DashboardPageView v6 ───────────
+  // Neutrals
   static const Color _ink = Color(0xFF1E282E);
   static const Color _inkMute = Color(0xFF566670);
+  static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
-  static const Color _hairline = Color(0xFFECF0F2);
-  static const Color _hairlineOnSurface = Color(0xFFCBD8DD);
-  // Brand accent — TEAL (field icons / focus). Primary action is ink.
-  static const Color _teal = Color(0xFF1E282E);
+  static const Color _hairline = Color(0xFFEAEEF0);
+  static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
+  // Steel hero + accent
+  static const Color _steel = Color(0xFF3F5C69); // hero header background
+  static const Color _accent = Color(0xFFE7E247); // primary CTA fill
   // Status
-  static const Color _live = Color(0xFF4E504F);
-  static const Color _coral = Color(0xFF4E504F);
+  static const Color _coral = Color(0xFF566670);
   // Type
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
-  static const String _monoFont = 'Inter';
   // ────────────────────────────────────────────────────────────────────
 
-  static const double _hPad = 24;
-  static const double _vPad = 14;
+  static const double _hPad = 20;
   static const double _radius = 12;
 
   static const String _prefsKeyLoginMethod = 'subby_login_method';
@@ -103,20 +99,8 @@ class _LoginViewState extends State<LoginView> {
   static const String _defaultAfterLoginRoute = 'homePage';
 
   // =========================================================
-  // ✅ TYPOGRAPHY
+  // TYPOGRAPHY
   // =========================================================
-  TextStyle _subtitleStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: _bodyFont,
-        color: _inkMute,
-      );
-
-  TextStyle _toggleTextStyle(FlutterFlowTheme t, {required bool selected}) =>
-      t.labelMedium.override(
-        fontFamily: _bodyFont,
-        color: selected ? _paper : _ink,
-        fontWeight: FontWeight.w800,
-      );
-
   TextStyle _uLabelStyle(FlutterFlowTheme t) => t.bodySmall.override(
         fontFamily: _bodyFont,
         color: _inkMute,
@@ -139,13 +123,6 @@ class _LoginViewState extends State<LoginView> {
         fontWeight: FontWeight.w600,
         fontSize: 16,
         letterSpacing: 0.0,
-      );
-
-  TextStyle _buttonTextStyle(FlutterFlowTheme t, {required Color color}) =>
-      t.labelLarge.override(
-        fontFamily: _bodyFont,
-        color: color,
-        fontWeight: FontWeight.w900,
       );
 
   TextStyle _snackTextStyle(FlutterFlowTheme t) => t.bodySmall.override(
@@ -177,9 +154,7 @@ class _LoginViewState extends State<LoginView> {
       final m = saved == 'email' ? LoginMethod.email : LoginMethod.phone;
       if (!mounted) return;
       setState(() => _method = m);
-    } catch (_) {
-      // ignore
-    }
+    } catch (_) {}
   }
 
   Future<void> _saveLastMethod(LoginMethod m) async {
@@ -189,9 +164,7 @@ class _LoginViewState extends State<LoginView> {
         _prefsKeyLoginMethod,
         m == LoginMethod.email ? 'email' : 'phone',
       );
-    } catch (_) {
-      // ignore
-    }
+    } catch (_) {}
   }
 
   @override
@@ -231,17 +204,13 @@ class _LoginViewState extends State<LoginView> {
   }) {
     var digits = rawPhone.trim().replaceAll(RegExp(r'[\s\-\(\)]'), '');
     if (digits.startsWith('+')) return digits;
-
-    // SA convenience: 081... -> +2781...
     if (countryCode == '+27' && digits.startsWith('0')) {
       digits = digits.substring(1);
     }
-
     final cc = countryCode.startsWith('+') ? countryCode : '+$countryCode';
     return '$cc$digits';
   }
 
-  // Borderless field decoration (Option C underline style).
   InputDecoration _bareDeco(FlutterFlowTheme theme, String hint) {
     return InputDecoration(
       isDense: true,
@@ -259,7 +228,6 @@ class _LoginViewState extends State<LoginView> {
   void _showSubbySnack(String message, {bool success = true}) {
     if (!mounted) return;
     final theme = FlutterFlowTheme.of(context);
-
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
@@ -271,7 +239,7 @@ class _LoginViewState extends State<LoginView> {
           backgroundColor: _surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: _hairline, width: 1),
+            side: const BorderSide(color: _hairline, width: 1),
           ),
           duration: const Duration(milliseconds: 1600),
           content: Row(
@@ -290,31 +258,11 @@ class _LoginViewState extends State<LoginView> {
                 ),
               ),
               const SizedBox(width: 10),
-              Expanded(
-                child: Text(message, style: _snackTextStyle(theme)),
-              ),
+              Expanded(child: Text(message, style: _snackTextStyle(theme))),
             ],
           ),
         ),
       );
-  }
-
-  Widget _circleBack(FlutterFlowTheme t) {
-    return GestureDetector(
-      onTap: () => context.safePop(),
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: _surface,
-          shape: BoxShape.circle,
-          border: Border.all(color: _hairline, width: 1),
-        ),
-        alignment: Alignment.center,
-        child: const Icon(Icons.arrow_back_ios_new_rounded,
-            size: 15, color: _inkMute),
-      ),
-    );
   }
 
   // ---------------------------
@@ -322,24 +270,20 @@ class _LoginViewState extends State<LoginView> {
   // ---------------------------
   Future<void> _sendOtp() async {
     _setError(null);
-
     if (_phoneCtrl.text.trim().isEmpty) {
       _setError('Please enter your phone number.');
       return;
     }
-
     final e164 = _normalizeToE164(
       countryCode: _countryCtrl.text,
       rawPhone: _phoneCtrl.text,
     );
-
     setState(() {
       _sendingCode = true;
       _codeSent = false;
       _verificationId = null;
       _clearOtp();
     });
-
     try {
       await FirebaseAuth.instance.verifyPhoneNumber(
         phoneNumber: e164,
@@ -356,13 +300,11 @@ class _LoginViewState extends State<LoginView> {
             _verificationId = id;
             _codeSent = true;
           });
-
           if (_otpNodes.isNotEmpty) {
             Future.delayed(const Duration(milliseconds: 200), () {
               if (mounted) _otpNodes.first.requestFocus();
             });
           }
-
           _showSubbySnack('OTP sent.', success: true);
         },
         codeAutoRetrievalTimeout: (id) => _verificationId = id,
@@ -376,20 +318,16 @@ class _LoginViewState extends State<LoginView> {
 
   Future<void> _verifyOtp() async {
     _setError(null);
-
     if ((_verificationId ?? '').isEmpty) {
       _setError('Please request an OTP first.');
       return;
     }
-
     final code = _otpValue();
     if (code.length != _otpLen) {
       _setError('Please enter the full OTP code.');
       return;
     }
-
     setState(() => _verifyingCode = true);
-
     try {
       final cred = PhoneAuthProvider.credential(
         verificationId: _verificationId!,
@@ -408,10 +346,8 @@ class _LoginViewState extends State<LoginView> {
 
   Future<void> _loginWithEmail() async {
     _setError(null);
-
     final email = _emailCtrl.text.trim();
     final pw = _passwordCtrl.text;
-
     if (email.isEmpty) {
       _setError('Please enter your email.');
       return;
@@ -420,9 +356,7 @@ class _LoginViewState extends State<LoginView> {
       _setError('Please enter your password.');
       return;
     }
-
     setState(() => _emailLoading = true);
-
     try {
       final res = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email,
@@ -440,13 +374,11 @@ class _LoginViewState extends State<LoginView> {
 
   Future<void> _forgotPassword() async {
     _setError(null);
-
     final email = _emailCtrl.text.trim();
     if (email.isEmpty) {
       _setError('Enter your email first.');
       return;
     }
-
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
       _showSubbySnack('Password reset email sent.', success: true);
@@ -460,10 +392,8 @@ class _LoginViewState extends State<LoginView> {
   /// ✅ Post-auth step: ensure Firestore user doc exists, then go Home.
   Future<void> _postLogin(User? user) async {
     if (user == null) return;
-
     final ref = FirebaseFirestore.instance.collection('users').doc(user.uid);
     final now = Timestamp.now();
-
     await ref.set({
       'uid': user.uid,
       'email': (user.email ?? '').trim(),
@@ -471,28 +401,88 @@ class _LoginViewState extends State<LoginView> {
       'active': true,
       'last_login': now,
     }, SetOptions(merge: true));
-
     context.goNamed(widget.afterLoginRouteName ?? _defaultAfterLoginRoute);
   }
 
   // ---------------------------
-  // UI pieces (Option C — minimal underline)
+  // NEW STYLE — steel hero
+  // ---------------------------
+  Widget _heroCircle(IconData icon, VoidCallback onTap) => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            width: 38,
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+                color: _paper.withOpacity(0.14), shape: BoxShape.circle),
+            child: Icon(icon, size: 16, color: _paper),
+          ),
+        ),
+      );
+
+  Widget _hero() => Container(
+        width: double.infinity,
+        color: _steel,
+        padding: EdgeInsets.fromLTRB(
+            _hPad, MediaQuery.of(context).padding.top + 8, _hPad, 22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _heroCircle(
+                    Icons.arrow_back_ios_new_rounded, () => context.safePop()),
+                Expanded(
+                  child: Center(
+                    child: Text('SUBBY ACCOUNT',
+                        style: TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.7,
+                            color: _paper.withOpacity(0.55))),
+                  ),
+                ),
+                const SizedBox(width: 38, height: 38),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Text('Log in',
+                style: TextStyle(
+                    fontFamily: _displayFont,
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -1,
+                    height: 1.0,
+                    color: _paper)),
+            const SizedBox(height: 8),
+            Text('Welcome back — access your Subby account.',
+                style: TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: _paper.withOpacity(0.6))),
+          ],
+        ),
+      );
+
+  // ---------------------------
+  // UI pieces
   // ---------------------------
   Widget _slidingToggle(FlutterFlowTheme theme) {
     final isPhone = _method == LoginMethod.phone;
-
     return Container(
-      height: 40,
+      height: 44,
       decoration: BoxDecoration(
         color: _surface,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: _hairline, width: 1),
       ),
       child: LayoutBuilder(
         builder: (context, c) {
-          final w = c.maxWidth;
-          final pillW = (w - 4) / 2;
-
+          final pillW = (c.maxWidth - 6) / 2;
           return Stack(
             children: [
               AnimatedAlign(
@@ -502,9 +492,9 @@ class _LoginViewState extends State<LoginView> {
                     isPhone ? Alignment.centerLeft : Alignment.centerRight,
                 child: Container(
                   width: pillW,
-                  margin: const EdgeInsets.all(2),
+                  margin: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
-                    color: _ink,
+                    color: _steel,
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),
@@ -522,10 +512,12 @@ class _LoginViewState extends State<LoginView> {
                         await _saveLastMethod(LoginMethod.phone);
                       },
                       child: Center(
-                        child: Text(
-                          'Phone',
-                          style: _toggleTextStyle(theme, selected: isPhone),
-                        ),
+                        child: Text('Phone',
+                            style: TextStyle(
+                                fontFamily: _bodyFont,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: isPhone ? _paper : _inkMute)),
                       ),
                     ),
                   ),
@@ -540,10 +532,12 @@ class _LoginViewState extends State<LoginView> {
                         await _saveLastMethod(LoginMethod.email);
                       },
                       child: Center(
-                        child: Text(
-                          'Email',
-                          style: _toggleTextStyle(theme, selected: !isPhone),
-                        ),
+                        child: Text('Email',
+                            style: TextStyle(
+                                fontFamily: _bodyFont,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: !isPhone ? _paper : _inkMute)),
                       ),
                     ),
                   ),
@@ -556,8 +550,8 @@ class _LoginViewState extends State<LoginView> {
     );
   }
 
-  // Full-width ink primary button.
-  Widget _inkButton(
+  // Full-width ACCENT (yellow) primary button — ink label.
+  Widget _accentButton(
     FlutterFlowTheme theme, {
     required String label,
     required VoidCallback? onPressed,
@@ -574,8 +568,8 @@ class _LoginViewState extends State<LoginView> {
           width: double.infinity,
           height: 54,
           decoration: BoxDecoration(
-            color: _ink,
-            borderRadius: BorderRadius.circular(999),
+            color: _accent,
+            borderRadius: BorderRadius.circular(_radius),
           ),
           alignment: Alignment.center,
           child: loading
@@ -584,17 +578,22 @@ class _LoginViewState extends State<LoginView> {
                   height: 22,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(_paper),
+                    valueColor: AlwaysStoppedAnimation<Color>(_ink),
                   ),
                 )
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (icon != null) ...[
-                      Icon(icon, size: 18, color: _paper),
+                      Icon(icon, size: 18, color: _ink),
                       const SizedBox(width: 8),
                     ],
-                    Text(label, style: _buttonTextStyle(theme, color: _paper)),
+                    Text(label,
+                        style: const TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
+                            color: _ink)),
                   ],
                 ),
         ),
@@ -602,7 +601,6 @@ class _LoginViewState extends State<LoginView> {
     );
   }
 
-  // Full-width outline secondary button.
   Widget _outlineButton(
     FlutterFlowTheme theme, {
     required String label,
@@ -616,7 +614,7 @@ class _LoginViewState extends State<LoginView> {
         height: 52,
         decoration: BoxDecoration(
           color: _paper,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(_radius),
           border: Border.all(color: _hairlineOnSurface, width: 1),
         ),
         alignment: Alignment.center,
@@ -627,30 +625,27 @@ class _LoginViewState extends State<LoginView> {
               Icon(icon, size: 18, color: _inkMute),
               const SizedBox(width: 8),
             ],
-            Text(
-              label,
-              style: theme.labelLarge.override(
-                fontFamily: _bodyFont,
-                color: _ink,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
+            Text(label,
+                style: const TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: _ink)),
           ],
         ),
       ),
     );
   }
 
-  // Underline field wrapper.
   Widget _uUnderline({
     required FlutterFlowTheme theme,
     required String label,
     required Widget row,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: 18),
       decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: _hairline, width: 1)),
+        border: Border(bottom: BorderSide(color: _hairlineOnSurface, width: 1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -666,7 +661,6 @@ class _LoginViewState extends State<LoginView> {
   Widget _errorBanner(FlutterFlowTheme theme) {
     final msg = (_error ?? '').trim();
     if (msg.isEmpty) return const SizedBox.shrink();
-
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(top: 16),
@@ -678,17 +672,14 @@ class _LoginViewState extends State<LoginView> {
       ),
       child: Row(
         children: [
-          Icon(Icons.error_outline, size: 18, color: _coral),
+          const Icon(Icons.error_outline, size: 18, color: _coral),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              msg,
-              style: theme.bodyMedium.override(
-                fontFamily: _bodyFont,
-                color: _coral,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+            child: Text(msg,
+                style: const TextStyle(
+                    fontFamily: _bodyFont,
+                    color: _coral,
+                    fontWeight: FontWeight.w700)),
           ),
         ],
       ),
@@ -703,25 +694,24 @@ class _LoginViewState extends State<LoginView> {
           controller: _otpCtrls[i],
           focusNode: _otpNodes[i],
           keyboardType: TextInputType.number,
-          inputFormatters: [
-            FilteringTextInputFormatter.digitsOnly,
-          ],
+          textInputAction: TextInputAction.done,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           textAlign: TextAlign.center,
           maxLength: 1,
-          cursorColor: _teal,
+          cursorColor: _steel,
           style: _otpDigitStyle(theme),
           decoration: InputDecoration(
             counterText: '',
             filled: true,
             fillColor: _surface,
-            contentPadding: const EdgeInsets.symmetric(vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(vertical: 15),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: _hairlineOnSurface, width: 1),
+              borderSide: const BorderSide(color: _hairlineOnSurface, width: 1),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: _teal, width: 1.7),
+              borderSide: const BorderSide(color: _steel, width: 1.7),
             ),
           ),
           onChanged: (v) {
@@ -737,7 +727,6 @@ class _LoginViewState extends State<LoginView> {
               setState(() {});
               return;
             }
-
             if (v.isNotEmpty) {
               if (i < _otpLen - 1) {
                 _otpNodes[i + 1].requestFocus();
@@ -768,14 +757,15 @@ class _LoginViewState extends State<LoginView> {
           label: 'Phone number',
           row: Row(
             children: [
-              const Icon(Icons.phone_outlined, size: 19, color: _teal),
+              const Icon(Icons.phone_outlined, size: 19, color: _ink),
               const SizedBox(width: 10),
               SizedBox(
                 width: 46,
                 child: TextField(
                   controller: _countryCtrl,
                   keyboardType: TextInputType.phone,
-                  cursorColor: _teal,
+                  textInputAction: TextInputAction.done,
+                  cursorColor: _steel,
                   decoration: _bareDeco(theme, '+27'),
                   style: _fieldTextStyle(theme),
                 ),
@@ -790,7 +780,8 @@ class _LoginViewState extends State<LoginView> {
                 child: TextField(
                   controller: _phoneCtrl,
                   keyboardType: TextInputType.phone,
-                  cursorColor: _teal,
+                  textInputAction: TextInputAction.done,
+                  cursorColor: _steel,
                   decoration: _bareDeco(theme, '081 234 5678'),
                   style: _fieldTextStyle(theme),
                 ),
@@ -798,8 +789,8 @@ class _LoginViewState extends State<LoginView> {
             ],
           ),
         ),
-        const SizedBox(height: 20),
-        _inkButton(
+        const SizedBox(height: 22),
+        _accentButton(
           theme,
           label: _codeSent ? 'Resend code' : 'Send code',
           icon: Icons.sms_outlined,
@@ -807,12 +798,12 @@ class _LoginViewState extends State<LoginView> {
           onPressed: _sendingCode ? null : _sendOtp,
         ),
         if (_codeSent) ...[
-          const SizedBox(height: 22),
+          const SizedBox(height: 24),
           Text('OTP CODE', style: _uLabelStyle(theme)),
           const SizedBox(height: 12),
           _otpBoxes(theme),
           const SizedBox(height: 20),
-          _inkButton(
+          _accentButton(
             theme,
             label: 'Verify & continue',
             icon: Icons.lock_open_outlined,
@@ -833,13 +824,14 @@ class _LoginViewState extends State<LoginView> {
           label: 'Email',
           row: Row(
             children: [
-              const Icon(Icons.mail_outline_rounded, size: 19, color: _teal),
+              const Icon(Icons.mail_outline_rounded, size: 19, color: _ink),
               const SizedBox(width: 10),
               Expanded(
                 child: TextField(
                   controller: _emailCtrl,
                   keyboardType: TextInputType.emailAddress,
-                  cursorColor: _teal,
+                  textInputAction: TextInputAction.done,
+                  cursorColor: _steel,
                   decoration: _bareDeco(theme, 'you@example.com'),
                   style: _fieldTextStyle(theme),
                 ),
@@ -852,13 +844,14 @@ class _LoginViewState extends State<LoginView> {
           label: 'Password',
           row: Row(
             children: [
-              const Icon(Icons.lock_outline_rounded, size: 19, color: _teal),
+              const Icon(Icons.lock_outline_rounded, size: 19, color: _ink),
               const SizedBox(width: 10),
               Expanded(
                 child: TextField(
                   controller: _passwordCtrl,
                   obscureText: _obscurePw,
-                  cursorColor: _teal,
+                  textInputAction: TextInputAction.done,
+                  cursorColor: _steel,
                   decoration: _bareDeco(theme, 'Enter password'),
                   style: _fieldTextStyle(theme),
                 ),
@@ -884,18 +877,15 @@ class _LoginViewState extends State<LoginView> {
           alignment: Alignment.centerRight,
           child: TextButton(
             onPressed: _forgotPassword,
-            child: Text(
-              'Forgot password?',
-              style: theme.labelMedium.override(
-                fontFamily: _bodyFont,
-                color: _inkMute,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
+            child: const Text('Forgot password?',
+                style: TextStyle(
+                    fontFamily: _bodyFont,
+                    color: _steel,
+                    fontWeight: FontWeight.w800)),
           ),
         ),
-        const SizedBox(height: 12),
-        _inkButton(
+        const SizedBox(height: 14),
+        _accentButton(
           theme,
           label: 'Log in',
           icon: Icons.login,
@@ -906,86 +896,80 @@ class _LoginViewState extends State<LoginView> {
     );
   }
 
+  Widget _divider(FlutterFlowTheme theme, String label) => Row(
+        children: [
+          const Expanded(child: Divider(color: _hairline, thickness: 1)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Text(label.toUpperCase(),
+                style: const TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.4,
+                    color: _faint)),
+          ),
+          const Expanded(child: Divider(color: _hairline, thickness: 1)),
+        ],
+      );
+
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
-
     final double width = widget.width ?? MediaQuery.sizeOf(context).width;
     final double height = widget.height ?? MediaQuery.sizeOf(context).height;
 
-    // ---------------------------------------------------------
-    // ✅ OPTION C — MINIMAL UNDERLINE
-    // ---------------------------------------------------------
     return SizedBox(
       width: width,
       height: height,
-      child: SafeArea(
-        child: Container(
-          color: _paper,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ===== TOP ROW: back =====
-                Row(children: [_circleBack(theme), const Spacer()]),
-
-                const SizedBox(height: 20),
-
-                // ===== TITLE =====
-                Text(
-                  'Log in',
-                  style: theme.titleLarge.override(
-                    fontFamily: _displayFont,
-                    color: _ink,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 30,
-                    lineHeight: 1.05,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Subby account access.',
-                  style: _subtitleStyle(theme).copyWith(fontSize: 13),
-                ),
-
-                const SizedBox(height: 30),
-
-                // Toggle
-                _slidingToggle(theme),
-                const SizedBox(height: 8),
-
-                // Forms
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 220),
-                  switchInCurve: Curves.easeOut,
-                  switchOutCurve: Curves.easeIn,
-                  child: (_method == LoginMethod.phone)
-                      ? Container(
-                          key: const ValueKey('phone'),
-                          child: _phoneForm(theme),
-                        )
-                      : Container(
-                          key: const ValueKey('email'),
-                          child: _emailForm(theme),
+      child: Container(
+        color: _paper,
+        child: Column(
+          children: [
+            _hero(),
+            Expanded(
+              child: GestureDetector(
+                onTap: () => FocusScope.of(context).unfocus(),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(_hPad, 22, _hPad, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _slidingToggle(theme),
+                      const SizedBox(height: 8),
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 220),
+                        switchInCurve: Curves.easeOut,
+                        switchOutCurve: Curves.easeIn,
+                        child: (_method == LoginMethod.phone)
+                            ? Container(
+                                key: const ValueKey('phone'),
+                                child: _phoneForm(theme),
+                              )
+                            : Container(
+                                key: const ValueKey('email'),
+                                child: _emailForm(theme),
+                              ),
+                      ),
+                      _errorBanner(theme),
+                      const SizedBox(height: 22),
+                      _divider(theme, 'New to Subby?'),
+                      const SizedBox(height: 16),
+                      _outlineButton(
+                        theme,
+                        label: 'Create account',
+                        icon: Icons.person_add_alt_1_outlined,
+                        onPressed: () => context.pushNamed(
+                          widget.createAccountRouteName ??
+                              _defaultCreateAccountRoute,
                         ),
-                ),
-
-                _errorBanner(theme),
-                const SizedBox(height: 30),
-
-                // Create account (outline)
-                _outlineButton(
-                  theme,
-                  label: 'Create account',
-                  icon: Icons.person_add_alt_1_outlined,
-                  onPressed: () => context.pushNamed(
-                    widget.createAccountRouteName ?? _defaultCreateAccountRoute,
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

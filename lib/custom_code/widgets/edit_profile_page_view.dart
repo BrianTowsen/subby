@@ -13,8 +13,10 @@ import 'index.dart'; // Imports other custom widgets
 // ✅ Auth helpers (currentUserReference, currentUserEmail, etc.)
 import '/auth/firebase_auth/auth_util.dart';
 
-// ✅ Needed to rebuild UI on logout (auth state changes)
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 
 class EditProfilePageView extends StatefulWidget {
   const EditProfilePageView({
@@ -31,22 +33,18 @@ class EditProfilePageView extends StatefulWidget {
 }
 
 class _EditProfilePageViewState extends State<EditProfilePageView> {
-  // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
+  // ─── SUBBY PALETTE (LOCK) — synced with DashboardPageView v6 ───────────
   static const Color _ink = Color(0xFF1E282E);
   static const Color _inkMute = Color(0xFF566670);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
-  static const Color _hairline = Color(0xFFECF0F2);
-  static const Color _hairlineOnSurface = Color(0xFFCBD8DD);
-  // Brand accent — TEAL (field icons / focus). Primary action is ink.
-  static const Color _teal = Color(0xFF1E282E);
-  // Status
-  static const Color _live = Color(0xFF4E504F);
-  static const Color _coral = Color(0xFF4E504F);
-  // Type
+  static const Color _hairline = Color(0xFFEAEEF0);
+  static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
+  static const Color _steel = Color(0xFF3F5C69); // hero background
+  static const Color _accent = Color(0xFFE7E247); // primary CTA fill
+  static const Color _coral = Color(0xFF566670);
   static const String _displayFont = 'Inter Tight';
   static const String _bodyFont = 'Inter';
-  static const String _monoFont = 'Inter';
   // ────────────────────────────────────────────────────────────────────
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -59,19 +57,13 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
 
   bool _prefilled = false;
   bool _saving = false;
+  bool _uploadingPhoto = false;
 
-  static const double _hPad = 24;
-  static const double _vPad = 14;
-  static const double _radius = 12;
+  static const double _hPad = 20;
 
   // =========================================================
-  // ✅ TYPOGRAPHY
+  // TYPOGRAPHY
   // =========================================================
-  TextStyle _subtitleStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: _bodyFont,
-        color: _inkMute,
-      );
-
   TextStyle _uLabelStyle(FlutterFlowTheme t) => t.bodySmall.override(
         fontFamily: _bodyFont,
         color: _inkMute,
@@ -92,30 +84,26 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
         fontFamily: _bodyFont,
         color: _ink,
       );
-  // =========================================================
 
-  Widget _circleBack(FlutterFlowTheme t) {
-    return GestureDetector(
-      onTap: () => context.safePop(),
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: _surface,
-          shape: BoxShape.circle,
-          border: Border.all(color: _hairline, width: 1),
+  Widget _heroCircle(IconData icon, VoidCallback onTap) => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            width: 38,
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+                color: _paper.withOpacity(0.14), shape: BoxShape.circle),
+            child: Icon(icon, size: 16, color: _paper),
+          ),
         ),
-        alignment: Alignment.center,
-        child: const Icon(Icons.arrow_back_ios_new_rounded,
-            size: 15, color: _inkMute),
-      ),
-    );
-  }
+      );
 
   void _showToast(String message, {bool success = true}) {
     if (!mounted) return;
     final theme = FlutterFlowTheme.of(context);
-
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
@@ -127,18 +115,16 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
           backgroundColor: _surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: _hairline, width: 1),
+            side: const BorderSide(color: _hairline, width: 1),
           ),
-          duration: const Duration(milliseconds: 1600),
+          duration: const Duration(milliseconds: 1700),
           content: Row(
             children: [
               Container(
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: _ink.withOpacity(0.08),
-                  shape: BoxShape.circle,
-                ),
+                    color: _ink.withOpacity(0.08), shape: BoxShape.circle),
                 child: Icon(
                   success ? Icons.check_rounded : Icons.info_outline_rounded,
                   size: 16,
@@ -146,9 +132,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                 ),
               ),
               const SizedBox(width: 10),
-              Expanded(
-                child: Text(message, style: _snackTextStyle(theme)),
-              ),
+              Expanded(child: Text(message, style: _snackTextStyle(theme))),
             ],
           ),
         ),
@@ -156,7 +140,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
   }
 
   // =========================================================
-  // ✅ OPTION C — MINIMAL UNDERLINE FIELD
+  // MINIMAL UNDERLINE FIELD — keyboard action = Done (blue tick)
   // =========================================================
   Widget _uText({
     required FlutterFlowTheme theme,
@@ -166,14 +150,13 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
     required IconData icon,
     required String hint,
     TextInputType? keyboardType,
-    TextInputAction textInputAction = TextInputAction.next,
     ValueChanged<String>? onSubmitted,
     String? Function(String?)? validator,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: 18),
       decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: _hairline, width: 1)),
+        border: Border(bottom: BorderSide(color: _hairlineOnSurface, width: 1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -182,17 +165,17 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
           const SizedBox(height: 8),
           Row(
             children: [
-              Icon(icon, size: 19, color: _teal),
+              Icon(icon, size: 19, color: _ink),
               const SizedBox(width: 10),
               Expanded(
                 child: TextFormField(
                   controller: controller,
                   focusNode: focusNode,
                   keyboardType: keyboardType,
-                  textInputAction: textInputAction,
+                  textInputAction: TextInputAction.done,
                   onFieldSubmitted: onSubmitted,
                   validator: validator,
-                  cursorColor: _teal,
+                  cursorColor: _steel,
                   style: _fieldTextStyle(theme),
                   decoration: InputDecoration(
                     isDense: true,
@@ -235,8 +218,8 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
           width: double.infinity,
           height: 54,
           decoration: BoxDecoration(
-            color: _ink,
-            borderRadius: BorderRadius.circular(999),
+            color: _accent,
+            borderRadius: BorderRadius.circular(12),
           ),
           alignment: Alignment.center,
           child: _saving
@@ -245,22 +228,20 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(_paper),
+                    valueColor: AlwaysStoppedAnimation<Color>(_ink),
                   ),
                 )
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.check_rounded, size: 18, color: _paper),
+                    const Icon(Icons.check_rounded, size: 18, color: _ink),
                     const SizedBox(width: 8),
-                    Text(
-                      'Save Profile',
-                      style: theme.labelLarge.override(
-                        fontFamily: _bodyFont,
-                        color: _paper,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
+                    Text('Save Profile',
+                        style: theme.labelLarge.override(
+                          fontFamily: _bodyFont,
+                          color: _ink,
+                          fontWeight: FontWeight.w900,
+                        )),
                   ],
                 ),
         ),
@@ -283,14 +264,60 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
     final parts = n.split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
     if (parts.isEmpty) return '?';
     if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
-    final a = parts.first.substring(0, 1).toUpperCase();
-    final b = parts.last.substring(0, 1).toUpperCase();
-    return '$a$b';
+    return (parts.first.substring(0, 1) + parts.last.substring(0, 1))
+        .toUpperCase();
+  }
+
+  // =========================================================
+  // ✅ CHANGE PHOTO — pick → upload to Storage → save photo_url
+  // =========================================================
+  Future<void> _changePhoto() async {
+    if (_uploadingPhoto) return;
+    final userRef = currentUserReference;
+    final user = FirebaseAuth.instance.currentUser;
+    if (userRef == null || user == null) {
+      _showToast('Not signed in.', success: false);
+      return;
+    }
+
+    try {
+      final picker = ImagePicker();
+      final XFile? picked = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 82,
+      );
+      if (picked == null) return;
+
+      setState(() => _uploadingPhoto = true);
+
+      final bytes = await picked.readAsBytes();
+      final ref =
+          FirebaseStorage.instance.ref().child('users/${user.uid}/profile.jpg');
+      await ref.putData(
+        bytes,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+      final url = await ref.getDownloadURL();
+
+      await userRef.update(<String, dynamic>{'photo_url': url});
+      try {
+        await user.updatePhotoURL(url);
+      } catch (_) {}
+
+      if (!mounted) return;
+      _showToast('Photo updated.');
+    } catch (e) {
+      if (!mounted) return;
+      _showToast('Could not update photo: $e', success: false);
+    } finally {
+      if (mounted) setState(() => _uploadingPhoto = false);
+    }
   }
 
   Future<void> _saveProfile() async {
     if (_saving) return;
-
     final formOk = _formKey.currentState?.validate() ?? false;
     if (!formOk) return;
 
@@ -301,21 +328,16 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
     }
 
     setState(() => _saving = true);
-
     try {
       final displayName = _nameController.text.trim();
       final phone = _phoneController.text.trim();
-
       await userRef.update(<String, dynamic>{
         'display_name': displayName,
         'phone_number': phone,
       });
-
       if (!mounted) return;
-
       _showToast('Profile updated.', success: true);
-
-      context.pop();
+      context.safePop();
     } catch (e) {
       if (!mounted) return;
       _showToast('Failed to save: $e', success: false);
@@ -323,9 +345,193 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
     }
   }
 
-  // =========================
-  // Minimal header + message scaffold (logged-out / error states)
-  // =========================
+  // ─── Steel hero ────────────────────────────────────────────────────────
+  Widget _hero() => Container(
+        width: double.infinity,
+        color: _steel,
+        padding: EdgeInsets.fromLTRB(
+            _hPad, MediaQuery.of(context).padding.top + 8, _hPad, 22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _heroCircle(
+                    Icons.arrow_back_ios_new_rounded, () => context.safePop()),
+                Expanded(
+                  child: Center(
+                    child: Text('PROFILE & ACCOUNT',
+                        style: TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.7,
+                            color: _paper.withOpacity(0.55))),
+                  ),
+                ),
+                const SizedBox(width: 38, height: 38),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Text('Edit profile',
+                style: TextStyle(
+                    fontFamily: _displayFont,
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -1,
+                    height: 1.0,
+                    color: _paper)),
+            const SizedBox(height: 8),
+            Text('Update your name and contact details.',
+                style: TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: _paper.withOpacity(0.6))),
+          ],
+        ),
+      );
+
+  // Empty-state avatar (shared look with ProfilePageView) + camera badge.
+  Widget _avatarBlock(FlutterFlowTheme theme, String displayName, String email,
+      String photoUrl) {
+    final initials = Center(
+      child: Text(
+        _initials(displayName),
+        style: const TextStyle(
+          fontFamily: _bodyFont,
+          color: _steel,
+          fontWeight: FontWeight.w900,
+          fontSize: 20,
+        ),
+      ),
+    );
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: _changePhoto,
+            child: SizedBox(
+              width: 56,
+              height: 56,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: _paper,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: _accent, width: 2.2),
+                    ),
+                    child: ClipOval(
+                      child: _uploadingPhoto
+                          ? const Center(
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor:
+                                      AlwaysStoppedAnimation<Color>(_steel),
+                                ),
+                              ),
+                            )
+                          : (photoUrl.isNotEmpty
+                              ? Image.network(photoUrl,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => initials)
+                              : initials),
+                    ),
+                  ),
+                  Positioned(
+                    right: -3,
+                    bottom: -3,
+                    child: Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: _accent,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: _surface, width: 2),
+                      ),
+                      child: const Icon(Icons.photo_camera_rounded,
+                          size: 13, color: _ink),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(displayName.isEmpty ? 'Your name' : displayName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.titleMedium.override(
+                        fontFamily: _displayFont,
+                        color: _ink,
+                        fontWeight: FontWeight.w900)),
+                const SizedBox(height: 2),
+                Text(email,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.bodySmall
+                        .override(fontFamily: _bodyFont, color: _inkMute)),
+                const SizedBox(height: 6),
+                GestureDetector(
+                  onTap: _changePhoto,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(Icons.upload_rounded, size: 15, color: _steel),
+                      SizedBox(width: 5),
+                      Text('Change photo',
+                          style: TextStyle(
+                              fontFamily: _bodyFont,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: _steel)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionHeader(String title) => Row(
+        children: [
+          Container(
+            width: 9,
+            height: 18,
+            decoration: BoxDecoration(
+                color: _ink, borderRadius: BorderRadius.circular(5)),
+          ),
+          const SizedBox(width: 10),
+          Text(title,
+              style: const TextStyle(
+                  fontFamily: _displayFont,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 17,
+                  letterSpacing: -0.3,
+                  color: _ink)),
+        ],
+      );
+
   Widget _messageState(
     FlutterFlowTheme theme,
     double width,
@@ -337,57 +543,37 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
     return SizedBox(
       width: width,
       height: height,
-      child: SafeArea(
-        child: Container(
-          color: _paper,
-          padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(children: [_circleBack(theme), const Spacer()]),
-              const SizedBox(height: 20),
-              Text(
-                'Edit profile',
-                style: theme.titleLarge.override(
-                  fontFamily: _displayFont,
-                  color: _ink,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 30,
-                  lineHeight: 1.05,
+      child: Container(
+        color: _paper,
+        child: Column(
+          children: [
+            _hero(),
+            Expanded(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(_hPad),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(icon, color: _inkMute, size: 34),
+                      const SizedBox(height: 12),
+                      Text(title,
+                          textAlign: TextAlign.center,
+                          style: theme.titleMedium.override(
+                              fontFamily: _displayFont,
+                              fontWeight: FontWeight.w900,
+                              color: _ink)),
+                      const SizedBox(height: 6),
+                      Text(body,
+                          textAlign: TextAlign.center,
+                          style: theme.bodySmall.override(
+                              fontFamily: _bodyFont, color: _inkMute)),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 8),
-              Text('Profile & account',
-                  style: _subtitleStyle(theme).copyWith(fontSize: 13)),
-              const SizedBox(height: 40),
-              Center(
-                child: Column(
-                  children: [
-                    Icon(icon, color: _inkMute, size: 34),
-                    const SizedBox(height: 12),
-                    Text(
-                      title,
-                      style: theme.titleMedium.override(
-                        fontFamily: _displayFont,
-                        fontWeight: FontWeight.w900,
-                        color: _ink,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      body,
-                      style: theme.bodySmall.override(
-                        fontFamily: _bodyFont,
-                        color: _inkMute,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -396,11 +582,9 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
-
     final double width = widget.width ?? MediaQuery.sizeOf(context).width;
     final double height = widget.height ?? MediaQuery.sizeOf(context).height;
 
-    // ✅ KEY FIX: rebuild when auth changes (prevents stale userRef after logout)
     return SizedBox(
       width: width,
       height: height,
@@ -415,7 +599,6 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                 title: 'You are not signed in.',
                 body: 'Please log in to edit your profile.');
           }
-
           if (authSnap.data == null || userRef == null) {
             _prefilled = false;
             _saving = false;
@@ -445,8 +628,6 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
               }
 
               final userDoc = snapshot.data;
-
-              // Prefill once
               if (!_prefilled && userDoc != null) {
                 _nameController.text = userDoc.displayName;
                 _phoneController.text = userDoc.phoneNumber;
@@ -457,201 +638,103 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
               final email = userDoc?.email ?? (currentUserEmail ?? '');
               final photoUrl = userDoc?.photoUrl ?? '';
 
-              // ---------------------------------------------------------
-              // ✅ OPTION C — MINIMAL UNDERLINE
-              // ---------------------------------------------------------
               return GestureDetector(
                 onTap: () => FocusScope.of(context).unfocus(),
-                child: SafeArea(
-                  child: Container(
-                    color: _paper,
-                    child: SingleChildScrollView(
-                      padding:
-                          const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, 24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // ===== TOP ROW: back =====
-                          Row(children: [_circleBack(theme), const Spacer()]),
-
-                          const SizedBox(height: 20),
-
-                          // ===== TITLE =====
-                          Text(
-                            'Edit profile',
-                            style: theme.titleLarge.override(
-                              fontFamily: _displayFont,
-                              color: _ink,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 30,
-                              lineHeight: 1.05,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text('Profile & account',
-                              style:
-                                  _subtitleStyle(theme).copyWith(fontSize: 13)),
-
-                          const SizedBox(height: 30),
-
-                          // ===== AVATAR + IDENTITY =====
-                          Row(
+                child: Container(
+                  color: _paper,
+                  child: Column(
+                    children: [
+                      _hero(),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding:
+                              const EdgeInsets.fromLTRB(_hPad, 20, _hPad, 24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                width: 56,
-                                height: 56,
-                                decoration: BoxDecoration(
-                                  color: _ink,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                      color: Color(0xFF4E504F), width: 2.2),
-                                ),
-                                child: ClipOval(
-                                  child: (photoUrl.isNotEmpty)
-                                      ? Image.network(
-                                          photoUrl,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) =>
-                                              _avatarInitials(
-                                                  theme, displayName),
-                                        )
-                                      : _avatarInitials(theme, displayName),
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
+                              _avatarBlock(theme, displayName, email, photoUrl),
+                              const SizedBox(height: 26),
+                              _sectionHeader('Details'),
+                              const SizedBox(height: 4),
+                              Form(
+                                key: _formKey,
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      displayName.isEmpty
-                                          ? 'Your name'
-                                          : displayName,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: theme.titleMedium.override(
-                                        fontFamily: _displayFont,
-                                        color: _ink,
-                                        fontWeight: FontWeight.w900,
-                                      ),
+                                    _uText(
+                                      theme: theme,
+                                      label: 'Display name',
+                                      controller: _nameController,
+                                      focusNode: _nameFocus,
+                                      icon: Icons.person_outline_rounded,
+                                      hint: 'Your name',
+                                      onSubmitted: (_) => FocusScope.of(context)
+                                          .requestFocus(_phoneFocus),
+                                      validator: (v) {
+                                        final s = (v ?? '').trim();
+                                        if (s.isEmpty) {
+                                          return 'Please enter your name.';
+                                        }
+                                        if (s.length < 2) {
+                                          return 'Name is too short.';
+                                        }
+                                        return null;
+                                      },
                                     ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      email,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: theme.bodySmall.override(
-                                        fontFamily: _bodyFont,
-                                        color: _inkMute,
-                                      ),
+                                    _uText(
+                                      theme: theme,
+                                      label: 'Phone number',
+                                      controller: _phoneController,
+                                      focusNode: _phoneFocus,
+                                      icon: Icons.phone_outlined,
+                                      hint: 'e.g. 0813151789',
+                                      keyboardType: TextInputType.phone,
+                                      onSubmitted: (_) => _saveProfile(),
+                                      validator: (v) {
+                                        final s = (v ?? '').trim();
+                                        if (s.isEmpty) {
+                                          return 'Please enter your phone number.';
+                                        }
+                                        if (s.length < 8) {
+                                          return 'Phone number looks too short.';
+                                        }
+                                        return null;
+                                      },
                                     ),
                                   ],
                                 ),
                               ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 30),
-
-                          // ===== FORM =====
-                          Text('DETAILS', style: _uLabelStyle(theme)),
-                          const SizedBox(height: 2),
-                          Form(
-                            key: _formKey,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _uText(
-                                  theme: theme,
-                                  label: 'Display name',
-                                  controller: _nameController,
-                                  focusNode: _nameFocus,
-                                  icon: Icons.person_outline_rounded,
-                                  hint: 'Your name',
-                                  onSubmitted: (_) => FocusScope.of(context)
-                                      .requestFocus(_phoneFocus),
-                                  validator: (v) {
-                                    final s = (v ?? '').trim();
-                                    if (s.isEmpty) {
-                                      return 'Please enter your name.';
-                                    }
-                                    if (s.length < 2) {
-                                      return 'Name is too short.';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                _uText(
-                                  theme: theme,
-                                  label: 'Phone number',
-                                  controller: _phoneController,
-                                  focusNode: _phoneFocus,
-                                  icon: Icons.phone_outlined,
-                                  hint: 'e.g. 0813151789',
-                                  keyboardType: TextInputType.phone,
-                                  textInputAction: TextInputAction.done,
-                                  onSubmitted: (_) => _saveProfile(),
-                                  validator: (v) {
-                                    final s = (v ?? '').trim();
-                                    if (s.isEmpty) {
-                                      return 'Please enter your phone number.';
-                                    }
-                                    if (s.length < 8) {
-                                      return 'Phone number looks too short.';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          const SizedBox(height: 30),
-
-                          _primarySave(theme),
-
-                          const SizedBox(height: 16),
-                          Center(
-                            child: GestureDetector(
-                              onTap: _saving ? null : () => context.safePop(),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 8),
-                                child: Text(
-                                  'Cancel',
-                                  style: theme.bodyMedium.override(
-                                    fontFamily: _bodyFont,
-                                    color: _inkMute,
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 14,
+                              const SizedBox(height: 28),
+                              _primarySave(theme),
+                              const SizedBox(height: 14),
+                              Center(
+                                child: GestureDetector(
+                                  onTap:
+                                      _saving ? null : () => context.safePop(),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 8),
+                                    child: Text('Cancel',
+                                        style: theme.bodyMedium.override(
+                                          fontFamily: _bodyFont,
+                                          color: _inkMute,
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 14,
+                                        )),
                                   ),
                                 ),
                               ),
-                            ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
               );
             },
           );
         },
-      ),
-    );
-  }
-
-  Widget _avatarInitials(FlutterFlowTheme theme, String displayName) {
-    return Center(
-      child: Text(
-        _initials(displayName),
-        style: theme.bodyMedium.override(
-          fontFamily: _bodyFont,
-          color: Color(0xFF4E504F),
-          fontWeight: FontWeight.w900,
-          fontSize: 20,
-        ),
       ),
     );
   }
