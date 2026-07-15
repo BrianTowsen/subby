@@ -20,6 +20,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -1031,8 +1033,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                           _accentMarker(_ink),
                           const SizedBox(width: 10),
                           Expanded(
-                            child: Text('Home Build Projects',
-                                style: _stepHeadlineStyle),
+                            child:
+                                Text('Home Builds', style: _stepHeadlineStyle),
                           ),
                         ],
                       ),
@@ -2373,9 +2375,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                       child: _dashStatInner(
                           daysLeft?.toString() ?? '—', 'Days left')),
                   _dashStatDivider(),
-                  _liveStat(ref, 'Snags', 'snags'),
-                  _dashStatDivider(),
                   _liveStat(ref, 'Tasks', 'tasks'),
+                  _dashStatDivider(),
+                  _liveStat(ref, 'Snags', 'snags'),
                   _dashStatDivider(),
                   _liveStat(ref, 'Docs', 'docs'),
                 ],
@@ -2520,9 +2522,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                       child: _dashStatInner(
                           daysLeft?.toString() ?? '—', 'Days left')),
                   _dashStatDivider(),
-                  _liveStat(ref, 'Snags', 'snags'),
-                  _dashStatDivider(),
                   _liveStat(ref, 'Tasks', 'tasks'),
+                  _dashStatDivider(),
+                  _liveStat(ref, 'Snags', 'snags'),
                   _dashStatDivider(),
                   _liveStat(ref, 'Docs', 'docs'),
                 ],

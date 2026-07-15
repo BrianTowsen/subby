@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -1156,28 +1158,44 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
         width: double.infinity,
         color: const Color(0xFF3F5C69),
         padding: EdgeInsets.fromLTRB(
-            20, 6 + MediaQuery.of(context).padding.top, 20, 18),
+            20, 14 + MediaQuery.of(context).padding.top, 20, 18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Centered project name + eyebrow — matches SiteBookPageView.
             Row(
               children: [
                 _heroCircle(Icons.arrow_back_ios_new_rounded, _handleBack),
                 Expanded(
-                  child: Center(
-                    child: Text(_isEditing ? 'EDIT TASK' : 'NEW TASK',
-                        style: TextStyle(
-                            fontFamily: _bodyFont,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.7,
-                            color: _paper.withOpacity(0.5))),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Column(
+                      children: [
+                        _heroProjectName(),
+                        const SizedBox(height: 2),
+                        Text(_isEditing ? 'EDIT TASK' : 'NEW TASK',
+                            style: TextStyle(
+                                fontFamily: _bodyFont,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.7,
+                                color: _paper.withOpacity(0.5))),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(width: 38, height: 38),
               ],
             ),
             const SizedBox(height: 16),
+            Text(subtitle,
+                style: TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1,
+                    color: _paper.withOpacity(0.55))),
+            const SizedBox(height: 4),
             Text(title,
                 style: const TextStyle(
                     fontFamily: _displayFont,
@@ -1186,16 +1204,43 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                     letterSpacing: -1,
                     height: 1.0,
                     color: _paper)),
-            const SizedBox(height: 8),
-            Text(subtitle,
-                style: TextStyle(
-                    fontFamily: _bodyFont,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: _paper.withOpacity(0.6))),
           ],
         ),
       );
+
+  // Centered project name in the hero (streamed from the project doc).
+  Widget _heroProjectName() {
+    const style = TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 15,
+        fontWeight: FontWeight.w800,
+        color: _paper);
+    final ref = _projectRef;
+    if (ref == null) {
+      return const Text('Project',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: style);
+    }
+    return StreamBuilder<DocumentSnapshot<Object?>>(
+      stream: ref.snapshots(),
+      builder: (context, snap) {
+        final data = (snap.data?.data() as Map<String, dynamic>?) ?? {};
+        final name = ((data['name'] ??
+                data['projectName'] ??
+                data['title'] ??
+                'Project'))
+            .toString()
+            .trim();
+        return Text(name.isEmpty ? 'Project' : name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: style);
+      },
+    );
+  }
 
   // Bright-white elevated footer (matches the Timeline inspector shell).
   Widget _footerBar(String ctaLabel, IconData ctaIcon) => Container(

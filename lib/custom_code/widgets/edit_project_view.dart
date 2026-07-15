@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/services.dart'; // SystemChrome / SystemUiOverlayStyle (dark status bar over white form)
@@ -1207,10 +1209,11 @@ class _EditProjectViewState extends State<EditProjectView>
         width: double.infinity,
         color: const Color(0xFF3F5C69),
         padding: EdgeInsets.fromLTRB(
-            20, 6 + MediaQuery.of(context).padding.top, 20, 18),
+            20, 14 + MediaQuery.of(context).padding.top, 20, 18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Centered project name + eyebrow — matches SiteBookPageView.
             Row(
               children: [
                 _heroCircle(Icons.arrow_back_ios_new_rounded, () {
@@ -1218,14 +1221,21 @@ class _EditProjectViewState extends State<EditProjectView>
                   if (nav.canPop()) nav.pop();
                 }),
                 Expanded(
-                  child: Center(
-                    child: Text('EDIT PROJECT',
-                        style: TextStyle(
-                            fontFamily: _bodyFont,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.7,
-                            color: _paper.withOpacity(0.5))),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Column(
+                      children: [
+                        _heroProjectName(),
+                        const SizedBox(height: 2),
+                        Text('EDIT PROJECT',
+                            style: TextStyle(
+                                fontFamily: _bodyFont,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.7,
+                                color: _paper.withOpacity(0.5))),
+                      ],
+                    ),
                   ),
                 ),
                 _heroCircle(Icons.delete_outline_rounded, () {
@@ -1235,6 +1245,14 @@ class _EditProjectViewState extends State<EditProjectView>
               ],
             ),
             const SizedBox(height: 16),
+            Text('UPDATE DETAILS, DATES AND NOTES',
+                style: TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1,
+                    color: _paper.withOpacity(0.55))),
+            const SizedBox(height: 4),
             const Text('Edit Project',
                 style: TextStyle(
                     fontFamily: _displayFont,
@@ -1243,16 +1261,43 @@ class _EditProjectViewState extends State<EditProjectView>
                     letterSpacing: -1,
                     height: 1.0,
                     color: _paper)),
-            const SizedBox(height: 8),
-            Text('Update details, dates and notes.',
-                style: TextStyle(
-                    fontFamily: _bodyFont,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: _paper.withOpacity(0.6))),
           ],
         ),
       );
+
+  // Centered project name in the hero (streamed from the project doc).
+  Widget _heroProjectName() {
+    const style = TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 15,
+        fontWeight: FontWeight.w800,
+        color: _paper);
+    final ref = widget.projectRef;
+    if (ref == null) {
+      return const Text('Edit Project',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: style);
+    }
+    return StreamBuilder<DocumentSnapshot<Object?>>(
+      stream: ref.snapshots(),
+      builder: (context, snap) {
+        final data = (snap.data?.data() as Map<String, dynamic>?) ?? {};
+        final name = ((data['name'] ??
+                data['projectName'] ??
+                data['title'] ??
+                'Edit Project'))
+            .toString()
+            .trim();
+        return Text(name.isEmpty ? 'Edit Project' : name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: style);
+      },
+    );
+  }
 
   // Bright-white elevated footer (matches the Timeline inspector shell).
   Widget _footer(FlutterFlowTheme theme) => Container(

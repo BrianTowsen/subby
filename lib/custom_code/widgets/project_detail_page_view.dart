@@ -10,16 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -1025,10 +1015,12 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         decoration: const BoxDecoration(
           color: Color(0xFF3F5C69),
         ),
-        padding: EdgeInsets.fromLTRB(20, topInset + 6, 20, 18),
+        padding: EdgeInsets.fromLTRB(20, topInset + 14, 20, 18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Centered project name + eyebrow, back circle, Edit pill —
+            // matches SiteBookPageView's masthead top row.
             Row(
               children: [
                 _tapCard(
@@ -1047,16 +1039,34 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                   ),
                 ),
                 Expanded(
-                  child: Center(
-                    child: Text(
-                      readOnly ? 'SHARED PROJECT' : 'PROJECT',
-                      style: theme.labelSmall.override(
-                        fontFamily: _bodyFont,
-                        color: _paper.withOpacity(0.5),
-                        letterSpacing: 0.7,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 10,
-                      ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Column(
+                      children: [
+                        Text(
+                          name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: theme.bodyMedium.override(
+                            fontFamily: _bodyFont,
+                            color: _paper,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          readOnly ? 'SHARED PROJECT' : 'PROJECT',
+                          style: theme.labelSmall.override(
+                            fontFamily: _bodyFont,
+                            color: _paper.withOpacity(0.5),
+                            letterSpacing: 0.7,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -1067,63 +1077,92 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                           widget.editProjectRouteName,
                           fallbackRoute: _fallbackEditRoute,
                         ),
-                        radius: BorderRadius.circular(12),
+                        radius: BorderRadius.circular(999),
                         child: Container(
-                          width: 38,
                           height: 38,
+                          padding: const EdgeInsets.symmetric(horizontal: 11),
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
                             color: _paper.withOpacity(0.12),
-                            shape: BoxShape.circle,
+                            borderRadius: BorderRadius.circular(999),
                           ),
-                          child: const Icon(Icons.edit_rounded,
-                              size: 16, color: _paper),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Icon(Icons.edit_rounded, size: 14, color: _paper),
+                              SizedBox(width: 5),
+                              Text('Edit',
+                                  style: TextStyle(
+                                      fontFamily: _bodyFont,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                      color: _paper)),
+                            ],
+                          ),
                         ),
                       ),
               ],
             ),
             const SizedBox(height: 16),
-            Text(
-              name,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.titleLarge.override(
-                fontFamily: _displayFont,
-                color: _paper,
-                fontWeight: FontWeight.w900,
-                fontSize: 26,
-                letterSpacing: -0.6,
-                lineHeight: 1.1,
-              ),
+            // Completion stat block + location / target date, mirroring
+            // SiteBookPageView's large TODAY stat masthead.
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('COMPLETION',
+                        style: TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1,
+                            color: _paper.withOpacity(0.55))),
+                    const SizedBox(height: 4),
+                    Text('${(progress * 100).round()}%',
+                        style: const TextStyle(
+                            fontFamily: _displayFont,
+                            fontSize: 34,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1,
+                            color: _paper,
+                            height: 1.0)),
+                  ],
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (address.trim().isNotEmpty)
+                          Text(address,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  fontFamily: _bodyFont,
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: _paper.withOpacity(0.6))),
+                        if (dates.trim().isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(dates,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  fontFamily: _bodyFont,
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: _paper.withOpacity(0.45))),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-            if (address.trim().isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(
-                address,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.bodySmall.override(
-                  fontFamily: _bodyFont,
-                  color: _paper.withOpacity(0.55),
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12,
-                ),
-              ),
-            ],
-            if (dates.trim().isNotEmpty) ...[
-              const SizedBox(height: 3),
-              Text(
-                dates,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.bodySmall.override(
-                  fontFamily: _bodyFont,
-                  color: _paper.withOpacity(0.55),
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12,
-                ),
-              ),
-            ],
           ],
         ),
       ),
@@ -3575,7 +3614,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       trailing = GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => _toggleModuleVis(visKey),
-        child: _rVisChip(vis, vis == 'shared' ? _tealTint : _surface),
+        child: _rVisChip(vis, _paper),
       );
     }
 
