@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -475,7 +477,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
-        backgroundColor: const Color(0xFF3F5C69), // slate
+        backgroundColor: const Color(0xFF3D4F66), // slate
         content: Text(msg,
             style: const TextStyle(
                 fontFamily: _bodyFont,
@@ -688,7 +690,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
     final meta = parts.join('  ·  ').toUpperCase();
     return Container(
       width: double.infinity,
-      color: const Color(0xFF3F5C69),
+      color: const Color(0xFF3D4F66),
       // Match the Snag List header height.
       constraints:
           BoxConstraints(minHeight: MediaQuery.of(context).padding.top + 138),

@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -657,7 +659,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
 
   // Standard app snackbar — ink background, white text.
   SnackBar _inkSnack(String message) => SnackBar(
-        backgroundColor: const Color(0xFF3F5C69),
+        backgroundColor: const Color(0xFF3D4F66),
         content: Text(
           message,
           style: const TextStyle(
@@ -1013,7 +1015,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       child: Container(
         width: double.infinity,
         decoration: const BoxDecoration(
-          color: Color(0xFF3F5C69),
+          color: Color(0xFF3D4F66),
         ),
         padding: EdgeInsets.fromLTRB(20, topInset + 14, 20, 18),
         child: Column(

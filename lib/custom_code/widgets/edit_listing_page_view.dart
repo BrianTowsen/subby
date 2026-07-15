@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'dart:typed_data';
@@ -60,7 +62,7 @@ class _EditListingPageViewState extends State<EditListingPageView> {
   static const Color _rule = Color(0xFFCBD8DD);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
-  static const Color _steel = Color(0xFF3F5C69);
+  static const Color _steel = Color(0xFF3D4F66);
   static const Color _lime = Color(0xFFE7E247);
   static const Color _slate = Color(0xFF4E504F);
   static const Color _hairline = Color(0xFFEAEEF0);
@@ -213,7 +215,7 @@ class _EditListingPageViewState extends State<EditListingPageView> {
       ..showSnackBar(SnackBar(
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        backgroundColor: const Color(0xFF3F5C69),
+        backgroundColor: const Color(0xFF3D4F66),
         content: Text(message,
             style: const TextStyle(
                 fontFamily: _bodyFont,

@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
@@ -175,7 +177,7 @@ class _SiteBookPageViewState extends State<SiteBookPageView> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
-        backgroundColor: const Color(0xFF3F5C69),
+        backgroundColor: const Color(0xFF3D4F66),
         content: Text(msg,
             style: const TextStyle(
                 color: _paper,
@@ -333,7 +335,7 @@ class _SiteBookPageViewState extends State<SiteBookPageView> {
   // a large stat block (today's entries) with with-photos / contributors.
   Widget _hero(double topInset) => Container(
         width: double.infinity,
-        color: const Color(0xFF3F5C69),
+        color: const Color(0xFF3D4F66),
         padding: EdgeInsets.fromLTRB(_hPad, topInset + 14, _hPad, 18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

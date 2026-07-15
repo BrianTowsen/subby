@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -1124,7 +1126,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
-        backgroundColor: const Color(0xFF3F5C69), // slate
+        backgroundColor: const Color(0xFF3D4F66), // slate
         content: Text(msg,
             style: const TextStyle(
                 fontFamily: _bodyFont,
@@ -1154,7 +1156,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
 
   Widget _addHero(String title, String subtitle) => Container(
         width: double.infinity,
-        color: const Color(0xFF3F5C69),
+        color: const Color(0xFF3D4F66),
         padding: EdgeInsets.fromLTRB(
             20, 14 + MediaQuery.of(context).padding.top, 20, 18),
         child: Column(
