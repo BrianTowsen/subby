@@ -10,12 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -395,7 +389,7 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
         bottom: true,
         child: Column(
           children: [
-            _addHero('Add Site Entry', 'Log a site note with photos & tags'),
+            _addHero('Add Site Entry', 'SITE NOTE'),
             Expanded(
               child: Stack(
                 children: [
@@ -468,24 +462,41 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Centered project name + NEW ENTRY eyebrow — matches
+            // SiteBookPageView's masthead top row.
             Row(
               children: [
                 _heroCircle(Icons.arrow_back_ios_new_rounded, _handleBack),
                 Expanded(
-                  child: Center(
-                    child: Text('NEW ENTRY',
-                        style: TextStyle(
-                            fontFamily: _bodyFont,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.7,
-                            color: _paper.withOpacity(0.5))),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Column(
+                      children: [
+                        _heroProjectName(),
+                        const SizedBox(height: 2),
+                        Text('NEW ENTRY',
+                            style: TextStyle(
+                                fontFamily: _bodyFont,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.7,
+                                color: _paper.withOpacity(0.5))),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(width: 38, height: 38),
               ],
             ),
             const SizedBox(height: 16),
+            Text(subtitle,
+                style: TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1,
+                    color: _paper.withOpacity(0.55))),
+            const SizedBox(height: 4),
             Text(title,
                 style: const TextStyle(
                     fontFamily: _displayFont,
@@ -494,16 +505,38 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
                     letterSpacing: -1,
                     height: 1.0,
                     color: _paper)),
-            const SizedBox(height: 8),
-            Text(subtitle,
-                style: TextStyle(
-                    fontFamily: _bodyFont,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: _paper.withOpacity(0.6))),
           ],
         ),
       );
+
+  // Centered project name in the hero (streamed from the project doc).
+  Widget _heroProjectName() {
+    const style = TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 15,
+        fontWeight: FontWeight.w800,
+        color: _paper);
+    final ref = _projectRef;
+    if (ref == null) {
+      return const Text('Site Book',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: style);
+    }
+    return StreamBuilder<DocumentSnapshot<Object?>>(
+      stream: ref.snapshots(),
+      builder: (context, snap) {
+        final data = (snap.data?.data() as Map<String, dynamic>?) ?? {};
+        final name = (data['name'] as String?)?.trim() ?? 'Site Book';
+        return Text(name.isEmpty ? 'Site Book' : name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: style);
+      },
+    );
+  }
 
   // Bright-white elevated footer (matches AddTaskPageView).
   Widget _footerBar(double bottomInset) => Container(
