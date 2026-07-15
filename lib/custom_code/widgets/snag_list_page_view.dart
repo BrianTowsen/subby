@@ -10,18 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -318,7 +306,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
   Color _statusTint(String status) {
     switch (status) {
       case 'in_progress':
-        return _green; // solid green fill
+        return _ink; // solid ink fill (matches In Progress text)
       case 'closed':
       case 'review':
         return _surface;
