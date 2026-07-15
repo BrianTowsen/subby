@@ -10,8 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -1188,7 +1186,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
               ],
             ),
             const SizedBox(height: 16),
-            Text(subtitle,
+            Text(subtitle.toUpperCase(),
                 style: TextStyle(
                     fontFamily: _bodyFont,
                     fontSize: 10.5,

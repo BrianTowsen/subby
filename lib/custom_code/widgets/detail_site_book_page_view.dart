@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart'; // currentUserReference (owner gate)
@@ -19,6 +21,14 @@ import '/auth/firebase_auth/auth_util.dart'; // currentUserReference (owner gate
 // The site-book ENTRY DETAIL, extracted from SiteBookPageView into its own
 // routed page (DetailSiteBookPage) so it gets native push/pop + edge-swipe
 // back for free — no in-widget overlay, no PopScope juggling.
+//
+// HEADER (this revision): the masthead is now a 1:1 match of
+// SiteBookPageView's hero — same 3F5C69 ink block, same paddings/spacers, a
+// centered project-name + SITE ENTRY eyebrow top row (back circle left, an
+// owner-only delete circle + weather pill right), and a large stat block
+// (avatar + LOGGED BY / author name at 34px, with a right-aligned date + media
+// meta column). Because the vertical metrics are identical to the list hero,
+// the header ends at exactly the same height.
 //
 // It resolves the entry to show from `entryRef` (passed by the widget param if
 // FlutterFlow wires it, otherwise read straight off the route query string, the
@@ -75,6 +85,15 @@ class _DetailSiteBookPageViewState extends State<DetailSiteBookPageView> {
   static const List<String> _monthsFull = [
     'January', 'February', 'March', 'April', 'May', 'June', //
     'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  // Short forms for the masthead's right-aligned date column.
+  static const List<String> _weekdaysShort = [
+    'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun' //
+  ];
+  static const List<String> _monthsShort = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', //
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
   ];
 
   DocumentReference? _ref;
@@ -351,6 +370,12 @@ class _DetailSiteBookPageViewState extends State<DetailSiteBookPageView> {
     return '${_weekdaysFull[l.weekday - 1]} ${l.day} ${_monthsFull[l.month - 1]} · ${_timeLabel(l)}';
   }
 
+  // Compact date for the masthead meta column (e.g. "Wed 15 Jul · 08:12").
+  String _shortDate(DateTime dt) {
+    final l = dt.toLocal();
+    return '${_weekdaysShort[l.weekday - 1]} ${l.day} ${_monthsShort[l.month - 1]} · ${_timeLabel(l)}';
+  }
+
   String _weatherLabelOf(String w) =>
       w == 'cloudy' ? 'Cloudy' : (w == 'rain' ? 'Rain' : 'Sunny');
 
@@ -397,6 +422,36 @@ class _DetailSiteBookPageViewState extends State<DetailSiteBookPageView> {
         ),
       );
 
+  // Centered project name in the masthead top row (streamed off the entry's
+  // projectRef) — 1:1 with SiteBookPageView._heroName.
+  Widget _heroName(Map<String, dynamic> d) {
+    const style = TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 15,
+        fontWeight: FontWeight.w800,
+        color: _paper);
+    final ref = d['projectRef'] as DocumentReference?;
+    if (ref == null) {
+      return const Text('Site Book',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: style);
+    }
+    return StreamBuilder<DocumentSnapshot<Object?>>(
+      stream: ref.snapshots(),
+      builder: (context, snap) {
+        final data = (snap.data?.data() as Map<String, dynamic>?) ?? {};
+        final name = (data['name'] as String?)?.trim() ?? 'Site Book';
+        return Text(name.isEmpty ? 'Site Book' : name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: style);
+      },
+    );
+  }
+
   // =====================================================================
   // BUILD
   // =====================================================================
@@ -440,7 +495,7 @@ class _DetailSiteBookPageViewState extends State<DetailSiteBookPageView> {
     final weather = (d['weather'] as String?) ?? '';
     final tags = (d['tags'] as List?)?.whereType<String>().toList() ?? const [];
     final media = _mediaOf(d);
-    final dateLabel = _fullDate(_dateOf(d['createdAt']));
+    final dateShort = _shortDate(_dateOf(d['createdAt']));
 
     final photos = media.where((m) => (m['type'] ?? 'image') != 'video').length;
     final videos = media.length - photos;
@@ -452,33 +507,43 @@ class _DetailSiteBookPageViewState extends State<DetailSiteBookPageView> {
     if (tags.isNotEmpty) {
       metaParts.add('${tags.length} ${tags.length == 1 ? 'tag' : 'tags'}');
     }
-    final metaLabel = metaParts.join('  ·  ');
+    final metaLabel = metaParts.join(' · ');
 
     return Column(
       children: [
-        // ink masthead
+        // ink masthead — matches SiteBookPageView._hero (same paddings,
+        // 14-spacer, 38-row, 16-gap, 34px stat), so it ends the same height.
         Container(
           width: double.infinity,
           color: const Color(0xFF3F5C69),
-          padding: EdgeInsets.fromLTRB(_hPad, topInset + 10, _hPad, 18),
+          padding: EdgeInsets.fromLTRB(_hPad, topInset + 14, _hPad, 18),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // top row: back · centered project name + SITE ENTRY eyebrow ·
+              // owner-only delete + weather pill
               Row(
                 children: [
                   _circleBtn(Icons.arrow_back_ios_new_rounded, _back, size: 16),
                   Expanded(
-                    child: Center(
-                      child: Text('SITE ENTRY',
-                          style: TextStyle(
-                              fontFamily: _bodyFont,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.7,
-                              color: _paper.withOpacity(0.5))),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Column(
+                        children: [
+                          _heroName(d),
+                          const SizedBox(height: 2),
+                          Text('SITE ENTRY',
+                              style: TextStyle(
+                                fontFamily: _bodyFont,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.7,
+                                color: _paper.withOpacity(0.5),
+                              )),
+                        ],
+                      ),
                     ),
                   ),
-                  // ✅ Owner-only delete affordance (matches DetailTaskPageView).
                   if (_isOwner()) ...[
                     _circleBtn(Icons.delete_outline_rounded, _confirmDelete,
                         size: 18),
@@ -511,78 +576,83 @@ class _DetailSiteBookPageViewState extends State<DetailSiteBookPageView> {
                     const SizedBox(width: 38, height: 38),
                 ],
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
+              // stat block: avatar + LOGGED BY / author (34px) · date + meta
               Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                        color: _paper.withOpacity(0.14),
-                        shape: BoxShape.circle),
-                    child: Text(_initials(author),
-                        style: const TextStyle(
-                            fontFamily: _displayFont,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w800,
-                            color: _paper)),
-                  ),
-                  const SizedBox(width: 13),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
                       children: [
-                        Text(author,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontFamily: _displayFont,
-                                fontSize: 22,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -0.5,
-                                height: 1.1,
-                                color: _paper)),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(Icons.calendar_today_rounded,
-                                size: 12, color: _paper.withOpacity(0.55)),
-                            const SizedBox(width: 6),
-                            Flexible(
-                              child: Text(dateLabel,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                        Container(
+                          width: 48,
+                          height: 48,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                              color: _paper.withOpacity(0.14),
+                              shape: BoxShape.circle),
+                          child: Text(_initials(author),
+                              style: const TextStyle(
+                                  fontFamily: _displayFont,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w800,
+                                  color: _paper)),
+                        ),
+                        const SizedBox(width: 13),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('LOGGED BY',
                                   style: TextStyle(
                                       fontFamily: _bodyFont,
-                                      fontSize: 12,
+                                      fontSize: 10.5,
                                       fontWeight: FontWeight.w600,
+                                      letterSpacing: 1,
                                       color: _paper.withOpacity(0.55))),
-                            ),
-                          ],
+                              const SizedBox(height: 4),
+                              Text(author,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      fontFamily: _displayFont,
+                                      fontSize: 34,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: -1,
+                                      height: 1.0,
+                                      color: _paper)),
+                            ],
+                          ),
                         ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(dateShort,
+                            style: TextStyle(
+                                fontFamily: _bodyFont,
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                                color: _paper.withOpacity(0.6))),
+                        if (metaLabel.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(metaLabel,
+                              style: TextStyle(
+                                  fontFamily: _bodyFont,
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: _paper.withOpacity(0.45))),
+                        ],
                       ],
                     ),
                   ),
                 ],
               ),
-              if (metaLabel.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.only(top: 14),
-                  decoration: BoxDecoration(
-                    border:
-                        Border(top: BorderSide(color: _paper.withOpacity(0.1))),
-                  ),
-                  child: Text(metaLabel,
-                      style: TextStyle(
-                          fontFamily: _bodyFont,
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.3,
-                          color: _paper.withOpacity(0.5))),
-                ),
-              ],
             ],
           ),
         ),
@@ -717,13 +787,14 @@ class _DetailSiteBookPageViewState extends State<DetailSiteBookPageView> {
         ],
       );
 
-  // A minimal ink header (back only) for the loading / not-found states.
+  // A minimal ink header (back only) for the loading / not-found states —
+  // kept the same height as the full masthead's top row + spacer.
   Widget _bareMasthead() {
     final topInset = MediaQuery.of(context).viewPadding.top;
     return Container(
       width: double.infinity,
       color: const Color(0xFF3F5C69),
-      padding: EdgeInsets.fromLTRB(_hPad, topInset + 10, _hPad, 18),
+      padding: EdgeInsets.fromLTRB(_hPad, topInset + 14, _hPad, 18),
       child: Row(
         children: [
           _circleBtn(Icons.arrow_back_ios_new_rounded, _back, size: 16),

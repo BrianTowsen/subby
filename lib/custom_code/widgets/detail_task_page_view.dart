@@ -10,16 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -706,8 +696,43 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
         ),
       );
 
+  // Centered project name in the hero top row (streamed from the project doc)
+  // — 1:1 with ToDoListPageView / AddTaskPageView.
+  Widget _heroProjectName(DocumentReference? projectRef) {
+    const style = TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 15,
+        fontWeight: FontWeight.w800,
+        color: _paper);
+    if (projectRef == null) {
+      return const Text('Project',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: style);
+    }
+    return StreamBuilder<DocumentSnapshot<Object?>>(
+      stream: projectRef.snapshots(),
+      builder: (context, snap) {
+        final data = (snap.data?.data() as Map<String, dynamic>?) ?? {};
+        final name = ((data['name'] ??
+                data['projectName'] ??
+                data['title'] ??
+                'Project'))
+            .toString()
+            .trim();
+        return Text(name.isEmpty ? 'Project' : name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: style);
+      },
+    );
+  }
+
   Widget _detailHero(
     DocumentReference ref,
+    DocumentReference? projectRef,
     String title,
     String status,
     String listingName,
@@ -718,27 +743,36 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
     final parts = <String>[];
     if (listingName.trim().isNotEmpty) parts.add(listingName.trim());
     if (dueHint.isNotEmpty) parts.add(dueHint);
-    final meta = parts.join('  ·  ');
+    // Uppercase eyebrow above the big title — matches the List / Add heroes.
+    final eyebrow = parts.join('  ·  ').toUpperCase();
     return Container(
       width: double.infinity,
       color: const Color(0xFF3F5C69),
       padding: EdgeInsets.fromLTRB(
-          20, 6 + MediaQuery.of(context).padding.top, 20, 18),
+          20, 14 + MediaQuery.of(context).padding.top, 20, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Centered project name + TASK DETAIL eyebrow top row.
           Row(
             children: [
               _heroCircle(Icons.arrow_back_ios_new_rounded, _handleBack),
               Expanded(
-                child: Center(
-                  child: Text('TASK DETAIL',
-                      style: TextStyle(
-                          fontFamily: _bodyFont,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.7,
-                          color: _paper.withOpacity(0.5))),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Column(
+                    children: [
+                      _heroProjectName(projectRef),
+                      const SizedBox(height: 2),
+                      Text('TASK DETAIL',
+                          style: TextStyle(
+                              fontFamily: _bodyFont,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.7,
+                              color: _paper.withOpacity(0.5))),
+                    ],
+                  ),
                 ),
               ),
               if (isOwner)
@@ -749,23 +783,23 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
             ],
           ),
           const SizedBox(height: 16),
+          if (eyebrow.isNotEmpty)
+            Text(eyebrow,
+                style: TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1,
+                    color: _paper.withOpacity(0.55))),
+          if (eyebrow.isNotEmpty) const SizedBox(height: 4),
           Text(title,
               style: const TextStyle(
                   fontFamily: _displayFont,
-                  fontSize: 26,
+                  fontSize: 34,
                   fontWeight: FontWeight.w900,
-                  letterSpacing: -0.6,
-                  height: 1.1,
+                  letterSpacing: -1,
+                  height: 1.02,
                   color: _paper)),
-          if (meta.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(meta,
-                style: TextStyle(
-                    fontFamily: _bodyFont,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: _paper.withOpacity(0.55))),
-          ],
         ],
       ),
     );
@@ -804,7 +838,8 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
 
     return Column(
       children: [
-        _detailHero(ref, title, status, listingName, due, isOwner),
+        _detailHero(ref, d['projectRef'] as DocumentReference?, title, status,
+            listingName, due, isOwner),
         Expanded(
           child: Stack(
             children: [
