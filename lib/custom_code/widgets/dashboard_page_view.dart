@@ -896,20 +896,133 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                 ],
               ),
               const SizedBox(height: 18),
-              Text(_eyebrowDate(now),
-                  style:
-                      _eyebrowStyle.copyWith(color: _paper.withOpacity(0.55))),
-              const SizedBox(height: 6),
-              Text(
-                hasName ? '${_greeting()},\n$firstName' : _greeting(),
-                style: _greetingStyle.copyWith(color: _paper),
+              // Avatar (photo → initials) + greeting. The translucent-white
+              // circle mirrors ProjectDetailPageView's back-button circle so
+              // the hero reads consistently when this page flows into it.
+              Row(
+                children: [
+                  _headerAvatar(name),
+                  const SizedBox(width: 13),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(_eyebrowDate(now),
+                            style: _eyebrowStyle.copyWith(
+                                color: _paper.withOpacity(0.55),
+                                fontSize: 11.5)),
+                        const SizedBox(height: 3),
+                        Text(
+                          hasName ? '${_greeting()}, $firstName' : _greeting(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontFamily: _displayFont,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.5,
+                            height: 1.05,
+                            color: _paper,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 12),
+              _headerStatusLine(),
             ],
           ),
         ),
       ],
     );
   }
+
+  // Header avatar — profile photo if available, else initials on a
+  // translucent-white circle (matches the ProjectDetail back-button circle).
+  Widget _headerAvatar(String name) {
+    final photo = currentUserPhoto.trim();
+    final fallback = Container(
+      alignment: Alignment.center,
+      color: Colors.white.withOpacity(0.14),
+      child: Text(
+        _initials(name),
+        style: const TextStyle(
+          fontFamily: _displayFont,
+          fontSize: 15,
+          fontWeight: FontWeight.w800,
+          color: Color(0xFFE7E247),
+        ),
+      ),
+    );
+    return ClipOval(
+      child: SizedBox(
+        width: 44,
+        height: 44,
+        child: photo.isEmpty
+            ? fallback
+            : Image.network(
+                photo,
+                width: 44,
+                height: 44,
+                fit: BoxFit.cover,
+                errorBuilder: (c, e, s) => fallback,
+              ),
+      ),
+    );
+  }
+
+  // Status subline — live count of active builds (owned + shared) from the
+  // already-cached stream, so it adds no new query. Falls back to a friendly
+  // prompt when there are none / signed out.
+  Widget _headerStatusLine() {
+    final stream = _activeProjectsStreamCached();
+    if (stream == null) {
+      return _headerStatusText('Manage your build — free', accent: false);
+    }
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: stream,
+      builder: (context, snap) {
+        final owned = snap.data?.docs.length ?? 0;
+        final total = owned + _sharedCount;
+        if (total == 0) {
+          return _headerStatusText(
+              "Ready when you are — let's start your first build",
+              accent: false);
+        }
+        final label = total == 1 ? '1 active build' : '$total active builds';
+        return _headerStatusText(label, accent: true);
+      },
+    );
+  }
+
+  Widget _headerStatusText(String text, {required bool accent}) => Row(
+        children: [
+          if (accent) ...[
+            Container(
+              width: 7,
+              height: 7,
+              decoration: const BoxDecoration(
+                  color: Color(0xFFE7E247), shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 7),
+          ],
+          Flexible(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: _bodyFont,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: _paper.withOpacity(0.85),
+              ),
+            ),
+          ),
+        ],
+      );
 
   // Icon-only mark — bold, no wordmark.
   // Loads the green Subby house PNG from FlutterFlow asset storage; falls back to
