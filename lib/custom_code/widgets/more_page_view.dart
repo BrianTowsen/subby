@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 // =============================================================================
 // MorePageView (v7, steel/accent restyle) — the "everything else" hub.
 //
@@ -132,22 +134,28 @@ class _MorePageViewState extends State<MorePageView> {
     return Container(
       width: double.infinity,
       color: _steel,
-      padding: EdgeInsets.fromLTRB(_hPad, topInset + 12, _hPad, 22),
+      padding: EdgeInsets.fromLTRB(_hPad, topInset + 14, _hPad, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                width: 42,
-                height: 42,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: _accent,
-                  borderRadius: BorderRadius.circular(12),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => Navigator.of(context).maybePop(),
+                  borderRadius: BorderRadius.circular(999),
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                        color: _paper.withOpacity(0.12),
+                        shape: BoxShape.circle),
+                    child: const Icon(Icons.arrow_back_ios_new_rounded,
+                        size: 16, color: _paper),
+                  ),
                 ),
-                child:
-                    const Icon(Icons.grid_view_rounded, size: 22, color: _ink),
               ),
               const Spacer(),
               Material(
