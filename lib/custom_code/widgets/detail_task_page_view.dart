@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -276,7 +278,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
   Color _statusTint(String s) {
     switch (s) {
       case 'in_progress':
-        return _green; // solid green fill
+        return _ink; // dark pill (white text)
       case 'done':
         return _surface;
       case 'todo':
@@ -793,12 +795,14 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
                     color: _paper.withOpacity(0.55))),
           if (eyebrow.isNotEmpty) const SizedBox(height: 4),
           Text(title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                   fontFamily: _displayFont,
                   fontSize: 34,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -1,
-                  height: 1.02,
+                  height: 1.0,
                   color: _paper)),
         ],
       ),

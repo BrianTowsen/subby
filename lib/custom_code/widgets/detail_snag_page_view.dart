@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -727,6 +729,8 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
           const SizedBox(height: 16),
           if (meta.isNotEmpty) ...[
             Text(meta,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                     fontFamily: _bodyFont,
                     fontSize: 10.5,
@@ -736,6 +740,8 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
             const SizedBox(height: 4),
           ],
           Text(title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                   fontFamily: _displayFont,
                   fontSize: 26,
