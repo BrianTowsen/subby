@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -1008,7 +1010,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                     .toList();
                 if (_sharedCount != shared.length) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) setState(() => _sharedCount = shared.length);
+                    final r = ModalRoute.of(context);
+                    if (mounted && (r?.isCurrent ?? false))
+                      setState(() => _sharedCount = shared.length);
                   });
                 }
                 return Column(
@@ -1064,7 +1068,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         // keep the count in sync (used elsewhere if owned arrives later)
         if (_sharedCount != shared.length) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) setState(() => _sharedCount = shared.length);
+            final r = ModalRoute.of(context);
+            if (mounted && (r?.isCurrent ?? false))
+              setState(() => _sharedCount = shared.length);
           });
         }
 
@@ -1598,7 +1604,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         // Keep the "Active builds" stat (owned + shared) in sync.
         if (_sharedCount != docs.length) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) setState(() => _sharedCount = docs.length);
+            final r = ModalRoute.of(context);
+            if (mounted && (r?.isCurrent ?? false))
+              setState(() => _sharedCount = docs.length);
           });
         }
 
@@ -3759,6 +3767,12 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      // Only refresh once this page is the settled, current route. During an
+      // interactive back-swipe the dashboard is repainted every frame while it
+      // is still covered/transitioning; running the listing check (and its
+      // setState) then reflows the tree mid-gesture — the "jerk/jump in".
+      final route = ModalRoute.of(context);
+      if (route == null || !route.isCurrent) return;
       _refreshHasListing(); // keep listing state fresh on return
     });
 
