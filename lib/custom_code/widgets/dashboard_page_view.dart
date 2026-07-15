@@ -10,18 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -3366,10 +3354,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           height: 64,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: const Color(0xFFAC0C0C),
+            color: const Color(0xFFE7E247),
             borderRadius: BorderRadius.circular(18),
           ),
-          child: const Icon(Icons.lock_open_rounded, size: 32, color: _paper),
+          child: const Icon(Icons.lock_open_rounded, size: 32, color: _ink),
         ),
         const SizedBox(height: 20),
         const Text(
@@ -3385,8 +3373,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         ),
         const SizedBox(height: 12),
         const Text(
-          'Create an account or log in to track plans, budget, '
-          'programme, snags and quotes — all in one place.',
+          'Track plans, budget, programme, snags and quotes — all in '
+          'one place, at no cost.',
           style: TextStyle(
             fontFamily: _bodyFont,
             fontSize: 14,
@@ -3395,6 +3383,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             color: _inkMute,
           ),
         ),
+        const SizedBox(height: 16),
+        _freeBanner(),
         const SizedBox(height: 28),
         Wrap(
           spacing: 8,
@@ -3410,7 +3400,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         ),
         const SizedBox(height: 28),
         _primaryButton(
-          label: 'Create account',
+          label: 'Create free account',
           icon: Icons.person_add_alt_1_rounded,
           onTap: _goToCreateAccount,
         ),
@@ -3440,10 +3430,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           height: 64,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: const Color(0xFFAC0C0C),
+            color: const Color(0xFFE7E247),
             borderRadius: BorderRadius.circular(18),
           ),
-          child: const Icon(Icons.construction, size: 32, color: _paper),
+          child: const Icon(Icons.construction, size: 32, color: _ink),
         ),
         const SizedBox(height: 20),
         const Text(
@@ -3459,8 +3449,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         ),
         const SizedBox(height: 12),
         const Text(
-          "Start your own home build below — or join a build you're "
-          'working on for someone else.',
+          "Plan a build of your own, or get hired onto someone else's. "
+          'Both are free to start.',
           style: TextStyle(
             fontFamily: _bodyFont,
             fontSize: 14,
@@ -3469,22 +3459,11 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             color: _inkMute,
           ),
         ),
-        const SizedBox(height: 28),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: const [
-            _CapabilityChip('Plans'),
-            _CapabilityChip('Budget'),
-            _CapabilityChip('Programme'),
-            _CapabilityChip('Snags'),
-            _CapabilityChip('Quotes'),
-            _CapabilityChip('To-do list'),
-          ],
-        ),
+        const SizedBox(height: 16),
+        _freeBanner(),
         const SizedBox(height: 28),
         _primaryButton(
-          label: 'Start a home build',
+          label: 'Start a home build — free',
           icon: Icons.add_rounded,
           onTap: _goToAddProject,
         ),
@@ -3495,6 +3474,47 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       ],
     );
   }
+
+  // Prominent "free" banner — the pricing model is a genuine differentiator:
+  // managing a build and listing a company cost nothing; a company only pays a
+  // monthly participation fee once a project owner hires them onto a Project
+  // Team. Shown at the top of both empty states (signed-out + no builds).
+  Widget _freeBanner() => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFE7E247),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: const [
+              Icon(Icons.savings_outlined, size: 20, color: _ink),
+              SizedBox(width: 8),
+              Text('Free to manage & list',
+                  style: TextStyle(
+                    fontFamily: _displayFont,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: _ink,
+                  )),
+            ]),
+            const SizedBox(height: 5),
+            Text(
+              'Companies only pay a monthly fee once a project owner hires '
+              'them onto a Project Team.',
+              style: TextStyle(
+                fontFamily: _bodyFont,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                height: 1.4,
+                color: _ink.withOpacity(0.75),
+              ),
+            ),
+          ],
+        ),
+      );
 
   Widget _orDivider() => Row(
         children: [
@@ -3519,14 +3539,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // find and add them; once listed, this reassures instead of re-prompting.
   Widget _directoryListingCard() {
     final IconData icon = _hasListing ? Icons.verified : Icons.storefront;
-    final String title = _hasListing
-        ? "You're listed in the Directory"
-        : 'Working on builds for others?';
+    final String title =
+        _hasListing ? "You're listed — for free" : 'List your company — free';
     final String body = _hasListing
-        ? "Project managers can find and add you. Builds you're added to "
-            'appear here automatically.'
-        : 'Create a listing in the Directory so project managers can find and '
-            'add you to their builds.';
+        ? 'Project managers can find and hire you at no cost. Builds you\'re '
+            'added to appear here automatically.'
+        : 'List your company in the Directory for free so project managers can '
+            'find and hire you onto their builds.';
 
     return InkWell(
       onTap: _goToListing,
