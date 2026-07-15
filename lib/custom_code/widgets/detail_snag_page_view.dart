@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -301,7 +303,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
   Color _statusTint(String s) {
     switch (s) {
       case 'in_progress':
-        return _green; // solid green fill
+        return _ink; // solid ink fill (matches In Progress text)
       case 'closed':
         return _surface;
       case 'open':
@@ -633,39 +635,86 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
         ),
       );
 
+  // Centered project name in the hero (streamed from the snag's projectRef) —
+  // matches AddSnagPageView / SnagListPageView.
+  Widget _heroProjectName(DocumentReference? projectRef) {
+    const style = TextStyle(
+        fontFamily: _bodyFont,
+        fontSize: 15,
+        fontWeight: FontWeight.w800,
+        color: _paper);
+    if (projectRef == null) {
+      return const Text('Project',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: style);
+    }
+    return StreamBuilder<DocumentSnapshot<Object?>>(
+      stream: projectRef.snapshots(),
+      builder: (context, snap) {
+        final data = (snap.data?.data() as Map<String, dynamic>?) ?? {};
+        final name = ((data['name'] ??
+                data['projectName'] ??
+                data['title'] ??
+                'Project'))
+            .toString()
+            .trim();
+        return Text(name.isEmpty ? 'Project' : name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: style);
+      },
+    );
+  }
+
   Widget _detailHero(
     DocumentReference ref,
     String title,
     String status,
     String area,
     DateTime? due,
-    bool isOwner,
-  ) {
+    bool isOwner, {
+    DocumentReference? projectRef,
+  }) {
     final dueHint = _dueHint(due, status);
     final parts = <String>[];
     if (area.trim().isNotEmpty) parts.add(area.trim());
     if (dueHint.isNotEmpty) parts.add(dueHint);
-    final meta = parts.join('  ·  ');
+    // Eyebrow above the title — uppercased, matching the other snag headers.
+    final meta = parts.join('  ·  ').toUpperCase();
     return Container(
       width: double.infinity,
       color: const Color(0xFF3F5C69),
+      // Match the Snag List header height.
+      constraints:
+          BoxConstraints(minHeight: MediaQuery.of(context).padding.top + 138),
       padding: EdgeInsets.fromLTRB(
-          20, 6 + MediaQuery.of(context).padding.top, 20, 18),
+          20, 14 + MediaQuery.of(context).padding.top, 20, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Centered project name + eyebrow, back on the left, delete on right.
           Row(
             children: [
               _heroCircle(Icons.arrow_back_ios_new_rounded, _handleBack),
               Expanded(
-                child: Center(
-                  child: Text('SNAG DETAIL',
-                      style: TextStyle(
-                          fontFamily: _bodyFont,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.7,
-                          color: _paper.withOpacity(0.5))),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Column(
+                    children: [
+                      _heroProjectName(projectRef),
+                      const SizedBox(height: 2),
+                      Text('SNAG DETAIL',
+                          style: TextStyle(
+                              fontFamily: _bodyFont,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.7,
+                              color: _paper.withOpacity(0.5))),
+                    ],
+                  ),
                 ),
               ),
               if (isOwner)
@@ -676,6 +725,16 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
             ],
           ),
           const SizedBox(height: 16),
+          if (meta.isNotEmpty) ...[
+            Text(meta,
+                style: TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1,
+                    color: _paper.withOpacity(0.55))),
+            const SizedBox(height: 4),
+          ],
           Text(title,
               style: const TextStyle(
                   fontFamily: _displayFont,
@@ -684,15 +743,6 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
                   letterSpacing: -0.6,
                   height: 1.1,
                   color: _paper)),
-          if (meta.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(meta,
-                style: TextStyle(
-                    fontFamily: _bodyFont,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: _paper.withOpacity(0.55))),
-          ],
         ],
       ),
     );
@@ -737,7 +787,8 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
 
     return Column(
       children: [
-        _detailHero(ref, title, status, area, due, isOwner),
+        _detailHero(ref, title, status, area, due, isOwner,
+            projectRef: d['projectRef'] as DocumentReference?),
         Expanded(
           child: Stack(
             children: [
@@ -1129,7 +1180,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
         color: _paper,
         border: Border(top: BorderSide(color: Color(0xFFEAEEF0), width: 1)),
       ),
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
+      padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
       child: SafeArea(
         top: false,
         child: Column(
