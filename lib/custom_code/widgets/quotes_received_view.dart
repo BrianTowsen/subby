@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -152,7 +154,7 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
           Container(
             width: double.infinity,
             color: const Color(
-                0xFF3F5C69), // steel — matches DashboardPageView hero
+                0xFF3D4F66), // steel — matches DashboardPageView hero
             padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

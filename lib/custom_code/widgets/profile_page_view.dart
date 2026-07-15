@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 // ✅ provides currentUserReference, currentUserEmail, etc.
 import '/auth/firebase_auth/auth_util.dart';
 
@@ -58,7 +60,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _hairline = Color(0xFFEAEEF0);
   static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
-  static const Color _steel = Color(0xFF3F5C69); // hero background
+  static const Color _steel = Color(0xFF3D4F66); // hero background
   static const Color _accent = Color(0xFFE7E247); // primary CTA fill
   static const Color _coral = Color(0xFF566670);
   static const Color _warn = Color(0xFFAC0C0C); // delete-dialog red (shared)

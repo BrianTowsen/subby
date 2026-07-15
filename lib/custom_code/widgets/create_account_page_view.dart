@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -43,7 +45,7 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _hairline = Color(0xFFEAEEF0);
   static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
-  static const Color _steel = Color(0xFF3F5C69); // hero header background
+  static const Color _steel = Color(0xFF3D4F66); // hero header background
   static const Color _accent = Color(0xFFE7E247); // primary CTA fill
   static const Color _coral = Color(0xFF566670);
   static const String _displayFont = 'Inter Tight';
@@ -133,7 +135,7 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           elevation: 0,
-          backgroundColor: const Color(0xFF3F5C69),
+          backgroundColor: const Color(0xFF3D4F66),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: BorderSide.none,
