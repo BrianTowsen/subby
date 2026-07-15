@@ -10,12 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -167,16 +161,16 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
                   _circleBtn(),
                   Expanded(
                     child: Column(children: [
-                      const Text('Quotes received',
-                          style: TextStyle(
+                      Text(_projectName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
                               fontFamily: _body,
                               fontSize: 15,
                               fontWeight: FontWeight.w800,
                               color: _paper)),
                       const SizedBox(height: 2),
-                      Text(_projectName.toUpperCase(),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                      Text('QUOTES RECEIVED',
                           style: TextStyle(
                               fontFamily: _body,
                               fontSize: 10,
@@ -187,6 +181,23 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
                   ),
                   _inviteBtn(),
                 ]),
+                const SizedBox(height: 16),
+                Text('COMPARE & AWARD TENDERS',
+                    style: TextStyle(
+                        fontFamily: _body,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1,
+                        color: _paper.withOpacity(0.55))),
+                const SizedBox(height: 4),
+                const Text('Quotes Received',
+                    style: TextStyle(
+                        fontFamily: _display,
+                        fontSize: 34,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -1,
+                        height: 1.0,
+                        color: _paper)),
               ],
             ),
           ),

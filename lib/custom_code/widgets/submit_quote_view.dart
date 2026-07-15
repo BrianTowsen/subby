@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -398,37 +400,57 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
             color: const Color(
                 0xFF3F5C69), // steel — matches DashboardPageView hero
             padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _circleBtn(Icons.arrow_back_ios_new_rounded, () {
-                  final nav = Navigator.of(context);
-                  if (nav.canPop()) nav.pop();
-                }),
-                Expanded(
-                  child: Column(
-                    children: [
-                      const Text('Submit your quote',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                              fontFamily: _body,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: _paper)),
-                      const SizedBox(height: 2),
-                      Text(_projectName.toUpperCase(),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                              fontFamily: _body,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.7,
-                              color: _paper.withOpacity(0.5))),
-                    ],
-                  ),
+                Row(
+                  children: [
+                    _circleBtn(Icons.arrow_back_ios_new_rounded, () {
+                      final nav = Navigator.of(context);
+                      if (nav.canPop()) nav.pop();
+                    }),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Text(_projectName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontFamily: _body,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  color: _paper)),
+                          const SizedBox(height: 2),
+                          Text('SUBMIT QUOTE',
+                              style: TextStyle(
+                                  fontFamily: _body,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.7,
+                                  color: _paper.withOpacity(0.5))),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 38),
+                  ],
                 ),
-                const SizedBox(width: 38),
+                const SizedBox(height: 16),
+                Text('PREPARE YOUR SUBMISSION',
+                    style: TextStyle(
+                        fontFamily: _body,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1,
+                        color: _paper.withOpacity(0.55))),
+                const SizedBox(height: 4),
+                const Text('Submit Quote',
+                    style: TextStyle(
+                        fontFamily: _display,
+                        fontSize: 34,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -1,
+                        height: 1.0,
+                        color: _paper)),
               ],
             ),
           ),
