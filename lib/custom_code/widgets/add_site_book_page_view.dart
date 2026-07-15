@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -458,7 +460,7 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
         width: double.infinity,
         color: const Color(0xFF3F5C69),
         padding: EdgeInsets.fromLTRB(
-            _hPad, 6 + MediaQuery.of(context).padding.top, _hPad, 18),
+            _hPad, 14 + MediaQuery.of(context).padding.top, _hPad, 18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

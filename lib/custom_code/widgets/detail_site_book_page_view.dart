@@ -10,8 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart'; // currentUserReference (owner gate)
@@ -585,8 +583,8 @@ class _DetailSiteBookPageViewState extends State<DetailSiteBookPageView> {
                     child: Row(
                       children: [
                         Container(
-                          width: 48,
-                          height: 48,
+                          width: 44,
+                          height: 44,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
                               color: _paper.withOpacity(0.14),
@@ -594,7 +592,7 @@ class _DetailSiteBookPageViewState extends State<DetailSiteBookPageView> {
                           child: Text(_initials(author),
                               style: const TextStyle(
                                   fontFamily: _displayFont,
-                                  fontSize: 17,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.w800,
                                   color: _paper)),
                         ),
@@ -616,10 +614,10 @@ class _DetailSiteBookPageViewState extends State<DetailSiteBookPageView> {
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
                                       fontFamily: _displayFont,
-                                      fontSize: 34,
+                                      fontSize: 27,
                                       fontWeight: FontWeight.w900,
-                                      letterSpacing: -1,
-                                      height: 1.0,
+                                      letterSpacing: -0.6,
+                                      height: 1.05,
                                       color: _paper)),
                             ],
                           ),
