@@ -10,14 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -198,7 +190,7 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
                 width: double.infinity,
                 color: const Color(
                     0xFF3F5C69), // steel — matches DashboardPageView hero
-                padding: EdgeInsets.fromLTRB(20, top + 14, 20, 20),
+                padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -206,16 +198,16 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
                         _circleBtn(),
                         Expanded(
                             child: Column(children: [
-                          const Text('Quote detail',
-                              style: TextStyle(
+                          Text(name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
                                   fontFamily: _body,
                                   fontSize: 15,
                                   fontWeight: FontWeight.w800,
                                   color: _paper)),
                           const SizedBox(height: 2),
-                          Text(name.toUpperCase(),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                          Text('QUOTE DETAIL',
                               style: TextStyle(
                                   fontFamily: _body,
                                   fontSize: 10,
@@ -226,6 +218,14 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
                         const SizedBox(width: 38),
                       ]),
                       const SizedBox(height: 16),
+                      Text(vatIncl ? 'TOTAL INCL. VAT' : 'TOTAL (NO VAT)',
+                          style: TextStyle(
+                              fontFamily: _body,
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 1,
+                              color: _paper.withOpacity(0.55))),
+                      const SizedBox(height: 4),
                       Text('R ${_fmt(total)}',
                           style: const TextStyle(
                               fontFamily: _display,
@@ -234,13 +234,6 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
                               letterSpacing: -1,
                               color: _paper,
                               height: 1.0)),
-                      const SizedBox(height: 4),
-                      Text(vatIncl ? 'Total incl. VAT' : 'Total (no VAT)',
-                          style: TextStyle(
-                              fontFamily: _body,
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w600,
-                              color: _paper.withOpacity(0.55))),
                     ]),
               ),
               Expanded(
