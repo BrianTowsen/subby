@@ -10,20 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'dart:convert';
 import 'package:intl/intl.dart';
@@ -1208,7 +1194,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
     };
 
     return Container(
-      color: _startBg,
+      color: _paper,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1216,11 +1202,11 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
           Container(
             width: double.infinity,
             color: _header,
-            padding: EdgeInsets.fromLTRB(22, top + 18, 22, 24),
+            padding: EdgeInsets.fromLTRB(20, top + 14, 20, 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _circleBtn(Icons.chevron_left_rounded, () {
+                _circleBtn(Icons.arrow_back_ios_new_rounded, () {
                   final nav = Navigator.of(context);
                   if (nav.canPop()) nav.pop();
                 }),
@@ -1597,7 +1583,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
         children: [
           Row(
             children: [
-              _circleBtn(Icons.chevron_left_rounded, () {
+              _circleBtn(Icons.arrow_back_ios_new_rounded, () {
                 final nav = Navigator.of(context);
                 if (nav.canPop()) nav.pop();
               }),
@@ -1769,7 +1755,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
             alignment: Alignment.center,
             decoration: BoxDecoration(
                 color: _paper.withOpacity(0.12), shape: BoxShape.circle),
-            child: Icon(icon, size: 22, color: _paper),
+            child: Icon(icon, size: 16, color: _paper),
           ),
         ),
       );
@@ -2425,7 +2411,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
         : (isParent ? '${_fmtDur(nDur)} span' : '${sec.days} working days');
 
     return Container(
-      color: _startBg,
+      color: _paper,
       child: Column(
         children: [
           // header
