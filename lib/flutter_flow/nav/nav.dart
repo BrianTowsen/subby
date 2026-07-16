@@ -457,6 +457,11 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           name: AddSiteBookPageWidget.routeName,
           path: AddSiteBookPageWidget.routePath,
           builder: (context, params) => AddSiteBookPageWidget(),
+        ),
+        FFRoute(
+          name: CheckListPageWidget.routeName,
+          path: CheckListPageWidget.routePath,
+          builder: (context, params) => CheckListPageWidget(),
         )
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );

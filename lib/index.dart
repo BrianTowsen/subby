@@ -66,3 +66,4 @@ export '/project_cost/edit_project_cost_page/edit_project_cost_page_widget.dart'
     show EditProjectCostPageWidget;
 export '/add_site_book_page/add_site_book_page_widget.dart'
     show AddSiteBookPageWidget;
+export '/check_list_page/check_list_page_widget.dart' show CheckListPageWidget;
