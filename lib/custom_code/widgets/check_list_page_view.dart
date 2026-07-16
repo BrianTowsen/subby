@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -22,6 +24,12 @@ import '/auth/firebase_auth/auth_util.dart';
 /// trade section becomes a check-list category. Ticking a check stamps who
 /// signed it off and when. The list is fully editable (rename / add / delete /
 /// reorder sections and checks) and persists to the device.
+///
+/// v3 checklist content: every section resequenced into strict site order
+/// (hold points and inspections placed BEFORE the work they gate), Dept of
+/// Labour compliance block added (Annexure 2 notification, construction work
+/// permit, COIDA, H&S spec), and dedicated upper-floor brickwork keys so
+/// storeys above ground don't repeat foundation / DPC / surface-bed checks.
 class CheckListPageView extends StatefulWidget {
   const CheckListPageView({
     super.key,
@@ -102,7 +110,10 @@ class _CheckListPageViewState extends State<CheckListPageView>
   static const String _display = 'Inter Tight';
   static const String _body = 'Inter';
 
-  static const String _kSaved = 'subby_checklist_v2';
+  // NOTE: bumped from subby_checklist_v2 so devices holding the old saved
+  // list load the new v3 content. Revert to _v2 if you'd rather keep any
+  // in-progress ticks on site (the old list will then show until Reset).
+  static const String _kSaved = 'subby_checklist_v3';
 
   String _screen = 'start'; // 'start' | 'list'
   String _template = '';
@@ -325,262 +336,290 @@ class _CheckListPageViewState extends State<CheckListPageView>
       'Home enrolled with NHBRC before construction starts',
       'Structural engineer appointed; designs & details issued',
       'Geotechnical report received; site classified (R/H/C/S/P)',
+      'Building contract signed & insurances in place',
+      'Dept of Labour notified of construction work (Annexure 2) before work starts',
+      'Construction work permit obtained where required (Construction Regs 2014)',
+      'Contractor COIDA registered; letter of good standing on file',
+      'Client H&S specification issued; contractor H&S plan approved',
       'Competent-person appointments confirmed in writing',
-      'Building contract signed & insurances in place'
+      'Municipality notified of commencement (48 hrs before start)',
     ],
     'Site Preparation': [
-      'Site cleared of vegetation; topsoil stripped & stockpiled',
-      'Existing structures demolished & rubble removed',
-      'Site datum / benchmark established & recorded',
+      'Land surveyor: site boundaries & pegs verified against SG diagram',
       'Trees & services to be retained protected',
+      'Existing structures demolished & rubble removed',
+      'Site cleared of vegetation; topsoil stripped & stockpiled',
+      'Site datum / benchmark established & recorded',
       'Access for delivery vehicles confirmed',
-      'Land surveyor: site boundaries & pegs verified against SG diagram'
     ],
     'Site Establishment': [
       'Boundary hoarding / fencing erected & secure',
       'Site board & statutory signage displayed',
+      'Copy of DoL notification (Annexure 2) & OHS Act signage displayed on site',
       'Temporary water & electrical connection in place',
       'Site office, store & lock-up erected',
       'Ablution facilities provided for workforce',
       'Materials laydown & storage area set out',
-      'Setting-out / survey pegs verified against approved plan',
+      'Security / access control in place',
+      'First aid kit & fire extinguishers on site',
       'Health & Safety file, risk assessment & OHS appointments on site (Construction Regs)',
-      'Fall-protection plan in place; roof harnesses, lanyards & anchor points provided'
+      'Fall-protection plan in place; roof harnesses, lanyards & anchor points provided',
+      'Setting-out / survey pegs verified against approved plan',
     ],
     'Earthworks & Excavation': [
-      'Foundation trenches to engineer’s depth & width',
-      'Founding stratum inspected & approved before pour',
       'Excavations to correct levels; sides shored where needed',
-      'Bulk fill placed & compacted in layers',
+      'Foundation trenches to engineer’s depth & width',
       'No standing water or loose soil in trenches',
       'Engineer inspection: founding stratum approved before pour',
       'NHBRC inspection: foundations booked & passed',
       'Municipal inspection: foundation / trench passed',
-      'Minimum foundation wall height achieved (≥150mm brickwork below DPC / to NHBRC & engineer detail)',
       'Soil poisoning / termite treatment applied to trenches & under surface bed',
-      'Foundation concrete cubes taken & tested (strength records kept)'
+      'Bulk fill placed & compacted in layers',
     ],
     'Brickwork & Concrete': [
+      'Engineer inspection: reinforcement approved before any pour',
       'Foundation concrete mix & strength per spec',
+      'Foundation concrete cubes taken & tested (strength records kept)',
+      'Minimum foundation wall height achieved (≥150mm brickwork below DPC / to NHBRC & engineer detail)',
       'DPC laid & lapped at correct level (≥150mm above ground)',
+      'HOLD POINT — services coordinated before surface-bed pour',
+      ' – Under-slab plumbing & sewer pipes laid, tested & correctly positioned',
+      ' – Electrical conduit / sleeves & earth mat cast in',
+      ' – 250µm USB damp-proof membrane laid & lapped under surface bed',
+      ' – DPM intact — not punctured by any penetration',
+      ' – Surface bed reinforcement (ref mesh) at correct position & lap',
+      'Municipal inspection: DPC / surface bed passed',
+      'NHBRC inspection: slab / DPC stage passed',
+      'Brick type & strength approved; delivered dry',
+      'Mortar mix correct; perpends & beds fully filled',
+      'Brickforce every 4th course; walls plumb & level',
+      'Cavity kept clean; wall ties at correct spacing',
+      'Weep holes provided over DPC & above all lintels',
+      'Air bricks / sub-floor & cavity ventilation built in',
+      'Lintels over all openings with correct bearing',
+      'Movement / expansion joints located per plan',
+    ],
+    'Brickwork & Concrete (First Floor)': [
       'Brick type & strength approved; delivered dry',
       'Mortar mix correct; perpends & beds fully filled',
       'Brickforce every 4th course; walls plumb & level',
       'Cavity kept clean; wall ties at correct spacing',
       'Lintels over all openings with correct bearing',
+      'Weep holes provided above all lintels',
       'Movement / expansion joints located per plan',
-      'Engineer inspection: reinforcement approved before any pour',
-      'NHBRC inspection: slab / DPC stage passed',
-      'Municipal inspection: DPC / surface bed passed',
-      '250µm USB damp-proof membrane laid & lapped under surface bed',
-      'Surface bed reinforcement (ref mesh) at correct position & lap',
-      'Weep holes provided over DPC & above all lintels',
-      'Air bricks / sub-floor & cavity ventilation built in',
-      'HOLD POINT — services coordinated before surface-bed pour',
-      '   – Under-slab plumbing & sewer pipes laid, tested & correctly positioned',
-      '   – Electrical conduit / sleeves & earth mat cast in',
-      '   – DPM intact — not punctured by any penetration'
+      'Gables & beam filling complete',
+      'Wall plate level & secured',
+    ],
+    'Brickwork & Concrete (Ground Floor)': [
+      'Brick type & strength approved; delivered dry',
+      'Mortar mix correct; perpends & beds fully filled',
+      'Brickforce every 4th course; walls plumb & level',
+      'Cavity kept clean; wall ties at correct spacing',
+      'Lintels over all openings with correct bearing',
+      'Weep holes provided above all lintels',
+      'Movement / expansion joints located per plan',
     ],
     'Structural Steel Works': [
       'Steel sections & grade match engineer’s drawing',
-      'Welds & bolted connections complete & to spec',
       'Members plumb, level & correctly aligned',
-      'Corrosion protection / galvanizing intact',
+      'Welds & bolted connections complete & to spec',
       'Baseplates & holding-down bolts grouted',
-      'Engineer inspection: steelwork inspected & signed off'
+      'Corrosion protection / galvanizing intact',
+      'Engineer inspection: steelwork inspected & signed off',
+    ],
+    'Shoring & Retaining Walls': [
+      'Lateral support / shoring designed by engineer & installed',
+      'Excavation faces stable; no collapse or undermining risk',
+      'Retaining wall founding, reinforcement & cover per engineer',
+      'Below-ground tanking / waterproofing applied to retaining face',
+      'Subsoil drainage & weep holes behind wall installed',
+      'Engineer inspection: retaining wall signed off before backfill',
+      'Backfill placed & compacted in layers',
+    ],
+    'Suspended Floor Slab': [
+      'Formwork level, tight & adequately propped',
+      'Reinforcement size, spacing & cover per drawing',
+      'Conduits, sleeves & services cast in before pour',
+      'Engineer inspection: reinforcement & formwork approved before pour',
+      'Concrete slump & strength tested (cubes taken)',
+      'Slab cured; props left in place per engineer',
+      'NHBRC inspection: suspended slab stage passed',
+      'Safety railings / edge protection to all open edges, stairwells & openings',
+      'Scaffold access to upper level inspected & tagged',
     ],
     'Suspended Roof Slab': [
       'Formwork level, tight & adequately propped',
       'Reinforcement size, spacing & cover per drawing',
       'Conduits & services cast in before pour',
+      'Engineer inspection: reinforcement & formwork approved before pour',
       'Concrete slump & strength tested (cubes taken)',
       'Slab cured; props left in place per engineer',
-      'Engineer inspection: reinforcement & formwork approved before pour',
       'NHBRC inspection: suspended slab stage passed',
+      'Safety railings / edge protection to all open edges, stairwells & floor openings',
       'Roof-slab screed laid to correct fall for drainage; no ponding (checked before waterproofing)',
       'Roof-slab water outlets / rainwater downpipes correctly positioned, sized & clear; screed falls to each outlet',
-      'Safety railings / edge protection to all open edges, stairwells & floor openings',
-      'Scaffold access to upper level inspected & tagged (double-storey work)'
+      'Scaffold access to upper level inspected & tagged (double-storey work)',
     ],
     'Roofing': [
       'Trusses / rafters certified & per approved design',
       'Trusses braced, tied down & fixed to wall plate',
+      'Engineer inspection: roof structure / tie-downs signed off (A19)',
+      'Roof work: harnesses clipped to anchor points; edge protection to eaves & openings',
       'Sisalation / insulation laid correctly',
       'Sheeting or tiles fixed; roof weathertight',
       'Ridges, valleys & flashings sealed',
-      'Gutters & downpipes installed to fall',
-      'Engineer inspection: roof structure / tie-downs signed off',
       'NHBRC inspection: roof stage passed',
       'Fascia & barge boards fixed straight & painted',
+      'Gutters & downpipes installed to fall',
       'Ceiling / roof insulation to SANS 10400-XA R-value',
-      'Roof work: harnesses clipped to anchor points; edge protection to eaves & openings'
     ],
     'Plumbing & Drainage': [
       'Sewer drainage laid to fall; air-pressure tested',
-      'Water supply pipes pressure tested (≥600 kPa)',
       'Gullies, manholes & rodding eyes correctly placed',
+      'Municipal inspection: open-drain / drainage test passed before closing',
+      'Water supply pipes pressure tested (≥600 kPa)',
       'Geyser / heat pump installed, secured & lagged',
+      'Geyser safety per SANS 10254: drip tray, PRV, vacuum breaker & overflow piped outside',
       'Tanks (JoJo / septic / conservancy) watertight',
-      'Municipal inspection: open-drain / drainage test passed',
-      'Geyser safety per SANS 10254: drip tray, PRV, vacuum breaker & overflow piped outside'
     ],
     'Electrical Works': [
-      'DB board installed, wired & clearly labelled',
+      'Plug point positions & heights marked and approved against layout',
+      'Light point & switch positions confirmed against layout',
+      'TV / data / telephone point positions confirmed',
+      'Geyser & appliance point positions confirmed',
+      'Air-conditioner points & solar / PV provisions positioned per layout',
       'Wiring in conduit; correct cable sizes used',
+      'DB board installed, wired & clearly labelled',
       'Plug points, switches & isolators per layout',
       'Earthing & bonding complete',
       'Installation ready for CoC inspection',
-      'Plug point positions & heights marked and approved against layout',
-      'TV / data / telephone point positions confirmed',
-      'Light point & switch positions confirmed against layout',
-      'Geyser & appliance point positions confirmed',
-      'Air-conditioner points & solar / PV provisions positioned per layout'
+    ],
+    'Plastering & Screeds': [
+      'HOLD POINT — first fix complete before plastering',
+      ' – Electrical chasing, conduit & boxes installed',
+      ' – Plumbing pipes in walls installed & pressure tested',
+      ' – Window & door frames built in / fixed',
+      ' – Wall ties, lintels & Brickforce signed off',
+      'Walls plumb; external corners square',
+      'Plaster even thickness; no cracks or blisters',
+      'Floor screeds laid to fall & correct level',
+      'Wet-area & balcony screeds laid to fall towards outlets / drains; no ponding',
+      'Screed well bonded; no hollow / drummy areas',
     ],
     'Windows & Door Frames': [
       'Frames plumb, square & correct size',
       'Built in / fixed securely; gaps sealed',
       'Glazing per spec; safety glass where required',
-      'Ironmongery fitted; sashes & doors operate freely'
-    ],
-    'Plastering & Screeds': [
-      'Walls plumb; external corners square',
-      'Plaster even thickness; no cracks or blisters',
-      'Floor screeds laid to fall & correct level',
-      'Screed well bonded; no hollow / drummy areas',
-      'HOLD POINT — first fix complete before plastering',
-      '   – Electrical chasing, conduit & boxes installed',
-      '   – Plumbing pipes in walls installed & pressure tested',
-      '   – Window & door frames built in / fixed',
-      '   – Wall ties, lintels & Brickforce signed off',
-      '   – Wet-area & balcony screeds laid to fall towards outlets / drains; no ponding'
+      'Ironmongery fitted; sashes & doors operate freely',
     ],
     'Waterproofing': [
+      'Screed falls re-checked before membrane — water drains to outlets, no ponding',
       'Wet-area membranes applied & turned up walls',
+      'Waterproofing under aluminium sliding door thresholds installed & lapped to floor',
       'Flat roof / balcony torch-on system complete',
       'Parapets & box gutters waterproofed',
       'Flood test passed; guarantee / certificate issued',
-      'Waterproofing under aluminium sliding door thresholds installed & lapped to floor',
-      'Screed falls re-checked before membrane — water drains to outlets, no ponding'
     ],
     'Ceilings & Partitioning': [
+      'HOLD POINT — before closing up the ceiling',
+      ' – Roof watertight & roof space clear',
+      ' – Ceiling wiring, downlight & fan points roughed in',
+      ' – Geyser & plumbing in roof space complete & lagged',
+      ' – Insulation laid to R-value before boards fixed',
       'Brandering / framing level at correct centres',
       'Ceiling boards fixed; joints flush & taped',
       'Bulkheads square, plumb & straight',
       'Cornices / trims fitted; insulation laid above',
-      'HOLD POINT — before closing up the ceiling',
-      '   – Roof watertight & roof space clear',
-      '   – Ceiling wiring, downlight & fan points roughed in',
-      '   – Geyser & plumbing in roof space complete & lagged',
-      '   – Insulation laid to R-value before boards fixed'
     ],
     'Joinery & Carpentry': [
       'Timber grade & moisture content per spec',
       'Doors hung with even gaps; operate freely',
       'Skirtings & architraves fixed neat & tight',
       'Fixings concealed; surfaces ready for finish',
-      'Garage / roller door installed, level & operating'
+      'Garage / roller door installed, level & operating',
     ],
     'Painting & Wall Covering': [
+      'HOLD POINT — surfaces ready before painting',
+      ' – Plaster cured, cracks filled & sanded',
+      ' – Ceilings, cornices & bulkheads complete',
+      ' – Second-fix carpentry & filling done',
       'Surfaces prepared, primed & sealed',
       'Correct number of coats; even coverage',
       'Cutting-in neat; no runs or missed patches',
       'Colours per approved schedule',
-      'HOLD POINT — surfaces ready before painting',
-      '   – Plaster cured, cracks filled & sanded',
-      '   – Ceilings, cornices & bulkheads complete',
-      '   – Second-fix carpentry & filling done'
     ],
     'Tiling': [
+      'HOLD POINT — substrates signed off before tiling',
+      ' – Waterproofing cured & flood-tested',
+      ' – Screeds cured, dry & laid to correct fall',
+      ' – Plumbing & electrical boxes set to finished tile depth',
+      'Vertical waterproofing to shower walls applied to full height before tiling',
       'Substrate level, primed; falls set in wet areas',
       'Tile type & layout per approved setting-out',
       'Full adhesive bed; no hollow-sounding tiles',
       'Grout & silicone joints neat; movement joints where needed',
-      'Vertical waterproofing to shower walls applied to full height before tiling',
-      'HOLD POINT — substrates signed off before tiling',
-      '   – Waterproofing cured & flood-tested',
-      '   – Screeds cured, dry & laid to correct fall',
-      '   – Plumbing & electrical boxes set to finished tile depth'
-    ],
-    'Kitchen (Built-in Units)': [
-      'Units match approved layout & dimensions',
-      'Cabinets level, plumb & secured to wall',
-      'Tops fitted; joints sealed; cut-outs correct',
-      'Doors & drawers aligned and operating',
-      'Electrical points (stove/oven, hob isolator, plugs, extractor) positioned per kitchen layout',
-      'Plumbing points (sink, dishwasher, washing machine) positioned per kitchen layout'
-    ],
-    'Built-in Cupboards': [
-      'Carcasses level, plumb & secured',
-      'Shelves, rails & drawers fitted',
-      'Doors aligned with even gaps',
-      'Finish & edging per spec'
-    ],
-    'Sanitary Fittings': [
-      'Fittings match approved schedule',
-      'Fixed level & secure; no leaks',
-      'Taps / mixers operate; hot & cold correct',
-      'Sealed to walls & floors with silicone',
-      'HOLD POINT — install only after finishes',
-      '   – Wall & floor tiling complete',
-      '   – Waterproofing flood-tested & signed off'
-    ],
-    'Floor Covering': [
-      'Substrate clean, dry & level',
-      'Material per spec; layout / direction correct',
-      'Laid flat; no lifting, gaps or squeaks',
-      'Edge trims & thresholds fitted'
-    ],
-    'Electrical Fittings': [
-      'Light fittings, plugs & switch plates fitted',
-      'Positions & heights per plan',
-      'All points tested & working',
-      'Cover plates straight, clean & undamaged',
-      'HOLD POINT — second fix only after finishes',
-      '   – Painting complete & dry',
-      '   – Wall tiling in wet areas complete'
-    ],
-    'External Site Works': [
-      'Paving / driveways to correct level & fall',
-      'Boundary walls, gates & fences complete',
-      'Stormwater drains away from building',
-      'Landscaping, topsoil & final grading done'
-    ],
-    'Cleaning & Handover': [
-      'Builder’s clean complete throughout',
-      'Snag list issued & closed out',
-      'CoCs & certificates (electrical, plumbing, gas, glazing) handed over',
-      'As-built plans, warranties & manuals provided',
-      'Occupancy Certificate (Form 4) applied for',
-      'NHBRC inspection: final inspection passed',
-      'Municipal inspection: final / Occupancy Certificate passed',
-      'Water & electricity meter readings recorded; keys scheduled & handed over',
-      'NHBRC warranty explained (3-month, 12-month & 5-year structural cover)'
-    ],
-    'Shoring & Retaining Walls': [
-      'Lateral support / shoring designed by engineer & installed',
-      'Excavation faces stable; no collapse or undermining risk',
-      'Retaining wall founding, reinforcement & cover per engineer',
-      'Subsoil drainage & weep holes behind wall installed',
-      'Below-ground tanking / waterproofing applied to retaining face',
-      'Backfill placed & compacted in layers',
-      'Engineer inspection: retaining wall signed off before backfill'
-    ],
-    'Suspended Floor Slab': [
-      'Formwork level, tight & adequately propped',
-      'Reinforcement size, spacing & cover per drawing',
-      'Conduits, sleeves & services cast in before pour',
-      'Concrete slump & strength tested (cubes taken)',
-      'Slab cured; props left in place per engineer',
-      'Safety railings / edge protection to all open edges, stairwells & openings',
-      'Engineer inspection: reinforcement & formwork approved before pour',
-      'NHBRC inspection: suspended slab stage passed'
     ],
     'Balustrades & Railings': [
       'Balustrade height & baluster spacing per SANS 10400-M (≥1.0m; gaps ≤100mm)',
       'Fixings secure; posts resist imposed handrail load',
       'Staircase handrails continuous & at correct height',
       'Glass balustrades: safety glass per spec',
-      'Finish / corrosion protection applied'
+      'Finish / corrosion protection applied',
+    ],
+    'Kitchen (Built-in Units)': [
+      'Electrical points (stove/oven, hob isolator, plugs, extractor) positioned per kitchen layout',
+      'Plumbing points (sink, dishwasher, washing machine) positioned per kitchen layout',
+      'Units match approved layout & dimensions',
+      'Cabinets level, plumb & secured to wall',
+      'Tops fitted; joints sealed; cut-outs correct',
+      'Doors & drawers aligned and operating',
+    ],
+    'Built-in Cupboards': [
+      'Carcasses level, plumb & secured',
+      'Shelves, rails & drawers fitted',
+      'Doors aligned with even gaps',
+      'Finish & edging per spec',
+    ],
+    'Sanitary Fittings': [
+      'HOLD POINT — install only after finishes',
+      ' – Wall & floor tiling complete',
+      ' – Waterproofing flood-tested & signed off',
+      'Fittings match approved schedule',
+      'Fixed level & secure; no leaks',
+      'Taps / mixers operate; hot & cold correct',
+      'Sealed to walls & floors with silicone',
+    ],
+    'Floor Covering': [
+      'Substrate clean, dry & level',
+      'Material per spec; layout / direction correct',
+      'Laid flat; no lifting, gaps or squeaks',
+      'Edge trims & thresholds fitted',
+    ],
+    'Electrical Fittings': [
+      'HOLD POINT — second fix only after finishes',
+      ' – Painting complete & dry',
+      ' – Wall tiling in wet areas complete',
+      'Light fittings, plugs & switch plates fitted',
+      'Positions & heights per plan',
+      'All points tested & working',
+      'Cover plates straight, clean & undamaged',
+    ],
+    'External Site Works': [
+      'Stormwater drains away from building',
+      'Paving / driveways to correct level & fall',
+      'Boundary walls, gates & fences complete',
+      'Landscaping, topsoil & final grading done',
+    ],
+    'Cleaning & Handover': [
+      'Builder’s clean complete throughout',
+      'Snag list issued & closed out',
+      'CoCs & certificates (electrical, plumbing, gas, glazing) handed over',
+      'NHBRC inspection: final inspection passed',
+      'Occupancy Certificate (Form 4) applied for',
+      'Municipal inspection: final / Occupancy Certificate passed',
+      'As-built plans, warranties & manuals provided',
+      'NHBRC warranty explained (3-month, 12-month & 5-year structural cover)',
+      'Water & electricity meter readings recorded; keys scheduled & handed over',
     ],
   };
 
