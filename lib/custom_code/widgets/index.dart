@@ -41,3 +41,4 @@ export 'detail_site_book_page_view.dart' show DetailSiteBookPageView;
 export 'edit_timeline_page_view.dart' show EditTimelinePageView;
 export 'edit_project_cost_page_view.dart' show EditProjectCostPageView;
 export 'add_site_book_page_view.dart' show AddSiteBookPageView;
+export 'check_list_page_view.dart' show CheckListPageView;

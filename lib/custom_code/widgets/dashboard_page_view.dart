@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -979,7 +981,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   Widget _headerStatusLine() {
     final stream = _activeProjectsStreamCached();
     if (stream == null) {
-      return _headerStatusText('Manage your build — free', accent: false);
+      return _headerStatusText('Manage your build — 30-day trial',
+          accent: false);
     }
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: stream,
@@ -3495,7 +3498,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         const SizedBox(height: 12),
         const Text(
           'Track plans, budget, programme, snags and quotes — all in '
-          'one place, at no cost.',
+          'one place.',
           style: TextStyle(
             fontFamily: _bodyFont,
             fontSize: 14,
@@ -3521,7 +3524,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         ),
         const SizedBox(height: 28),
         _primaryButton(
-          label: 'Create free account',
+          label: 'Create account',
           icon: Icons.person_add_alt_1_rounded,
           onTap: _goToCreateAccount,
         ),
@@ -3571,7 +3574,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         const SizedBox(height: 12),
         const Text(
           "Plan a build of your own, or get hired onto someone else's. "
-          'Both are free to start.',
+          'Both come with a 30-day trial.',
           style: TextStyle(
             fontFamily: _bodyFont,
             fontSize: 14,
@@ -3584,7 +3587,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         _freeBanner(),
         const SizedBox(height: 28),
         _primaryButton(
-          label: 'Start a home build — free',
+          label: 'Start a home build',
           icon: Icons.add_rounded,
           onTap: _goToAddProject,
         ),
@@ -3596,10 +3599,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     );
   }
 
-  // Prominent "free" banner — the pricing model is a genuine differentiator:
-  // managing a build and listing a company cost nothing; a company only pays a
-  // monthly participation fee once a project owner hires them onto a Project
-  // Team. Shown at the top of both empty states (signed-out + no builds).
+  // Trial banner — every plan starts with a 30-day trial: full access to plans,
+  // budget, programme, snags and quotes, then a monthly plan after the trial.
+  // Shown at the top of both empty states (signed-out + no builds).
   Widget _freeBanner() => Container(
         width: double.infinity,
         padding: const EdgeInsets.all(16),
@@ -3611,9 +3613,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(children: const [
-              Icon(Icons.savings_outlined, size: 20, color: _ink),
+              Icon(Icons.schedule_outlined, size: 20, color: _ink),
               SizedBox(width: 8),
-              Text('Free to manage & list',
+              Text('Includes a 30-day trial',
                   style: TextStyle(
                     fontFamily: _displayFont,
                     fontSize: 15,
@@ -3623,8 +3625,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             ]),
             const SizedBox(height: 5),
             Text(
-              'Companies only pay a monthly fee once a project owner hires '
-              'them onto a Project Team.',
+              'Full access to every feature for 30 days. Continue on a '
+              'monthly plan after your trial.',
               style: TextStyle(
                 fontFamily: _bodyFont,
                 fontSize: 12.5,
@@ -3660,12 +3662,11 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // find and add them; once listed, this reassures instead of re-prompting.
   Widget _directoryListingCard() {
     final IconData icon = _hasListing ? Icons.verified : Icons.storefront;
-    final String title =
-        _hasListing ? "You're listed — for free" : 'List your company — free';
+    final String title = _hasListing ? "You're listed" : 'List your company';
     final String body = _hasListing
-        ? 'Project managers can find and hire you at no cost. Builds you\'re '
+        ? 'Project managers can find and hire you. Builds you\'re '
             'added to appear here automatically.'
-        : 'List your company in the Directory for free so project managers can '
+        : 'List your company in the Directory so project managers can '
             'find and hire you onto their builds.';
 
     return InkWell(
