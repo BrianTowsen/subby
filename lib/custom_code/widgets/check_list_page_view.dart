@@ -10,15 +10,18 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'dart:convert';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '/auth/firebase_auth/auth_util.dart';
 
 /// CheckListPageView — Construction Quality Check List.
 ///
-/// Two screens managed internally: START (first-run template chooser) → LIST
-/// (the working checklist). Mirrors ProjectTimelinePageView: pick a floor-config
-/// template to load the standard trade sequence, and EVERY trade section becomes
-/// a check-list category. Ticking a check stamps who signed it off and when.
+/// START (template chooser) -> LIST (working, editable checklist).
+/// Pick a floor-config template to load the standard trade sections; every
+/// trade section becomes a check-list category. Ticking a check stamps who
+/// signed it off and when. The list is fully editable (rename / add / delete /
+/// reorder sections and checks) and persists to the device.
 class CheckListPageView extends StatefulWidget {
   const CheckListPageView({
     super.key,
@@ -37,13 +40,49 @@ class CheckListPageView extends StatefulWidget {
   State<CheckListPageView> createState() => _CheckListPageViewState();
 }
 
-class _Stamp {
-  final String by;
-  final String at;
-  const _Stamp(this.by, this.at);
+// ── mutable, id-keyed model ──
+class _Chk {
+  final String id;
+  String label;
+  bool sub;
+  bool done;
+  String? by;
+  String? at;
+  _Chk(this.id, this.label,
+      {this.sub = false, this.done = false, this.by, this.at});
+
+  Map<String, dynamic> toMap() =>
+      {'id': id, 'label': label, 'sub': sub, 'done': done, 'by': by, 'at': at};
+  static _Chk fromMap(Map m) => _Chk(
+        (m['id'] ?? '').toString(),
+        (m['label'] ?? '').toString(),
+        sub: m['sub'] == true,
+        done: m['done'] == true,
+        by: m['by']?.toString(),
+        at: m['at']?.toString(),
+      );
 }
 
-class _CheckListPageViewState extends State<CheckListPageView> {
+class _Sec {
+  final String id;
+  String name;
+  List<_Chk> checks;
+  _Sec(this.id, this.name, this.checks);
+
+  Map<String, dynamic> toMap() =>
+      {'id': id, 'name': name, 'checks': checks.map((c) => c.toMap()).toList()};
+  static _Sec fromMap(Map m) => _Sec(
+        (m['id'] ?? '').toString(),
+        (m['name'] ?? 'Section').toString(),
+        ((m['checks'] as List?) ?? const [])
+            .whereType<Map>()
+            .map(_Chk.fromMap)
+            .toList(),
+      );
+}
+
+class _CheckListPageViewState extends State<CheckListPageView>
+    with SingleTickerProviderStateMixin {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
   static const Color _ink = Color(0xFF1E282E);
   static const Color _inkMute = Color(0xFF566670);
@@ -58,34 +97,91 @@ class _CheckListPageViewState extends State<CheckListPageView> {
   static const Color _selTint = Color(0xFFE7EDF0);
   static const Color _green = Color(0xFF4E504F);
   static const Color _header = Color(0xFF3D4F66);
+  static const Color _yellow = Color(0xFFE7E247); // tick + active pill
 
   static const String _display = 'Inter Tight';
   static const String _body = 'Inter';
-  // ────────────────────────────────────────────────────────────────────
 
-  // Accent used for the ticked checkbox fill.
-  static const Color _accent = _ink;
+  static const String _kSaved = 'subby_checklist_v2';
 
-  // 'start' | 'list'
-  String _screen = 'start';
+  String _screen = 'start'; // 'start' | 'list'
   String _template = '';
-  String _filter = 'all'; // 'all' | 'open' | 'done'
+  bool _editing = false;
+  bool _showBanner = false;
+  final Set<String> _collapsed = <String>{};
+  List<_Sec> _sections = <_Sec>[];
+  late TabController _tab; // 0 All | 1 Open | 2 Done
+  int _seq = 0;
 
-  final Set<String> _done = <String>{}; // "si:ci"
-  final Set<int> _collapsed = <int>{}; // si
-  final Map<String, _Stamp> _meta = <String, _Stamp>{}; // "si:ci" → who/when
+  String _nid() {
+    _seq += 1;
+    return 'k${DateTime.now().microsecondsSinceEpoch}_$_seq';
+  }
 
   String get _projectName => (widget.projectName ?? '').trim().isNotEmpty
       ? widget.projectName!.trim()
       : 'Project';
-
   String get _currentUser {
     final n = (currentUserDisplayName).trim();
     return n.isEmpty ? 'You' : n;
   }
 
+  @override
+  void initState() {
+    super.initState();
+    _tab = TabController(length: 3, vsync: this);
+    _tab.addListener(() {
+      if (mounted) setState(() {});
+    });
+    _load();
+  }
+
+  @override
+  void dispose() {
+    _tab.dispose();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_kSaved);
+      if (raw == null || raw.isEmpty) return;
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return;
+      final list = (decoded['sections'] as List?) ?? const [];
+      final secs = list.whereType<Map>().map(_Sec.fromMap).toList();
+      if (secs.isEmpty && (decoded['template'] ?? '') != 'scratch') return;
+      if (!mounted) return;
+      setState(() {
+        _template = (decoded['template'] ?? 'custom').toString();
+        _sections = secs;
+        _screen = 'list';
+        _collapseAll();
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _save() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+          _kSaved,
+          jsonEncode({
+            'template': _template,
+            'sections': _sections.map((s) => s.toMap()).toList(),
+          }));
+    } catch (_) {}
+  }
+
+  void _collapseAll() {
+    _collapsed
+      ..clear()
+      ..addAll(_sections.map((s) => s.id));
+  }
+
   // =================================================================
-  // Templates — trade sequence per floor config (ported from Timeline)
+  // Templates
   // =================================================================
   List<String> _sectionsFor(String key) {
     const gf = <String>[
@@ -112,7 +208,7 @@ class _CheckListPageViewState extends State<CheckListPageView> {
       'Floor Covering',
       'Electrical Fittings',
       'External Site Works',
-      'Cleaning & Handover',
+      'Cleaning & Handover'
     ];
     const gf1 = <String>[
       'Professional Services',
@@ -142,7 +238,7 @@ class _CheckListPageViewState extends State<CheckListPageView> {
       'Floor Covering',
       'Electrical Fittings',
       'External Site Works',
-      'Cleaning & Handover',
+      'Cleaning & Handover'
     ];
     const lgfgf = <String>[
       'Professional Services',
@@ -173,7 +269,7 @@ class _CheckListPageViewState extends State<CheckListPageView> {
       'Floor Covering',
       'Electrical Fittings',
       'External Site Works',
-      'Cleaning & Handover',
+      'Cleaning & Handover'
     ];
     const lgfgf1 = <String>[
       'Professional Services',
@@ -207,7 +303,7 @@ class _CheckListPageViewState extends State<CheckListPageView> {
       'Floor Covering',
       'Electrical Fittings',
       'External Site Works',
-      'Cleaning & Handover',
+      'Cleaning & Handover'
     ];
     switch (key) {
       case 'gf':
@@ -223,7 +319,6 @@ class _CheckListPageViewState extends State<CheckListPageView> {
     }
   }
 
-  // Detailed QA checks per trade section (hold-point sub-items prefixed '   – ').
   static const Map<String, List<String>> _sectionChecks = {
     'Professional Services': [
       'Municipal building plans approved & stamped on site',
@@ -231,7 +326,7 @@ class _CheckListPageViewState extends State<CheckListPageView> {
       'Structural engineer appointed; designs & details issued',
       'Geotechnical report received; site classified (R/H/C/S/P)',
       'Competent-person appointments confirmed in writing',
-      'Building contract signed & insurances in place',
+      'Building contract signed & insurances in place'
     ],
     'Site Preparation': [
       'Site cleared of vegetation; topsoil stripped & stockpiled',
@@ -239,7 +334,7 @@ class _CheckListPageViewState extends State<CheckListPageView> {
       'Site datum / benchmark established & recorded',
       'Trees & services to be retained protected',
       'Access for delivery vehicles confirmed',
-      'Land surveyor: site boundaries & pegs verified against SG diagram',
+      'Land surveyor: site boundaries & pegs verified against SG diagram'
     ],
     'Site Establishment': [
       'Boundary hoarding / fencing erected & secure',
@@ -250,7 +345,7 @@ class _CheckListPageViewState extends State<CheckListPageView> {
       'Materials laydown & storage area set out',
       'Setting-out / survey pegs verified against approved plan',
       'Health & Safety file, risk assessment & OHS appointments on site (Construction Regs)',
-      'Fall-protection plan in place; roof harnesses, lanyards & anchor points provided',
+      'Fall-protection plan in place; roof harnesses, lanyards & anchor points provided'
     ],
     'Earthworks & Excavation': [
       'Foundation trenches to engineer’s depth & width',
@@ -263,7 +358,7 @@ class _CheckListPageViewState extends State<CheckListPageView> {
       'Municipal inspection: foundation / trench passed',
       'Minimum foundation wall height achieved (≥150mm brickwork below DPC / to NHBRC & engineer detail)',
       'Soil poisoning / termite treatment applied to trenches & under surface bed',
-      'Foundation concrete cubes taken & tested (strength records kept)',
+      'Foundation concrete cubes taken & tested (strength records kept)'
     ],
     'Brickwork & Concrete': [
       'Foundation concrete mix & strength per spec',
@@ -284,7 +379,7 @@ class _CheckListPageViewState extends State<CheckListPageView> {
       'HOLD POINT — services coordinated before surface-bed pour',
       '   – Under-slab plumbing & sewer pipes laid, tested & correctly positioned',
       '   – Electrical conduit / sleeves & earth mat cast in',
-      '   – DPM intact — not punctured by any penetration',
+      '   – DPM intact — not punctured by any penetration'
     ],
     'Structural Steel Works': [
       'Steel sections & grade match engineer’s drawing',
@@ -292,7 +387,7 @@ class _CheckListPageViewState extends State<CheckListPageView> {
       'Members plumb, level & correctly aligned',
       'Corrosion protection / galvanizing intact',
       'Baseplates & holding-down bolts grouted',
-      'Engineer inspection: steelwork inspected & signed off',
+      'Engineer inspection: steelwork inspected & signed off'
     ],
     'Suspended Roof Slab': [
       'Formwork level, tight & adequately propped',
@@ -305,7 +400,7 @@ class _CheckListPageViewState extends State<CheckListPageView> {
       'Roof-slab screed laid to correct fall for drainage; no ponding (checked before waterproofing)',
       'Roof-slab water outlets / rainwater downpipes correctly positioned, sized & clear; screed falls to each outlet',
       'Safety railings / edge protection to all open edges, stairwells & floor openings',
-      'Scaffold access to upper level inspected & tagged (double-storey work)',
+      'Scaffold access to upper level inspected & tagged (double-storey work)'
     ],
     'Roofing': [
       'Trusses / rafters certified & per approved design',
@@ -318,7 +413,7 @@ class _CheckListPageViewState extends State<CheckListPageView> {
       'NHBRC inspection: roof stage passed',
       'Fascia & barge boards fixed straight & painted',
       'Ceiling / roof insulation to SANS 10400-XA R-value',
-      'Roof work: harnesses clipped to anchor points; edge protection to eaves & openings',
+      'Roof work: harnesses clipped to anchor points; edge protection to eaves & openings'
     ],
     'Plumbing & Drainage': [
       'Sewer drainage laid to fall; air-pressure tested',
@@ -327,7 +422,7 @@ class _CheckListPageViewState extends State<CheckListPageView> {
       'Geyser / heat pump installed, secured & lagged',
       'Tanks (JoJo / septic / conservancy) watertight',
       'Municipal inspection: open-drain / drainage test passed',
-      'Geyser safety per SANS 10254: drip tray, PRV, vacuum breaker & overflow piped outside',
+      'Geyser safety per SANS 10254: drip tray, PRV, vacuum breaker & overflow piped outside'
     ],
     'Electrical Works': [
       'DB board installed, wired & clearly labelled',
@@ -339,13 +434,13 @@ class _CheckListPageViewState extends State<CheckListPageView> {
       'TV / data / telephone point positions confirmed',
       'Light point & switch positions confirmed against layout',
       'Geyser & appliance point positions confirmed',
-      'Air-conditioner points & solar / PV provisions positioned per layout',
+      'Air-conditioner points & solar / PV provisions positioned per layout'
     ],
     'Windows & Door Frames': [
       'Frames plumb, square & correct size',
       'Built in / fixed securely; gaps sealed',
       'Glazing per spec; safety glass where required',
-      'Ironmongery fitted; sashes & doors operate freely',
+      'Ironmongery fitted; sashes & doors operate freely'
     ],
     'Plastering & Screeds': [
       'Walls plumb; external corners square',
@@ -357,7 +452,7 @@ class _CheckListPageViewState extends State<CheckListPageView> {
       '   – Plumbing pipes in walls installed & pressure tested',
       '   – Window & door frames built in / fixed',
       '   – Wall ties, lintels & Brickforce signed off',
-      '   – Wet-area & balcony screeds laid to fall towards outlets / drains; no ponding',
+      '   – Wet-area & balcony screeds laid to fall towards outlets / drains; no ponding'
     ],
     'Waterproofing': [
       'Wet-area membranes applied & turned up walls',
@@ -365,7 +460,7 @@ class _CheckListPageViewState extends State<CheckListPageView> {
       'Parapets & box gutters waterproofed',
       'Flood test passed; guarantee / certificate issued',
       'Waterproofing under aluminium sliding door thresholds installed & lapped to floor',
-      'Screed falls re-checked before membrane — water drains to outlets, no ponding',
+      'Screed falls re-checked before membrane — water drains to outlets, no ponding'
     ],
     'Ceilings & Partitioning': [
       'Brandering / framing level at correct centres',
@@ -376,14 +471,14 @@ class _CheckListPageViewState extends State<CheckListPageView> {
       '   – Roof watertight & roof space clear',
       '   – Ceiling wiring, downlight & fan points roughed in',
       '   – Geyser & plumbing in roof space complete & lagged',
-      '   – Insulation laid to R-value before boards fixed',
+      '   – Insulation laid to R-value before boards fixed'
     ],
     'Joinery & Carpentry': [
       'Timber grade & moisture content per spec',
       'Doors hung with even gaps; operate freely',
       'Skirtings & architraves fixed neat & tight',
       'Fixings concealed; surfaces ready for finish',
-      'Garage / roller door installed, level & operating',
+      'Garage / roller door installed, level & operating'
     ],
     'Painting & Wall Covering': [
       'Surfaces prepared, primed & sealed',
@@ -393,7 +488,7 @@ class _CheckListPageViewState extends State<CheckListPageView> {
       'HOLD POINT — surfaces ready before painting',
       '   – Plaster cured, cracks filled & sanded',
       '   – Ceilings, cornices & bulkheads complete',
-      '   – Second-fix carpentry & filling done',
+      '   – Second-fix carpentry & filling done'
     ],
     'Tiling': [
       'Substrate level, primed; falls set in wet areas',
@@ -404,7 +499,7 @@ class _CheckListPageViewState extends State<CheckListPageView> {
       'HOLD POINT — substrates signed off before tiling',
       '   – Waterproofing cured & flood-tested',
       '   – Screeds cured, dry & laid to correct fall',
-      '   – Plumbing & electrical boxes set to finished tile depth',
+      '   – Plumbing & electrical boxes set to finished tile depth'
     ],
     'Kitchen (Built-in Units)': [
       'Units match approved layout & dimensions',
@@ -412,13 +507,13 @@ class _CheckListPageViewState extends State<CheckListPageView> {
       'Tops fitted; joints sealed; cut-outs correct',
       'Doors & drawers aligned and operating',
       'Electrical points (stove/oven, hob isolator, plugs, extractor) positioned per kitchen layout',
-      'Plumbing points (sink, dishwasher, washing machine) positioned per kitchen layout',
+      'Plumbing points (sink, dishwasher, washing machine) positioned per kitchen layout'
     ],
     'Built-in Cupboards': [
       'Carcasses level, plumb & secured',
       'Shelves, rails & drawers fitted',
       'Doors aligned with even gaps',
-      'Finish & edging per spec',
+      'Finish & edging per spec'
     ],
     'Sanitary Fittings': [
       'Fittings match approved schedule',
@@ -427,13 +522,13 @@ class _CheckListPageViewState extends State<CheckListPageView> {
       'Sealed to walls & floors with silicone',
       'HOLD POINT — install only after finishes',
       '   – Wall & floor tiling complete',
-      '   – Waterproofing flood-tested & signed off',
+      '   – Waterproofing flood-tested & signed off'
     ],
     'Floor Covering': [
       'Substrate clean, dry & level',
       'Material per spec; layout / direction correct',
       'Laid flat; no lifting, gaps or squeaks',
-      'Edge trims & thresholds fitted',
+      'Edge trims & thresholds fitted'
     ],
     'Electrical Fittings': [
       'Light fittings, plugs & switch plates fitted',
@@ -442,13 +537,13 @@ class _CheckListPageViewState extends State<CheckListPageView> {
       'Cover plates straight, clean & undamaged',
       'HOLD POINT — second fix only after finishes',
       '   – Painting complete & dry',
-      '   – Wall tiling in wet areas complete',
+      '   – Wall tiling in wet areas complete'
     ],
     'External Site Works': [
       'Paving / driveways to correct level & fall',
       'Boundary walls, gates & fences complete',
       'Stormwater drains away from building',
-      'Landscaping, topsoil & final grading done',
+      'Landscaping, topsoil & final grading done'
     ],
     'Cleaning & Handover': [
       'Builder’s clean complete throughout',
@@ -459,7 +554,7 @@ class _CheckListPageViewState extends State<CheckListPageView> {
       'NHBRC inspection: final inspection passed',
       'Municipal inspection: final / Occupancy Certificate passed',
       'Water & electricity meter readings recorded; keys scheduled & handed over',
-      'NHBRC warranty explained (3-month, 12-month & 5-year structural cover)',
+      'NHBRC warranty explained (3-month, 12-month & 5-year structural cover)'
     ],
     'Shoring & Retaining Walls': [
       'Lateral support / shoring designed by engineer & installed',
@@ -468,7 +563,7 @@ class _CheckListPageViewState extends State<CheckListPageView> {
       'Subsoil drainage & weep holes behind wall installed',
       'Below-ground tanking / waterproofing applied to retaining face',
       'Backfill placed & compacted in layers',
-      'Engineer inspection: retaining wall signed off before backfill',
+      'Engineer inspection: retaining wall signed off before backfill'
     ],
     'Suspended Floor Slab': [
       'Formwork level, tight & adequately propped',
@@ -478,20 +573,17 @@ class _CheckListPageViewState extends State<CheckListPageView> {
       'Slab cured; props left in place per engineer',
       'Safety railings / edge protection to all open edges, stairwells & openings',
       'Engineer inspection: reinforcement & formwork approved before pour',
-      'NHBRC inspection: suspended slab stage passed',
+      'NHBRC inspection: suspended slab stage passed'
     ],
     'Balustrades & Railings': [
       'Balustrade height & baluster spacing per SANS 10400-M (≥1.0m; gaps ≤100mm)',
       'Fixings secure; posts resist imposed handrail load',
       'Staircase handrails continuous & at correct height',
       'Glass balustrades: safety glass per spec',
-      'Finish / corrosion protection applied',
+      'Finish / corrosion protection applied'
     ],
   };
 
-  // QA checks for a trade section — strips any parenthetical / dash suffix so
-  // relabelled repeats (e.g. "Brickwork & Concrete (First Floor)") reuse the
-  // base section's checks. Falls back to a generic set if unmapped.
   List<String> _checksFor(String name) {
     final base = name
         .replaceAll(RegExp(r'\s*\(.*\)\s*$'), '')
@@ -544,66 +636,150 @@ class _CheckListPageViewState extends State<CheckListPageView> {
     return Icons.checklist_rounded;
   }
 
-  String _templateName(String key) {
-    switch (key) {
-      case 'gf':
-        return 'Ground Floor';
-      case 'gf1':
-        return 'Ground + First';
-      case 'lgfgf':
-        return 'Lower Ground + Ground';
-      case 'lgfgf1':
-        return 'Lower Ground + Ground + First';
-      case 'scratch':
-        return 'Custom';
-      default:
-        return 'Check List';
-    }
+  List<_Sec> _materialize(String key) {
+    final names = key == 'scratch' ? const <String>[] : _sectionsFor(key);
+    return names.map((name) {
+      final checks = _checksFor(name).map((raw) {
+        final sub = RegExp(r'^\s').hasMatch(raw);
+        return _Chk(_nid(), raw.trim(), sub: sub);
+      }).toList();
+      return _Sec(_nid(), name, checks);
+    }).toList();
   }
+
+  String _stampNow() => DateFormat('d MMM · HH:mm').format(DateTime.now());
 
   // =================================================================
   // Mutations
   // =================================================================
-  void _pickTemplate(String key) => setState(() {
-        _template = key;
-        _screen = 'list';
-        _filter = 'all';
-        _done.clear();
-        _collapsed.clear();
-        _meta.clear();
-      });
-
-  void _startScratch() => setState(() {
-        _template = 'scratch';
-        _screen = 'list';
-        _filter = 'all';
-        _done.clear();
-        _collapsed.clear();
-        _meta.clear();
-      });
-
-  void _changeTemplate() => setState(() => _screen = 'start');
-  void _setFilter(String f) => setState(() => _filter = f);
-  void _toggleCat(int si) => setState(() =>
-      _collapsed.contains(si) ? _collapsed.remove(si) : _collapsed.add(si));
-
-  String _stampNow() {
-    final d = DateTime.now();
-    return DateFormat('d MMM · HH:mm').format(d);
+  void _pickTemplate(String key) {
+    setState(() {
+      _template = key;
+      _sections = _materialize(key);
+      _screen = 'list';
+      _editing = false;
+      _showBanner = true;
+      _tab.index = 0;
+      _collapseAll();
+    });
+    _save();
   }
 
-  void _toggleItem(int si, int ci) {
-    final k = '$si:$ci';
+  void _startScratch() {
     setState(() {
-      if (_done.contains(k)) {
-        _done.remove(k);
-        _meta.remove(k);
+      _template = 'scratch';
+      _sections = <_Sec>[];
+      _screen = 'list';
+      _editing = true;
+      _showBanner = false;
+      _tab.index = 0;
+      _collapsed.clear();
+    });
+    _save();
+  }
+
+  void _resetDefault() {
+    final key = const ['gf', 'gf1', 'lgfgf', 'lgfgf1'].contains(_template)
+        ? _template
+        : 'gf';
+    setState(() {
+      _sections = _materialize(key);
+      _template = key;
+      _editing = false;
+      _showBanner = true;
+      _collapseAll();
+    });
+    _save();
+  }
+
+  void _changeTemplate() => setState(() {
+        _screen = 'start';
+        _editing = false;
+      });
+  void _toggleEdit() => setState(() => _editing = !_editing);
+  void _dismissBanner() => setState(() => _showBanner = false);
+
+  void _toggleAll() {
+    final anyClosed = _sections.any((s) => _collapsed.contains(s.id));
+    setState(() {
+      if (anyClosed) {
+        _collapsed.clear();
       } else {
-        _done.add(k);
-        _meta[k] = _Stamp(_currentUser, _stampNow());
+        _collapseAll();
       }
     });
   }
+
+  void _toggleCat(String id) => setState(() =>
+      _collapsed.contains(id) ? _collapsed.remove(id) : _collapsed.add(id));
+
+  void _toggleCheck(_Chk c) {
+    setState(() {
+      if (c.done) {
+        c.done = false;
+        c.by = null;
+        c.at = null;
+      } else {
+        c.done = true;
+        c.by = _currentUser;
+        c.at = _stampNow();
+      }
+    });
+    _save();
+  }
+
+  void _renameSection(_Sec s, String v) {
+    s.name = v;
+    _save();
+  }
+
+  void _deleteSection(_Sec s) {
+    setState(() => _sections.remove(s));
+    _save();
+  }
+
+  void _moveSection(int i, int dir) {
+    final j = i + dir;
+    if (j < 0 || j >= _sections.length) return;
+    setState(() {
+      final t = _sections[i];
+      _sections[i] = _sections[j];
+      _sections[j] = t;
+    });
+    _save();
+  }
+
+  void _addSection() {
+    setState(() {
+      final s = _Sec(_nid(), 'New section', <_Chk>[]);
+      _sections.add(s);
+      _collapsed.remove(s.id);
+    });
+    _save();
+  }
+
+  void _addCheck(_Sec s) {
+    setState(() {
+      _collapsed.remove(s.id);
+      s.checks.add(_Chk(_nid(), 'New check'));
+    });
+    _save();
+  }
+
+  void _renameCheck(_Chk c, String v) {
+    c.label = v;
+    _save();
+  }
+
+  void _deleteCheck(_Sec s, _Chk c) {
+    setState(() => s.checks.remove(c));
+    _save();
+  }
+
+  // Counts
+  int get _total => _sections.fold(0, (a, s) => a + s.checks.length);
+  int get _doneCount =>
+      _sections.fold(0, (a, s) => a + s.checks.where((c) => c.done).length);
 
   // =================================================================
   // BUILD
@@ -639,19 +815,32 @@ class _CheckListPageViewState extends State<CheckListPageView> {
   // =================================================================
   Widget _startScreen() {
     final top = MediaQuery.of(context).viewPadding.top;
-    final defs = <List<String>>[
-      ['gf', 'Ground Floor', 'Single-storey new build'],
-      ['gf1', 'Ground Floor + First Floor', 'Two-storey new build'],
-      ['lgfgf', 'Lower Ground + Ground Floor', 'Basement & ground level'],
-      ['lgfgf1', 'Lower Ground + Ground + First', 'Full three-level build'],
+    final defs = <List<dynamic>>[
+      [
+        'gf',
+        'Ground Floor',
+        'Single-storey new build',
+        <bool>[true]
+      ],
+      [
+        'gf1',
+        'Ground Floor + First Floor',
+        'Two-storey new build',
+        <bool>[true, true]
+      ],
+      [
+        'lgfgf',
+        'Lower Ground + Ground Floor',
+        'Basement & ground level',
+        <bool>[true, false]
+      ],
+      [
+        'lgfgf1',
+        'Lower Ground + Ground + First',
+        'Full three-level build',
+        <bool>[true, true, false]
+      ],
     ];
-    final floorViz = <String, List<bool>>{
-      'gf': [true],
-      'gf1': [true, true],
-      'lgfgf': [true, false],
-      'lgfgf1': [true, true, false],
-    };
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -709,8 +898,9 @@ class _CheckListPageViewState extends State<CheckListPageView> {
                         letterSpacing: 0.5,
                         color: _faint)),
                 const SizedBox(height: 10),
-                for (final d in defs)
-                  _templateCard(d[0], d[1], d[2], floorViz[d[0]]!),
+                for (final dfn in defs)
+                  _templateCard(dfn[0] as String, dfn[1] as String,
+                      dfn[2] as String, dfn[3] as List<bool>),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 6),
                   child: Row(children: const [
@@ -742,7 +932,6 @@ class _CheckListPageViewState extends State<CheckListPageView> {
     final secs = _sectionsFor(key);
     final checks = secs.fold<int>(0, (a, n) => a + _checksFor(n).length);
     final meta = '${secs.length} sections · $checks checks';
-
     return InkWell(
       onTap: () => _pickTemplate(key),
       borderRadius: BorderRadius.circular(16),
@@ -862,359 +1051,305 @@ class _CheckListPageViewState extends State<CheckListPageView> {
       );
 
   // =================================================================
-  // LIST / CHECKLIST (sections = categories)
+  // LIST
   // =================================================================
   Widget _listScreen() {
-    final top = MediaQuery.of(context).viewPadding.top;
-    final bottom = MediaQuery.of(context).viewPadding.bottom;
-    final isScratch = _template == 'scratch';
-    final sections = isScratch ? const <String>[] : _sectionsFor(_template);
-
-    // completion
-    var total = 0, doneCount = 0;
-    for (var si = 0; si < sections.length; si++) {
-      final checks = _checksFor(sections[si]);
-      total += checks.length;
-      for (var ci = 0; ci < checks.length; ci++) {
-        if (_done.contains('$si:$ci')) doneCount++;
-      }
-    }
-    final pct = total > 0 ? (doneCount / total * 100).round() : 0;
-
     return Column(
       children: [
-        // hero
-        Container(
-          width: double.infinity,
-          color: _header,
-          padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(children: [
-                _circleBtn(Icons.arrow_back_ios_new_rounded, _changeTemplate),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Column(children: [
-                      Text(_projectName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                              fontFamily: _body,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: _paper)),
-                      const SizedBox(height: 2),
-                      Text(_templateName(_template).toUpperCase(),
-                          style: TextStyle(
-                              fontFamily: _body,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.7,
-                              color: _paper.withOpacity(0.5))),
-                    ]),
-                  ),
-                ),
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: _changeTemplate,
-                    borderRadius: BorderRadius.circular(999),
-                    child: Container(
-                      height: 38,
-                      padding: const EdgeInsets.symmetric(horizontal: 11),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                          color: _paper.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(999)),
-                      child:
-                          Row(mainAxisSize: MainAxisSize.min, children: const [
-                        Icon(Icons.swap_horiz_rounded, size: 15, color: _paper),
-                        SizedBox(width: 5),
-                        Text('Template',
-                            style: TextStyle(
-                                fontFamily: _body,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                                color: _paper)),
-                      ]),
-                    ),
-                  ),
-                ),
-              ]),
-              const SizedBox(height: 16),
-              Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('COMPLETE',
-                        style: TextStyle(
-                            fontFamily: _body,
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 1,
-                            color: _paper.withOpacity(0.55))),
-                    const SizedBox(height: 4),
-                    Text('$pct%',
-                        style: const TextStyle(
-                            fontFamily: _display,
-                            fontSize: 34,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -1,
-                            height: 1.0,
-                            color: _paper)),
-                  ],
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('$doneCount of $total checks complete',
-                            style: TextStyle(
-                                fontFamily: _body,
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w600,
-                                color: _paper.withOpacity(0.6))),
-                        const SizedBox(height: 8),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(999),
-                          child: LinearProgressIndicator(
-                            value: total > 0 ? doneCount / total : 0,
-                            minHeight: 6,
-                            backgroundColor: Colors.white.withOpacity(0.18),
-                            // "done" bar is WHITE on the ink hero.
-                            valueColor:
-                                const AlwaysStoppedAnimation<Color>(_paper),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ]),
-            ],
-          ),
-        ),
-        // body
+        _hero(),
         Expanded(
-          child: isScratch
-              ? _scratchEmpty()
-              : SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: EdgeInsets.fromLTRB(20, 16, 20, 40 + bottom),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _filterBar(),
-                      const SizedBox(height: 16),
-                      ..._buildCategories(sections),
-                    ],
-                  ),
-                ),
+          child: _editing
+              ? _editor()
+              : (_sections.isEmpty ? _emptyState() : _viewBody()),
         ),
       ],
     );
   }
 
-  Widget _scratchEmpty() => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 64,
-                height: 64,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                    color: _band, borderRadius: BorderRadius.circular(18)),
-                child: const Icon(Icons.playlist_add_rounded,
-                    size: 30, color: _inkMute),
-              ),
-              const SizedBox(height: 14),
-              const Text('Empty checklist',
-                  style: TextStyle(
-                      fontFamily: _display,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: _ink)),
-              const SizedBox(height: 6),
-              const Text('Add your first section to get started.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontFamily: _body,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: _faint)),
-            ],
-          ),
-        ),
-      );
-
-  Widget _filterBar() {
-    Widget seg(String key, String label) {
-      final on = _filter == key;
-      return Expanded(
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => _setFilter(key),
-            borderRadius: BorderRadius.circular(9),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 7),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: on ? _paper : Colors.transparent,
-                borderRadius: BorderRadius.circular(9),
-                boxShadow: on
-                    ? [
-                        BoxShadow(
-                            color: _ink.withOpacity(0.12),
-                            blurRadius: 2,
-                            offset: const Offset(0, 1))
-                      ]
-                    : null,
-              ),
-              child: Text(label,
-                  style: TextStyle(
-                      fontFamily: _body,
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w700,
-                      color: on ? _ink : _faint)),
-            ),
-          ),
-        ),
-      );
-    }
-
+  Widget _hero() {
+    final top = MediaQuery.of(context).viewPadding.top;
+    final total = _total;
+    final done = _doneCount;
+    final outstanding = total - done;
+    final pct = total > 0 ? (done / total * 100).round() : 0;
     return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-          color: _surface, borderRadius: BorderRadius.circular(12)),
-      child: Row(children: [
-        seg('all', 'All'),
-        const SizedBox(width: 4),
-        seg('open', 'Open'),
-        const SizedBox(width: 4),
-        seg('done', 'Done'),
-      ]),
-    );
-  }
-
-  bool _matches(bool isDone) =>
-      _filter == 'all' || (_filter == 'open' ? !isDone : isDone);
-
-  List<Widget> _buildCategories(List<String> sections) {
-    final cards = <Widget>[];
-    for (var si = 0; si < sections.length; si++) {
-      final name = sections[si];
-      final checks = _checksFor(name);
-      final visible = <int>[];
-      var catDone = 0;
-      for (var ci = 0; ci < checks.length; ci++) {
-        final d = _done.contains('$si:$ci');
-        if (d) catDone++;
-        if (_matches(d)) visible.add(ci);
-      }
-      if (visible.isEmpty) continue; // hidden by filter
-      final open = !_collapsed.contains(si);
-
-      cards.add(Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: _border),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(children: [
-          // header
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => _toggleCat(si),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-                color: _band,
-                child: Row(children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                        color: _paper, borderRadius: BorderRadius.circular(11)),
-                    child: Icon(_iconFor(name), size: 20, color: _ink),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontFamily: _display,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.3,
-                                color: _ink)),
-                        const SizedBox(height: 2),
-                        Text(
-                            catDone == checks.length
-                                ? 'All checks complete'
-                                : '${checks.length - catDone} outstanding',
-                            style: const TextStyle(
-                                fontFamily: _body,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: _faint)),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-                    decoration: BoxDecoration(
-                        color: catDone == checks.length ? _selTint : _paper,
-                        borderRadius: BorderRadius.circular(999)),
-                    child: Text('$catDone/${checks.length}',
-                        style: TextStyle(
-                            fontFamily: _body,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            color: catDone == checks.length ? _ink : _inkMute)),
-                  ),
-                  const SizedBox(width: 6),
-                  AnimatedRotation(
-                    turns: open ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 180),
-                    child: const Icon(Icons.expand_more_rounded,
-                        size: 20, color: _chevron),
-                  ),
+      width: double.infinity,
+      color: _header,
+      padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            _circleBtn(Icons.arrow_back_ios_new_rounded, _changeTemplate),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Column(children: [
+                  Text(_projectName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          fontFamily: _body,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: _paper)),
+                  const SizedBox(height: 2),
+                  Text('CHECK LIST',
+                      style: TextStyle(
+                          fontFamily: _body,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.7,
+                          color: _paper.withOpacity(0.5))),
                 ]),
               ),
             ),
-          ),
-          // rows
-          if (open)
+            Container(
+              height: 38,
+              padding: const EdgeInsets.symmetric(horizontal: 11),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                  color: _paper.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(999)),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                const Icon(Icons.checklist_rounded, size: 14, color: _paper),
+                const SizedBox(width: 5),
+                Text('$total ${total == 1 ? 'check' : 'checks'}',
+                    style: const TextStyle(
+                        fontFamily: _body,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: _paper)),
+              ]),
+            ),
+          ]),
+          const SizedBox(height: 16),
+          Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
             Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                for (var vi = 0; vi < visible.length; vi++)
-                  _checkRow(si, visible[vi], checks[visible[vi]],
-                      first: vi == 0),
+                Text('OUTSTANDING',
+                    style: TextStyle(
+                        fontFamily: _body,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1,
+                        color: _paper.withOpacity(0.55))),
+                const SizedBox(height: 4),
+                Text('$outstanding ${outstanding == 1 ? 'check' : 'checks'}',
+                    style: const TextStyle(
+                        fontFamily: _display,
+                        fontSize: 34,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -1,
+                        height: 1.0,
+                        color: _paper)),
               ],
             ),
-        ]),
-      ));
-    }
+            const SizedBox(width: 14),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('$done done',
+                      style: TextStyle(
+                          fontFamily: _body,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: _paper.withOpacity(0.6))),
+                  const SizedBox(height: 2),
+                  Text('$pct% complete',
+                      style: TextStyle(
+                          fontFamily: _body,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: _paper.withOpacity(0.45))),
+                ],
+              ),
+            ),
+          ]),
+        ],
+      ),
+    );
+  }
 
+  // ── view body: controls + pill tabs + sliding content ──
+  Widget _viewBody() {
+    return Column(
+      children: [
+        if (_showBanner) _banner(),
+        Container(
+          color: _paper,
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
+          child: Column(
+            children: [
+              Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                _editPill(),
+                const SizedBox(width: 14),
+                InkWell(
+                  onTap: _toggleAll,
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    Icon(
+                        _sections.any((s) => _collapsed.contains(s.id))
+                            ? Icons.unfold_more_rounded
+                            : Icons.unfold_less_rounded,
+                        size: 16,
+                        color: _inkMute),
+                    const SizedBox(width: 5),
+                    Text(
+                        _sections.any((s) => _collapsed.contains(s.id))
+                            ? 'Expand all'
+                            : 'Collapse all',
+                        style: const TextStyle(
+                            fontFamily: _body,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w800,
+                            color: _inkMute)),
+                  ]),
+                ),
+              ]),
+              const SizedBox(height: 11),
+              _pillTabs(),
+            ],
+          ),
+        ),
+        Expanded(
+          child: TabBarView(
+            controller: _tab,
+            physics: const NeverScrollableScrollPhysics(),
+            children: [
+              _pane('all'),
+              _pane('open'),
+              _pane('done'),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _banner() => Container(
+        width: double.infinity,
+        color: _band,
+        padding: const EdgeInsets.fromLTRB(20, 11, 20, 11),
+        child: Row(children: [
+          const Icon(Icons.bookmark_added_rounded, size: 17, color: _green),
+          const SizedBox(width: 9),
+          const Expanded(
+            child: Text(
+                'Template loaded — tap a section to open its checks, then tick each item to stamp who signed it off.',
+                style: TextStyle(
+                    fontFamily: _body,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    height: 1.3,
+                    color: _inkMute)),
+          ),
+          const SizedBox(width: 8),
+          InkWell(
+              onTap: _dismissBanner,
+              child: const Icon(Icons.close_rounded, size: 17, color: _faint)),
+        ]),
+      );
+
+  Widget _editPill() => InkWell(
+        onTap: _toggleEdit,
+        borderRadius: BorderRadius.circular(999),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+              color: _yellow, borderRadius: BorderRadius.circular(999)),
+          child: Row(mainAxisSize: MainAxisSize.min, children: const [
+            Icon(Icons.tune_rounded, size: 14, color: _ink),
+            SizedBox(width: 4),
+            Text('Edit list',
+                style: TextStyle(
+                    fontFamily: _body,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: _ink)),
+          ]),
+        ),
+      );
+
+  Widget _pillTabs() {
+    const labels = ['All', 'Open', 'Done'];
+    final total = _total, done = _doneCount;
+    final counts = [total, total - done, done];
+    final current = _tab.index;
+    return Container(
+      height: 44,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+          color: _surface, borderRadius: BorderRadius.circular(999)),
+      child: LayoutBuilder(builder: (context, c) {
+        final segW = c.maxWidth / 3;
+        return Stack(children: [
+          AnimatedAlign(
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment((-1 + current).toDouble(), 0),
+            child: Container(
+              width: segW,
+              height: double.infinity,
+              decoration: BoxDecoration(
+                color: _yellow,
+                borderRadius: BorderRadius.circular(999),
+                boxShadow: const [
+                  BoxShadow(
+                      color: Color(0x1A000000),
+                      blurRadius: 3,
+                      offset: Offset(0, 1)),
+                ],
+              ),
+            ),
+          ),
+          Row(
+              children: List.generate(3, (i) {
+            final active = i == current;
+            return Expanded(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _tab.animateTo(i),
+                child: Center(
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    Text(labels[i],
+                        style: TextStyle(
+                            fontFamily: _body,
+                            fontSize: 12.5,
+                            fontWeight:
+                                active ? FontWeight.w800 : FontWeight.w600,
+                            color: active ? _ink : _faint)),
+                    const SizedBox(width: 5),
+                    Text('${counts[i]}',
+                        style: TextStyle(
+                            fontFamily: _body,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: (active ? _ink : _faint).withOpacity(0.75))),
+                  ]),
+                ),
+              ),
+            );
+          })),
+        ]);
+      }),
+    );
+  }
+
+  bool _matches(String fk, bool done) =>
+      fk == 'all' || (fk == 'open' ? !done : done);
+
+  Widget _pane(String fk) {
+    final cards = <Widget>[];
+    for (var si = 0; si < _sections.length; si++) {
+      final sec = _sections[si];
+      final visible = sec.checks.where((c) => _matches(fk, c.done)).toList();
+      if (visible.isEmpty) continue;
+      cards.add(_categoryCard(sec, visible));
+    }
     if (cards.isEmpty) {
       cards.add(Padding(
         padding: const EdgeInsets.only(top: 24),
@@ -1228,9 +1363,11 @@ class _CheckListPageViewState extends State<CheckListPageView> {
                     color: _ink)),
             const SizedBox(height: 6),
             Text(
-                _filter == 'done'
+                fk == 'done'
                     ? 'No checks ticked off yet.'
-                    : 'Every check is complete.',
+                    : (fk == 'open'
+                        ? 'Every check is complete.'
+                        : 'No sections yet.'),
                 style: const TextStyle(
                     fontFamily: _body,
                     fontSize: 13,
@@ -1240,16 +1377,110 @@ class _CheckListPageViewState extends State<CheckListPageView> {
         ),
       ));
     }
-    return cards;
+    return ListView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
+      children: cards,
+    );
   }
 
-  Widget _checkRow(int si, int ci, String label, {bool first = false}) {
-    final isDone = _done.contains('$si:$ci');
-    final stamp = _meta['$si:$ci'];
+  Widget _categoryCard(_Sec sec, List<_Chk> visible) {
+    final checks = sec.checks;
+    final catDone = checks.where((c) => c.done).length;
+    final allDone = checks.isNotEmpty && catDone == checks.length;
+    final open = !_collapsed.contains(sec.id);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _border),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(children: [
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => _toggleCat(sec.id),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+              color: _band,
+              child: Row(children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                      color: _paper, borderRadius: BorderRadius.circular(11)),
+                  child: Icon(_iconFor(sec.name), size: 20, color: _ink),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(sec.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontFamily: _display,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.3,
+                              color: _ink)),
+                      const SizedBox(height: 2),
+                      Text(
+                          checks.isEmpty
+                              ? 'No checks yet'
+                              : (allDone
+                                  ? 'All checks complete'
+                                  : '${checks.length - catDone} outstanding'),
+                          style: const TextStyle(
+                              fontFamily: _body,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: _faint)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                  decoration: BoxDecoration(
+                      color: allDone ? _selTint : _paper,
+                      borderRadius: BorderRadius.circular(999)),
+                  child: Text('$catDone/${checks.length}',
+                      style: TextStyle(
+                          fontFamily: _body,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: allDone ? _ink : _inkMute)),
+                ),
+                const SizedBox(width: 6),
+                AnimatedRotation(
+                  turns: open ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 180),
+                  child: const Icon(Icons.expand_more_rounded,
+                      size: 20, color: _chevron),
+                ),
+              ]),
+            ),
+          ),
+        ),
+        if (open)
+          Column(children: [
+            for (var vi = 0; vi < visible.length; vi++)
+              _checkRow(visible[vi], first: vi == 0),
+          ]),
+      ]),
+    );
+  }
+
+  Widget _checkRow(_Chk c, {bool first = false}) {
     return Material(
       color: _paper,
       child: InkWell(
-        onTap: () => _toggleItem(si, ci),
+        onTap: () => _toggleCheck(c),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
@@ -1264,51 +1495,309 @@ class _CheckListPageViewState extends State<CheckListPageView> {
                 margin: const EdgeInsets.only(top: 1),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: isDone ? _accent : _paper,
+                  color: c.done ? _yellow : _paper,
                   borderRadius: BorderRadius.circular(7),
                   border: Border.all(
-                      color: isDone ? _accent : _chevron,
-                      width: isDone ? 1 : 1.5),
+                      color: c.done ? _yellow : _chevron,
+                      width: c.done ? 1 : 1.5),
                 ),
-                child: isDone
-                    ? const Icon(Icons.check_rounded, size: 15, color: _paper)
+                child: c.done
+                    ? const Icon(Icons.check_rounded, size: 15, color: _ink)
                     : null,
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(label,
-                        style: TextStyle(
-                            fontFamily: _body,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            height: 1.35,
-                            color: isDone ? _faint : _ink,
-                            decoration:
-                                isDone ? TextDecoration.lineThrough : null)),
-                    if (isDone && stamp != null) ...[
-                      const SizedBox(height: 4),
-                      Row(children: [
-                        const Icon(Icons.task_alt_rounded,
-                            size: 13, color: _green),
-                        const SizedBox(width: 5),
-                        Text('${stamp.by} · ${stamp.at}',
-                            style: const TextStyle(
-                                fontFamily: _body,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: _faint)),
-                      ]),
+                child: Padding(
+                  padding: EdgeInsets.only(left: c.sub ? 14 : 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(c.label,
+                          style: TextStyle(
+                              fontFamily: _body,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              height: 1.35,
+                              color: c.done ? _faint : _ink,
+                              decoration:
+                                  c.done ? TextDecoration.lineThrough : null)),
+                      if (c.done && (c.by != null)) ...[
+                        const SizedBox(height: 4),
+                        Row(children: [
+                          const Icon(Icons.task_alt_rounded,
+                              size: 13, color: _green),
+                          const SizedBox(width: 5),
+                          Text('${c.by} · ${c.at}',
+                              style: const TextStyle(
+                                  fontFamily: _body,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: _faint)),
+                        ]),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  // ── empty state ──
+  Widget _emptyState() => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Container(
+              width: 64,
+              height: 64,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                  color: _band, borderRadius: BorderRadius.circular(18)),
+              child: const Icon(Icons.playlist_add_rounded,
+                  size: 30, color: _inkMute),
+            ),
+            const SizedBox(height: 14),
+            const Text('Empty checklist',
+                style: TextStyle(
+                    fontFamily: _display,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: _ink)),
+            const SizedBox(height: 6),
+            const Text('Add sections and checks to build your own list.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontFamily: _body,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: _faint)),
+            const SizedBox(height: 16),
+            InkWell(
+              onTap: _toggleEdit,
+              borderRadius: BorderRadius.circular(999),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
+                decoration: BoxDecoration(
+                    color: _ink, borderRadius: BorderRadius.circular(999)),
+                child: Row(mainAxisSize: MainAxisSize.min, children: const [
+                  Icon(Icons.add_rounded, size: 17, color: _paper),
+                  SizedBox(width: 7),
+                  Text('Build list',
+                      style: TextStyle(
+                          fontFamily: _body,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w800,
+                          color: _paper)),
+                ]),
+              ),
+            ),
+          ]),
+        ),
+      );
+
+  // ── editor ──
+  Widget _editor() {
+    return Column(children: [
+      Container(
+        color: _band,
+        padding: const EdgeInsets.fromLTRB(20, 11, 20, 11),
+        child: Row(children: [
+          const Icon(Icons.edit_note_rounded, size: 17, color: _green),
+          const SizedBox(width: 9),
+          const Expanded(
+            child: Text(
+                'Editing — rename anything, add or remove checks and sections, reorder with the arrows.',
+                style: TextStyle(
+                    fontFamily: _body,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    height: 1.3,
+                    color: _inkMute)),
+          ),
+          const SizedBox(width: 8),
+          InkWell(
+            onTap: _toggleEdit,
+            borderRadius: BorderRadius.circular(999),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+              decoration: BoxDecoration(
+                  color: _yellow, borderRadius: BorderRadius.circular(999)),
+              child: Row(mainAxisSize: MainAxisSize.min, children: const [
+                Icon(Icons.check_rounded, size: 15, color: _ink),
+                SizedBox(width: 4),
+                Text('Done',
+                    style: TextStyle(
+                        fontFamily: _body,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: _ink)),
+              ]),
+            ),
+          ),
+        ]),
+      ),
+      Expanded(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
+          children: [
+            for (var i = 0; i < _sections.length; i++) _editSectionCard(i),
+            InkWell(
+              onTap: _addSection,
+              borderRadius: BorderRadius.circular(14),
+              child: Container(
+                padding: const EdgeInsets.all(13),
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    border:
+                        Border.all(color: const Color(0xFFCBD8DD), width: 1.5)),
+                child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Icon(Icons.add_rounded, size: 18, color: _ink),
+                      SizedBox(width: 7),
+                      Text('Add section',
+                          style: TextStyle(
+                              fontFamily: _display,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: _ink)),
+                    ]),
+              ),
+            ),
+            const SizedBox(height: 12),
+            InkWell(
+              onTap: _resetDefault,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Icon(Icons.restart_alt_rounded, size: 17, color: _faint),
+                      SizedBox(width: 7),
+                      Text('Reset to default',
+                          style: TextStyle(
+                              fontFamily: _body,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w800,
+                              color: _inkMute)),
+                    ]),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ]);
+  }
+
+  Widget _editSectionCard(int i) {
+    final sec = _sections[i];
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _border),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+          color: _band,
+          child: Row(children: [
+            Icon(_iconFor(sec.name), size: 18, color: _ink),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextFormField(
+                key: ValueKey('sec_${sec.id}'),
+                initialValue: sec.name,
+                onChanged: (v) => _renameSection(sec, v),
+                style: const TextStyle(
+                    fontFamily: _display,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: _ink),
+                decoration: const InputDecoration(
+                  isDense: true,
+                  border: InputBorder.none,
+                  hintText: 'Section name',
+                  contentPadding: EdgeInsets.symmetric(vertical: 2),
+                ),
+              ),
+            ),
+            InkWell(
+                onTap: () => _moveSection(i, -1),
+                child: Icon(Icons.keyboard_arrow_up_rounded,
+                    size: 18, color: i == 0 ? _hairlineOnSurface : _faint)),
+            InkWell(
+                onTap: () => _moveSection(i, 1),
+                child: Icon(Icons.keyboard_arrow_down_rounded,
+                    size: 18,
+                    color: i == _sections.length - 1
+                        ? _hairlineOnSurface
+                        : _faint)),
+            const SizedBox(width: 4),
+            InkWell(
+                onTap: () => _deleteSection(sec),
+                child: const Icon(Icons.delete_rounded,
+                    size: 18, color: Color(0xFFB7C2C7))),
+          ]),
+        ),
+        for (final c in sec.checks)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: const BoxDecoration(
+                border: Border(top: BorderSide(color: _line))),
+            child: Row(children: [
+              const Icon(Icons.radio_button_unchecked_rounded,
+                  size: 9, color: _chevron),
+              const SizedBox(width: 9),
+              Expanded(
+                child: TextFormField(
+                  key: ValueKey('chk_${c.id}'),
+                  initialValue: c.label,
+                  onChanged: (v) => _renameCheck(c, v),
+                  style: const TextStyle(
+                      fontFamily: _body,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: _ink),
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    border: InputBorder.none,
+                    hintText: 'Check item',
+                    contentPadding: EdgeInsets.symmetric(vertical: 2),
+                  ),
+                ),
+              ),
+              InkWell(
+                  onTap: () => _deleteCheck(sec, c),
+                  child: const Icon(Icons.close_rounded,
+                      size: 16, color: Color(0xFFB7C2C7))),
+            ]),
+          ),
+        InkWell(
+          onTap: () => _addCheck(sec),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: const BoxDecoration(
+                border: Border(top: BorderSide(color: _line))),
+            child: Row(children: const [
+              Icon(Icons.add_rounded, size: 16, color: _inkMute),
+              SizedBox(width: 7),
+              Text('Add check',
+                  style: TextStyle(
+                      fontFamily: _body,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: _inkMute)),
+            ]),
+          ),
+        ),
+      ]),
     );
   }
 }
