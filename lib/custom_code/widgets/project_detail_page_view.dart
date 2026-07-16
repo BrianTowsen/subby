@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -34,6 +36,9 @@ class ProjectDetailPageView extends StatefulWidget {
     this.getQuotesRouteName,
     this.snagListRouteName,
     this.toDoListRouteName,
+
+    /// ✅ NEW: Check List route (project quality checklist)
+    this.checkListRouteName,
 
     /// ✅ NEW: Site Book route (journal site entries linked to the project)
     this.siteBookRouteName,
@@ -74,6 +79,7 @@ class ProjectDetailPageView extends StatefulWidget {
   final String? getQuotesRouteName;
   final String? snagListRouteName;
   final String? toDoListRouteName;
+  final String? checkListRouteName;
   final String? siteBookRouteName;
 
   /// Directory (HomePageView) — opened from the empty Project Team state.
@@ -243,6 +249,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   static const String _fallbackQuotesRoute = 'quotesPage';
   static const String _fallbackSnagRoute = 'snagListPage';
   static const String _fallbackToDoRoute = 'toDoListPage';
+  static const String _fallbackCheckListRoute = 'CheckListPage';
   static const String _fallbackSiteBookRoute = 'siteBookPage';
   static const String _fallbackListingDetailRoute = 'listingDetailPage';
 
@@ -1399,6 +1406,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   // =========================================================
   static const Map<String, String> _defaultModuleVis = {
     'timeline': 'shared',
+    'checkList': 'shared',
     'siteBook': 'private',
     'snagList': 'shared',
     'toDo': 'shared',
@@ -1433,6 +1441,8 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         return 'Site Book';
       case 'toDo':
         return 'To-Do List';
+      case 'checkList':
+        return 'Check List';
       case 'snagList':
         return 'Snag List';
       case 'projectCost':
@@ -3844,15 +3854,6 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         true, // featured
       ],
       [
-        Icons.menu_book_rounded,
-        'Site Book',
-        'Journal site entries',
-        'siteBook',
-        widget.siteBookRouteName,
-        _fallbackSiteBookRoute,
-        false,
-      ],
-      [
         Icons.checklist_rounded,
         'To-Do List',
         'Tasks & reminders',
@@ -3862,12 +3863,30 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         false,
       ],
       [
+        Icons.rule_rounded,
+        'Check List',
+        'Quality checks',
+        'checkList',
+        widget.checkListRouteName,
+        _fallbackCheckListRoute,
+        false,
+      ],
+      [
         Icons.fact_check_outlined,
         'Snag List',
         'Defects & fixes',
         'snagList',
         widget.snagListRouteName,
         _fallbackSnagRoute,
+        false,
+      ],
+      [
+        Icons.menu_book_rounded,
+        'Site Book',
+        'Journal site entries',
+        'siteBook',
+        widget.siteBookRouteName,
+        _fallbackSiteBookRoute,
         false,
       ],
       [
