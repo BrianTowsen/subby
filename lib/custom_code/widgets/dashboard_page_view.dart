@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -3727,7 +3729,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     final String body = _hasListing
         ? 'Project managers can find and hire you. Builds you\'re '
             'added to appear here automatically.'
-        : 'List your company in the Directory so project managers can '
+        : 'List your company in the Network so project managers can '
             'find and hire you onto their builds.';
 
     return InkWell(
