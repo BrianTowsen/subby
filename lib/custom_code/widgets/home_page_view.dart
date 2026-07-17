@@ -548,7 +548,7 @@ class _HomePageViewState extends State<HomePageView> {
                     ],
                   ),
                   const SizedBox(height: 14),
-                  const Text('Subby Directory',
+                  const Text('Subby Members',
                       style: TextStyle(
                         fontFamily: _displayFont,
                         fontSize: 28,

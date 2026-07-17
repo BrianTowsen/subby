@@ -194,7 +194,7 @@ class _MainBottomNavState extends State<MainBottomNav> {
             index: 1,
             activeIcon: Icons.contacts_rounded,
             inactiveIcon: Icons.contacts_outlined,
-            label: 'Directory',
+            label: 'Subbies',
           ),
           _navItem(
             index: 2,
