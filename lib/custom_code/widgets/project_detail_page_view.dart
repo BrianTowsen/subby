@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -3860,15 +3862,6 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         'toDo',
         widget.toDoListRouteName,
         _fallbackToDoRoute,
-        false,
-      ],
-      [
-        Icons.rule_rounded,
-        'Check List',
-        'Quality checks',
-        'checkList',
-        widget.checkListRouteName,
-        _fallbackCheckListRoute,
         false,
       ],
       [
