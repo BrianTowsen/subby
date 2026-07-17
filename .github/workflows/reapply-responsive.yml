@@ -1,0 +1,48 @@
+name: Reapply responsive shell
+
+# FlutterFlow pushes generated code to this branch and overwrites lib/main.dart.
+# After each push we re-insert the one-line MaterialApp.builder that delegates
+# to ResponsiveShell.app (defined in lib/custom_code/widgets/, which FF keeps).
+#
+# Pushes made below use the default GITHUB_TOKEN, and GitHub does NOT re-trigger
+# workflows for those pushes — so there is no infinite loop.
+
+on:
+  push:
+    branches: [flutterflow]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: reapply-responsive-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: flutterflow
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Re-apply responsive builder
+        run: python3 tool/patch_main.py
+
+      - name: Commit if changed
+        run: |
+          if [[ -n "$(git status --porcelain lib/main.dart)" ]]; then
+            git config user.name "responsive-bot"
+            git config user.email "responsive-bot@users.noreply.github.com"
+            git add lib/main.dart
+            git commit -m "chore: reapply responsive MaterialApp.builder"
+            git push
+          else
+            echo "No changes to commit."
+          fi
