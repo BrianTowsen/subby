@@ -221,6 +221,29 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     _stopSubscriptions();
   }
 
+  // ─── BUILT-TREE CACHE (back-swipe "snap" fix) ────────────────────────
+  // go_router rebuilds the FlutterFlow page hosting this widget the moment
+  // a pop is COMMITTED (finger-lift), while the swipe settle animation is
+  // still running — handing us a brand-new ProjectDetailPageView instance
+  // and forcing this ~4k-line tree to rebuild mid-animation. Since the FF
+  // page can't be edited, we memoize HERE: build() returns the identical
+  // tree instance when nothing changed, so Flutter skips the subtree diff.
+  // Invalidated by every setState (override below), dependency changes,
+  // a different projectRef (didUpdateWidget), and hot reload.
+  Widget? _builtTree;
+
+  @override
+  void setState(VoidCallback fn) {
+    _builtTree = null; // every intentional visual change rebuilds the tree
+    super.setState(fn);
+  }
+
+  @override
+  void reassemble() {
+    super.reassemble();
+    _builtTree = null; // hot reload — show newly edited code
+  }
+
   // Hero scroll-away + compact sticky bar
   final ScrollController _scrollController = ScrollController();
   bool _showCompactBar = false;
@@ -341,12 +364,14 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       _stopSubscriptions();
       _resetLocalState();
       _startSubscriptions();
+      _builtTree = null; // different project — rebuild the whole tree
     }
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _builtTree = null; // MediaQuery / theme changed — rebuild fresh
     // Listen for back-gesture start/end so _safeRebuild can defer visual
     // refreshes while a swipe (drag or settle) is animating. Navigator.of
     // registers NO inherited dependency, so this cannot cause rebuilds.
@@ -3130,6 +3155,13 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
 
   @override
   Widget build(BuildContext context) {
+    // Return the cached tree when nothing changed — this is what makes the
+    // go_router page rebuild at pop-commit FREE (see the BUILT-TREE CACHE
+    // comment near _onRoutePopped). All real changes invalidate _builtTree.
+    return _builtTree ??= _buildTree(context);
+  }
+
+  Widget _buildTree(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
 
     final projectsAccent = _projectsColor(theme);
