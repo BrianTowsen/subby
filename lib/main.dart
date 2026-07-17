@@ -8,7 +8,6 @@ import 'auth/firebase_auth/auth_util.dart';
 
 import 'backend/firebase/firebase_config.dart';
 import 'flutter_flow/flutter_flow_util.dart';
-import 'custom_code/widgets/index.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -69,7 +68,7 @@ class _MyAppState extends State<MyApp> {
       });
     jwtTokenStream.listen((_) {});
     Future.delayed(
-      Duration(milliseconds: 3000),
+      Duration(milliseconds: 2500),
       () => _appStateNotifier.stopShowingSplashImage(),
     );
   }
@@ -102,7 +101,6 @@ class _MyAppState extends State<MyApp> {
       ),
       themeMode: _themeMode,
       routerConfig: _router,
-      builder: (context, child) => ResponsiveShell.app(context, child),
     );
   }
 }
