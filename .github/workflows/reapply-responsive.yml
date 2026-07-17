@@ -1,0 +1,53 @@
+name: Reapply responsive shell
+
+# FlutterFlow owns lib/ and regenerates it on every export, deleting the
+# ResponsiveShell widget, the index.dart export, and the main.dart builder.
+# Everything this workflow needs lives under .github/ (which FlutterFlow never
+# touches), so after each FF push we RESTORE the whole responsive layer from
+# the canonical copy in .github/responsive/ and commit it back.
+#
+# The commit below uses the default GITHUB_TOKEN, and GitHub does NOT re-trigger
+# workflows for those pushes — so there is no infinite loop.
+
+on:
+  push:
+    branches: [flutterflow]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: reapply-responsive
+  cancel-in-progress: false
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: flutterflow
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Re-apply responsive layer
+        run: python3 .github/responsive/reapply.py
+
+      - name: Commit if changed
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config user.name "responsive-bot"
+            git config user.email "responsive-bot@users.noreply.github.com"
+            git add -A
+            git commit -m "chore: reapply responsive layer"
+            # Handle the race where FlutterFlow pushed again mid-run.
+            git pull --rebase origin flutterflow || true
+            git push
+          else
+            echo "Responsive layer already present — nothing to commit."
+          fi
