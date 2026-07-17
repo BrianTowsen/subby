@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -564,6 +566,27 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
   Future<List<_SharedProject>> _sharedProjectsFutureCached() {
     return _sharedProjectsFuture ??= _loadSharedProjects();
+  }
+
+  // -----------------------------
+  // Route settle tracking (fed by _RouteSettleNotifier in build).
+  // _routeSettled is FALSE from the moment another page covers this one until
+  // that page's exit transition has fully completed on the way back. Any
+  // deferred setState (e.g. the _sharedCount sync) checks this flag instead
+  // of ModalRoute.isCurrent, which turns true too early (at pop commit).
+  // -----------------------------
+  bool _routeSettled = true;
+
+  void _onRouteCovered() => _routeSettled = false;
+
+  void _onRouteSettled() {
+    if (!mounted) return;
+    _routeSettled = true;
+    // One post-animation rebuild: lets any setState that was deferred while
+    // covered/transitioning (shared-count sync etc.) re-run now that nothing
+    // is moving on screen, then refresh the listing state.
+    setState(() {});
+    _refreshHasListing();
   }
 
   // -----------------------------
@@ -1126,8 +1149,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                     .toList();
                 if (_sharedCount != shared.length) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
-                    final r = ModalRoute.of(context);
-                    if (mounted && (r?.isCurrent ?? false))
+                    // _routeSettled (not ModalRoute.isCurrent): stays false
+                    // until the back-swipe settle animation has finished.
+                    if (mounted && _routeSettled)
                       setState(() => _sharedCount = shared.length);
                   });
                 }
@@ -1184,8 +1208,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         // keep the count in sync (used elsewhere if owned arrives later)
         if (_sharedCount != shared.length) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            final r = ModalRoute.of(context);
-            if (mounted && (r?.isCurrent ?? false))
+            // _routeSettled (not ModalRoute.isCurrent): stays false until the
+            // back-swipe settle animation has finished.
+            if (mounted && _routeSettled)
               setState(() => _sharedCount = shared.length);
           });
         }
@@ -1720,8 +1745,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         // Keep the "Active builds" stat (owned + shared) in sync.
         if (_sharedCount != docs.length) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            final r = ModalRoute.of(context);
-            if (mounted && (r?.isCurrent ?? false))
+            // _routeSettled (not ModalRoute.isCurrent): stays false until the
+            // back-swipe settle animation has finished.
+            if (mounted && _routeSettled)
               setState(() => _sharedCount = docs.length);
           });
         }
@@ -3879,16 +3905,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     // Drop cached streams/futures if the signed-in user changed.
     _resetCachesIfUserChanged();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      // Only refresh once this page is the settled, current route. During an
-      // interactive back-swipe the dashboard is repainted every frame while it
-      // is still covered/transitioning; running the listing check (and its
-      // setState) then reflows the tree mid-gesture — the "jerk/jump in".
-      final route = ModalRoute.of(context);
-      if (route == null || !route.isCurrent) return;
-      _refreshHasListing(); // keep listing state fresh on return
-    });
+    // NOTE: no ModalRoute.of(context) here (and no post-frame refresh).
+    // route.isCurrent flips TRUE at finger-lift (pop commit) while the
+    // back-swipe settle animation is still running, and ModalRoute.of on the
+    // page's own context makes this ENTIRE page rebuild at that exact moment
+    // — the "last bit jerk". The zero-size _RouteSettleNotifier below owns
+    // the route dependency instead and calls _onRouteSettled() only after
+    // the covering route's exit transition has fully finished.
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       // Dark (black) status-bar icons over the white dashboard. Because the
@@ -3902,6 +3925,14 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         // Welcome header is PINNED (fixed) — only the body below it scrolls.
         child: Column(
           children: [
+            // Zero-size. Watches this page's route and fires _onRouteSettled
+            // AFTER a covering page (e.g. ProjectDetail) has fully animated
+            // away — never mid back-swipe. Keeping the ModalRoute dependency
+            // on this leaf means isCurrent flips rebuild ONLY this SizedBox.
+            _RouteSettleNotifier(
+              onCovered: _onRouteCovered,
+              onSettled: _onRouteSettled,
+            ),
             _buildWelcomeHeader(),
             Expanded(
               child: SingleChildScrollView(
@@ -4045,4 +4076,100 @@ class _FeedRow {
   int count;
   final DocumentReference? targetRef;
   final DocumentReference? projectRef;
+}
+
+// =====================================================================
+// _RouteSettleNotifier — zero-size route-transition watcher.
+//
+// WHY THIS EXISTS (the back-swipe "last bit jerk"):
+//   • ModalRoute.isCurrent flips TRUE at finger-lift (the pop is committed
+//     then), while the covering page's exit animation still has ~200ms to
+//     run. Guarding work on isCurrent therefore still runs it MID-settle.
+//   • Calling ModalRoute.of(context) with the page State's own context makes
+//     the ENTIRE page rebuild whenever isCurrent flips — i.e. exactly at
+//     finger-lift, mid-animation.
+//
+// This leaf owns the ModalRoute dependency instead (isCurrent flips rebuild
+// only this SizedBox.shrink) and invokes:
+//   • onCovered  — the moment another route covers this page.
+//   • onSettled  — only after this page is current again AND the covering
+//     route's exit transition (secondaryAnimation) is fully DISMISSED, plus
+//     one extra frame so the refresh never shares a frame with the popped
+//     page's (heavy) dispose.
+// =====================================================================
+class _RouteSettleNotifier extends StatefulWidget {
+  const _RouteSettleNotifier({
+    required this.onCovered,
+    required this.onSettled,
+  });
+
+  final VoidCallback onCovered;
+  final VoidCallback onSettled;
+
+  @override
+  State<_RouteSettleNotifier> createState() => _RouteSettleNotifierState();
+}
+
+class _RouteSettleNotifierState extends State<_RouteSettleNotifier> {
+  ModalRoute<dynamic>? _route;
+  Animation<double>? _armed; // secondaryAnimation we're listening to
+  bool? _wasCurrent;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Dependency lands on THIS element only — the page above stays free of it.
+    _route = ModalRoute.of(context);
+    final bool isCurrent = _route?.isCurrent ?? true;
+    final bool? was = _wasCurrent;
+    _wasCurrent = isCurrent;
+
+    if (was == null) return; // first build — initState covers initial load
+    if (!isCurrent && was) {
+      widget.onCovered();
+      return;
+    }
+    if (isCurrent && !was) {
+      _waitForSettle(); // pop committed — wait out the exit animation
+    }
+  }
+
+  void _waitForSettle() {
+    final Animation<double>? sec = _route?.secondaryAnimation;
+    if (sec == null || sec.status == AnimationStatus.dismissed) {
+      _notifyNextFrame();
+      return;
+    }
+    if (_armed != null) return; // already listening
+    _armed = sec;
+    sec.addStatusListener(_onSecondaryStatus);
+  }
+
+  void _onSecondaryStatus(AnimationStatus status) {
+    // Dismissed fires either when the exit animation completes, or when the
+    // Navigator re-points the proxy at kAlwaysDismissedAnimation on dispose
+    // of the popped route — both mean "nothing is animating over us".
+    if (status != AnimationStatus.dismissed) return;
+    _armed?.removeStatusListener(_onSecondaryStatus);
+    _armed = null;
+    _notifyNextFrame();
+  }
+
+  void _notifyNextFrame() {
+    // Skip one frame: the popped route's subtree is disposed in the frame the
+    // transition completes — don't pile a Firestore refresh onto it.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.onSettled();
+    });
+  }
+
+  @override
+  void dispose() {
+    _armed?.removeStatusListener(_onSecondaryStatus);
+    _armed = null;
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
 }
