@@ -3918,40 +3918,46 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       // visible route's AnnotatedRegion wins, this reasserts dark icons the
       // moment ProjectDetailPageView (which forces light) is popped.
       value: SystemUiOverlayStyle.light,
-      child: Container(
-        width: widget.width ?? double.infinity,
-        height: widget.height ?? double.infinity,
-        color: _paper,
-        // Welcome header is PINNED (fixed) — only the body below it scrolls.
-        child: Column(
-          children: [
-            // Zero-size. Watches this page's route and fires _onRouteSettled
-            // AFTER a covering page (e.g. ProjectDetail) has fully animated
-            // away — never mid back-swipe. Keeping the ModalRoute dependency
-            // on this leaf means isCurrent flips rebuild ONLY this SizedBox.
-            _RouteSettleNotifier(
-              onCovered: _onRouteCovered,
-              onSettled: _onRouteSettled,
-            ),
-            _buildWelcomeHeader(),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    _buildQuoteInvites(),
-                    _buildBody(),
-                    // Archived builds — collapsed, pinned to the bottom.
-                    _buildArchivedCollapsible(),
-                    // Clear the overlaid MainBottomNav (72) + breathing room
-                    // (28) + system gesture inset.
-                    SizedBox(
-                        height:
-                            72 + 28 + MediaQuery.of(context).padding.bottom),
-                  ],
+      // RepaintBoundary: while a page above slides during the back-swipe,
+      // this page is only translated (Cupertino under-parallax) — its own
+      // layer lets the compositor reuse the cached texture instead of
+      // repainting the whole dashboard every frame of the gesture.
+      child: RepaintBoundary(
+        child: Container(
+          width: widget.width ?? double.infinity,
+          height: widget.height ?? double.infinity,
+          color: _paper,
+          // Welcome header is PINNED (fixed) — only the body below it scrolls.
+          child: Column(
+            children: [
+              // Zero-size. Watches this page's route and fires _onRouteSettled
+              // AFTER a covering page (e.g. ProjectDetail) has fully animated
+              // away — never mid back-swipe. Keeping the ModalRoute dependency
+              // on this leaf means isCurrent flips rebuild ONLY this SizedBox.
+              _RouteSettleNotifier(
+                onCovered: _onRouteCovered,
+                onSettled: _onRouteSettled,
+              ),
+              _buildWelcomeHeader(),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      _buildQuoteInvites(),
+                      _buildBody(),
+                      // Archived builds — collapsed, pinned to the bottom.
+                      _buildArchivedCollapsible(),
+                      // Clear the overlaid MainBottomNav (72) + breathing room
+                      // (28) + system gesture inset.
+                      SizedBox(
+                          height:
+                              72 + 28 + MediaQuery.of(context).padding.bottom),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

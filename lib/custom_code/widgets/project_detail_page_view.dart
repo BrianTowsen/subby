@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -175,6 +177,50 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   // ✅ navigation lock (NO setState)
   bool _isNavigating = false;
 
+  // ─── Exit freeze (fixes the back-swipe "last bit jerk") ──────────────
+  // The four Firestore .snapshots() listeners below each call setState on the
+  // WHOLE page. If a snapshot lands while this page is sliding away during
+  // the interactive back-swipe (or its settle), the full ~4k-line rebuild
+  // drops frames mid-animation — intermittently, whenever delivery timing
+  // coincides. So:
+  //   • _routePopped  — set the instant this route is popped (via
+  //     _RoutePopProbe in build). From then on the page is only ever animating
+  //     out: subscriptions are cancelled and ALL rebuilds are skipped.
+  //   • While a back-gesture is in progress (drag OR settle), rebuilds are
+  //     deferred and flushed when the gesture ends without a pop (snap-back).
+  bool _routePopped = false;
+  bool _rebuildDeferred = false;
+  NavigatorState? _gestureNav;
+
+  void _safeRebuild() {
+    if (!mounted || _routePopped || _isNavigating) return;
+    final nav = _gestureNav;
+    if (nav != null && nav.userGestureInProgress) {
+      // Data fields are already updated by the caller — only the visual
+      // refresh is deferred until the gesture (drag + settle) finishes.
+      _rebuildDeferred = true;
+      return;
+    }
+    setState(() {});
+  }
+
+  void _onUserGestureChanged() {
+    final nav = _gestureNav;
+    if (nav == null || nav.userGestureInProgress) return; // started, not ended
+    if (!mounted || _routePopped || !_rebuildDeferred) return;
+    _rebuildDeferred = false; // gesture cancelled (snap-back) — flush now
+    setState(() {});
+  }
+
+  void _onRoutePopped() {
+    if (_routePopped) return;
+    _routePopped = true;
+    // Stop Firestore listeners immediately: no more mid-exit setStates, and
+    // dispose (which runs the frame the exit animation completes) gets
+    // cheaper because the listeners are already gone.
+    _stopSubscriptions();
+  }
+
   // Hero scroll-away + compact sticky bar
   final ScrollController _scrollController = ScrollController();
   bool _showCompactBar = false;
@@ -299,7 +345,24 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Listen for back-gesture start/end so _safeRebuild can defer visual
+    // refreshes while a swipe (drag or settle) is animating. Navigator.of
+    // registers NO inherited dependency, so this cannot cause rebuilds.
+    final nav = Navigator.maybeOf(context);
+    if (nav != null && !identical(nav, _gestureNav)) {
+      _gestureNav?.userGestureInProgressNotifier
+          .removeListener(_onUserGestureChanged);
+      _gestureNav = nav;
+      nav.userGestureInProgressNotifier.addListener(_onUserGestureChanged);
+    }
+  }
+
+  @override
   void dispose() {
+    _gestureNav?.userGestureInProgressNotifier
+        .removeListener(_onUserGestureChanged);
     _scrollController.dispose();
     _stopSubscriptions();
     _snapCtrl.dispose();
@@ -350,10 +413,10 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         _projectData = data;
         _projectLoadedOnce = true;
       }
-      if (!_isNavigating && mounted) setState(() {});
+      _safeRebuild();
     }, onError: (e) {
       _projectErr = e;
-      if (!_isNavigating && mounted) setState(() {});
+      _safeRebuild();
     });
 
     // Documents query
@@ -366,10 +429,10 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       _docsErr = null;
       _docRows = snap.docs;
       _docsLoadedOnce = true;
-      if (!_isNavigating && mounted) setState(() {});
+      _safeRebuild();
     }, onError: (e) {
       _docsErr = e;
-      if (!_isNavigating && mounted) setState(() {});
+      _safeRebuild();
     });
 
     // Listings query
@@ -382,10 +445,10 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       _listingsErr = null;
       _listingRows = snap.docs;
       _listingsLoadedOnce = true;
-      if (!_isNavigating && mounted) setState(() {});
+      _safeRebuild();
     }, onError: (e) {
       _listingsErr = e;
-      if (!_isNavigating && mounted) setState(() {});
+      _safeRebuild();
     });
 
     // Project activity feed (read-only log). Optional fields per doc:
@@ -402,10 +465,10 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       _activityErr = null;
       _activityRows = snap.docs;
       _activityLoadedOnce = true;
-      if (!_isNavigating && mounted) setState(() {});
+      _safeRebuild();
     }, onError: (e) {
       _activityErr = e;
-      if (!_isNavigating && mounted) setState(() {});
+      _safeRebuild();
     });
   }
 
@@ -3221,56 +3284,66 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     final bottomInset = MediaQuery.of(context).padding.bottom;
 
     return _swipeBack(
-      Container(
-        width: widget.width ?? double.infinity,
-        height: widget.height ?? double.infinity,
-        color: _paper,
-        // Ink hero masthead is PINNED (fixed) — only the content below scrolls.
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _inkHero(
-              theme: theme,
-              topInset: topInset,
-              name: projectName,
-              status: projectStatus,
-              address: projectAddress,
-              dates: projectDates,
-              progress: progressVal,
-              readOnly: readOnly,
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                physics: const BouncingScrollPhysics(),
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(
-                      _hPad, 18, _hPad, _vPad + bottomInset),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // -- Redesigned body (matches DetailTask / DetailSnag) --
-                      _rPills(theme),
-                      const SizedBox(height: 18),
-                      _rCompletion(theme),
-                      if (readOnly) ...[
+      // RepaintBoundary: during the back-swipe this page is only TRANSLATED,
+      // so give it its own layer — the slide then composites the cached
+      // texture instead of repainting the page every frame.
+      RepaintBoundary(
+        child: Container(
+          width: widget.width ?? double.infinity,
+          height: widget.height ?? double.infinity,
+          color: _paper,
+          // Ink hero masthead is PINNED (fixed) — only the content below scrolls.
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Zero-size probe: fires _onRoutePopped the instant this route is
+              // popped (finger-lift commit), freezing subscriptions + rebuilds
+              // for the exit animation. Owns the ModalRoute dependency on its
+              // own leaf element so it can never rebuild this whole page.
+              _RoutePopProbe(onPopped: _onRoutePopped),
+              _inkHero(
+                theme: theme,
+                topInset: topInset,
+                name: projectName,
+                status: projectStatus,
+                address: projectAddress,
+                dates: projectDates,
+                progress: progressVal,
+                readOnly: readOnly,
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  physics: const BouncingScrollPhysics(),
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                        _hPad, 18, _hPad, _vPad + bottomInset),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // -- Redesigned body (matches DetailTask / DetailSnag) --
+                        _rPills(theme),
                         const SizedBox(height: 18),
-                        _rOwnerCard(theme, ownerProfileRef),
+                        _rCompletion(theme),
+                        if (readOnly) ...[
+                          const SizedBox(height: 18),
+                          _rOwnerCard(theme, ownerProfileRef),
+                        ],
+                        const SizedBox(height: 20),
+                        _rSectionLabel('PROJECT MANAGEMENT'),
+                        const SizedBox(height: 10),
+                        _rModules(readOnly),
+                        const SizedBox(height: 24),
+                        _rDocuments(readOnly),
+                        const SizedBox(height: 24),
+                        _rTeam(),
                       ],
-                      const SizedBox(height: 20),
-                      _rSectionLabel('PROJECT MANAGEMENT'),
-                      const SizedBox(height: 10),
-                      _rModules(readOnly),
-                      const SizedBox(height: 24),
-                      _rDocuments(readOnly),
-                      const SizedBox(height: 24),
-                      _rTeam(),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -4234,4 +4307,40 @@ class _FeedVisual {
   final Color tint;
   final Color border;
   const _FeedVisual(this.icon, this.accent, this.tint, this.border);
+}
+
+// =====================================================================
+// _RoutePopProbe — zero-size widget that fires [onPopped] once, the moment
+// this page's route is popped off the Navigator (route.isActive → false,
+// which happens at finger-lift when the back-swipe commits — while the exit
+// animation still has ~250ms to run). The page uses this to freeze Firestore
+// subscriptions and rebuilds for the duration of the exit animation.
+//
+// The ModalRoute.of dependency lives on THIS leaf element, so route status
+// notifications rebuild only this SizedBox.shrink — never the whole page.
+// =====================================================================
+class _RoutePopProbe extends StatefulWidget {
+  const _RoutePopProbe({required this.onPopped});
+
+  final VoidCallback onPopped;
+
+  @override
+  State<_RoutePopProbe> createState() => _RoutePopProbeState();
+}
+
+class _RoutePopProbeState extends State<_RoutePopProbe> {
+  bool _fired = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (!_fired && route != null && !route.isActive) {
+      _fired = true;
+      widget.onPopped();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
 }
