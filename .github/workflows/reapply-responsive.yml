@@ -1,10 +1,12 @@
 name: Reapply responsive shell
 
-# FlutterFlow pushes generated code to this branch and overwrites lib/main.dart.
-# After each push we re-insert the one-line MaterialApp.builder that delegates
-# to ResponsiveShell.app (defined in lib/custom_code/widgets/, which FF keeps).
+# FlutterFlow owns lib/ and regenerates it on every export, deleting the
+# ResponsiveShell widget, the index.dart export, and the main.dart builder.
+# Everything this workflow needs lives under .github/ (which FlutterFlow never
+# touches), so after each FF push we RESTORE the whole responsive layer from
+# the canonical copy in .github/responsive/ and commit it back.
 #
-# Pushes made below use the default GITHUB_TOKEN, and GitHub does NOT re-trigger
+# The commit below uses the default GITHUB_TOKEN, and GitHub does NOT re-trigger
 # workflows for those pushes — so there is no infinite loop.
 
 on:
@@ -15,8 +17,8 @@ permissions:
   contents: write
 
 concurrency:
-  group: reapply-responsive-${{ github.ref }}
-  cancel-in-progress: true
+  group: reapply-responsive
+  cancel-in-progress: false
 
 jobs:
   patch:
@@ -26,23 +28,26 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: flutterflow
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
 
-      - name: Re-apply responsive builder
-        run: python3 tool/patch_main.py
+      - name: Re-apply responsive layer
+        run: python3 .github/responsive/reapply.py
 
       - name: Commit if changed
         run: |
-          if [[ -n "$(git status --porcelain lib/main.dart)" ]]; then
+          if [[ -n "$(git status --porcelain)" ]]; then
             git config user.name "responsive-bot"
             git config user.email "responsive-bot@users.noreply.github.com"
-            git add lib/main.dart
-            git commit -m "chore: reapply responsive MaterialApp.builder"
+            git add -A
+            git commit -m "chore: reapply responsive layer"
+            # Handle the race where FlutterFlow pushed again mid-run.
+            git pull --rebase origin flutterflow || true
             git push
           else
-            echo "No changes to commit."
+            echo "Responsive layer already present — nothing to commit."
           fi
