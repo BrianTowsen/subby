@@ -35,57 +35,51 @@ class _DashboardPageWidgetState extends State<DashboardPageWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-        FocusManager.instance.primaryFocus?.unfocus();
-      },
-      child: Scaffold(
-        key: scaffoldKey,
-        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
-        body: Stack(
-          children: [
-            Container(
+    return Scaffold(
+      key: scaffoldKey,
+      backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+      body: Stack(
+        children: [
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            child: custom_widgets.DashboardPageView(
               width: double.infinity,
               height: double.infinity,
-              child: custom_widgets.DashboardPageView(
-                width: double.infinity,
-                height: double.infinity,
-                directoryRouteName: 'homePage',
-                timelineRouteName: 'TimelineHomePage',
-                snagListRouteName: 'snagListHomePage',
-                profileRouteName: 'profilePage',
-                projectsRouteName: '',
-                projectCostRouteName: 'projectCostHomePage',
-                getQuotesRouteName: 'getQuotesHomePage',
-                termsRouteName: 'termsPage',
-                privacyRouteName: 'privacyPage',
-                addListingRouteName: 'addListingPage',
-                editListingRouteName: 'editListingPage',
-                projectDetailRouteName: '',
-                addProjectsRouteName: '',
-                loginRouteName: 'login',
-                createAccountRouteName: 'createAccountPage',
-                moreRouteName: 'morePage',
-              ),
+              directoryRouteName: 'homePage',
+              timelineRouteName: 'TimelineHomePage',
+              snagListRouteName: 'snagListHomePage',
+              profileRouteName: 'profilePage',
+              projectsRouteName: '',
+              projectCostRouteName: 'projectCostHomePage',
+              getQuotesRouteName: 'getQuotesHomePage',
+              termsRouteName: 'termsPage',
+              privacyRouteName: 'privacyPage',
+              addListingRouteName: 'addListingPage',
+              editListingRouteName: 'editListingPage',
+              projectDetailRouteName: '',
+              addProjectsRouteName: '',
+              loginRouteName: 'login',
+              createAccountRouteName: 'createAccountPage',
+              moreRouteName: 'morePage',
             ),
-            Align(
-              alignment: AlignmentDirectional(0.0, 1.0),
-              child: Container(
+          ),
+          Align(
+            alignment: AlignmentDirectional(0.0, 1.0),
+            child: Container(
+              width: MediaQuery.sizeOf(context).width * 1.0,
+              height: 84.0,
+              child: custom_widgets.MainBottomNav(
                 width: MediaQuery.sizeOf(context).width * 1.0,
                 height: 84.0,
-                child: custom_widgets.MainBottomNav(
-                  width: MediaQuery.sizeOf(context).width * 1.0,
-                  height: 84.0,
-                  currentIndex: 0,
-                  projectsRouteName: 'dashboardPage',
-                  directoryRouteName: 'homePage',
-                  accountRouteName: 'profilePage',
-                ),
+                currentIndex: 0,
+                projectsRouteName: 'dashboardPage',
+                directoryRouteName: 'homePage',
+                accountRouteName: 'profilePage',
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

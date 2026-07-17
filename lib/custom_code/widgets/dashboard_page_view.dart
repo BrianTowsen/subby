@@ -410,6 +410,41 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     });
   }
 
+  // ─── BUILT-TREE CACHE (back-swipe "snap" fix) ────────────────────────
+  // The FlutterFlow page hosting this widget is rebuilt by go_router the
+  // moment a pop is COMMITTED (at finger-lift, while the back-swipe settle
+  // animation still has ~200ms to run). FF pages can't be edited, so the
+  // parent will always hand us a brand-new DashboardPageView instance at
+  // that moment — which used to force this entire ~4k-line tree to rebuild
+  // mid-animation and drop frames ("snaps into place" instead of gliding).
+  //
+  // Fix: build() returns the IDENTICAL tree instance when nothing changed —
+  // Flutter's updateChild short-circuits on identical widgets and skips the
+  // whole subtree diff. The cache is invalidated on every setState (see
+  // override below), on inherited-dependency changes (MediaQuery / theme),
+  // on user switch, and on hot reload — so it can never go stale. Stream/
+  // FutureBuilders live INSIDE the cached tree and still rebuild their own
+  // subtrees on data events as normal.
+  Widget? _builtTree;
+
+  @override
+  void setState(VoidCallback fn) {
+    _builtTree = null; // every intentional visual change rebuilds the tree
+    super.setState(fn);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _builtTree = null; // MediaQuery / theme / locale changed — rebuild fresh
+  }
+
+  @override
+  void reassemble() {
+    super.reassemble();
+    _builtTree = null; // hot reload — show newly edited code
+  }
+
   // -----------------------------
   // Navigation
   // -----------------------------
@@ -539,6 +574,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       _archivedProjectsStream = null;
       _sharedProjectsFuture = null;
       _sharedCount = 0;
+      _builtTree = null; // different user — rebuild the whole tree
     }
   }
 
@@ -1165,8 +1201,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                           _accentMarker(_ink),
                           const SizedBox(width: 10),
                           Expanded(
-                            child:
-                                Text('Home Builds', style: _stepHeadlineStyle),
+                            child: Text('MyBuild', style: _stepHeadlineStyle),
                           ),
                         ],
                       ),
@@ -3905,6 +3940,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     // Drop cached streams/futures if the signed-in user changed.
     _resetCachesIfUserChanged();
 
+    // Return the cached tree when nothing changed — this is what makes the
+    // go_router page rebuild at pop-commit FREE (see the BUILT-TREE CACHE
+    // comment near initState). All real changes invalidate _builtTree.
+    return _builtTree ??= _buildTree(context);
+  }
+
+  Widget _buildTree(BuildContext context) {
     // NOTE: no ModalRoute.of(context) here (and no post-frame refresh).
     // route.isCurrent flips TRUE at finger-lift (pop commit) while the
     // back-swipe settle animation is still running, and ModalRoute.of on the

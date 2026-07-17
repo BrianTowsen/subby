@@ -188,7 +188,7 @@ class _MainBottomNavState extends State<MainBottomNav> {
             index: 0,
             activeIcon: Icons.grid_view_rounded,
             inactiveIcon: Icons.grid_view_outlined,
-            label: 'Projects',
+            label: 'MyBuild',
           ),
           _navItem(
             index: 1,
