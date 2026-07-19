@@ -1203,7 +1203,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                           _accentMarker(_ink),
                           const SizedBox(width: 10),
                           Expanded(
-                            child: Text('MyBuild', style: _stepHeadlineStyle),
+                            child:
+                                Text('My Projects', style: _stepHeadlineStyle),
                           ),
                         ],
                       ),
