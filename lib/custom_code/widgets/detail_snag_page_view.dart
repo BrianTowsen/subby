@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -73,7 +75,8 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
       Color(0xFFECF0F2); // DS: lime tint → neutral surface
   static const Color _live =
       Color(0xFF566670); // DS: lime → clay (high / attention)
-  static const Color _green = Color(0xFF4E504F); // DS: in-progress / info
+  static const Color _green =
+      Color(0xFF0CAC47); // success green — mirrors _warn
   static const Color _greenSurface = Color(0xFFE7EDF0);
   static const Color _greenBorder = Color(0xFFCBD8DD);
   static const Color _coral = Color(0xFF566670);
@@ -438,6 +441,26 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
   }
 
   // ── Close-out is GATED on at least one fixed photo/video. ──
+  // ── Close-out is GATED on at least one fixed photo/video. ──
+  //    Confirmed first via the shared warning dialog in GREEN (mirrors the
+  //    red Delete dialog) — the success/close “message” is green, not red.
+  Future<void> _confirmCloseOut() async {
+    if (_fixedMedia.isEmpty) {
+      _toast('Add a fixed photo or video to close this snag out.');
+      return;
+    }
+    FocusScope.of(context).unfocus();
+    await _showConfirmDialog(
+      icon: Icons.task_alt_rounded,
+      accent: _green,
+      title: 'Mark as fixed?',
+      message:
+          'This snag closes out with the attached fix photos. You can reopen it if more work is needed.',
+      confirmLabel: 'Mark as fixed',
+      onConfirm: () => _closeWithFixedMedia(),
+    );
+  }
+
   Future<void> _closeWithFixedMedia() async {
     final ref = _snagRef;
     if (ref == null || _working) return;
@@ -958,6 +981,35 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
                         ],
                       ),
                     ),
+                  )
+                else
+                  // BEFORE badge (red) on the original defect media.
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 9, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _warn,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(Icons.error_rounded,
+                              size: 12, color: Colors.white),
+                          SizedBox(width: 5),
+                          Text('BEFORE',
+                              style: TextStyle(
+                                  fontFamily: _bodyFont,
+                                  fontSize: 10,
+                                  letterSpacing: 0.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white)),
+                        ],
+                      ),
+                    ),
                   ),
                 if (media.length > 1)
                   Positioned(
@@ -1424,7 +1476,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
         bg: ready ? const Color(0xFFE7E247) : _surface, // lime when ready
         fg: ready ? _ink : _faint,
         border: ready ? null : _hairlineOnSurface,
-        onTap: ready ? _closeWithFixedMedia : _pickFixedMedia,
+        onTap: ready ? _confirmCloseOut : _pickFixedMedia,
       );
     }
 
@@ -1513,8 +1565,9 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
   // =========================================================
   Future<void> _confirmDelete(DocumentReference ref, String title) async {
     FocusScope.of(context).unfocus();
-    await _showDeleteDialog(
+    await _showConfirmDialog(
       icon: Icons.delete_rounded,
+      accent: _warn,
       title: 'Delete this snag?',
       message: '“$title” will be permanently removed. This can’t be undone.',
       confirmLabel: 'Delete snag',
@@ -1534,12 +1587,15 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
     }
   }
 
-  Future<void> _showDeleteDialog({
+  // Shared centred confirm dialog. `accent` colours the badge + confirm button
+  // — _warn (red) for Delete, _green for the close-out “Mark as fixed” message.
+  Future<void> _showConfirmDialog({
     required String title,
     required String message,
     required String confirmLabel,
     required IconData icon,
     required Future<void> Function() onConfirm,
+    Color accent = _warn,
   }) async {
     await showDialog(
       context: context,
@@ -1571,12 +1627,12 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
                   height: 62,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: _warn.withOpacity(0.12),
+                    color: accent.withOpacity(0.12),
                     shape: BoxShape.circle,
                     border:
-                        Border.all(color: _warn.withOpacity(0.22), width: 1),
+                        Border.all(color: accent.withOpacity(0.22), width: 1),
                   ),
-                  child: Icon(icon, color: _warn, size: 30),
+                  child: Icon(icon, color: accent, size: 30),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -1616,7 +1672,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: _warn,
+                        color: accent,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
