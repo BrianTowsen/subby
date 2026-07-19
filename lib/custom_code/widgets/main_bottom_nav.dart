@@ -10,7 +10,15 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'package:flutter/services.dart'; // HapticFeedback (LIGHT impact on tab tap)
+import 'index.dart'; // Imports other custom widgets
+
+import 'index.dart'; // Imports other custom widgets
+
+import 'index.dart'; // Imports other custom widgets
+
+import 'package:flutter/services.dart'; // HapticFeedback (medium impact on tab tap)
+
+import '/custom_code/widgets/index.dart'; // (kept if FF expects it)
 
 // Subby bottom nav — matches DashboardPageView (Option C).
 // Three destinations only — More lives in the top-right menu button, not here.
@@ -18,16 +26,14 @@ import 'package:flutter/services.dart'; // HapticFeedback (LIGHT impact on tab t
 // (0 Projects · 1 Directory · 2 Account) so the right tab lights up, and pass
 // the FF route names for the tabs you want it to navigate to.
 //
-// Tapping a tab calls context.goNamed(route) (root switch). Empty routes are
-// ignored. Taps on the already-active tab still give feedback (pill press +
-// haptic) but do not navigate.
+// Tapping a tab calls context.goNamed(route) (root switch). Empty routes and
+// taps on the already-active tab are ignored.
 //
 // UPDATE (this revision):
-//   • Haptic is now LIGHT impact (was medium) on every tab tap.
-//   • The active INK pill (#3D4F66) now SLIDES horizontally to the tapped tab
-//     with a springy curve, and the tapped icon does a quick press "pop".
-//     (Previously the pill just appeared under the active tab with a route
-//     cross-fade.)
+//   • Active tab pill is now INK (#29343A) with a WHITE icon (was the sage
+//     green pill).
+//   • The bar is a BRIGHT-WHITE ELEVATED shell — hairline top border plus a
+//     soft upward drop shadow — to match the DetailTaskView dock treatment.
 
 class MainBottomNav extends StatefulWidget {
   const MainBottomNav({
@@ -56,8 +62,7 @@ class MainBottomNav extends StatefulWidget {
   State<MainBottomNav> createState() => _MainBottomNavState();
 }
 
-class _MainBottomNavState extends State<MainBottomNav>
-    with SingleTickerProviderStateMixin {
+class _MainBottomNavState extends State<MainBottomNav> {
   // ─── SUBBY PALETTE (LOCK) ──────────────────────────────────────────
   static const Color _ink = Color(0xFF3D4F66); // active pill + active label
   static const Color _faint = Color(0xFF93A3AC); // inactive
@@ -67,36 +72,9 @@ class _MainBottomNavState extends State<MainBottomNav>
   // ────────────────────────────────────────────────────────────────────
 
   static const double _barHeight = 72;
-  static const int _tabCount = 3;
 
-  // Pill geometry (matches the old selected pill: 22px icon + 18/3 padding).
-  static const double _pillWidth = 58;
-  static const double _pillHeight = 34;
-
-  // Which tab the pill currently sits on. Seeded from currentIndex, then
-  // driven locally so the pill can slide immediately on tap (before the route
-  // rebuild lands).
-  late int _pillIndex = widget.currentIndex;
-
-  // Press "pop" on the tapped icon.
-  late final AnimationController _pop = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 320),
-  );
-
-  @override
-  void didUpdateWidget(covariant MainBottomNav oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.currentIndex != oldWidget.currentIndex) {
-      setState(() => _pillIndex = widget.currentIndex);
-    }
-  }
-
-  @override
-  void dispose() {
-    _pop.dispose();
-    super.dispose();
-  }
+  // Active pill — INK on every tab (icon rendered white inside it).
+  Color _activeColorFor(int index) => _ink;
 
   String? _routeFor(int index) {
     switch (index) {
@@ -112,19 +90,15 @@ class _MainBottomNavState extends State<MainBottomNav>
   }
 
   void _handleTap(int index) {
-    // LIGHT haptic on every tab tap.
+    // Light haptic on every tab tap.
     HapticFeedback.lightImpact();
-
-    // Slide the pill + fire the press pop immediately (even on the active tab).
-    setState(() => _pillIndex = index);
-    _pop.forward(from: 0);
 
     if (index == widget.currentIndex) return;
 
     final route = (_routeFor(index) ?? '').trim();
     if (route.isEmpty) return;
 
-    // Fade between tabs — no slide. 320ms so the cross-fade reads.
+    // Fade between tabs — no slide. Slowed to 320ms so the cross-fade reads.
     context.goNamed(
       route,
       extra: <String, dynamic>{
@@ -143,14 +117,10 @@ class _MainBottomNavState extends State<MainBottomNav>
     required IconData inactiveIcon,
     required String label,
   }) {
-    final bool selected = index == _pillIndex;
+    final bool selected = index == widget.currentIndex;
     final Color color = selected ? _ink : _faint;
     // Active icon sits inside the ink pill → render it white.
     final Color iconColor = selected ? _paper : _faint;
-
-    // Press pop scales the tapped icon down and back.
-    final Widget icon = Icon(selected ? activeIcon : inactiveIcon,
-        size: selected ? 22 : 23, color: iconColor);
 
     return Expanded(
       child: Material(
@@ -165,32 +135,22 @@ class _MainBottomNavState extends State<MainBottomNav>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SizedBox(
-                height: _pillHeight,
-                child: Center(
-                  child: selected
-                      ? ScaleTransition(
-                          scale: Tween<double>(begin: 1, end: 1).animate(
-                            TweenSequence<double>([
-                              TweenSequenceItem(
-                                  tween: Tween(begin: 1.0, end: 0.82)
-                                      .chain(CurveTween(curve: Curves.easeOut)),
-                                  weight: 40),
-                              TweenSequenceItem(
-                                  tween: Tween(begin: 0.82, end: 1.0)
-                                      .chain(CurveTween(curve: Curves.easeOut)),
-                                  weight: 60),
-                            ]).animate(_pop),
-                          ),
-                          child: icon,
-                        )
-                      : icon,
-                ),
+              Container(
+                padding: selected
+                    ? const EdgeInsets.symmetric(horizontal: 18, vertical: 3)
+                    : EdgeInsets.zero,
+                decoration: selected
+                    ? BoxDecoration(
+                        color: _activeColorFor(index),
+                        borderRadius: BorderRadius.circular(999),
+                      )
+                    : null,
+                child: Icon(selected ? activeIcon : inactiveIcon,
+                    size: selected ? 22 : 23, color: iconColor),
               ),
               const SizedBox(height: 5),
-              // Colour cross-fades between selected/unselected.
-              AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 260),
+              Text(
+                label,
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 10,
@@ -198,7 +158,6 @@ class _MainBottomNavState extends State<MainBottomNav>
                   color: color,
                   letterSpacing: 0.0,
                 ),
-                child: Text(label),
               ),
             ],
           ),
@@ -219,68 +178,33 @@ class _MainBottomNavState extends State<MainBottomNav>
       decoration: const BoxDecoration(
         color: _paper,
         border: Border(top: BorderSide(color: Color(0xFFEAEEF0), width: 1)),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x0F29343A), // ~6% ink
-            blurRadius: 24,
-            offset: Offset(0, -8),
-          ),
-        ],
       ),
+      // Three roomy tabs — a little extra horizontal inset keeps them centred.
+      // top:12 gives the pill + icons more breathing room from the top edge.
       padding:
           EdgeInsets.only(top: 12, bottom: bottomInset, left: 24, right: 24),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final double slotWidth = constraints.maxWidth / _tabCount;
-          // Centre the pill within the destination slot.
-          final double pillLeft =
-              _pillIndex * slotWidth + (slotWidth - _pillWidth) / 2;
-
-          return Stack(
-            children: [
-              // ── Sliding ink pill ─────────────────────────────────────
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 340),
-                curve: Curves.easeOutBack, // springy overshoot
-                left: pillLeft,
-                top: -2,
-                width: _pillWidth,
-                height: _pillHeight,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: _ink,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-              ),
-
-              // ── Tabs on top of the pill ──────────────────────────────
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  _navItem(
-                    index: 0,
-                    activeIcon: Icons.grid_view_rounded,
-                    inactiveIcon: Icons.grid_view_outlined,
-                    label: 'Projects',
-                  ),
-                  _navItem(
-                    index: 1,
-                    activeIcon: Icons.contacts_rounded,
-                    inactiveIcon: Icons.contacts_outlined,
-                    label: 'Network',
-                  ),
-                  _navItem(
-                    index: 2,
-                    activeIcon: Icons.person_rounded,
-                    inactiveIcon: Icons.person_outline_rounded,
-                    label: 'Account',
-                  ),
-                ],
-              ),
-            ],
-          );
-        },
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          _navItem(
+            index: 0,
+            activeIcon: Icons.grid_view_rounded,
+            inactiveIcon: Icons.grid_view_outlined,
+            label: 'MyBuild',
+          ),
+          _navItem(
+            index: 1,
+            activeIcon: Icons.contacts_rounded,
+            inactiveIcon: Icons.contacts_outlined,
+            label: 'Network',
+          ),
+          _navItem(
+            index: 2,
+            activeIcon: Icons.person_rounded,
+            inactiveIcon: Icons.person_outline_rounded,
+            label: 'Account',
+          ),
+        ],
       ),
     );
   }
