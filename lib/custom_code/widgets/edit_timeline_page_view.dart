@@ -10,22 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'dart:convert';
 import 'package:intl/intl.dart';
@@ -2322,7 +2306,7 @@ class _EditTimelinePageViewState extends State<EditTimelinePageView> {
     final bottom = MediaQuery.of(context).padding.bottom;
     if (_sections.isEmpty) {
       // safety — nothing to edit
-      return Container(color: _startBg);
+      return Container(color: _paper);
     }
     final sch = _schedule();
     final sec = _selSec;

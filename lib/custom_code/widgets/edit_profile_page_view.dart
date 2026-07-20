@@ -10,14 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 // ✅ Auth helpers (currentUserReference, currentUserEmail, etc.)
 import '/auth/firebase_auth/auth_util.dart';
 
@@ -183,6 +175,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                 child: TextFormField(
                   controller: controller,
                   focusNode: focusNode,
+                  onTap: _ensureFocusedVisible,
                   keyboardType: keyboardType,
                   textInputAction: TextInputAction.done,
                   onFieldSubmitted: onSubmitted,
@@ -579,6 +572,19 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
         ),
       ),
     );
+  }
+
+  // Lift the focused field above the on-screen keyboard.
+  void _ensureFocusedVisible() {
+    Future.delayed(const Duration(milliseconds: 250), () {
+      final ctx = FocusManager.instance.primaryFocus?.context;
+      if (ctx != null) {
+        Scrollable.ensureVisible(ctx,
+            alignment: 0.1,
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOut);
+      }
+    });
   }
 
   @override
