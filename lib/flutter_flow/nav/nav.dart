@@ -649,7 +649,7 @@ class FFRoute {
               ? Container(
                   color: Colors.transparent,
                   child: Image.asset(
-                    'assets/images/subby-splash-final.png',
+                    'assets/images/subby-splash-2a-mobile.png',
                     fit: BoxFit.cover,
                   ),
                 )

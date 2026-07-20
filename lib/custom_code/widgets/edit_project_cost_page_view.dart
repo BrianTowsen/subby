@@ -16,6 +16,10 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -157,7 +161,23 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
   // floating "Done" accessory bar gives them the same blue tick / dismiss.
   final FocusNode _qtyFocus = FocusNode();
   final FocusNode _rateFocus = FocusNode();
+  final FocusNode _descFocus = FocusNode();
   OverlayEntry? _kbBar;
+
+  // Scroll the focused field up so it clears the on-screen keyboard.
+  void _ensureVisible(FocusNode fn) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = fn.context;
+      if (ctx != null) {
+        Scrollable.ensureVisible(
+          ctx,
+          alignment: 0.12,
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
 
   @override
   void initState() {
@@ -169,6 +189,9 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
     if (_sections.isNotEmpty) _sections[0].lines.add(_EstLine());
     _qtyFocus.addListener(_onNumFocusChange);
     _rateFocus.addListener(_onNumFocusChange);
+    _descFocus.addListener(() {
+      if (_descFocus.hasFocus) _ensureVisible(_descFocus);
+    });
   }
 
   // ── Keyboard "Done" accessory bar (numeric decimal pad has no return key) ──
@@ -176,6 +199,7 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
     final anyFocused = _qtyFocus.hasFocus || _rateFocus.hasFocus;
     if (anyFocused) {
       _showKbBar();
+      _ensureVisible(_qtyFocus.hasFocus ? _qtyFocus : _rateFocus);
     } else {
       // Defer so focus can transfer between the two numeric fields without flicker.
       Future.microtask(() {
@@ -294,6 +318,7 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
     _hideKbBar();
     _qtyFocus.dispose();
     _rateFocus.dispose();
+    _descFocus.dispose();
     _descCtl.dispose();
     _qtyCtl.dispose();
     _rateCtl.dispose();
@@ -722,7 +747,7 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
     return Container(
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
-      color: _startBg,
+      color: _paper,
       child: (!_ready) ? _loading() : _editScreen(),
     );
   }
@@ -926,6 +951,7 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
                       Expanded(
                         child: TextField(
                           controller: _descCtl,
+                          focusNode: _descFocus,
                           readOnly: _readOnly,
                           textInputAction: TextInputAction.done,
                           onChanged: (v) {
