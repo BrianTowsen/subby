@@ -10,12 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -309,66 +303,8 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
   }
 
   // ===========================
-  // GET QUOTE
+  // ADD TO PROJECT — PICKER
   // ===========================
-  Future<void> _inviteListingToQuote({
-    required DocumentReference projectRef,
-    required DocumentReference listingRef,
-    required DocumentReference? providerRef,
-    required String title,
-  }) async {
-    try {
-      final qref = projectRef.collection('quotes').doc(listingRef.id);
-      final existing = await qref.get();
-      final status =
-          ((existing.data() as Map<String, dynamic>?)?['status'] ?? '')
-              .toString();
-      if (existing.exists && status != 'declined') {
-        _snack('Already invited to quote on this project.');
-        return;
-      }
-      await qref.set({
-        'listingRef': listingRef,
-        'listingName': title,
-        'providerRef': providerRef,
-        'status': 'invited',
-        'invitedAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-      _snack(providerRef != null
-          ? 'Quote request sent.'
-          : 'Request logged — this listing isn\'t claimed on Subby yet, '
-              'so contact the trade directly.');
-    } catch (e) {
-      debugPrint('⚠️ inviteListingToQuote failed: $e');
-      _snack('Could not send quote request.');
-    }
-  }
-
-  Future<void> _showGetQuoteSheet({
-    required DocumentReference listingRef,
-    required DocumentReference? providerRef,
-    required String title,
-  }) async {
-    final userRef = _currentUserRefOrNull();
-    if (userRef == null) {
-      context.pushNamed('loginPage');
-      return;
-    }
-    await _showProjectPickerSheet(
-      sheetTitle: 'Get a Quote',
-      sheetSubtitle: 'Choose which project you want this trade to quote on.',
-      ctaLabel: 'Send quote request',
-      ctaIcon: Icons.send_rounded,
-      onConfirm: (projectRef) => _inviteListingToQuote(
-        projectRef: projectRef,
-        listingRef: listingRef,
-        providerRef: providerRef,
-        title: title,
-      ),
-    );
-  }
-
   Future<void> _showProjectPickerSheet({
     required String sheetTitle,
     required String sheetSubtitle,
@@ -1692,45 +1628,6 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                     border: Border(top: BorderSide(color: _hairline)),
                   ),
                   child: Row(children: [
-                    Expanded(
-                      child: InkWell(
-                        onTap: () => _showGetQuoteSheet(
-                          listingRef: listingRef,
-                          providerRef: ownerRef,
-                          title: plTitle,
-                        ),
-                        borderRadius: BorderRadius.circular(10),
-                        child: Container(
-                          height: 52,
-                          alignment: Alignment.center,
-                          padding: const EdgeInsets.symmetric(horizontal: 6),
-                          decoration: BoxDecoration(
-                              color: _paper,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: _ink, width: 1.5)),
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.request_quote_outlined,
-                                  size: 18, color: _ink),
-                              SizedBox(width: 6),
-                              Flexible(
-                                child: Text('Get Quote',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                        fontFamily: _bodyFont,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w800,
-                                        color: _ink)),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
                     Expanded(
                       child: InkWell(
                         onTap: () => _showAddToProjectSheet(
