@@ -10,14 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status bar icons over ink hero)
@@ -226,6 +218,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
               Expanded(
                 child: TextFormField(
                   controller: controller,
+                  onTap: _ensureFocusedVisible,
                   enabled: !_saving,
                   cursorColor: _teal,
                   textInputAction: TextInputAction.done,
@@ -770,6 +763,19 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
         padding: const EdgeInsets.fromLTRB(_hPad, 14, _hPad, 14),
         child: SafeArea(top: false, child: _primarySave(theme)),
       );
+
+  // Lift the focused field above the on-screen keyboard.
+  void _ensureFocusedVisible() {
+    Future.delayed(const Duration(milliseconds: 250), () {
+      final ctx = FocusManager.instance.primaryFocus?.context;
+      if (ctx != null) {
+        Scrollable.ensureVisible(ctx,
+            alignment: 0.1,
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOut);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

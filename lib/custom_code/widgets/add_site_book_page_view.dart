@@ -10,12 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -379,6 +373,19 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
   // =====================================================================
   // BUILD
   // =====================================================================
+  // Lift the focused field above the on-screen keyboard.
+  void _ensureFocusedVisible() {
+    Future.delayed(const Duration(milliseconds: 250), () {
+      final ctx = FocusManager.instance.primaryFocus?.context;
+      if (ctx != null) {
+        Scrollable.ensureVisible(ctx,
+            alignment: 0.1,
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOut);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final reuse = _reuseTags();
@@ -647,6 +654,7 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
         padding: const EdgeInsets.all(14),
         child: TextField(
           controller: _noteCtl,
+          onTap: _ensureFocusedVisible,
           maxLines: 5,
           minLines: 4,
           textInputAction: TextInputAction.done,
@@ -892,6 +900,7 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
               Expanded(
                 child: TextField(
                   controller: _tagCtl,
+                  onTap: _ensureFocusedVisible,
                   textInputAction: TextInputAction.done,
                   onSubmitted: (_) => _commitTag(),
                   cursorColor: _ink,

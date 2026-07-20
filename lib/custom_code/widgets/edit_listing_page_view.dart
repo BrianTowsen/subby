@@ -10,14 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'dart:typed_data';
@@ -745,6 +737,19 @@ class _EditListingPageViewState extends State<EditListingPageView> {
     );
   }
 
+  // Lift the focused field above the on-screen keyboard.
+  void _ensureFocusedVisible() {
+    Future.delayed(const Duration(milliseconds: 250), () {
+      final ctx = FocusManager.instance.primaryFocus?.context;
+      if (ctx != null) {
+        Scrollable.ensureVisible(ctx,
+            alignment: 0.1,
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOut);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final double width = widget.width ?? MediaQuery.sizeOf(context).width;
@@ -1217,6 +1222,7 @@ class _EditListingPageViewState extends State<EditListingPageView> {
               const SizedBox(height: 2),
               TextField(
                 controller: controller,
+                onTap: _ensureFocusedVisible,
                 maxLines: maxLines,
                 keyboardType: keyboard,
                 enabled: !_saving,

@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -199,6 +201,7 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
                 child: TextField(
                   controller: controller,
                   focusNode: focusNode,
+                  onTap: _ensureFocusedVisible,
                   keyboardType: keyboardType,
                   textInputAction: TextInputAction.done,
                   textCapitalization: textCapitalization,
@@ -480,6 +483,19 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  // Lift the focused field above the on-screen keyboard.
+  void _ensureFocusedVisible() {
+    Future.delayed(const Duration(milliseconds: 250), () {
+      final ctx = FocusManager.instance.primaryFocus?.context;
+      if (ctx != null) {
+        Scrollable.ensureVisible(ctx,
+            alignment: 0.1,
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOut);
+      }
+    });
   }
 
   @override

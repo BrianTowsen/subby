@@ -10,16 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -805,7 +795,7 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
           if (mounted) context.safePop();
         });
       }
-      return Container(color: _startBg);
+      return Container(color: _paper);
     }
 
     final sec = _selSec;

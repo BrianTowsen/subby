@@ -10,10 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -444,6 +440,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
               Expanded(
                 child: TextFormField(
                   controller: controller,
+                  onTap: _ensureFocusedVisible,
                   enabled: !_saving,
                   cursorColor: _teal,
                   textInputAction: TextInputAction.done,
@@ -1158,6 +1155,19 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
           ),
         ),
       );
+
+  // Lift the focused field above the on-screen keyboard.
+  void _ensureFocusedVisible() {
+    Future.delayed(const Duration(milliseconds: 250), () {
+      final ctx = FocusManager.instance.primaryFocus?.context;
+      if (ctx != null) {
+        Scrollable.ensureVisible(ctx,
+            alignment: 0.1,
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOut);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
