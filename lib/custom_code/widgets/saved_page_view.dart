@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -245,12 +247,12 @@ class _SavedPageViewState extends State<SavedPageView> {
 
     return InkWell(
       onTap: () => _openListing(listingRef),
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: _paper,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: _hairline),
         ),
         child: Row(children: [
@@ -259,7 +261,7 @@ class _SavedPageViewState extends State<SavedPageView> {
             height: 64,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-                color: _surface, borderRadius: BorderRadius.circular(12)),
+                color: _surface, borderRadius: BorderRadius.circular(10)),
             child: Icon(_iconForCategory(category), size: 26, color: _slate),
           ),
           const SizedBox(width: 12),
@@ -300,13 +302,14 @@ class _SavedPageViewState extends State<SavedPageView> {
                   const SizedBox(width: 10),
                   InkWell(
                     onTap: () => _removeBookmark(listingRef),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: 30,
                       height: 30,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                          color: _lime, borderRadius: BorderRadius.circular(8)),
+                          color: _lime,
+                          borderRadius: BorderRadius.circular(10)),
                       child: const Icon(Icons.bookmark_rounded,
                           size: 16, color: _ink),
                     ),
@@ -364,7 +367,7 @@ class _SavedPageViewState extends State<SavedPageView> {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                   color: _surface,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: _hairlineOnSurface)),
               child:
                   const Icon(Icons.bookmark_border, size: 34, color: _inkMute),
@@ -406,7 +409,7 @@ class _SavedPageViewState extends State<SavedPageView> {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                   color: _surface,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: _hairlineOnSurface)),
               child: const Icon(Icons.lock_outline, size: 34, color: _inkMute),
             ),
@@ -438,11 +441,11 @@ class _SavedPageViewState extends State<SavedPageView> {
 
   Widget _primaryPill(String label, VoidCallback onTap) => InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
           decoration: BoxDecoration(
-              color: _lime, borderRadius: BorderRadius.circular(14)),
+              color: _lime, borderRadius: BorderRadius.circular(10)),
           child: Text(label,
               style: const TextStyle(
                   fontFamily: _bodyFont,

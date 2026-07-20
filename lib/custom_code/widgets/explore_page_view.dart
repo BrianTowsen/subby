@@ -20,6 +20,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -439,7 +441,7 @@ class _ExplorePageViewState extends State<ExplorePageView> {
                   final selected = isAll ? current.isEmpty : e == current;
                   return InkWell(
                     onTap: () => Navigator.of(ctx).pop(isAll ? '' : e),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 14),
@@ -447,7 +449,7 @@ class _ExplorePageViewState extends State<ExplorePageView> {
                         color: selected
                             ? const Color(0xFFF3F6F7)
                             : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(children: [
                         Expanded(
@@ -529,7 +531,7 @@ class _ExplorePageViewState extends State<ExplorePageView> {
                                   Container(
                                     decoration: BoxDecoration(
                                       color: _paper,
-                                      borderRadius: BorderRadius.circular(14),
+                                      borderRadius: BorderRadius.circular(10),
                                       border: Border.all(color: _hairline),
                                     ),
                                     clipBehavior: Clip.antiAlias,
@@ -569,7 +571,7 @@ class _ExplorePageViewState extends State<ExplorePageView> {
                                         horizontal: 16, vertical: 13),
                                     decoration: BoxDecoration(
                                       color: _paper,
-                                      borderRadius: BorderRadius.circular(14),
+                                      borderRadius: BorderRadius.circular(10),
                                       border: Border.all(color: _hairline),
                                     ),
                                     child: Row(children: [
@@ -800,12 +802,12 @@ class _ExplorePageViewState extends State<ExplorePageView> {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: _paper,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: _hairline),
         ),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -814,7 +816,7 @@ class _ExplorePageViewState extends State<ExplorePageView> {
             height: 52,
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
-                color: _surface, borderRadius: BorderRadius.circular(11)),
+                color: _surface, borderRadius: BorderRadius.circular(10)),
             child: img.isNotEmpty
                 ? Image.network(img,
                     fit: BoxFit.cover,

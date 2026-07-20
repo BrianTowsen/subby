@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -283,7 +285,7 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
                       Container(
                         decoration: BoxDecoration(
                             color: _paper,
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(10),
                             border: Border.all(color: _border)),
                         padding: const EdgeInsets.all(13),
                         child: Row(children: [
@@ -325,13 +327,13 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
                     Expanded(
                       child: InkWell(
                         onTap: () => _setStatus('accepted'),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(10),
                         child: Container(
                           height: 52,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
                               color: _lime,
-                              borderRadius: BorderRadius.circular(14)),
+                              borderRadius: BorderRadius.circular(10)),
                           child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: const [
@@ -351,14 +353,14 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
                     const SizedBox(width: 10),
                     InkWell(
                       onTap: () => _setStatus('declined'),
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(10),
                       child: Container(
                           width: 52,
                           height: 52,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
                               color: _paper,
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(10),
                               border: Border.all(
                                   color: const Color(0xFFCBD8DD), width: 1.4)),
                           child: const Icon(Icons.close_rounded,
@@ -404,7 +406,7 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
   Widget _card(List<Widget> children) => Container(
         decoration: BoxDecoration(
             color: _paper,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: _border)),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
         child: Column(children: children),
@@ -434,7 +436,7 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
   Widget _stat(String l, String v) => Container(
         decoration: BoxDecoration(
             color: _paper,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: _border)),
         padding: const EdgeInsets.all(12),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

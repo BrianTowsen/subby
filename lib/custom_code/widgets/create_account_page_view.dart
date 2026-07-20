@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -53,7 +55,7 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
   // ────────────────────────────────────────────────────────────────────
 
   static const double _hPad = 20;
-  static const double _radius = 12;
+  static const double _radius = 10;
 
   final _displayNameCtrl = TextEditingController();
   final FocusNode _displayNameFocus = FocusNode();
@@ -137,7 +139,7 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
           elevation: 0,
           backgroundColor: const Color(0xFF3D4F66),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             side: BorderSide.none,
           ),
           duration: const Duration(milliseconds: 1600),
@@ -231,7 +233,7 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: _coral.withOpacity(0.10),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: _coral.withOpacity(0.35)),
       ),
       child: Row(
@@ -259,7 +261,7 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: _ink.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: _hairline),
       ),
       child: Text(msg,
@@ -530,7 +532,7 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
                         obscureText: _obscurePw,
                         trailing: InkWell(
                           onTap: () => setState(() => _obscurePw = !_obscurePw),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(10),
                           child: Padding(
                             padding: const EdgeInsets.all(4),
                             child: Icon(
@@ -549,7 +551,7 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
                             horizontal: 14, vertical: 12),
                         decoration: BoxDecoration(
                           color: _surface,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(
                           children: [

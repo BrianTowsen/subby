@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -67,7 +69,7 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
 
   static const double _hPad = 24;
   static const double _vPad = 14;
-  static const double _radius = 12;
+  static const double _radius = 10;
   static const double _gap = 12;
 
   static const String _kActiveProjectPath = 'subby_active_project_path';
@@ -611,7 +613,7 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
             padding: const EdgeInsets.all(13),
             decoration: BoxDecoration(
                 color: lime ? const Color(0xFFE7E247) : _surface,
-                borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(10)),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('$value',
@@ -643,16 +645,16 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
   Widget _actionInvite(FlutterFlowTheme theme) {
     return Material(
       color: Colors.transparent,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(10),
       child: InkWell(
         onTap: () =>
             _openQuoteRoute(widget.inviteRouteName, _fallbackInviteRoute),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
               color: const Color(0xFFE7E247),
-              borderRadius: BorderRadius.circular(14)),
+              borderRadius: BorderRadius.circular(10)),
           child: Row(children: [
             Container(
               width: 44,
@@ -660,7 +662,7 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                   color: _ink.withOpacity(0.10),
-                  borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(10)),
               child: const Icon(Icons.person_add_alt_1_rounded,
                   size: 22, color: _ink),
             ),
@@ -696,16 +698,16 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
   Widget _actionQuotes(FlutterFlowTheme theme, int received) {
     return Material(
       color: Colors.transparent,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(10),
       child: InkWell(
         onTap: () => _openQuoteRoute(
             widget.quotesReceivedRouteName, _fallbackQuotesReceivedRoute),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
               color: _paper,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(10),
               border: Border.all(color: _hairline)),
           child: Row(children: [
             Container(
@@ -713,7 +715,7 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
               height: 44,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                  color: _surface, borderRadius: BorderRadius.circular(12)),
+                  color: _surface, borderRadius: BorderRadius.circular(10)),
               child: const Icon(Icons.reviews_outlined, size: 22, color: _ink),
             ),
             const SizedBox(width: 13),

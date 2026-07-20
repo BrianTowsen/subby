@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/services.dart'; // SystemChrome / SystemUiOverlayStyle (dark status bar over white form)
@@ -75,7 +77,7 @@ class _EditProjectViewState extends State<EditProjectView>
 
   static const double _hPad = 24;
   static const double _vPad = 24;
-  static const double _radius = 12;
+  static const double _radius = 10;
   static const double _gap = 12;
 
   final _formKey = GlobalKey<FormState>();
@@ -528,7 +530,7 @@ class _EditProjectViewState extends State<EditProjectView>
             padding: const EdgeInsets.symmetric(vertical: 19),
             decoration: BoxDecoration(
               color: const Color(0xFFE7E247),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -600,7 +602,7 @@ class _EditProjectViewState extends State<EditProjectView>
                 fontWeight: FontWeight.w600,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(10),
               ),
             ),
             textButtonTheme: TextButtonThemeData(
@@ -945,7 +947,7 @@ class _EditProjectViewState extends State<EditProjectView>
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         splashFactory: NoSplash.splashFactory,
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,
@@ -956,14 +958,14 @@ class _EditProjectViewState extends State<EditProjectView>
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             color: _paper,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: borderColor, width: 1),
           ),
           child: Container(
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
             decoration: BoxDecoration(
               color: _surface,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: destructive
                     ? _coral.withOpacity(0.18)
@@ -978,7 +980,7 @@ class _EditProjectViewState extends State<EditProjectView>
                   height: 42,
                   decoration: BoxDecoration(
                     color: iconColor.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: iconColor.withOpacity(0.22),
                       width: 1,
@@ -1053,7 +1055,7 @@ class _EditProjectViewState extends State<EditProjectView>
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: _paper,
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.30),
@@ -1107,14 +1109,14 @@ class _EditProjectViewState extends State<EditProjectView>
                       Navigator.pop(ctx);
                       await onConfirm();
                     },
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: _warn,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         confirmLabel,
@@ -1132,14 +1134,14 @@ class _EditProjectViewState extends State<EditProjectView>
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () => Navigator.pop(ctx),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: _paper,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                             color: const Color(0xFFCBD8DD), width: 1.4),
                       ),
@@ -1393,7 +1395,7 @@ class _EditProjectViewState extends State<EditProjectView>
                         Container(
                           decoration: BoxDecoration(
                             color: _surface,
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           clipBehavior: Clip.antiAlias,
                           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1415,7 +1417,7 @@ class _EditProjectViewState extends State<EditProjectView>
                         Container(
                           decoration: BoxDecoration(
                             color: _paper,
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(10),
                             border: Border.all(color: _hairlineOnSurface),
                           ),
                           clipBehavior: Clip.antiAlias,

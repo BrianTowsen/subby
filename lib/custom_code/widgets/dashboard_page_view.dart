@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -170,8 +172,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
   // Geometry
   static const double _rSmall = 6;
-  static const double _rMed = 8;
-  static const double _rLarge = 12;
+  static const double _rMed = 6;
+  static const double _rLarge = 10;
   static const double _rPill = 999;
   static const double _pageHPad = 20;
 
@@ -709,7 +711,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         height: 16,
         decoration: BoxDecoration(
           color: c,
-          borderRadius: BorderRadius.circular(5),
+          borderRadius: BorderRadius.circular(10),
         ),
       );
 
@@ -1367,13 +1369,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
     return InkWell(
       onTap: () => _goToProject(sp.ref),
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
         decoration: BoxDecoration(
           // SHARED hero — tint surface (matches the tint project tiles).
           color: const Color(0xFFF4F2D2),
           border: Border.all(color: const Color(0xFFF4F2D2)),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(10),
         ),
         padding: const EdgeInsets.all(18),
         child: Column(
@@ -1502,12 +1504,12 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       padding: const EdgeInsets.only(bottom: 10),
       child: InkWell(
         onTap: () => _goToProject(sp.ref),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         child: Container(
           decoration: BoxDecoration(
             // SHARED primary row — muted yellow (matches owner tint tiles).
             color: const Color(0xFFF4F2D2),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: const Color(0xFFF4F2D2)),
           ),
           padding: const EdgeInsets.all(14),
@@ -1845,7 +1847,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
           color: _paper,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: const Color(0xFFDCE3E6)),
         ),
         padding: const EdgeInsets.all(12),
@@ -2035,7 +2037,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       padding: const EdgeInsets.fromLTRB(13, 13, 13, 12),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(11),
+        borderRadius: BorderRadius.circular(10),
         border: attention ? Border.all(color: const Color(0xFFDCE3E6)) : null,
         boxShadow: null,
       ),
@@ -2122,13 +2124,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
     return InkWell(
       onTap: () => _goToProject(ref),
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
         height: 84,
         decoration: BoxDecoration(
           color: bg,
           border: Border.all(color: border),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(10),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 18),
         child: Row(
@@ -2193,13 +2195,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // "New home build" add tile — slim neutral affordance so the hero leads.
   Widget _addTile() => InkWell(
         onTap: _goToAddProject,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(10),
         child: Container(
           height: 56,
           decoration: BoxDecoration(
             color: const Color(0xFFF6F8F9),
             border: Border.all(color: const Color(0xFFCBD8DD), width: 1.4),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(10),
           ),
           child: const Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -2448,11 +2450,11 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
     return InkWell(
       onTap: () => _goToProject(ref),
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
         decoration: BoxDecoration(
           color: const Color(0xFFE7E247),
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(10),
         ),
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -2542,7 +2544,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             Container(
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 11),
               child: Row(
@@ -2591,11 +2593,11 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
     return InkWell(
       onTap: () => _goToProject(ref),
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
         decoration: BoxDecoration(
           color: const Color(0xFFEDF1F3),
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(10),
         ),
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -2689,7 +2691,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             Container(
               decoration: BoxDecoration(
                 color: _paper,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 11),
               child: Row(
@@ -3232,14 +3234,14 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
     return InkWell(
       onTap: () => _goToProject(doc.reference),
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
         decoration: BoxDecoration(
           // MOST RECENT card — sage-yellow tint (matches the ProjectDetail
           // "Manage" module tiles + the rest of the project cards).
           color: const Color(0xFFE7EDF0),
           border: Border.all(color: const Color(0xFFCBD8DD)),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(10),
         ),
         padding: const EdgeInsets.all(18),
         child: Column(
@@ -3375,12 +3377,12 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       padding: const EdgeInsets.only(bottom: 10),
       child: InkWell(
         onTap: () => _goToProject(doc.reference),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         child: Container(
           decoration: BoxDecoration(
             // Owned project rows — sage-yellow tint (matches the Manage tiles).
             color: const Color(0xFFE7EDF0),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: const Color(0xFFCBD8DD)),
           ),
           padding: const EdgeInsets.all(14),
@@ -3543,7 +3545,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: const Color(0xFFE7E247),
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(10),
           ),
           child: const Icon(Icons.lock_open_rounded, size: 32, color: _ink),
         ),
@@ -3619,7 +3621,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: const Color(0xFFE7E247),
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(10),
           ),
           child: const Icon(Icons.construction, size: 32, color: _ink),
         ),
@@ -3671,7 +3673,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: const Color(0xFFE7E247),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -3735,13 +3737,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
     return InkWell(
       onTap: _goToListing,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: _surface,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: const Color(0xFFDCE3E6)),
         ),
         child: Row(
@@ -3878,7 +3880,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   Widget _heroSkeleton() => Container(
         decoration: BoxDecoration(
           color: _paper,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: _hairline),
         ),
         padding: const EdgeInsets.all(18),

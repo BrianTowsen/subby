@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -306,14 +308,14 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
 
   Widget _outlineBtn(String label, VoidCallback? onTap) => InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         child: Container(
           height: 52,
           padding: const EdgeInsets.symmetric(horizontal: 18),
           alignment: Alignment.center,
           decoration: BoxDecoration(
               color: _paper,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(10),
               border: Border.all(color: const Color(0xFFCBD8DD), width: 1.4)),
           child: Text(label,
               style: const TextStyle(
@@ -331,12 +333,12 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
           required VoidCallback? onTap}) =>
       InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         child: Container(
           height: 52,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-              color: color, borderRadius: BorderRadius.circular(14)),
+              color: color, borderRadius: BorderRadius.circular(10)),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
             Icon(icon, size: 19, color: _ink),
             const SizedBox(width: 8),
@@ -412,7 +414,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
               Container(
                 decoration: BoxDecoration(
                     color: _paper.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(10)),
                 padding: const EdgeInsets.all(11),
                 child: Row(children: [
                   Container(
@@ -542,7 +544,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
             return Container(
               decoration: BoxDecoration(
                   color: const Color(0xFFF2F5F6),
-                  borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(10)),
               padding: const EdgeInsets.all(13),
               child: Text('No shared ${category}s.',
                   style: const TextStyle(
@@ -555,7 +557,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
           return Container(
             decoration: BoxDecoration(
                 color: _paper,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: _border)),
             clipBehavior: Clip.antiAlias,
             child: Column(children: [
@@ -656,7 +658,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-          color: _surface, borderRadius: BorderRadius.circular(14)),
+          color: _surface, borderRadius: BorderRadius.circular(10)),
       child: FutureBuilder<DocumentSnapshot<Object?>>(
         future: ref?.get(),
         builder: (context, snap) {
@@ -675,7 +677,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
               height: 44,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                  color: _paper, borderRadius: BorderRadius.circular(12)),
+                  color: _paper, borderRadius: BorderRadius.circular(10)),
               child: Text(_initials(display),
                   style: const TextStyle(
                       fontFamily: 'Inter Tight',

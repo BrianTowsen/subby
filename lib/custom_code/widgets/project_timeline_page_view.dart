@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:intl/intl.dart';
@@ -1020,7 +1022,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: _paper,
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.30),
@@ -1069,13 +1071,13 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                       Navigator.pop(ctx);
                       if (onConfirm != null) onConfirm();
                     },
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                          color: red, borderRadius: BorderRadius.circular(12)),
+                          color: red, borderRadius: BorderRadius.circular(10)),
                       child: Text(confirmLabel,
                           style: const TextStyle(
                               fontFamily: _body,
@@ -1090,14 +1092,14 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () => Navigator.pop(ctx),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: _paper,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                             color: const Color(0xFFCBD8DD), width: 1.4),
                       ),
@@ -1308,13 +1310,13 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
 
     return InkWell(
       onTap: () => _pickTemplate(key),
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: _paper,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: _border),
         ),
         child: Row(
@@ -1326,7 +1328,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
               padding: const EdgeInsets.all(9),
               decoration: BoxDecoration(
                   color: const Color(0xFFEEF2F4),
-                  borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(10)),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -1336,7 +1338,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                       height: 7,
                       decoration: BoxDecoration(
                         color: floors[i] ? _ink : Colors.transparent,
-                        borderRadius: BorderRadius.circular(2),
+                        borderRadius: BorderRadius.circular(10),
                         border: floors[i]
                             ? null
                             : Border.all(
@@ -1388,12 +1390,12 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
 
   Widget _scratchCard() => InkWell(
         onTap: _startScratch,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(10),
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: _paper,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: _dash, width: 1.4),
           ),
           child: Row(
@@ -1404,7 +1406,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                     color: const Color(0xFFEEF2F4),
-                    borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(10)),
                 child: const Icon(Icons.add_rounded, size: 24, color: _green),
               ),
               const SizedBox(width: 14),
@@ -1519,7 +1521,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
         padding: const EdgeInsets.fromLTRB(22, 44, 22, 44),
         decoration: BoxDecoration(
           color: _paper,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: _border),
         ),
         child: Column(
@@ -2043,7 +2045,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
     return Container(
       decoration: BoxDecoration(
         color: _paper,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: _border),
       ),
       clipBehavior: Clip.antiAlias,
@@ -2488,7 +2490,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                         color: _paper,
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: _border)),
                     child: Row(
                       children: [
@@ -2498,7 +2500,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                           margin: const EdgeInsets.only(right: 10),
                           decoration: BoxDecoration(
                               color: editColor,
-                              borderRadius: BorderRadius.circular(4)),
+                              borderRadius: BorderRadius.circular(10)),
                         ),
                         Expanded(
                           child: TextField(
@@ -2544,7 +2546,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                           horizontal: 14, vertical: 13),
                       decoration: BoxDecoration(
                           color: const Color(0xFFEEF2F4),
-                          borderRadius: BorderRadius.circular(14)),
+                          borderRadius: BorderRadius.circular(10)),
                       child: Row(
                         children: [
                           const Icon(Icons.account_tree_rounded,
@@ -2647,11 +2649,11 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                     const SizedBox(height: 8),
                     InkWell(
                       onTap: _addChild,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(10),
                       child: Container(
                         padding: const EdgeInsets.all(13),
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: _dash, width: 1.4),
                         ),
                         child: Row(
@@ -2674,12 +2676,12 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                   const SizedBox(height: 22),
                   InkWell(
                     onTap: _deleteSel,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       padding: const EdgeInsets.all(13),
                       decoration: BoxDecoration(
                           color: _paper,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: _border)),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -2701,11 +2703,11 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                   // done
                   InkWell(
                     onTap: _back,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       padding: const EdgeInsets.all(15),
                       decoration: BoxDecoration(
-                          color: _ink, borderRadius: BorderRadius.circular(12)),
+                          color: _ink, borderRadius: BorderRadius.circular(10)),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: const [
@@ -2743,7 +2745,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
           color: _paper,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(6),
           border: Border.all(color: _border)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2793,7 +2795,8 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                   children: [
                     Container(
                       decoration: BoxDecoration(
-                          color: _band, borderRadius: BorderRadius.circular(6)),
+                          color: _band,
+                          borderRadius: BorderRadius.circular(10)),
                     ),
                     for (final sg in segs)
                       Positioned(
@@ -2804,7 +2807,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
                         child: Container(
                           decoration: BoxDecoration(
                             color: color.withOpacity(sg.current ? 1 : 0.28),
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
                       ),
@@ -2845,7 +2848,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
           color: _paper,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: _border)),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2874,7 +2877,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       decoration: BoxDecoration(
           color: _paper,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: _border)),
       child: Row(
         children: [
@@ -2934,12 +2937,12 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
     final active = current == key || (isFirst && key == 'start');
     return InkWell(
       onTap: () => _setMode(key),
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
         decoration: BoxDecoration(
           color: active ? _ink : _paper,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: active ? _ink : _hairlineOnSurface),
         ),
         child: Column(
@@ -2966,12 +2969,12 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
       opacity: enabled ? 1 : 0.35,
       child: InkWell(
         onTap: enabled ? onTap : null,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         child: Container(
           padding: const EdgeInsets.all(11),
           decoration: BoxDecoration(
               color: _paper,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
               border: Border.all(color: _border)),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -2994,12 +2997,12 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   Widget _insertBtn(String label, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
         padding: const EdgeInsets.all(11),
         decoration: BoxDecoration(
             color: _paper,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: _dash, width: 1.2)),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -3021,13 +3024,13 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   Widget _childRow(_Child c, int si, int ci) {
     return InkWell(
       onTap: () => _openEdit(si, ci),
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
         decoration: BoxDecoration(
             color: _paper,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: _border)),
         child: Row(
           children: [
@@ -3073,7 +3076,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
       decoration: BoxDecoration(
         color: _paper,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: _border),
       ),
       child: Column(
