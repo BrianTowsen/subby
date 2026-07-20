@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -44,38 +46,6 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
   static const String _kActiveProjectPath = 'subby_active_project_path';
   static const String _kActiveQuotePath = 'subby_active_quote_path';
 
-  static const List<String> _scopeOptions = [
-    'Professional Fees',
-    'Preliminaries & General',
-    'Site Preparation',
-    'Site Establishment',
-    'Earthworks & Excavation',
-    'Concrete Works (Foundations)',
-    'Brickwork & Blockwork',
-    'Damp Proofing & Waterproofing',
-    'Structural Steel Works',
-    'Roofing & Trusses',
-    'Windows & Door Frames',
-    'Glazing',
-    'Plumbing & Drainage',
-    'Sanitary Fittings',
-    'Electrical Works',
-    'Electrical Fittings',
-    'Plastering & Screeds',
-    'Ceilings & Partitioning',
-    'Internal Carpentry & Joinery',
-    'Kitchen (Built-in Units)',
-    'Built-in Cupboards',
-    'Tiling',
-    'Floor Covering',
-    'Special Items',
-    'Painting & Decorating',
-    'Balustrades & Railings',
-    'External Site Works',
-    'Landscaping',
-    'Cleaning & Handover',
-  ];
-
   DocumentReference<Map<String, dynamic>>? _projectRef;
   DocumentReference<Map<String, dynamic>>? _quoteRef;
   String _projectName = 'Project';
@@ -84,6 +54,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
   final Set<String> _scope = {};
   bool _saving = false;
   String _status = 'invited';
+  String _pmMessage = '';
 
   @override
   void initState() {
@@ -138,6 +109,8 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
       try {
         final snap = await qref.get();
         final status = (snap.data()?['status'] ?? '').toString();
+        final msg = (snap.data()?['message'] ?? '').toString();
+        if (mounted && msg.isNotEmpty) setState(() => _pmMessage = msg);
         if (snap.exists && (status == 'invited' || status.isEmpty)) {
           await qref.set({
             'status': 'viewed',
@@ -157,7 +130,6 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
     setState(() => _saving = true);
     try {
       await qref.set({
-        'scope': _scope.toList(),
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } catch (_) {}
@@ -284,7 +256,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
               ? _primaryBtn(
                   icon: Icons.edit_document,
                   label: 'Prepare your quote',
-                  color: _scope.isEmpty ? const Color(0xFFB7C2C7) : _lime,
+                  color: _lime,
                   onTap: _saving ? null : _prepare)
               : _primaryBtn(
                   icon: Icons.check_rounded,
@@ -454,24 +426,16 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
                     children: [
                       _pmCard(),
                       const SizedBox(height: 18),
+                      if (_pmMessage.isNotEmpty) ...[
+                        _messageCard(),
+                        const SizedBox(height: 16),
+                      ],
                       _docsSection(ref, 'DRAWINGS', 'drawing',
                           Icons.architecture_rounded),
                       const SizedBox(height: 14),
                       _docsSection(ref, 'DOCUMENTS', 'document',
                           Icons.description_rounded),
                       const SizedBox(height: 16),
-                      const Text('YOUR SCOPE · pick sections',
-                          style: TextStyle(
-                              fontFamily: _body,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.6,
-                              color: _inkMute)),
-                      const SizedBox(height: 10),
-                      Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [for (final s in _scopeOptions) _chip(s)]),
                     ],
                   ),
           ),
@@ -588,6 +552,29 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
       ),
     ]);
   }
+
+  Widget _messageCard() => Container(
+        decoration: BoxDecoration(
+            color: _surface, borderRadius: BorderRadius.circular(10)),
+        padding: const EdgeInsets.all(14),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('MESSAGE FROM PROJECT MANAGER',
+              style: TextStyle(
+                  fontFamily: _body,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.6,
+                  color: _inkMute)),
+          const SizedBox(height: 8),
+          Text(_pmMessage,
+              style: const TextStyle(
+                  fontFamily: _body,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  height: 1.5,
+                  color: _ink)),
+        ]),
+      );
 
   Widget _chip(String s) {
     final on = _scope.contains(s);

@@ -10,8 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -131,6 +129,28 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
     }
   }
 
+  String _awardDate(dynamic ts) {
+    if (ts is Timestamp) {
+      final d = ts.toDate();
+      const m = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec'
+      ];
+      return '${d.day} ${m[d.month - 1]} ${d.year}';
+    }
+    return '';
+  }
+
   String _fmt(num v) {
     final n = v.round();
     final s = n.abs().toString();
@@ -241,17 +261,25 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
           return ta.compareTo(tb);
         });
         final submitted = docs
-            .where((d) => ['submitted', 'accepted']
-                .contains((d.data()['status'] ?? '').toString()))
+            .where((d) => (d.data()['status'] ?? '').toString() == 'submitted')
+            .length;
+        final awarded = docs
+            .where((d) => (d.data()['status'] ?? '').toString() == 'accepted')
             .length;
         final viewed = docs
             .where((d) => (d.data()['status'] ?? '').toString() == 'viewed')
             .length;
+        final summaryParts = <String>[
+          '${docs.length} quote${docs.length == 1 ? '' : 's'}',
+        ];
+        if (awarded > 0) summaryParts.add('$awarded awarded');
+        if (submitted > 0) summaryParts.add('$submitted submitted');
+        if (viewed > 0) summaryParts.add('$viewed viewed');
+        final summary = summaryParts.join(' · ');
         return ListView(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
           children: [
-            Text(
-                '${docs.length} quote${docs.length == 1 ? '' : 's'} · $submitted submitted · $viewed viewed',
+            Text(summary,
                 style: const TextStyle(
                     fontFamily: 'Roboto Mono',
                     fontSize: 12,
@@ -447,15 +475,25 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
                   ] else
                     Padding(
                       padding: const EdgeInsets.only(top: 10),
-                      child: Row(children: const [
-                        Icon(Icons.verified_rounded, size: 16, color: _success),
-                        SizedBox(width: 6),
-                        Text('Awarded',
+                      child: Row(children: [
+                        const Icon(Icons.verified_rounded,
+                            size: 16, color: _success),
+                        const SizedBox(width: 6),
+                        const Text('Awarded',
                             style: TextStyle(
                                 fontFamily: _body,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w800,
                                 color: _success)),
+                        if (_awardDate(d['decidedAt']).isNotEmpty) ...[
+                          const SizedBox(width: 6),
+                          Text('· ${_awardDate(d['decidedAt'])}',
+                              style: const TextStyle(
+                                  fontFamily: _body,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: _faint)),
+                        ],
                       ]),
                     ),
                 ],
