@@ -22,6 +22,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -186,7 +188,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
                 decoration: BoxDecoration(
                   color: const Color(0xFF0A84FF), // iOS blue
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -505,7 +507,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
                 Container(
                   decoration: BoxDecoration(
                     color: _paper,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(6),
                     border: Border.all(color: _border),
                   ),
                   padding: const EdgeInsets.all(13),
@@ -545,13 +547,13 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
               children: [
                 InkWell(
                   onTap: canSubmit && !_saving ? _submit : null,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(10),
                   child: Container(
                     height: 52,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: canSubmit ? _lime : const Color(0xFFB7C2C7),
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: _saving
                         ? const SizedBox(
@@ -654,7 +656,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
       return Container(
         decoration: BoxDecoration(
           color: _sage,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
         ),
         padding: const EdgeInsets.all(14),
         child: Row(
@@ -693,7 +695,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
             ),
             InkWell(
               onTap: _removeFile,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10),
               child: const Padding(
                 padding: EdgeInsets.all(6),
                 child: Icon(Icons.close_rounded, size: 19, color: _inkMute),
@@ -705,11 +707,11 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
     }
     return InkWell(
       onTap: _pickFile,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
         decoration: BoxDecoration(
           color: _sage,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(10),
         ),
         padding: const EdgeInsets.symmetric(vertical: 26, horizontal: 20),
         child: Column(
@@ -719,7 +721,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
               height: 56,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                  color: _ink, borderRadius: BorderRadius.circular(16)),
+                  color: _ink, borderRadius: BorderRadius.circular(10)),
               child: const Icon(Icons.upload_file_rounded,
                   size: 28, color: _paper),
             ),
@@ -747,7 +749,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
     return Container(
       decoration: BoxDecoration(
         color: _paper,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: _border),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -771,7 +773,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
                   height: 36,
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   decoration: BoxDecoration(
-                      color: _surface, borderRadius: BorderRadius.circular(9)),
+                      color: _surface, borderRadius: BorderRadius.circular(10)),
                   child: Row(
                     children: [
                       const Text('R',

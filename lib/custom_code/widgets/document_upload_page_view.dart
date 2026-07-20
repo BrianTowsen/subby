@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -83,7 +85,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
 
   static const double _hPad = 24;
   static const double _vPad = 14;
-  static const double _radius = 12;
+  static const double _radius = 10;
   static const double _gap = 12;
 
   // Local state
@@ -405,7 +407,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: _paper,
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.30),
@@ -459,14 +461,14 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
                       Navigator.pop(ctx);
                       await onConfirm();
                     },
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: _warn,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         confirmLabel,
@@ -484,14 +486,14 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () => Navigator.pop(ctx),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: _paper,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                             color: const Color(0xFFCBD8DD), width: 1.4),
                       ),
@@ -546,7 +548,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         splashFactory: NoSplash.splashFactory,
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,
@@ -557,7 +559,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: _surface,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: borderColor, width: 1),
           ),
           child: Row(
@@ -567,7 +569,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
                 height: 42,
                 decoration: BoxDecoration(
                   color: iconColor.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                   border:
                       Border.all(color: iconColor.withOpacity(0.22), width: 1),
                 ),
@@ -892,7 +894,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
             if (onDelete != null)
               InkWell(
                 onTap: onDelete,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(10),
                 child: Padding(
                   padding: const EdgeInsets.all(6),
                   child: Icon(

@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 // ===================================
 // FILE: post_auth_gate_page_view.dart
 // ===================================
@@ -201,7 +203,7 @@ class _PostAuthGatePageViewState extends State<PostAuthGatePageView>
                       foregroundColor: _sparkInk, // ink-on-yellow, never white
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(6),
                       ),
                     ),
                     child: const Text(

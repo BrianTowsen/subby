@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status bar icons over ink hero)
@@ -62,7 +64,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
 
   static const double _hPad = 24;
   static const double _vPad = 14;
-  static const double _radius = 12;
+  static const double _radius = 10;
   static const double _gap = 12;
 
   final _formKey = GlobalKey<FormState>();
@@ -473,7 +475,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
             padding: const EdgeInsets.symmetric(vertical: 19),
             decoration: BoxDecoration(
               color: const Color(0xFFE7E247),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -545,7 +547,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
                 fontWeight: FontWeight.w600,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(10),
               ),
             ),
             textButtonTheme: TextButtonThemeData(
@@ -810,7 +812,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
                             Container(
                               decoration: BoxDecoration(
                                 color: _paper,
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: BorderRadius.circular(10),
                                 border: Border.all(color: _hairline),
                               ),
                               clipBehavior: Clip.antiAlias,

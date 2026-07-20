@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'dart:typed_data';
@@ -532,7 +534,7 @@ class _EditListingPageViewState extends State<EditListingPageView> {
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: _paper,
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.30),
@@ -585,14 +587,14 @@ class _EditListingPageViewState extends State<EditListingPageView> {
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () => Navigator.pop(ctx, true),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: _warn,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         confirmLabel,
@@ -611,14 +613,14 @@ class _EditListingPageViewState extends State<EditListingPageView> {
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () => Navigator.pop(ctx, false),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: _paper,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: _rule, width: 1.4),
                       ),
                       child: const Text(
@@ -691,7 +693,7 @@ class _EditListingPageViewState extends State<EditListingPageView> {
                   final selected = e == current;
                   return InkWell(
                     onTap: () => Navigator.of(ctx).pop(e),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 14),
@@ -699,7 +701,7 @@ class _EditListingPageViewState extends State<EditListingPageView> {
                         color: selected
                             ? const Color(0xFFF3F6F7)
                             : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(children: [
                         Expanded(
@@ -798,7 +800,7 @@ class _EditListingPageViewState extends State<EditListingPageView> {
                             Container(
                               decoration: BoxDecoration(
                                 color: _paper,
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: BorderRadius.circular(10),
                                 border: Border.all(color: _hairline),
                               ),
                               clipBehavior: Clip.antiAlias,
@@ -894,7 +896,7 @@ class _EditListingPageViewState extends State<EditListingPageView> {
                               onTap: (_saving || _deleting)
                                   ? null
                                   : () => _save(listingRef),
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(10),
                               child: Opacity(
                                 opacity: _saving ? 0.6 : 1,
                                 child: Container(
@@ -903,7 +905,7 @@ class _EditListingPageViewState extends State<EditListingPageView> {
                                       const EdgeInsets.symmetric(vertical: 15),
                                   decoration: BoxDecoration(
                                       color: _lime,
-                                      borderRadius: BorderRadius.circular(14)),
+                                      borderRadius: BorderRadius.circular(10)),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
@@ -933,7 +935,7 @@ class _EditListingPageViewState extends State<EditListingPageView> {
                                   onTap: (_saving || _deleting)
                                       ? null
                                       : () => _deleteListing(listingRef),
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(10),
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 16, vertical: 8),
@@ -1011,12 +1013,12 @@ class _EditListingPageViewState extends State<EditListingPageView> {
   }) =>
       InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
             color: _paper,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: _hairline),
           ),
           child: Row(children: [
@@ -1042,14 +1044,14 @@ class _EditListingPageViewState extends State<EditListingPageView> {
     Widget thumb() {
       if (hasNew) {
         return ClipRRect(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
           child: Image.memory(_heroBytes!,
               width: 76, height: 76, fit: BoxFit.cover),
         );
       }
       if (hasExisting) {
         return ClipRRect(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
           child: Image.network(_existingHeroUrl,
               width: 76, height: 76, fit: BoxFit.cover),
         );
@@ -1060,7 +1062,7 @@ class _EditListingPageViewState extends State<EditListingPageView> {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: _paper,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: _hairlineOnSurface, width: 1.5),
         ),
         child: const Icon(Icons.add_a_photo_outlined, size: 24, color: _faint),
@@ -1070,7 +1072,7 @@ class _EditListingPageViewState extends State<EditListingPageView> {
     return Row(children: [
       InkWell(
         onTap: _saving ? null : _pickHeroPhoto,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         child: thumb(),
       ),
       const SizedBox(width: 14),
@@ -1326,12 +1328,12 @@ class _EditListingPageViewState extends State<EditListingPageView> {
                 const SizedBox(height: 18),
                 InkWell(
                   onTap: () => context.safePop(),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(10),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 22, vertical: 13),
                     decoration: BoxDecoration(
-                        color: _lime, borderRadius: BorderRadius.circular(14)),
+                        color: _lime, borderRadius: BorderRadius.circular(10)),
                     child: const Text('Go back',
                         style: TextStyle(
                             fontFamily: _bodyFont,

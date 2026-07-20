@@ -22,6 +22,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -83,7 +85,7 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
   // ────────────────────────────────────────────────────────────────────
 
   static const double _hPad = 24;
-  static const double _radius = 12;
+  static const double _radius = 10;
   static const double _stickyTabsHeight = 62;
   static const String _kActiveProjectPath = 'subby_active_project_path';
 
@@ -297,7 +299,7 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: _paper,
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.30),
@@ -350,14 +352,14 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () => Navigator.pop(ctx, true),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: warn,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Text(
                         'Close task',
@@ -376,14 +378,14 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () => Navigator.pop(ctx, false),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: _paper,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                             color: const Color(0xFFCBD8DD), width: 1.4),
                       ),

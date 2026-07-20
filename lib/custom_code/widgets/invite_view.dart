@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -283,7 +285,7 @@ class _InviteViewState extends State<InviteView> {
                                   Container(
                                     decoration: BoxDecoration(
                                         color: const Color(0xFFF2F5F6),
-                                        borderRadius: BorderRadius.circular(14),
+                                        borderRadius: BorderRadius.circular(10),
                                         border: Border.all(color: _border)),
                                     padding: const EdgeInsets.all(18),
                                     child: const Text(
@@ -300,7 +302,7 @@ class _InviteViewState extends State<InviteView> {
                                 Container(
                                   decoration: BoxDecoration(
                                       color: const Color(0xFFE7EDF0),
-                                      borderRadius: BorderRadius.circular(12)),
+                                      borderRadius: BorderRadius.circular(10)),
                                   padding: const EdgeInsets.all(12),
                                   child: Row(
                                       crossAxisAlignment:
@@ -334,7 +336,7 @@ class _InviteViewState extends State<InviteView> {
                               onTap: _selected.isNotEmpty && !_sending
                                   ? () => _send(rows)
                                   : null,
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(10),
                               child: Container(
                                 height: 52,
                                 alignment: Alignment.center,
@@ -342,7 +344,7 @@ class _InviteViewState extends State<InviteView> {
                                     color: _selected.isNotEmpty
                                         ? _lime
                                         : const Color(0xFFB7C2C7),
-                                    borderRadius: BorderRadius.circular(14)),
+                                    borderRadius: BorderRadius.circular(10)),
                                 child: _sending
                                     ? const SizedBox(
                                         width: 20,
@@ -393,7 +395,7 @@ class _InviteViewState extends State<InviteView> {
         margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
           color: _paper,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(
               color: on ? _sageBorder : _border, width: on ? 1.5 : 1),
         ),
@@ -405,7 +407,7 @@ class _InviteViewState extends State<InviteView> {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                   color: on ? _ink : _surface,
-                  borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(10)),
               child: Icon(Icons.storefront_rounded,
                   size: 22, color: on ? _paper : _faint)),
           const SizedBox(width: 12),

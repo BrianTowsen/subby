@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -88,7 +90,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
   // ────────────────────────────────────────────────────────────────────
 
   static const double _hPad = 24;
-  static const double _radius = 12;
+  static const double _radius = 10;
 
   static const String _kActiveSnagPath = 'subby_active_snag_path';
 
@@ -1066,7 +1068,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
         height: 48,
         decoration: BoxDecoration(
           color: _surface,
-          borderRadius: BorderRadius.circular(9),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(
               color: selected
                   ? selColor
@@ -1156,7 +1158,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
             alignment: Alignment.center,
             decoration: BoxDecoration(
                 color: has ? _tealTint : _surface,
-                borderRadius: BorderRadius.circular(9)),
+                borderRadius: BorderRadius.circular(10)),
             child: has
                 ? Text(_initials(name),
                     style: const TextStyle(
@@ -1284,7 +1286,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: has ? _surface : const Color(0x0F566670),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
             color: has ? _hairlineOnSurface : const Color(0x59566670)),
       ),
@@ -1610,7 +1612,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: _paper,
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.30),
@@ -1666,14 +1668,14 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
                       Navigator.pop(ctx);
                       await onConfirm();
                     },
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: accent,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         confirmLabel,
@@ -1692,14 +1694,14 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () => Navigator.pop(ctx),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: _paper,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                             color: const Color(0xFFCBD8DD), width: 1.4),
                       ),

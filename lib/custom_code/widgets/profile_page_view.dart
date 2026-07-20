@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 // ✅ provides currentUserReference, currentUserEmail, etc.
 import '/auth/firebase_auth/auth_util.dart';
 
@@ -170,7 +172,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
           elevation: 0,
           backgroundColor: _surface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             side: const BorderSide(color: _hairline, width: 1),
           ),
           duration: const Duration(milliseconds: 1700),
@@ -268,7 +270,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: _paper,
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.30),
@@ -324,14 +326,14 @@ class _ProfilePageViewState extends State<ProfilePageView> {
                       Navigator.pop(ctx);
                       await onConfirm();
                     },
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: _warn,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         confirmLabel,
@@ -350,14 +352,14 @@ class _ProfilePageViewState extends State<ProfilePageView> {
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () => Navigator.pop(ctx),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: _paper,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                             color: const Color(0xFFCBD8DD), width: 1.4),
                       ),
@@ -596,7 +598,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
                 width: 9,
                 height: 18,
                 decoration: BoxDecoration(
-                    color: _ink, borderRadius: BorderRadius.circular(5)),
+                    color: _ink, borderRadius: BorderRadius.circular(10)),
               ),
               const SizedBox(width: 10),
               Expanded(child: Text(title, style: _sectionTitle)),
@@ -610,7 +612,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
   Widget _freeNote(String detail) => Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-            color: _surface, borderRadius: BorderRadius.circular(12)),
+            color: _surface, borderRadius: BorderRadius.circular(10)),
         child: Row(
           children: [
             const Icon(Icons.check_circle_rounded, size: 19, color: _steel),
@@ -646,7 +648,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
         width: double.infinity,
         height: 52,
         decoration: BoxDecoration(
-            color: _accent, borderRadius: BorderRadius.circular(12)),
+            color: _accent, borderRadius: BorderRadius.circular(10)),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -678,7 +680,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
         height: 50,
         decoration: BoxDecoration(
           color: _paper,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: borderColor, width: 1),
         ),
         child: Row(

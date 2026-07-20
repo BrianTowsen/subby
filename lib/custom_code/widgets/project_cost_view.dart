@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -248,7 +250,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
                 decoration: BoxDecoration(
                   color: const Color(0xFF0A84FF), // iOS blue
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -616,12 +618,12 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                         if (!_readOnly)
                           InkWell(
                             onTap: _addSection,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(10),
                             child: Container(
                               padding: const EdgeInsets.all(13),
                               decoration: BoxDecoration(
                                 color: _paper,
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(10),
                                 border: Border.all(color: _dash, width: 1.4),
                               ),
                               child: Row(
@@ -643,12 +645,12 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                         const SizedBox(height: 12),
                         InkWell(
                           onTap: () => setState(() => _manage = false),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                           child: Container(
                             padding: const EdgeInsets.all(15),
                             decoration: BoxDecoration(
                                 color: _header,
-                                borderRadius: BorderRadius.circular(12)),
+                                borderRadius: BorderRadius.circular(10)),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: const [
@@ -676,7 +678,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                   padding: const EdgeInsets.fromLTRB(8, 6, 6, 6),
                   decoration: BoxDecoration(
                     color: _paper,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: _border),
                   ),
                   child: Row(
@@ -697,7 +699,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                         margin: const EdgeInsets.symmetric(horizontal: 8),
                         decoration: BoxDecoration(
                           color: _header,
-                          borderRadius: BorderRadius.circular(5),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text('${i + 1}',
                             style: const TextStyle(
@@ -731,7 +733,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                       if (!_readOnly)
                         InkWell(
                           onTap: () => _removeSection(s),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(6),
                           child: const Padding(
                             padding: EdgeInsets.all(6),
                             child: Icon(Icons.delete_outline_rounded,
@@ -770,7 +772,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: _paper,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.30),
@@ -824,14 +826,14 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                       Navigator.pop(ctx);
                       _removeInvoice();
                     },
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: _warn,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Text('Delete invoice',
                           style: TextStyle(
@@ -848,14 +850,14 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () => Navigator.pop(ctx),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: _paper,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: _dash, width: 1.4),
                       ),
                       child: const Text('Cancel',
@@ -1050,7 +1052,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: _paper,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.30),
@@ -1107,14 +1109,14 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                       Navigator.pop(ctx);
                       _deletePayment();
                     },
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: _warn,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Text(
                         'Delete payment',
@@ -1133,14 +1135,14 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () => Navigator.pop(ctx),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: _paper,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: _dash, width: 1.4),
                       ),
                       child: const Text(
@@ -1534,7 +1536,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                     Container(
                       decoration: BoxDecoration(
                         color: _paper,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: _border),
                       ),
                       clipBehavior: Clip.antiAlias,
@@ -1639,7 +1641,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       padding: const EdgeInsets.fromLTRB(22, 40, 22, 40),
       decoration: BoxDecoration(
         color: _paper,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: _border),
       ),
       child: Column(
@@ -1649,7 +1651,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
             height: 54,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-                color: _band, borderRadius: BorderRadius.circular(14)),
+                color: _band, borderRadius: BorderRadius.circular(10)),
             child: const Icon(Icons.list_alt_rounded, size: 26, color: _zero),
           ),
           const SizedBox(height: 14),
@@ -1754,7 +1756,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                 margin: const EdgeInsets.only(right: 10),
                 decoration: BoxDecoration(
                   color: _ink,
-                  borderRadius: BorderRadius.circular(5),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text('${index + 1}',
                     style: const TextStyle(
@@ -1839,7 +1841,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                   margin: const EdgeInsets.only(right: 9),
                   decoration: BoxDecoration(
                     color: const Color(0xFFE7EDF0),
-                    borderRadius: BorderRadius.circular(5),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(subNum,
                       style: const TextStyle(
@@ -2216,12 +2218,12 @@ class _ProjectCostViewState extends State<ProjectCostView> {
   Widget _addSectionButton() {
     return InkWell(
       onTap: _addSection,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
         padding: const EdgeInsets.all(13),
         decoration: BoxDecoration(
           color: _paper,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: _dash, width: 1.4),
         ),
         child: Row(
@@ -2246,7 +2248,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     return Container(
       decoration: BoxDecoration(
         color: _brandYellowPale,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
       ),
       padding: const EdgeInsets.fromLTRB(14, 6, 14, 14),
       child: Column(
@@ -2324,15 +2326,15 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                       filled: true,
                       fillColor: const Color(0xFFF7F9FA),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(7),
+                        borderRadius: BorderRadius.circular(6),
                         borderSide: const BorderSide(color: _dash, width: 1),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(7),
+                        borderRadius: BorderRadius.circular(6),
                         borderSide: const BorderSide(color: _green, width: 1.4),
                       ),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(7),
+                        borderRadius: BorderRadius.circular(6),
                       ),
                     ),
                   ),
@@ -2578,12 +2580,12 @@ class _ProjectCostViewState extends State<ProjectCostView> {
 
     return InkWell(
       onTap: () => _openPayment(p.id),
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
         padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
         decoration: BoxDecoration(
           color: _paper,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: _border),
         ),
         child: Column(
@@ -2793,7 +2795,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     return Container(
       decoration: BoxDecoration(
         color: _paper,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: _border),
       ),
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
@@ -2927,7 +2929,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
             width: 10,
             height: 10,
             decoration: BoxDecoration(
-                color: dot, borderRadius: BorderRadius.circular(3)),
+                color: dot, borderRadius: BorderRadius.circular(10)),
           ),
           const SizedBox(width: 8),
           Text(label,
@@ -2979,7 +2981,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     return Container(
       decoration: BoxDecoration(
         color: c.withOpacity(0.06),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
       ),
       padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
       child: Row(
@@ -3034,7 +3036,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     return Container(
       decoration: BoxDecoration(
         color: _paper,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: _border),
       ),
       padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
@@ -3255,7 +3257,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                   const SizedBox(height: 8),
                   InkWell(
                     onTap: _readOnly ? null : () => _pickDate(p),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(10),
                     child: _cardField(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 14),
@@ -3301,12 +3303,12 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                   if (!_readOnly)
                     InkWell(
                       onTap: _confirmDeletePayment,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(10),
                       child: Container(
                         padding: const EdgeInsets.all(13),
                         decoration: BoxDecoration(
                             color: _paper,
-                            borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(10)),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: const [
@@ -3326,11 +3328,11 @@ class _ProjectCostViewState extends State<ProjectCostView> {
                   const SizedBox(height: 12),
                   InkWell(
                     onTap: _closePayment,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       padding: const EdgeInsets.all(15),
                       decoration: BoxDecoration(
-                          color: _ink, borderRadius: BorderRadius.circular(12)),
+                          color: _ink, borderRadius: BorderRadius.circular(10)),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: const [
@@ -3383,7 +3385,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
         padding: padding ?? const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: _paper,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: _border),
         ),
         child: child,
@@ -3393,13 +3395,13 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     final active = p.status == v;
     return InkWell(
       onTap: _readOnly ? null : () => _editPayment((x) => x.status = v),
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(6),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: active ? _ink : const Color(0xFFE4EAED),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(6),
         ),
         child: Text(_statusLabel[v] ?? v,
             style: TextStyle(
@@ -3417,12 +3419,12 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     if (!has) {
       return InkWell(
         onTap: _readOnly ? null : _attachInvoice,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: _paper,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: _dash, width: 1.4),
           ),
           child: Row(
@@ -3446,7 +3448,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
       decoration: BoxDecoration(
         color: _paper,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: _border),
       ),
       child: Row(
@@ -3457,7 +3459,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: _green.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10),
             ),
             child:
                 const Icon(Icons.description_rounded, size: 18, color: _green),
@@ -3529,7 +3531,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     return Container(
       decoration: BoxDecoration(
         color: _paper,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: _border),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -3604,7 +3606,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
     return Container(
       decoration: BoxDecoration(
         color: _paper,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: _border),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 14),

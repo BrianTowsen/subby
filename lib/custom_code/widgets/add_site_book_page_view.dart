@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -93,7 +95,7 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
   // ────────────────────────────────────────────────────────────────────
 
   static const double _hPad = 20;
-  static const double _radius = 12;
+  static const double _radius = 10;
 
   static const String _kActiveProjectPath = 'subby_active_project_path';
 
@@ -639,7 +641,7 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
   Widget _noteField() => Container(
         decoration: BoxDecoration(
           color: _paper,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: _fieldBorder),
         ),
         padding: const EdgeInsets.all(14),
@@ -687,7 +689,7 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
             padding: const EdgeInsets.symmetric(vertical: 9),
             decoration: BoxDecoration(
               color: sel ? _paper : Colors.transparent,
-              borderRadius: BorderRadius.circular(9),
+              borderRadius: BorderRadius.circular(10),
               boxShadow: sel
                   ? [
                       BoxShadow(
@@ -719,7 +721,7 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
           color: const Color(0xFFE7ECEF),
-          borderRadius: BorderRadius.circular(12)),
+          borderRadius: BorderRadius.circular(10)),
       child: Row(
         children: [
           seg('sunny', 'Sunny', Icons.wb_sunny_outlined),
@@ -744,7 +746,7 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
               height: 84,
               decoration: BoxDecoration(
                 color: _paper,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: _tintBorder, width: 1.5),
               ),
               child: Column(
@@ -879,7 +881,7 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
         Container(
           decoration: BoxDecoration(
             color: _paper,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: _fieldBorder),
           ),
           padding: const EdgeInsets.fromLTRB(14, 4, 4, 4),
@@ -916,7 +918,7 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
-                      color: _sage, borderRadius: BorderRadius.circular(9)),
+                      color: _sage, borderRadius: BorderRadius.circular(10)),
                   child: const Text('Add',
                       style: TextStyle(
                           fontFamily: _bodyFont,

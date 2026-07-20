@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -519,7 +521,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                               });
                               await onConfirm(selectedRef!);
                             },
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(10),
                       child: Opacity(
                         opacity: selectedRef == null ? 0.5 : 1,
                         child: Container(
@@ -527,7 +529,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                           padding: const EdgeInsets.symmetric(vertical: 15),
                           decoration: BoxDecoration(
                               color: _lime,
-                              borderRadius: BorderRadius.circular(14)),
+                              borderRadius: BorderRadius.circular(10)),
                           child: Center(
                             child:
                                 Row(mainAxisSize: MainAxisSize.min, children: [
@@ -1001,7 +1003,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                 padding: const EdgeInsets.all(14),
                                 decoration: BoxDecoration(
                                     color: _surface,
-                                    borderRadius: BorderRadius.circular(14)),
+                                    borderRadius: BorderRadius.circular(10)),
                                 child: Row(children: [
                                   Container(
                                     width: 46,
@@ -1010,7 +1012,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                     decoration: BoxDecoration(
                                         color: _paper,
                                         borderRadius:
-                                            BorderRadius.circular(12)),
+                                            BorderRadius.circular(10)),
                                     child: Text(_initials(providerDisplay),
                                         style: const TextStyle(
                                             fontFamily: _displayFont,
@@ -1082,13 +1084,13 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                 const SizedBox(height: 10),
                                 InkWell(
                                   onTap: () => _launchEmail(listingEmail),
-                                  borderRadius: BorderRadius.circular(14),
+                                  borderRadius: BorderRadius.circular(10),
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 16, vertical: 14),
                                     decoration: BoxDecoration(
                                         color: _paper,
-                                        borderRadius: BorderRadius.circular(14),
+                                        borderRadius: BorderRadius.circular(10),
                                         border: Border.all(color: _hairline)),
                                     child: Row(children: [
                                       const Icon(Icons.mail_outlined,
@@ -1147,14 +1149,14 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                           providerRef: ownerRef,
                           title: plTitle,
                         ),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(10),
                         child: Container(
                           height: 52,
                           alignment: Alignment.center,
                           padding: const EdgeInsets.symmetric(horizontal: 6),
                           decoration: BoxDecoration(
                               color: _paper,
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(10),
                               border: Border.all(color: _ink, width: 1.5)),
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -1188,14 +1190,14 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                           ratingText: plRatingText,
                           photoUrl: heroPhotoUrl,
                         ),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(10),
                         child: Container(
                           height: 52,
                           alignment: Alignment.center,
                           padding: const EdgeInsets.symmetric(horizontal: 6),
                           decoration: BoxDecoration(
                               color: _lime,
-                              borderRadius: BorderRadius.circular(14)),
+                              borderRadius: BorderRadius.circular(10)),
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             mainAxisSize: MainAxisSize.min,
@@ -1380,7 +1382,7 @@ class _DetailTabsState extends State<_DetailTabs> {
                   childAspectRatio: 1.2,
                 ),
                 itemBuilder: (context, i) => ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                   child: Image.network(widget.galleryPhotos[i],
                       fit: BoxFit.cover,
                       errorBuilder: (c, e, st) => Container(
@@ -1395,7 +1397,7 @@ class _DetailTabsState extends State<_DetailTabs> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(10),
               border: Border.all(color: _hairline)),
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

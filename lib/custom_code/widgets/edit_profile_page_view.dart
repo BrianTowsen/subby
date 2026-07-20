@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 // ✅ Auth helpers (currentUserReference, currentUserEmail, etc.)
 import '/auth/firebase_auth/auth_util.dart';
 
@@ -121,7 +123,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
           elevation: 0,
           backgroundColor: const Color(0xFF3D4F66),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             side: BorderSide.none,
           ),
           duration: const Duration(milliseconds: 1700),
@@ -229,7 +231,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
           height: 54,
           decoration: BoxDecoration(
             color: _accent,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
           ),
           alignment: Alignment.center,
           child: _saving
@@ -421,7 +423,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: _surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
         children: [
@@ -661,7 +663,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
                                 child: Container(
                                   decoration: BoxDecoration(
                                     color: _paper,
-                                    borderRadius: BorderRadius.circular(14),
+                                    borderRadius: BorderRadius.circular(10),
                                     border: Border.all(color: _hairline),
                                   ),
                                   clipBehavior: Clip.antiAlias,

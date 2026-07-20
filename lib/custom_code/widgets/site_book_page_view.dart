@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
@@ -101,7 +103,7 @@ class _SiteBookPageViewState extends State<SiteBookPageView> {
   // ────────────────────────────────────────────────────────────────────
 
   static const double _hPad = 20;
-  static const double _radius = 12;
+  static const double _radius = 10;
 
   static const List<String> _weekdays = [
     'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN' //
@@ -527,7 +529,7 @@ class _SiteBookPageViewState extends State<SiteBookPageView> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
         decoration: BoxDecoration(
           color: _surface,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
           children: [
@@ -609,14 +611,14 @@ class _SiteBookPageViewState extends State<SiteBookPageView> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: _paper,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: _hairline),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: () => _openEntry(doc),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -770,13 +772,13 @@ class _SiteBookPageViewState extends State<SiteBookPageView> {
           color: Colors.transparent,
           child: InkWell(
             onTap: _handleAddSiteBook,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(10),
             child: Container(
               height: 52,
               padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
                 color: _surface,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
                 children: [
@@ -835,7 +837,7 @@ class _SiteBookPageViewState extends State<SiteBookPageView> {
               height: 60,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                  color: _tint, borderRadius: BorderRadius.circular(16)),
+                  color: _tint, borderRadius: BorderRadius.circular(10)),
               child: const Icon(Icons.menu_book_rounded, size: 28, color: _ink),
             ),
             const SizedBox(height: 16),
@@ -890,7 +892,7 @@ class _SiteBookPageViewState extends State<SiteBookPageView> {
             height: 60,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-                color: _tint, borderRadius: BorderRadius.circular(16)),
+                color: _tint, borderRadius: BorderRadius.circular(10)),
             child: const Icon(Icons.cloud_off_rounded, size: 28, color: _ink),
           ),
           const SizedBox(height: 16),

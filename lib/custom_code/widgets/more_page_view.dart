@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 // =============================================================================
 // MorePageView (v7, steel/accent restyle) — the "everything else" hub.
 //
@@ -208,7 +210,7 @@ class _MorePageViewState extends State<MorePageView> {
               width: 9,
               height: 18,
               decoration: BoxDecoration(
-                  color: _ink, borderRadius: BorderRadius.circular(5)),
+                  color: _ink, borderRadius: BorderRadius.circular(10)),
             ),
             const SizedBox(width: 10),
             Text(title,
@@ -233,7 +235,7 @@ class _MorePageViewState extends State<MorePageView> {
     return Container(
       decoration: BoxDecoration(
         color: _paper,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: _hairline, width: 1),
       ),
       clipBehavior: Clip.antiAlias,

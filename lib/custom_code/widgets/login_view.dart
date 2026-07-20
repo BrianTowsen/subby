@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -67,7 +69,7 @@ class _LoginViewState extends State<LoginView> {
   // ────────────────────────────────────────────────────────────────────
 
   static const double _hPad = 20;
-  static const double _radius = 12;
+  static const double _radius = 10;
 
   static const String _prefsKeyLoginMethod = 'subby_login_method';
   static const int _otpLen = 6;
@@ -240,7 +242,7 @@ class _LoginViewState extends State<LoginView> {
           elevation: 0,
           backgroundColor: _surface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             side: const BorderSide(color: _hairline, width: 1),
           ),
           duration: const Duration(milliseconds: 1600),
@@ -669,7 +671,7 @@ class _LoginViewState extends State<LoginView> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: _coral.withOpacity(0.10),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: _coral.withOpacity(0.35)),
       ),
       child: Row(
@@ -708,11 +710,11 @@ class _LoginViewState extends State<LoginView> {
             fillColor: _surface,
             contentPadding: const EdgeInsets.symmetric(vertical: 15),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(6),
               borderSide: const BorderSide(color: _hairlineOnSurface, width: 1),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(6),
               borderSide: const BorderSide(color: _steel, width: 1.7),
             ),
           ),
@@ -860,7 +862,7 @@ class _LoginViewState extends State<LoginView> {
               ),
               InkWell(
                 onTap: () => setState(() => _obscurePw = !_obscurePw),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(6),
                 child: Padding(
                   padding: const EdgeInsets.all(4),
                   child: Icon(

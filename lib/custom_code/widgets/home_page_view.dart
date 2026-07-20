@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -81,7 +83,7 @@ class _HomePageViewState extends State<HomePageView> {
   static const double _hPad = 20;
 
   // Menu-button geometry — matches DashboardPageView (_rLarge = 12).
-  static const double _rLarge = 12;
+  static const double _rLarge = 10;
 
   static const String _kProvince = 'subby_app_province';
   static const String _kCity = 'subby_app_city';
@@ -455,7 +457,7 @@ class _HomePageViewState extends State<HomePageView> {
                   final selected = e == current;
                   return InkWell(
                     onTap: () => Navigator.of(ctx).pop(e),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 14),
@@ -463,7 +465,7 @@ class _HomePageViewState extends State<HomePageView> {
                         color: selected
                             ? const Color(0xFFF3F6F7)
                             : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(children: [
                         Expanded(
@@ -719,7 +721,7 @@ class _HomePageViewState extends State<HomePageView> {
         padding: padding,
         decoration: BoxDecoration(
           color: _paper,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: _hairline),
         ),
         clipBehavior: Clip.antiAlias,
@@ -787,7 +789,7 @@ class _HomePageViewState extends State<HomePageView> {
             height: 34,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-                color: _surface, borderRadius: BorderRadius.circular(9)),
+                color: _surface, borderRadius: BorderRadius.circular(10)),
             child: Icon(_iconForCategory(category), size: 18, color: _slate),
           ),
           const SizedBox(width: 12),

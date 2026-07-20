@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -74,7 +76,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
 
   static const double _hPad = 24;
   static const double _vPad = 14;
-  static const double _radius = 12;
+  static const double _radius = 10;
   static const double _gap = 0;
 
   static const double _sliverTopGap = 4;
@@ -618,7 +620,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
                 height: 52,
                 decoration: BoxDecoration(
                   color: _surface,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: _hairlineOnSurface),
                   image: photoUrl.isNotEmpty
                       ? DecorationImage(
@@ -909,12 +911,12 @@ class _SnagListPageViewState extends State<SnagListPageView>
             color: Colors.transparent,
             child: InkWell(
               onTap: _handleAddSnag,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
               child: Container(
                 height: 52,
                 decoration: BoxDecoration(
                     color: const Color(0xFFE7E247),
-                    borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(10)),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: const [

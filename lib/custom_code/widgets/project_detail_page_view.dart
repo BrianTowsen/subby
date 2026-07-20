@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -150,7 +152,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
 
   static const double _hPad = 24;
   static const double _vPad = 24;
-  static const double _radius = 12;
+  static const double _radius = 10;
   static const double _gap = 12;
   static const double _pmGridTileH = 165; // ✅ SAME as DashboardPageView
 
@@ -784,7 +786,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         splashFactory: NoSplash.splashFactory,
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,
@@ -795,14 +797,14 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             color: _paper, // ✅ shell = primaryBackground
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: borderColor, width: 1),
           ),
           child: Container(
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
             decoration: BoxDecoration(
               color: _surface, // ✅ inner = secondaryBackground
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: destructive
                     ? _coral.withOpacity(0.18)
@@ -817,7 +819,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                   height: 42,
                   decoration: BoxDecoration(
                     color: iconColor.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: iconColor.withOpacity(0.22),
                       width: 1,
@@ -892,7 +894,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: _paper,
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.30),
@@ -946,14 +948,14 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                       Navigator.pop(ctx);
                       await onConfirm();
                     },
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: _coral,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         confirmLabel,
@@ -971,14 +973,14 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () => Navigator.pop(ctx),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: _paper,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                             color: const Color(0xFFCBD8DD), width: 1.4),
                       ),
@@ -1904,7 +1906,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                   height: 40,
                   decoration: BoxDecoration(
                     color: chipBg,
-                    borderRadius: BorderRadius.circular(11),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(icon, size: 21, color: _paper),
                 ),
@@ -1976,7 +1978,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
               height: 40,
               decoration: BoxDecoration(
                 color: _ink,
-                borderRadius: BorderRadius.circular(11),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(icon, size: 21, color: _paper),
             ),
@@ -2275,7 +2277,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                 const SizedBox(width: 18),
                 InkWell(
                   onTap: onDelete,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(10),
                   child: Padding(
                     padding: const EdgeInsets.all(6),
                     child: Icon(
@@ -2290,7 +2292,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                 const SizedBox(width: 6),
                 InkWell(
                   onTap: onDownload,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(10),
                   child: const Padding(
                     padding: EdgeInsets.all(6),
                     child: Icon(Icons.download_rounded, size: 20, color: _ink),
@@ -2389,7 +2391,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
               if (!readOnly && onDelete != null)
                 InkWell(
                   onTap: onDelete,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(10),
                   child: Padding(
                     padding: const EdgeInsets.all(6),
                     child: Icon(
@@ -2409,12 +2411,12 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   Widget _uploadDocButton(FlutterFlowTheme theme, Color accent) {
     return _tapCard(
       onTap: _navigateToUploadDocument,
-      radius: BorderRadius.circular(12),
+      radius: BorderRadius.circular(10),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: accent,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -2466,7 +2468,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             Container(
               decoration: BoxDecoration(
                 color: _tealSurface,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: _tealSurfaceBorder),
               ),
               padding: const EdgeInsets.all(15),
@@ -3503,7 +3505,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-          color: _surface, borderRadius: BorderRadius.circular(14)),
+          color: _surface, borderRadius: BorderRadius.circular(10)),
       child: FutureBuilder<DocumentSnapshot<Object?>>(
         future: ownerRef?.get(),
         builder: (context, snap) {
@@ -3516,7 +3518,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
               height: 44,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                  color: _paper, borderRadius: BorderRadius.circular(12)),
+                  color: _paper, borderRadius: BorderRadius.circular(10)),
               child: Text(_rInitials(nm),
                   style: const TextStyle(
                       fontFamily: _displayFont,
@@ -3586,7 +3588,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         height: 40,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-            color: _paper, borderRadius: BorderRadius.circular(11)),
+            color: _paper, borderRadius: BorderRadius.circular(10)),
         child: Icon(icon, size: 21, color: _ink),
       );
 
@@ -3741,12 +3743,12 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(6),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
             color: const Color(0xFFEDF1F3),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(6),
           ),
           child: Row(children: [
             Container(
@@ -3755,7 +3757,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: attention ? const Color(0xFFF7E4E4) : _paper,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(icon,
                   size: 24, color: attention ? const Color(0xFFAC0C0C) : _ink),
@@ -3820,12 +3822,12 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
               color: const Color(0xFFE7E247),
-              borderRadius: BorderRadius.circular(14)),
+              borderRadius: BorderRadius.circular(10)),
           child: Row(children: [
             Container(
               width: 46,
@@ -3833,7 +3835,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
               alignment: Alignment.center,
               decoration: BoxDecoration(
                   color: const Color(0x1A1E282E),
-                  borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(10)),
               child: Icon(icon, size: 24, color: _ink),
             ),
             const SizedBox(width: 14),
@@ -3903,11 +3905,11 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-              color: _surface, borderRadius: BorderRadius.circular(14)),
+              color: _surface, borderRadius: BorderRadius.circular(10)),
           child: Row(children: [
             _rModIcon(icon),
             const SizedBox(width: 12),
@@ -4016,7 +4018,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
         decoration: BoxDecoration(
           color: _surface,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: const Text('No modules shared with you yet.',
             style: TextStyle(
@@ -4084,7 +4086,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   Widget _rDocCard(List<Widget> rows) => Container(
         decoration: BoxDecoration(
             color: _paper,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: _rDivider)),
         clipBehavior: Clip.antiAlias,
         child: Column(children: rows),
@@ -4169,14 +4171,14 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             color: Colors.transparent,
             child: InkWell(
               onTap: _navigateToUploadDocument,
-              borderRadius: BorderRadius.circular(9),
+              borderRadius: BorderRadius.circular(10),
               child: Container(
                 width: 30,
                 height: 30,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                     color: const Color(0xFFAC0C0C),
-                    borderRadius: BorderRadius.circular(9)),
+                    borderRadius: BorderRadius.circular(10)),
                 child: const Icon(Icons.add_rounded,
                     size: 18, color: Colors.white),
               ),
@@ -4288,7 +4290,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                         color: _tealTint,
-                        borderRadius: BorderRadius.circular(9)),
+                        borderRadius: BorderRadius.circular(10)),
                     child: Text(_rInitials(title),
                         style: const TextStyle(
                             fontFamily: _displayFont,

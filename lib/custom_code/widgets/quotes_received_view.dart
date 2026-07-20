@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -270,7 +272,7 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
   Widget _emptyCard() => Container(
         decoration: BoxDecoration(
             color: const Color(0xFFF2F5F6),
-            borderRadius: BorderRadius.circular(14)),
+            borderRadius: BorderRadius.circular(10)),
         padding: const EdgeInsets.all(18),
         child: const Text(
             'No trades invited yet. Invite trades from the project team to request quotes.',
@@ -297,15 +299,15 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
       margin: const EdgeInsets.only(bottom: 12),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         child: InkWell(
           // Tapping anywhere on the quote block opens the full Quote Detail.
           onTap: () => _openDetail(doc.reference),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
           child: Container(
             decoration: BoxDecoration(
               color: submitted ? _paper : const Color(0xFFF2F5F6),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(10),
               border: submitted
                   ? Border.all(
                       color: accepted ? _sageBorder : _border,
@@ -322,7 +324,7 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                         color: submitted ? _ink : _surface,
-                        borderRadius: BorderRadius.circular(11)),
+                        borderRadius: BorderRadius.circular(10)),
                     child: Icon(Icons.storefront_rounded,
                         size: 20, color: submitted ? _paper : _faint),
                   ),
@@ -394,13 +396,13 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
                       Expanded(
                         child: InkWell(
                           onTap: () => _setStatus(doc.reference, 'accepted'),
-                          borderRadius: BorderRadius.circular(11),
+                          borderRadius: BorderRadius.circular(10),
                           child: Container(
                             height: 42,
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                                 color: _lime,
-                                borderRadius: BorderRadius.circular(11)),
+                                borderRadius: BorderRadius.circular(10)),
                             child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: const [
@@ -420,14 +422,14 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
                       const SizedBox(width: 9),
                       InkWell(
                         onTap: () => _setStatus(doc.reference, 'declined'),
-                        borderRadius: BorderRadius.circular(11),
+                        borderRadius: BorderRadius.circular(10),
                         child: Container(
                           width: 42,
                           height: 42,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
                               color: _paper,
-                              borderRadius: BorderRadius.circular(11),
+                              borderRadius: BorderRadius.circular(10),
                               border: Border.all(
                                   color: const Color(0xFFCBD8DD), width: 1.4)),
                           child: const Icon(Icons.close_rounded,

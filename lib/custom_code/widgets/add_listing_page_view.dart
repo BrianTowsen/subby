@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -318,7 +320,7 @@ class _AddListingPageViewState extends State<AddListingPageView> {
                   final selected = e == current;
                   return InkWell(
                     onTap: () => Navigator.of(ctx).pop(e),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 14),
@@ -326,7 +328,7 @@ class _AddListingPageViewState extends State<AddListingPageView> {
                         color: selected
                             ? const Color(0xFFF3F6F7)
                             : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(children: [
                         Expanded(
@@ -409,7 +411,7 @@ class _AddListingPageViewState extends State<AddListingPageView> {
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               color: _paper,
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(10),
                               border: Border.all(
                                   color: _hairlineOnSurface, width: 1.5),
                             ),
@@ -423,7 +425,7 @@ class _AddListingPageViewState extends State<AddListingPageView> {
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                                 color: _surface,
-                                borderRadius: BorderRadius.circular(14)),
+                                borderRadius: BorderRadius.circular(10)),
                             child: const Icon(Icons.image_outlined,
                                 size: 24, color: Color(0xFFC6D0D5)),
                           ),
@@ -434,7 +436,7 @@ class _AddListingPageViewState extends State<AddListingPageView> {
                         Container(
                           decoration: BoxDecoration(
                             color: _paper,
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(10),
                             border: Border.all(color: _hairline),
                           ),
                           clipBehavior: Clip.antiAlias,
@@ -525,7 +527,7 @@ class _AddListingPageViewState extends State<AddListingPageView> {
                         const SizedBox(height: 24),
                         InkWell(
                           onTap: _isSaving ? null : _save,
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(6),
                           child: Opacity(
                             opacity: _isSaving ? 0.6 : 1,
                             child: Container(
@@ -533,7 +535,7 @@ class _AddListingPageViewState extends State<AddListingPageView> {
                               padding: const EdgeInsets.symmetric(vertical: 15),
                               decoration: BoxDecoration(
                                   color: _lime,
-                                  borderRadius: BorderRadius.circular(14)),
+                                  borderRadius: BorderRadius.circular(10)),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -586,12 +588,12 @@ class _AddListingPageViewState extends State<AddListingPageView> {
   }) =>
       InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
             color: _paper,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: _hairline),
           ),
           child: Row(children: [

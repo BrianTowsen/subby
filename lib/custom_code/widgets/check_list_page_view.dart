@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -973,13 +975,13 @@ class _CheckListPageViewState extends State<CheckListPageView>
     final meta = '${secs.length} sections · $checks checks';
     return InkWell(
       onTap: () => _pickTemplate(key),
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: _paper,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: _border),
         ),
         child: Row(children: [
@@ -989,7 +991,7 @@ class _CheckListPageViewState extends State<CheckListPageView>
             padding: const EdgeInsets.all(9),
             decoration: BoxDecoration(
                 color: const Color(0xFFEEF2F4),
-                borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(10)),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -999,7 +1001,7 @@ class _CheckListPageViewState extends State<CheckListPageView>
                     height: 7,
                     decoration: BoxDecoration(
                       color: floors[i] ? _ink : Colors.transparent,
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: BorderRadius.circular(10),
                       border: floors[i]
                           ? null
                           : Border.all(color: _faint, width: 1.5),
@@ -1047,11 +1049,11 @@ class _CheckListPageViewState extends State<CheckListPageView>
 
   Widget _scratchCard() => InkWell(
         onTap: _startScratch,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(10),
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: const Color(0xFFCBD8DD), width: 1.5),
           ),
           child: Row(children: [
@@ -1061,7 +1063,7 @@ class _CheckListPageViewState extends State<CheckListPageView>
               alignment: Alignment.center,
               decoration: BoxDecoration(
                   color: const Color(0xFFEEF2F4),
-                  borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(10)),
               child: const Icon(Icons.add_rounded, size: 22, color: _inkMute),
             ),
             const SizedBox(width: 14),
@@ -1431,7 +1433,7 @@ class _CheckListPageViewState extends State<CheckListPageView>
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: _border),
       ),
       clipBehavior: Clip.antiAlias,
@@ -1449,7 +1451,7 @@ class _CheckListPageViewState extends State<CheckListPageView>
                   height: 38,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                      color: _paper, borderRadius: BorderRadius.circular(11)),
+                      color: _paper, borderRadius: BorderRadius.circular(10)),
                   child: Icon(_iconFor(sec.name), size: 20, color: _ink),
                 ),
                 const SizedBox(width: 12),
@@ -1535,7 +1537,7 @@ class _CheckListPageViewState extends State<CheckListPageView>
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: c.done ? _yellow : _paper,
-                  borderRadius: BorderRadius.circular(7),
+                  borderRadius: BorderRadius.circular(10),
                   border: Border.all(
                       color: c.done ? _yellow : _chevron,
                       width: c.done ? 1 : 1.5),
@@ -1595,7 +1597,7 @@ class _CheckListPageViewState extends State<CheckListPageView>
               height: 64,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                  color: _band, borderRadius: BorderRadius.circular(18)),
+                  color: _band, borderRadius: BorderRadius.circular(10)),
               child: const Icon(Icons.playlist_add_rounded,
                   size: 30, color: _inkMute),
             ),
@@ -1687,11 +1689,11 @@ class _CheckListPageViewState extends State<CheckListPageView>
             for (var i = 0; i < _sections.length; i++) _editSectionCard(i),
             InkWell(
               onTap: _addSection,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(10),
               child: Container(
                 padding: const EdgeInsets.all(13),
                 decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(10),
                     border:
                         Border.all(color: const Color(0xFFCBD8DD), width: 1.5)),
                 child: Row(
@@ -1738,7 +1740,7 @@ class _CheckListPageViewState extends State<CheckListPageView>
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: _border),
       ),
       clipBehavior: Clip.antiAlias,

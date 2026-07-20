@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 // =================== DashboardSettingsPageView (FULL FILE) ===================
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -66,7 +68,7 @@ class _DashboardSettingsPageViewState extends State<DashboardSettingsPageView> {
   // ────────────────────────────────────────────────────────────────────
 
   static const double _hPad = 24;
-  static const double _radius = 12;
+  static const double _radius = 10;
   static const double _gap = 12;
   static const double _tileH = 72;
 
@@ -345,13 +347,13 @@ class _DashboardSettingsPageViewState extends State<DashboardSettingsPageView> {
               children: [
                 InkWell(
                   onTap: () => Navigator.maybePop(context),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                   child: Container(
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
                       color: _surface,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: _hairline),
                     ),
                     child: Icon(
@@ -414,7 +416,7 @@ class _DashboardSettingsPageViewState extends State<DashboardSettingsPageView> {
                       Expanded(
                         child: InkWell(
                           onTap: _resetDefaults,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 14,
@@ -422,7 +424,7 @@ class _DashboardSettingsPageViewState extends State<DashboardSettingsPageView> {
                             ),
                             decoration: BoxDecoration(
                               color: _surface,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(10),
                               border: Border.all(color: _hairline),
                             ),
                             child: Center(
@@ -442,7 +444,7 @@ class _DashboardSettingsPageViewState extends State<DashboardSettingsPageView> {
                       Expanded(
                         child: InkWell(
                           onTap: () => Navigator.maybePop(context),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 14,
@@ -450,7 +452,7 @@ class _DashboardSettingsPageViewState extends State<DashboardSettingsPageView> {
                             ),
                             decoration: BoxDecoration(
                               color: _spark,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(10),
                             ),
                             child: const Center(
                               child: Text(

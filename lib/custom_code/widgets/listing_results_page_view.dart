@@ -18,6 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -398,7 +400,7 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                         foregroundColor: _inkMute,
                         side: const BorderSide(color: _rule, width: 1),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
+                            borderRadius: BorderRadius.circular(6)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                       child: const Text('Reset',
@@ -418,7 +420,7 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                         foregroundColor: _ink,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
+                            borderRadius: BorderRadius.circular(6)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                       child: const Text('Apply',
@@ -739,12 +741,12 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
           }.withoutNulls,
         );
       },
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: _paper,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: _hairline),
         ),
         child: Row(children: [
@@ -753,7 +755,7 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
             height: 48,
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
-                color: _surface, borderRadius: BorderRadius.circular(11)),
+                color: _surface, borderRadius: BorderRadius.circular(10)),
             child: heroPhoto.isNotEmpty
                 ? Image.network(heroPhoto, fit: BoxFit.cover)
                 : const Icon(Icons.handyman_rounded, size: 22, color: _slate),

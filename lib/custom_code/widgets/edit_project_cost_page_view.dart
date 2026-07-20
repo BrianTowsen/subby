@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -206,7 +208,7 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
                 decoration: BoxDecoration(
                   color: const Color(0xFF0A84FF), // iOS blue
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -583,7 +585,7 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: _paper,
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.30),
@@ -640,14 +642,14 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
                       Navigator.pop(ctx);
                       _deleteLineNow();
                     },
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: _warn,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Text(
                         'Delete line item',
@@ -666,14 +668,14 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () => Navigator.pop(ctx),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: _paper,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: _dash, width: 1.4),
                       ),
                       child: const Text(
@@ -881,7 +883,7 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
                       margin: const EdgeInsets.only(right: 6),
                       decoration: BoxDecoration(
                           color: _green,
-                          borderRadius: BorderRadius.circular(2)),
+                          borderRadius: BorderRadius.circular(10)),
                     ),
                     Flexible(
                       child: Text(contextLabel,
@@ -909,7 +911,7 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                       color: _paper,
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: _border)),
                   child: Row(
                     children: [
@@ -919,7 +921,7 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
                         margin: const EdgeInsets.only(right: 10),
                         decoration: BoxDecoration(
                             color: _green,
-                            borderRadius: BorderRadius.circular(4)),
+                            borderRadius: BorderRadius.circular(10)),
                       ),
                       Expanded(
                         child: TextField(
@@ -1000,12 +1002,12 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
                 const SizedBox(height: 22),
                 InkWell(
                   onTap: _confirmDeleteLine,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                   child: Container(
                     padding: const EdgeInsets.all(13),
                     decoration: BoxDecoration(
                         color: _paper,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: _border)),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -1027,11 +1029,11 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
                 // done
                 InkWell(
                   onTap: _back,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                   child: Container(
                     padding: const EdgeInsets.all(15),
                     decoration: BoxDecoration(
-                        color: _ink, borderRadius: BorderRadius.circular(12)),
+                        color: _ink, borderRadius: BorderRadius.circular(10)),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: const [
@@ -1084,7 +1086,7 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
           color: _paper,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: _border)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1149,7 +1151,7 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
                     child: Container(
                       decoration: BoxDecoration(
                         color: _green.withOpacity(cur ? 1 : 0.26),
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
                   ));
@@ -1162,7 +1164,8 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
                   children: [
                     Container(
                       decoration: BoxDecoration(
-                          color: _band, borderRadius: BorderRadius.circular(6)),
+                          color: _band,
+                          borderRadius: BorderRadius.circular(10)),
                     ),
                     ...segs,
                   ],
@@ -1220,7 +1223,7 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
           color: _paper,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: _border)),
       child: Row(
         children: [
@@ -1283,7 +1286,7 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
           color: _paper,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: _border)),
       child: Row(
         children: [
@@ -1349,12 +1352,12 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
       opacity: enabled ? 1 : 0.35,
       child: InkWell(
         onTap: enabled ? onTap : null,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         child: Container(
           padding: const EdgeInsets.all(11),
           decoration: BoxDecoration(
               color: _paper,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
               border: Border.all(color: _border)),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1377,12 +1380,12 @@ class _EditProjectCostPageViewState extends State<EditProjectCostPageView> {
   Widget _insertBtn(String label, VoidCallback onTap) {
     return InkWell(
       onTap: _readOnly ? null : onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
         padding: const EdgeInsets.all(11),
         decoration: BoxDecoration(
             color: _paper,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: _dash, width: 1.2)),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

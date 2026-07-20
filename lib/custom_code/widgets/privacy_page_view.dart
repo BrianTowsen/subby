@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:intl/intl.dart';
 
 class PrivacyPageView extends StatefulWidget {
@@ -56,7 +58,7 @@ class _PrivacyPageViewState extends State<PrivacyPageView> {
 
   static const double _hPad = 24;
   static const double _vPad = 14;
-  static const double _radius = 12;
+  static const double _radius = 10;
 
   // =========================================================
   // ✅ TYPOGRAPHY (locked palette — explicit family + colour)

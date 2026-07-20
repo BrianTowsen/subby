@@ -12,6 +12,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -69,7 +71,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
   // ────────────────────────────────────────────────────────────────────
 
   static const double _hPad = 24;
-  static const double _radius = 12;
+  static const double _radius = 10;
 
   static const String _kActiveProjectPath = 'subby_active_project_path';
 
@@ -880,7 +882,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
               headerBackgroundColor: _teal,
               headerForegroundColor: _paper,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20)),
+                  borderRadius: BorderRadius.circular(10)),
             ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(foregroundColor: _teal),
@@ -1197,7 +1199,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                           Container(
                             decoration: BoxDecoration(
                               color: _paper,
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(10),
                               border: Border.all(color: _hairline),
                             ),
                             clipBehavior: Clip.antiAlias,

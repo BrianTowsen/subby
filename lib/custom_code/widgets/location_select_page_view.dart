@@ -20,6 +20,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 class LocationSelectPageView extends StatefulWidget {
@@ -190,7 +192,7 @@ class _LocationSelectPageViewState extends State<LocationSelectPageView> {
                   final selected = e == _province;
                   return InkWell(
                     onTap: () => Navigator.of(ctx).pop(e),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 14),
@@ -198,7 +200,7 @@ class _LocationSelectPageViewState extends State<LocationSelectPageView> {
                         color: selected
                             ? const Color(0xFFF3F6F7)
                             : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(children: [
                         Expanded(
@@ -268,13 +270,13 @@ class _LocationSelectPageViewState extends State<LocationSelectPageView> {
                           const SizedBox(height: 10),
                           InkWell(
                             onTap: _pickProvince,
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(10),
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 14),
                               decoration: BoxDecoration(
                                 color: _paper,
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: BorderRadius.circular(10),
                                 border: Border.all(color: _hairline),
                               ),
                               child: Row(children: [
@@ -308,7 +310,7 @@ class _LocationSelectPageViewState extends State<LocationSelectPageView> {
                         child: Container(
                           decoration: BoxDecoration(
                             color: _paper,
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(10),
                             border: Border.all(color: _hairline),
                           ),
                           clipBehavior: Clip.antiAlias,
@@ -492,7 +494,7 @@ class _LocationSelectPageViewState extends State<LocationSelectPageView> {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         child: Opacity(
           opacity: onTap == null ? 0.5 : 1,
           child: Container(
@@ -500,7 +502,7 @@ class _LocationSelectPageViewState extends State<LocationSelectPageView> {
             padding: const EdgeInsets.symmetric(vertical: 15),
             decoration: BoxDecoration(
               color: _lime,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,

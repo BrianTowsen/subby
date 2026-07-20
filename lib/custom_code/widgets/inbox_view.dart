@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/auth/firebase_auth/auth_util.dart';
@@ -170,7 +172,7 @@ class _InboxViewState extends State<InboxView> {
         margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
             color: _paper,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: _border)),
         padding: const EdgeInsets.all(14),
         child: Row(children: [
@@ -179,7 +181,7 @@ class _InboxViewState extends State<InboxView> {
               height: 44,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                  color: _surface, borderRadius: BorderRadius.circular(12)),
+                  color: _surface, borderRadius: BorderRadius.circular(10)),
               child: const Icon(Icons.request_quote_outlined,
                   size: 22, color: _ink)),
           const SizedBox(width: 12),
