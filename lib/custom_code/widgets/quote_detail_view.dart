@@ -10,9 +10,12 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// QuoteDetailView — owner views one quote in full (Accept / Decline).
 ///
@@ -117,6 +120,37 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
     if (nav.canPop()) nav.pop();
   }
 
+  Future<void> _downloadFile(String url) async {
+    if (url.isEmpty) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(const SnackBar(
+            backgroundColor: Color(0xFF3D4F66),
+            content: Text('No file attached to this quote.',
+                style: TextStyle(
+                    fontFamily: _body,
+                    fontWeight: FontWeight.w700,
+                    color: _paper))));
+      return;
+    }
+    final uri = Uri.tryParse(url);
+    bool ok = false;
+    if (uri != null) {
+      ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(const SnackBar(
+            backgroundColor: Color(0xFF3D4F66),
+            content: Text('Could not open the file.',
+                style: TextStyle(
+                    fontFamily: _body,
+                    fontWeight: FontWeight.w700,
+                    color: _paper))));
+    }
+  }
+
   String _fmt(num v) {
     final n = v.round();
     final s = n.abs().toString();
@@ -176,6 +210,7 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
         final dep = (d['depositPct'] ?? 0);
         final notes = (d['notes'] ?? '').toString();
         final hasFile = (d['fileName'] ?? '').toString().isNotEmpty;
+        final fileUrl = (d['fileUrl'] ?? '').toString();
         final vatIncl = d['vatIncluded'] != false;
         final decided = status == 'accepted' || status == 'declined';
 
@@ -278,36 +313,45 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
                       ]),
                     if (hasFile) ...[
                       const SizedBox(height: 12),
-                      Container(
-                        decoration: BoxDecoration(
-                            color: _paper,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: _border)),
-                        padding: const EdgeInsets.all(13),
-                        child: Row(children: [
-                          Container(
-                              width: 40,
-                              height: 40,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                  color: _ink,
-                                  borderRadius: BorderRadius.circular(10)),
-                              child: const Icon(Icons.picture_as_pdf_rounded,
-                                  size: 21, color: _paper)),
-                          const SizedBox(width: 11),
-                          Expanded(
-                              child: Text(
-                                  (d['fileName'] ?? 'Quote.pdf').toString(),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                      fontFamily: _body,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w800,
-                                      color: _ink))),
-                          const Icon(Icons.download_rounded,
-                              size: 20, color: _ink),
-                        ]),
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () => _downloadFile(fileUrl),
+                          borderRadius: BorderRadius.circular(10),
+                          child: Container(
+                            decoration: BoxDecoration(
+                                color: _paper,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: _border)),
+                            padding: const EdgeInsets.all(13),
+                            child: Row(children: [
+                              Container(
+                                  width: 40,
+                                  height: 40,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                      color: _ink,
+                                      borderRadius: BorderRadius.circular(10)),
+                                  child: const Icon(
+                                      Icons.picture_as_pdf_rounded,
+                                      size: 21,
+                                      color: _paper)),
+                              const SizedBox(width: 11),
+                              Expanded(
+                                  child: Text(
+                                      (d['fileName'] ?? 'Quote.pdf').toString(),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                          fontFamily: _body,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w800,
+                                          color: _ink))),
+                              const Icon(Icons.download_rounded,
+                                  size: 20, color: _ink),
+                            ]),
+                          ),
+                        ),
                       ),
                     ],
                   ],

@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -287,6 +289,7 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
     final lead = (d['leadWeeks'] ?? 0);
     final dep = (d['depositPct'] ?? 0);
     final hasFile = (d['fileName'] ?? '').toString().isNotEmpty;
+    final fileName = (d['fileName'] ?? '').toString();
     final vatIncl = d['vatIncluded'] != false;
     final submitted = status == 'submitted' || status == 'accepted';
     final accepted = status == 'accepted';
@@ -374,17 +377,23 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
                       ),
                     ),
                     if (hasFile)
-                      Row(children: const [
-                        Icon(Icons.picture_as_pdf_rounded,
-                            size: 16, color: _green),
-                        SizedBox(width: 4),
-                        Text('Quote.pdf',
-                            style: TextStyle(
-                                fontFamily: _body,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: _green)),
-                      ]),
+                      Flexible(
+                        child: Row(mainAxisSize: MainAxisSize.min, children: [
+                          const Icon(Icons.picture_as_pdf_rounded,
+                              size: 16, color: _green),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(fileName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    fontFamily: _body,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: _inkMute)),
+                          ),
+                        ]),
+                      ),
                   ]),
                   if (!accepted) ...[
                     const SizedBox(height: 12),
