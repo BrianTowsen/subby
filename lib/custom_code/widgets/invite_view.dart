@@ -10,16 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -54,6 +44,8 @@ class _InviteViewState extends State<InviteView> {
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _projSub;
   final Set<String> _selected = {};
   bool _sending = false;
+  final TextEditingController _msgCtl = TextEditingController();
+  final GlobalKey _msgKey = GlobalKey();
 
   @override
   void initState() {
@@ -64,6 +56,7 @@ class _InviteViewState extends State<InviteView> {
   @override
   void dispose() {
     _projSub?.cancel();
+    _msgCtl.dispose();
     super.dispose();
   }
 
@@ -139,6 +132,7 @@ class _InviteViewState extends State<InviteView> {
               'listingRef': lref,
               'listingName': (d['title'] ?? 'Trade').toString(),
               'providerRef': providerRef,
+              'message': _msgCtl.text.trim(),
               'status': 'invited',
               'invitedAt': FieldValue.serverTimestamp(),
               'updatedAt': FieldValue.serverTimestamp(),
@@ -298,6 +292,54 @@ class _InviteViewState extends State<InviteView> {
                                   )
                                 else
                                   for (final row in rows) _teamRow(row),
+                                const SizedBox(height: 8),
+                                Column(
+                                    key: _msgKey,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text('MESSAGE TO TRADES · optional',
+                                          style: TextStyle(
+                                              fontFamily: _body,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w800,
+                                              letterSpacing: 0.6,
+                                              color: _inkMute)),
+                                      const SizedBox(height: 9),
+                                      Container(
+                                        decoration: BoxDecoration(
+                                            color: _paper,
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            border: Border.all(color: _border)),
+                                        padding: const EdgeInsets.all(12),
+                                        child: TextField(
+                                          controller: _msgCtl,
+                                          minLines: 4,
+                                          maxLines: 6,
+                                          cursorColor: _ink,
+                                          style: const TextStyle(
+                                              fontFamily: _body,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w500,
+                                              height: 1.5,
+                                              color: _ink),
+                                          decoration: const InputDecoration(
+                                            isDense: true,
+                                            border: InputBorder.none,
+                                            contentPadding: EdgeInsets.zero,
+                                            hintText:
+                                                'Add a note — e.g. what to quote for, key dates, site access…',
+                                            hintStyle: TextStyle(
+                                                fontFamily: _body,
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w500,
+                                                color: _faint),
+                                          ),
+                                        ),
+                                      ),
+                                    ]),
+                                const SizedBox(height: 14),
                                 const SizedBox(height: 6),
                                 Container(
                                   decoration: BoxDecoration(
@@ -389,8 +431,20 @@ class _InviteViewState extends State<InviteView> {
     final sub = (d['subtitle'] ?? d['subTitle'] ?? '').toString();
     final on = _selected.contains(id);
     return GestureDetector(
-      onTap: () =>
-          setState(() => on ? _selected.remove(id) : _selected.add(id)),
+      onTap: () {
+        setState(() => on ? _selected.remove(id) : _selected.add(id));
+        if (!on) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            final ctx = _msgKey.currentContext;
+            if (ctx != null) {
+              Scrollable.ensureVisible(ctx,
+                  alignment: 0.05,
+                  duration: const Duration(milliseconds: 320),
+                  curve: Curves.easeOut);
+            }
+          });
+        }
+      },
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
