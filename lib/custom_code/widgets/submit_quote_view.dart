@@ -24,6 +24,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -280,7 +282,8 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
   String _money(num v) => 'R ${_fmt(v)}';
 
   // Opens the native file picker, then uploads the chosen file to Firebase
-  // Storage and stores the download URL in _fileName.
+  // Storage and stores the download URL in _fileUrl. The file is only shown
+  // as "Attached" once the upload has actually succeeded.
   Future<void> _pickFile() async {
     try {
       final result = await FilePicker.platform.pickFiles(
@@ -292,34 +295,63 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
       final picked = result.files.first;
       final name = picked.name;
 
+      // Real Firebase Auth uid — must match the {uid} segment the storage
+      // rule checks. Never fall back to a fake id: the rule would reject it.
+      final uid = currentUserUid;
+      if (uid.isEmpty) {
+        _uploadError('You need to be signed in to attach a quote.');
+        return;
+      }
+
+      final bytes = picked.bytes;
+      if (bytes == null) {
+        _uploadError('Couldn\'t read that file — try picking it again.');
+        return;
+      }
+
+      final ext = name.contains('.') ? name.split('.').last.toLowerCase() : '';
+      final contentType = switch (ext) {
+        'pdf' => 'application/pdf',
+        'jpg' || 'jpeg' => 'image/jpeg',
+        'png' => 'image/png',
+        _ => 'application/octet-stream',
+      };
+
+      final ref = FirebaseStorage.instance
+          .ref('quotes/$uid/${DateTime.now().millisecondsSinceEpoch}-$name');
+      await ref.putData(bytes, SettableMetadata(contentType: contentType));
+      final url = await ref.getDownloadURL();
+      if (!mounted) return;
       setState(() {
         _fileAttached = true;
         _fileName = name;
-      });
-
-      final bytes = picked.bytes;
-      final uid = currentUserReference?.id ?? 'anon';
-      if (bytes != null) {
-        final ref = FirebaseStorage.instance
-            .ref('quotes/$uid/${DateTime.now().millisecondsSinceEpoch}-$name');
-        await ref.putData(bytes);
-        final url = await ref.getDownloadURL();
-        if (mounted) setState(() => _fileName = name); // keep display name
         _fileUrl = url;
-      }
+      });
+    } on FirebaseException catch (e) {
+      _uploadError(e.code == 'unauthorized'
+          ? 'Upload not allowed — please sign in again.'
+          : 'Upload failed (${e.code}). Check your connection.');
     } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(const SnackBar(
-              backgroundColor: _ink,
-              content: Text('Couldn\'t attach that file.',
-                  style: TextStyle(
-                      fontFamily: _body,
-                      fontWeight: FontWeight.w700,
-                      color: _paper))));
-      }
+      _uploadError('Couldn\'t attach that file.');
     }
+  }
+
+  void _uploadError(String msg) {
+    if (!mounted) return;
+    setState(() {
+      _fileAttached = false;
+      _fileName = '';
+      _fileUrl = '';
+    });
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+          backgroundColor: _ink,
+          content: Text(msg,
+              style: const TextStyle(
+                  fontFamily: _body,
+                  fontWeight: FontWeight.w700,
+                  color: _paper))));
   }
 
   void _removeFile() {

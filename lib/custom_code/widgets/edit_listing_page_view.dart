@@ -16,6 +16,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'dart:typed_data';
@@ -94,6 +96,18 @@ class _EditListingPageViewState extends State<EditListingPageView> {
   bool _saving = false;
   bool _deleting = false;
   bool _didHydrate = false;
+
+  // The listing is loaded ONCE. Creating this future inside build() would
+  // re-fetch on every rebuild — e.g. when the keyboard opens (MediaQuery
+  // insets change) — flashing the loading spinner and killing text-field
+  // focus, which looks like the page "reloading" on every tap.
+  late Future<DocumentSnapshot<Map<String, dynamic>>?> _listingFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _listingFuture = _loadListingDoc();
+  }
 
   String _existingHeroUrl = '';
   Uint8List? _heroBytes;
@@ -745,7 +759,7 @@ class _EditListingPageViewState extends State<EditListingPageView> {
         child: Container(
           color: _steel,
           child: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>?>(
-            future: _loadListingDoc(),
+            future: _listingFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(

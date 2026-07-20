@@ -24,6 +24,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:intl/intl.dart';
@@ -149,15 +151,34 @@ class _EditTimelinePageViewState extends State<EditTimelinePageView> {
   Timer? _progressTimer;
 
   final TextEditingController _nameCtl = TextEditingController();
+  final FocusNode _nameFocus = FocusNode();
   final ScrollController _vCtl = ScrollController();
   final ScrollController _editScrollCtl = ScrollController();
   bool _openScrolledTop = false;
+
+  // Scroll the focused field up so it clears the on-screen keyboard.
+  void _ensureVisible(FocusNode fn) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = fn.context;
+      if (ctx != null) {
+        Scrollable.ensureVisible(
+          ctx,
+          alignment: 0.12,
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
 
   @override
   void initState() {
     super.initState();
     _sections = buildProgramme('gf'); // harmless placeholder behind START
     _syncNameCtl();
+    _nameFocus.addListener(() {
+      if (_nameFocus.hasFocus) _ensureVisible(_nameFocus);
+    });
     // NOTE: project resolution happens in didChangeDependencies (route
     // reading needs context).
   }
@@ -221,6 +242,7 @@ class _EditTimelinePageViewState extends State<EditTimelinePageView> {
     _saveTimer?.cancel();
     _progressTimer?.cancel();
     _nameCtl.dispose();
+    _nameFocus.dispose();
     _vCtl.dispose();
     _editScrollCtl.dispose();
     super.dispose();
@@ -1114,7 +1136,7 @@ class _EditTimelinePageViewState extends State<EditTimelinePageView> {
     return Container(
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
-      color: _startBg,
+      color: _paper,
       child: showEdit ? _editScreen() : _editLoading(),
     );
   }
@@ -1180,7 +1202,7 @@ class _EditTimelinePageViewState extends State<EditTimelinePageView> {
     };
 
     return Container(
-      color: _startBg,
+      color: _paper,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2393,7 +2415,7 @@ class _EditTimelinePageViewState extends State<EditTimelinePageView> {
         : (isParent ? '${_fmtDur(nDur)} span' : '${sec.days} working days');
 
     return Container(
-      color: _startBg,
+      color: _paper,
       child: Column(
         children: [
           // header
@@ -2483,6 +2505,7 @@ class _EditTimelinePageViewState extends State<EditTimelinePageView> {
                         Expanded(
                           child: TextField(
                             controller: _nameCtl,
+                            focusNode: _nameFocus,
                             onChanged: _setName,
                             textInputAction: TextInputAction.done,
                             style: const TextStyle(
