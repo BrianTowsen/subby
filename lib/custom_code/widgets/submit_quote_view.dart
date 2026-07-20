@@ -10,22 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -346,7 +330,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
-          backgroundColor: _ink,
+          backgroundColor: const Color(0xFF3D4F66),
           content: Text(msg,
               style: const TextStyle(
                   fontFamily: _body,
@@ -388,7 +372,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(SnackBar(
-          backgroundColor: _ink,
+          backgroundColor: const Color(0xFF3D4F66),
           content: const Text('Quote submitted.',
               style: TextStyle(
                   fontFamily: _body,
@@ -405,7 +389,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
           ..showSnackBar(const SnackBar(
-              backgroundColor: _ink,
+              backgroundColor: const Color(0xFF3D4F66),
               content: Text('Couldn\'t submit — check your connection.',
                   style: TextStyle(
                       fontFamily: _body,

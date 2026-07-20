@@ -10,16 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -180,7 +170,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(const SnackBar(
-            backgroundColor: _ink,
+            backgroundColor: const Color(0xFF3D4F66),
             content: Text('Scope saved — continue to Submit Quote.',
                 style: TextStyle(
                     fontFamily: _body,
@@ -209,7 +199,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(const SnackBar(
-          backgroundColor: _ink,
+          backgroundColor: const Color(0xFF3D4F66),
           content: Text(
               'Invitation accepted — pick your scope, then prepare your quote.',
               style: TextStyle(
@@ -266,7 +256,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(const SnackBar(
-          backgroundColor: _ink,
+          backgroundColor: const Color(0xFF3D4F66),
           content: Text('Invite declined.',
               style: TextStyle(
                   fontFamily: _body,
@@ -506,7 +496,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(const SnackBar(
-          backgroundColor: _ink,
+          backgroundColor: const Color(0xFF3D4F66),
           content: Text('No file attached to this document.',
               style: TextStyle(
                   fontFamily: _body,
@@ -642,7 +632,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
-          backgroundColor: _ink,
+          backgroundColor: const Color(0xFF3D4F66),
           content: Text('No $what for this project manager.',
               style: const TextStyle(
                   fontFamily: _body,
