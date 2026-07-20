@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,8 +21,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 
 /// SubmitQuoteView — a trade submits a quote to a project.
 /// Upload-first, then the key figures (amount + VAT, lead time, deposit),
-/// the SCOPE OF WORK (the standard cost sections from ProjectCostView), and
-/// inclusions/exclusions. Writes to projects/{id}/quotes/{tradeUid}.
+/// and inclusions/exclusions. Writes to projects/{id}/quotes/{tradeUid}.
 ///
 /// After a successful submit the trade is returned to the Dashboard
 /// (dashboardRouteName — defaults to 'DashboardPage').
@@ -66,39 +67,6 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
   static const int _vatPct = 15;
   static const String _fallbackDashboardRoute = 'DashboardPage';
 
-  // Standard residential trade cost sections — sourced from
-  // ProjectCostView._baseSections so the quote scope maps 1:1 onto the
-  // owner's cost estimate sections.
-  static const List<String> _scopeOptions = [
-    'Professional Fees',
-    'Preliminaries & General',
-    'Site Preparation',
-    'Site Establishment',
-    'Earthworks & Excavation',
-    'Brickwork & Concrete',
-    'Structural Steel Works',
-    'Roofing',
-    'Windows & Door Frames',
-    'Plumbing & Drainage',
-    'Electrical Works',
-    'Plastering & Screeds',
-    'Waterproofing',
-    'Ceilings & Partitioning',
-    'Internal Carpentry & Joinery',
-    'Kitchen (Built-in Units)',
-    'Built-in Cupboards',
-    'Tiling',
-    'Special Items',
-    'Steel Works',
-    'Sanitary Fittings',
-    'Painting & Wall Covering',
-    'Electrical Fittings',
-    'Floor Covering',
-    'External Site Works',
-    'Landscaping',
-    'Cleaning & Handover',
-  ];
-
   DocumentReference<Map<String, dynamic>>? _projectRef;
   DocumentReference<Map<String, dynamic>>? _quoteRef;
   String _projectName = 'Project';
@@ -119,7 +87,6 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
   bool _fileAttached = false;
   String _fileName = '';
   String _fileUrl = '';
-  final Set<String> _scope = {};
   bool _saving = false;
 
   @override
@@ -221,22 +188,6 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
     }
     if (ref == null) return;
     _projectRef = ref;
-
-    // Pre-select any scope the trade already picked in QuoteRequestView.
-    final qref = _quoteRef;
-    if (qref != null) {
-      try {
-        final snap = await qref.get();
-        final sc = snap.data()?['scope'];
-        if (sc is List && mounted) {
-          setState(() {
-            _scope
-              ..clear()
-              ..addAll(sc.map((e) => e.toString()));
-          });
-        }
-      } catch (_) {}
-    }
 
     _projSub = ref.snapshots().listen((snap) {
       final raw = snap.data();
@@ -361,7 +312,6 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
         'total': _total,
         'leadWeeks': _leadWeeks,
         'depositPct': _depositPct,
-        'scope': _scope.toList(),
         'notes': _notesCtl.text.trim(),
         'fileName': _fileName,
         'fileUrl': _fileUrl,
@@ -487,38 +437,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
                 const SizedBox(height: 10),
                 _figuresCard(),
                 const SizedBox(height: 20),
-                Row(children: [
-                  _label('3 · SCOPE OF WORK'),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                        color: const Color(0xFFE7EDF0),
-                        borderRadius: BorderRadius.circular(999)),
-                    child: Text(
-                        '${_scope.length} section${_scope.length == 1 ? '' : 's'}',
-                        style: const TextStyle(
-                            fontFamily: 'Roboto Mono',
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: _green)),
-                  ),
-                ]),
-                const SizedBox(height: 6),
-                const Text('Which cost sections does this quote cover?',
-                    style: TextStyle(
-                        fontFamily: _body,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: _faint)),
-                const SizedBox(height: 10),
-                Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [for (final s in _scopeOptions) _chip(s)]),
-                const SizedBox(height: 20),
-                _label('4 · INCLUSIONS / EXCLUSIONS'),
+                _label('3 · INCLUSIONS / EXCLUSIONS'),
                 const SizedBox(height: 10),
                 Container(
                   decoration: BoxDecoration(
@@ -639,33 +558,6 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
           fontWeight: FontWeight.w800,
           letterSpacing: 0.6,
           color: _inkMute));
-
-  // Scope chip — mirrors QuoteRequestView._chip.
-  Widget _chip(String s) {
-    final on = _scope.contains(s);
-    return GestureDetector(
-      onTap: () => setState(() => on ? _scope.remove(s) : _scope.add(s)),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-        decoration: BoxDecoration(
-          color: on ? _ink : _surface,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          if (on) ...[
-            const Icon(Icons.check_rounded, size: 15, color: _paper),
-            const SizedBox(width: 6)
-          ],
-          Text(s,
-              style: TextStyle(
-                  fontFamily: _body,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: on ? _paper : _inkMute)),
-        ]),
-      ),
-    );
-  }
 
   Widget _uploadBox() {
     if (_fileAttached) {

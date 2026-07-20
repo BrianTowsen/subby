@@ -14,6 +14,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -382,178 +384,680 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
     DocumentReference? selectedRef = _selectedProjectRef;
     String? selectedName = _selectedProjectName;
 
-    await showModalBottomSheet(
+    await showDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: _paper,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
+      barrierColor: Colors.black.withOpacity(0.55),
       builder: (ctx) {
-        final bottomInset = MediaQuery.of(ctx).viewInsets.bottom;
-        return Padding(
-          padding: EdgeInsets.only(bottom: bottomInset),
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(_hPad, 18, _hPad, 18),
-              child: StatefulBuilder(
-                builder: (context, setLocal) => Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(children: [
-                      Expanded(
-                        child: Text(sheetTitle,
-                            style: const TextStyle(
-                                fontFamily: _displayFont,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -0.4,
-                                color: _ink)),
-                      ),
-                      IconButton(
-                          onPressed: () => Navigator.of(ctx).pop(),
-                          icon:
-                              const Icon(Icons.close_rounded, color: _inkMute)),
-                    ]),
-                    const SizedBox(height: 4),
-                    Text(sheetSubtitle,
-                        style: const TextStyle(
-                            fontFamily: _bodyFont,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: _faint)),
-                    const SizedBox(height: 8),
-                    StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                      stream: _projectsQuery(userRef).snapshots(),
-                      builder: (context, snap) {
-                        if (snap.connectionState == ConnectionState.waiting) {
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 20),
-                            child: Center(
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: _ink)),
-                          );
-                        }
-                        final rawDocs = snap.data?.docs ?? const [];
-                        final docs = rawDocs
-                            .where((d) => !_projectIsArchived(d.data()))
-                            .toList()
-                          ..sort((a, b) => _updatedAtMillis(b.data())
-                              .compareTo(_updatedAtMillis(a.data())));
-                        if (docs.isEmpty) {
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            child: Text('No projects yet.',
+        return StatefulBuilder(
+          builder: (context, setLocal) => Dialog(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: _paper,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.30),
+                      blurRadius: 54,
+                      offset: const Offset(0, 22)),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 62,
+                    height: 62,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: _ink.withOpacity(0.12),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: _ink.withOpacity(0.22)),
+                    ),
+                    child: Icon(ctaIcon, color: _ink, size: 30),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(sheetTitle,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          fontFamily: _displayFont,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.4,
+                          color: _ink)),
+                  const SizedBox(height: 8),
+                  Text(sheetSubtitle,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          height: 1.5,
+                          color: _inkMute)),
+                  const SizedBox(height: 16),
+                  StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                    stream: _projectsQuery(userRef).snapshots(),
+                    builder: (context, snap) {
+                      if (snap.connectionState == ConnectionState.waiting) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 20),
+                          child: Center(
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: _ink)),
+                        );
+                      }
+                      final rawDocs = snap.data?.docs ?? const [];
+                      final docs = rawDocs
+                          .where((d) => !_projectIsArchived(d.data()))
+                          .toList()
+                        ..sort((a, b) => _updatedAtMillis(b.data())
+                            .compareTo(_updatedAtMillis(a.data())));
+                      if (docs.isEmpty) {
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 20, horizontal: 16),
+                              decoration: BoxDecoration(
+                                  color: _surface,
+                                  borderRadius: BorderRadius.circular(10)),
+                              child: Column(children: const [
+                                Icon(Icons.folder_off_outlined,
+                                    size: 26, color: _faint),
+                                SizedBox(height: 8),
+                                Text('No projects yet',
+                                    style: TextStyle(
+                                        fontFamily: _displayFont,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w800,
+                                        color: _ink)),
+                                SizedBox(height: 4),
+                                Text(
+                                    'Create a project first, then add this trade to it to request quotes.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        fontFamily: _bodyFont,
+                                        fontSize: 12.5,
+                                        fontWeight: FontWeight.w500,
+                                        height: 1.45,
+                                        color: _inkMute)),
+                              ]),
+                            ),
+                            const SizedBox(height: 16),
+                            _dialogButton(
+                              label: 'Create a project',
+                              icon: Icons.add_rounded,
+                              filled: true,
+                              fillColor: const Color(0xFF0CAC47),
+                              onTap: () {
+                                Navigator.of(ctx).pop();
+                                _openCreateProject();
+                              },
+                            ),
+                            const SizedBox(height: 10),
+                            _dialogButton(
+                              label: 'Cancel',
+                              filled: false,
+                              onTap: () => Navigator.of(ctx).pop(),
+                            ),
+                          ],
+                        );
+                      }
+                      // ── PROJECT LIST ──
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text('SELECT PROJECT',
                                 style: TextStyle(
                                     fontFamily: _bodyFont,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: _faint)),
-                          );
-                        }
-                        return ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxHeight:
-                                (MediaQuery.of(context).size.height * 0.45)
-                                    .clamp(220.0, 400.0),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.6,
+                                    color: _inkMute)),
                           ),
-                          child: ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: docs.length,
-                            itemBuilder: (context, i) {
-                              final d = docs[i];
-                              final pName = _projectNameFrom(d.data());
-                              final pRef = d.reference;
-                              final selected = selectedRef?.path == pRef.path;
-                              return InkWell(
-                                onTap: () {
-                                  selectedRef = pRef;
-                                  selectedName = pName;
-                                  setLocal(() {});
-                                },
-                                child: Container(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 14),
-                                  decoration: const BoxDecoration(
-                                    border: Border(
-                                        bottom: BorderSide(color: _rule)),
-                                  ),
-                                  child: Row(children: [
-                                    Icon(
-                                        selected
-                                            ? Icons.check_circle_rounded
-                                            : Icons.folder_open_outlined,
-                                        size: 19,
-                                        color: selected ? _ink : _faint),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: Text(pName,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                              fontFamily: _bodyFont,
-                                              fontSize: 16,
-                                              fontWeight: selected
-                                                  ? FontWeight.w700
-                                                  : FontWeight.w600,
-                                              color:
-                                                  selected ? _ink : _inkMute)),
+                          const SizedBox(height: 4),
+                          ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxHeight:
+                                  (MediaQuery.of(context).size.height * 0.4)
+                                      .clamp(180.0, 340.0),
+                            ),
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: docs.length,
+                              itemBuilder: (context, i) {
+                                final d = docs[i];
+                                final pName = _projectNameFrom(d.data());
+                                final pRef = d.reference;
+                                final selected = selectedRef?.path == pRef.path;
+                                return InkWell(
+                                  onTap: () {
+                                    selectedRef = pRef;
+                                    selectedName = pName;
+                                    setLocal(() {});
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 13),
+                                    decoration: const BoxDecoration(
+                                      border: Border(
+                                          bottom: BorderSide(color: _rule)),
                                     ),
-                                  ]),
-                                ),
-                              );
-                            },
+                                    child: Row(children: [
+                                      Icon(
+                                          selected
+                                              ? Icons.check_circle_rounded
+                                              : Icons.folder_open_outlined,
+                                          size: 19,
+                                          color: selected ? _ink : _faint),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(pName,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                                fontFamily: _bodyFont,
+                                                fontSize: 16,
+                                                fontWeight: selected
+                                                    ? FontWeight.w700
+                                                    : FontWeight.w600,
+                                                color: selected
+                                                    ? _ink
+                                                    : _inkMute)),
+                                      ),
+                                    ]),
+                                  ),
+                                );
+                              },
+                            ),
                           ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    InkWell(
-                      onTap: (selectedRef == null)
-                          ? null
-                          : () async {
-                              Navigator.of(ctx).pop();
-                              setState(() {
-                                _selectedProjectRef = selectedRef;
-                                _selectedProjectName = selectedName;
-                              });
-                              await onConfirm(selectedRef!);
-                            },
-                      borderRadius: BorderRadius.circular(10),
-                      child: Opacity(
-                        opacity: selectedRef == null ? 0.5 : 1,
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                          decoration: BoxDecoration(
-                              color: _lime,
-                              borderRadius: BorderRadius.circular(10)),
-                          child: Center(
-                            child:
-                                Row(mainAxisSize: MainAxisSize.min, children: [
-                              Icon(ctaIcon, size: 17, color: _ink),
-                              const SizedBox(width: 8),
-                              Text(ctaLabel,
-                                  style: const TextStyle(
-                                      fontFamily: _bodyFont,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w900,
-                                      color: _ink)),
-                            ]),
+                          const SizedBox(height: 16),
+                          Opacity(
+                            opacity: selectedRef == null ? 0.5 : 1,
+                            child: _dialogButton(
+                              label: ctaLabel,
+                              icon: ctaIcon,
+                              filled: true,
+                              onTap: selectedRef == null
+                                  ? null
+                                  : () async {
+                                      Navigator.of(ctx).pop();
+                                      setState(() {
+                                        _selectedProjectRef = selectedRef;
+                                        _selectedProjectName = selectedName;
+                                      });
+                                      await onConfirm(selectedRef!);
+                                    },
+                            ),
                           ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                          const SizedBox(height: 10),
+                          _dialogButton(
+                            label: 'Cancel',
+                            filled: false,
+                            onTap: () => Navigator.of(ctx).pop(),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           ),
         );
       },
     );
+  }
+
+  // Shared module button — filled = ink primary, else outline.
+  Widget _dialogButton({
+    required String label,
+    IconData? icon,
+    bool filled = true,
+    Color fillColor = _ink,
+    VoidCallback? onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: filled ? fillColor : _paper,
+            borderRadius: BorderRadius.circular(10),
+            border: filled
+                ? null
+                : Border.all(color: const Color(0xFFCBD8DD), width: 1.4),
+          ),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            if (icon != null) ...[
+              Icon(icon, size: 17, color: filled ? _paper : _ink),
+              const SizedBox(width: 8),
+            ],
+            Text(label,
+                style: TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: filled ? _paper : _ink)),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  // Navigates to project creation (best-effort route; hint snack on failure).
+  void _openCreateProject() {
+    try {
+      context.pushNamed('AddProjects');
+    } catch (_) {
+      _snack('Open My Projects to create a project.');
+    }
+  }
+
+  // Resolves whether the trade is open right now. An explicit boolean on the
+  // listing (openNow / isOpen) always wins; otherwise we parse the opening
+  // hours string (e.g. "07:00 – 18:00", "7am - 6pm", "Closed", "24 hours")
+  // and compare against the current local time.
+  bool _computeOpenNow(Map<String, dynamic> raw, String hours) {
+    if (raw['openNow'] is bool) return raw['openNow'] as bool;
+    if (raw['isOpen'] is bool) return raw['isOpen'] as bool;
+
+    final h = hours.trim().toLowerCase();
+    if (h.isEmpty) return false;
+    if (h.contains('24')) return true; // "24 hours", "open 24/7"
+    if (h.contains('closed')) return false;
+
+    // Split on en-dash, em-dash, hyphen or the word "to".
+    final parts = h.split(RegExp(r'\s*(?:–|—|-|to)\s*'));
+    if (parts.length < 2) return false;
+
+    final open = _parseTimeOfDay(parts[0]);
+    final close = _parseTimeOfDay(parts[1]);
+    if (open == null || close == null) return false;
+
+    final now = TimeOfDay.now();
+    final nowM = now.hour * 60 + now.minute;
+    final openM = open.hour * 60 + open.minute;
+    var closeM = close.hour * 60 + close.minute;
+    if (closeM <= openM) closeM += 24 * 60; // overnight (e.g. 18:00 – 02:00)
+    final probe = nowM < openM ? nowM + 24 * 60 : nowM;
+    return probe >= openM && probe < closeM;
+  }
+
+  // Parses "07:00", "7", "7am", "6:30 pm" → TimeOfDay (null if unparseable).
+  TimeOfDay? _parseTimeOfDay(String s) {
+    final t = s.trim().toLowerCase();
+    final m = RegExp(r'(\d{1,2})(?::(\d{2}))?\s*(am|pm)?').firstMatch(t);
+    if (m == null) return null;
+    var hh = int.tryParse(m.group(1) ?? '') ?? -1;
+    final mm = int.tryParse(m.group(2) ?? '0') ?? 0;
+    final ap = m.group(3);
+    if (hh < 0 || hh > 23 || mm < 0 || mm > 59) return null;
+    if (ap == 'pm' && hh < 12) hh += 12;
+    if (ap == 'am' && hh == 12) hh = 0;
+    return TimeOfDay(hour: hh, minute: mm);
+  }
+
+  // ===========================
+  // RATING & REVIEWS
+  // ===========================
+  static const Color _warn = Color(0xFFAC0C0C); // gate-dialog red
+
+  // A user may only rate a trade they have actually engaged: the gate passes
+  // only if THIS user previously added THIS listing to one of their projects
+  // (project_listings.addedBy == user & listingRef == listing).
+  Future<bool> _hasAddedToProject({
+    required DocumentReference listingRef,
+    required DocumentReference userRef,
+  }) async {
+    try {
+      final q = await FirebaseFirestore.instance
+          .collection('project_listings')
+          .where('listingRef', isEqualTo: listingRef)
+          .where('addedBy', isEqualTo: userRef)
+          .limit(1)
+          .get();
+      return q.docs.isNotEmpty;
+    } catch (e) {
+      debugPrint('⚠️ rating gate check failed: $e');
+      return false;
+    }
+  }
+
+  Future<void> _onRateTapped({
+    required DocumentReference listingRef,
+    DocumentReference? providerRef,
+    required String name,
+  }) async {
+    final userRef = _currentUserRefOrNull();
+    if (userRef == null) {
+      context.pushNamed('loginPage');
+      return;
+    }
+    final allowed =
+        await _hasAddedToProject(listingRef: listingRef, userRef: userRef);
+    if (!mounted) return;
+    if (!allowed) {
+      await _showRatingGateDialog(name);
+      return;
+    }
+    await _showRatingSheet(
+        listingRef: listingRef, userRef: userRef, name: name);
+  }
+
+  // Warning gate — mirrors the shared confirm dialog, single dismiss action.
+  Future<void> _showRatingGateDialog(String name) async {
+    await showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.55),
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 28),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+              color: _paper, borderRadius: BorderRadius.circular(10)),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Container(
+              width: 62,
+              height: 62,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: _warn.withOpacity(0.12),
+                shape: BoxShape.circle,
+                border: Border.all(color: _warn.withOpacity(0.22)),
+              ),
+              child: const Icon(Icons.lock_outline_rounded,
+                  color: _warn, size: 30),
+            ),
+            const SizedBox(height: 16),
+            const Text('Add to a project first',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontFamily: _displayFont,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.4,
+                    fontSize: 18,
+                    color: _ink)),
+            const SizedBox(height: 8),
+            Text(
+                'You can only rate a trade you’ve worked with. Add this listing to one of your projects, then rate them once the job’s underway.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontFamily: _bodyFont,
+                    fontWeight: FontWeight.w500,
+                    height: 1.5,
+                    fontSize: 14,
+                    color: _inkMute)),
+            const SizedBox(height: 22),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => Navigator.pop(ctx),
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                      color: _ink, borderRadius: BorderRadius.circular(10)),
+                  child: const Text('Got it',
+                      style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: _paper)),
+                ),
+              ),
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  // Star + comment capture. Prefills the user's existing review if present.
+  Future<void> _showRatingSheet({
+    required DocumentReference listingRef,
+    required DocumentReference userRef,
+    required String name,
+  }) async {
+    final reviewRef = listingRef.collection('reviews').doc(userRef.id);
+    int stars = 5;
+    final commentCtl = TextEditingController();
+    try {
+      final prev = await reviewRef.get();
+      final pd = prev.data() as Map<String, dynamic>?;
+      if (pd != null) {
+        if (pd['rating'] is num)
+          stars = (pd['rating'] as num).round().clamp(1, 5);
+        commentCtl.text = (pd['comment'] ?? '').toString();
+      }
+    } catch (_) {}
+    if (!mounted) return;
+
+    await showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.55),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setLocal) => Dialog(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: _paper,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.30),
+                      blurRadius: 54,
+                      offset: const Offset(0, 22)),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 62,
+                    height: 62,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF2B01E).withOpacity(0.14),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                          color: const Color(0xFFF2B01E).withOpacity(0.28)),
+                    ),
+                    child: const Icon(Icons.star_rounded,
+                        color: Color(0xFFF2B01E), size: 30),
+                  ),
+                  const SizedBox(height: 16),
+                  Text('Rate $name',
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontFamily: _displayFont,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.4,
+                          color: _ink)),
+                  const SizedBox(height: 8),
+                  const Text('Tap a star to set your rating.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: _inkMute)),
+                  const SizedBox(height: 16),
+                  Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(5, (i) {
+                        final on = i < stars;
+                        return GestureDetector(
+                          onTap: () => setLocal(() => stars = i + 1),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Icon(
+                                on
+                                    ? Icons.star_rounded
+                                    : Icons.star_outline_rounded,
+                                size: 40,
+                                color: on ? const Color(0xFFF2B01E) : _rule),
+                          ),
+                        );
+                      })),
+                  const SizedBox(height: 16),
+                  Container(
+                    decoration: BoxDecoration(
+                        color: _paper,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: _hairline)),
+                    padding: const EdgeInsets.all(12),
+                    child: TextField(
+                      controller: commentCtl,
+                      minLines: 3,
+                      maxLines: 5,
+                      cursorColor: _ink,
+                      style: const TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          height: 1.5,
+                          color: _ink),
+                      decoration: const InputDecoration(
+                        isDense: true,
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
+                        hintText:
+                            'Share how the job went — quality, timekeeping, value…',
+                        hintStyle: TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: _faint),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () async {
+                        Navigator.pop(ctx);
+                        await _submitReview(
+                          listingRef: listingRef,
+                          userRef: userRef,
+                          stars: stars,
+                          comment: commentCtl.text,
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                            color: _lime,
+                            borderRadius: BorderRadius.circular(10)),
+                        child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Icon(Icons.star_rounded, size: 18, color: _ink),
+                              SizedBox(width: 8),
+                              Text('Submit rating',
+                                  style: TextStyle(
+                                      fontFamily: _bodyFont,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w900,
+                                      color: _ink)),
+                            ]),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _dialogButton(
+                    label: 'Cancel',
+                    filled: false,
+                    onTap: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Writes the user's review (one doc per user, keyed by uid) and keeps the
+  // listing's rating/reviewCount aggregate in sync so Explore / Saved / list
+  // cards (which read listing.rating) stay correct without a Cloud Function.
+  Future<void> _submitReview({
+    required DocumentReference listingRef,
+    required DocumentReference userRef,
+    required int stars,
+    required String comment,
+  }) async {
+    final reviewRef = listingRef.collection('reviews').doc(userRef.id);
+    try {
+      final prev = await reviewRef.get();
+      final prevData = prev.data() as Map<String, dynamic>?;
+      final int? oldStars = (prevData?['rating'] is num)
+          ? (prevData!['rating'] as num).round()
+          : null;
+
+      await reviewRef.set({
+        'rating': stars,
+        'comment': comment.trim(),
+        'userRef': userRef,
+        'updatedAt': FieldValue.serverTimestamp(),
+        if (!prev.exists) 'createdAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      await FirebaseFirestore.instance.runTransaction((tx) async {
+        final lsnap = await tx.get(listingRef);
+        final ld = (lsnap.data() as Map<String, dynamic>? ?? {});
+        num sum = (ld['ratingSum'] is num) ? ld['ratingSum'] as num : 0;
+        int count =
+            (ld['reviewCount'] is num) ? (ld['reviewCount'] as num).toInt() : 0;
+        if (oldStars == null) {
+          sum += stars;
+          count += 1;
+        } else {
+          sum += (stars - oldStars);
+        }
+        final double avg = count > 0 ? (sum / count) : 0;
+        tx.update(listingRef, {
+          'ratingSum': sum,
+          'reviewCount': count,
+          'rating': avg,
+        });
+      });
+      _snack('Thanks — your rating was saved.');
+    } catch (e) {
+      debugPrint('⚠️ submit review failed: $e');
+      _snack('Could not save your rating. Please try again.');
+    }
   }
 
   String _initials(String name) {
@@ -691,8 +1195,9 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
           final String openingHours = readString('openingHours').isNotEmpty
               ? readString('openingHours')
               : '07:00 – 18:00';
-          final bool openNow =
-              (raw['openNow'] == true) || (raw['isOpen'] == true);
+          // Open/closed now derives from the opening hours when no explicit
+          // openNow/isOpen boolean is set on the listing.
+          final bool openNow = _computeOpenNow(raw, openingHours);
 
           final String listingPhone = readString('phoneNumber');
           final String listingWhatsapp = readString('whatsappNumber');
@@ -838,33 +1343,78 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                     spacing: 10,
                                     runSpacing: 8,
                                     children: [
-                                      Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Icon(Icons.star_rounded,
-                                                size: 16, color: _lime),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                                hasReviews
-                                                    ? rating.toStringAsFixed(1)
-                                                    : 'No reviews yet',
-                                                style: const TextStyle(
-                                                    fontFamily: _bodyFont,
-                                                    fontSize: 13,
-                                                    fontWeight: FontWeight.w800,
-                                                    color: _paper)),
-                                            if (hasReviews) ...[
-                                              const SizedBox(width: 5),
-                                              Text('($reviews)',
-                                                  style: TextStyle(
-                                                      fontFamily: _bodyFont,
-                                                      fontSize: 12,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      color: _paper
-                                                          .withOpacity(0.55))),
-                                            ],
-                                          ]),
+                                      InkWell(
+                                        onTap: () => _onRateTapped(
+                                          listingRef: listingRef,
+                                          providerRef: ownerRef,
+                                          name: name,
+                                        ),
+                                        borderRadius:
+                                            BorderRadius.circular(999),
+                                        child: StreamBuilder<
+                                            QuerySnapshot<
+                                                Map<String, dynamic>>>(
+                                          stream: listingRef
+                                              .collection('reviews')
+                                              .snapshots(),
+                                          builder: (context, rvSnap) {
+                                            final rvDocs =
+                                                rvSnap.data?.docs ?? const [];
+                                            final int liveCount =
+                                                rvDocs.isNotEmpty
+                                                    ? rvDocs.length
+                                                    : reviews;
+                                            double liveAvg = rating;
+                                            if (rvDocs.isNotEmpty) {
+                                              double sum = 0;
+                                              for (final r in rvDocs) {
+                                                final v = r.data()['rating'];
+                                                if (v is num) {
+                                                  sum += v.toDouble();
+                                                }
+                                              }
+                                              liveAvg = sum / rvDocs.length;
+                                            }
+                                            final bool liveHas = liveCount > 0;
+                                            return Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const Icon(Icons.star_rounded,
+                                                    size: 16, color: _lime),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                    liveHas
+                                                        ? liveAvg
+                                                            .toStringAsFixed(1)
+                                                        : 'Rate this trade',
+                                                    style: const TextStyle(
+                                                        fontFamily: _bodyFont,
+                                                        fontSize: 13,
+                                                        fontWeight:
+                                                            FontWeight.w800,
+                                                        color: _paper)),
+                                                if (liveHas) ...[
+                                                  const SizedBox(width: 5),
+                                                  Text('($liveCount)',
+                                                      style: TextStyle(
+                                                          fontFamily: _bodyFont,
+                                                          fontSize: 12,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          color: _paper
+                                                              .withOpacity(
+                                                                  0.55))),
+                                                ],
+                                                const SizedBox(width: 5),
+                                                Icon(Icons.edit_outlined,
+                                                    size: 13,
+                                                    color: _paper
+                                                        .withOpacity(0.6)),
+                                              ],
+                                            );
+                                          },
+                                        ),
+                                      ),
                                       Container(
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 11, vertical: 5),

@@ -18,7 +18,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '/auth/firebase_auth/auth_util.dart';
 
 /// QuoteRequestView — the trade opens an invitation: view shared drawings &
-/// documents, pick scope sections, then prepare a quote. Marks status 'viewed'.
+/// documents, then prepare a quote. Marks status 'viewed'.
 class QuoteRequestView extends StatefulWidget {
   const QuoteRequestView(
       {super.key, this.width, this.height, this.submitQuoteRouteName});
@@ -51,7 +51,6 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
   String _projectName = 'Project';
   DocumentReference? _ownerRef;
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _projSub;
-  final Set<String> _scope = {};
   bool _saving = false;
   String _status = 'invited';
   String _pmMessage = '';
@@ -143,7 +142,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
         ..hideCurrentSnackBar()
         ..showSnackBar(const SnackBar(
             backgroundColor: const Color(0xFF3D4F66),
-            content: Text('Scope saved — continue to Submit Quote.',
+            content: Text('Continue to Submit Quote.',
                 style: TextStyle(
                     fontFamily: _body,
                     fontWeight: FontWeight.w700,
@@ -173,7 +172,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
       ..showSnackBar(const SnackBar(
           backgroundColor: const Color(0xFF3D4F66),
           content: Text(
-              'Invitation accepted — pick your scope, then prepare your quote.',
+              'Invitation accepted — review the drawings, then prepare your quote.',
               style: TextStyle(
                   fontFamily: _body,
                   fontWeight: FontWeight.w700,
@@ -575,32 +574,6 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
                   color: _ink)),
         ]),
       );
-
-  Widget _chip(String s) {
-    final on = _scope.contains(s);
-    return GestureDetector(
-      onTap: () => setState(() => on ? _scope.remove(s) : _scope.add(s)),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-        decoration: BoxDecoration(
-          color: on ? _ink : _surface,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          if (on) ...[
-            const Icon(Icons.check_rounded, size: 15, color: _paper),
-            const SizedBox(width: 6)
-          ],
-          Text(s,
-              style: TextStyle(
-                  fontFamily: _body,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: on ? _paper : _inkMute)),
-        ]),
-      ),
-    );
-  }
 
   // Phone helpers — mirror ListingDetailPageView so the manager calling card
   // dials and opens WhatsApp consistently across the app.
