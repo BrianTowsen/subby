@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -693,6 +695,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   String _capitalize(String s) =>
       s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 
+  // Grammar helper — singular for a count of 1, plural otherwise. Drives the
+  // section headers (Quote invite(s) / My Project(s) / Shared Home Build(s)).
+  String _plural(int n, String one, String many) => n == 1 ? one : many;
+
   // -----------------------------
   // Small shared bits
   // -----------------------------
@@ -774,7 +780,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                 _accentMarker(_teal),
                 const SizedBox(width: 10),
                 Expanded(
-                    child: Text('Quote invites', style: _stepHeadlineStyle)),
+                    child: Text(
+                        _plural(docs.length, 'Quote invite', 'Quote invites'),
+                        style: _stepHeadlineStyle)),
                 if (actionable > 0)
                   Container(
                     padding:
@@ -1195,8 +1203,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                           _accentMarker(_ink),
                           const SizedBox(width: 10),
                           Expanded(
-                            child:
-                                Text('My Projects', style: _stepHeadlineStyle),
+                            child: Text(
+                                _plural(
+                                    docs.length, 'My Project', 'My Projects'),
+                                style: _stepHeadlineStyle),
                           ),
                         ],
                       ),
@@ -1292,7 +1302,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         const SizedBox(height: 18),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: _hPad),
-          child: _sharedSectionHeader(),
+          child: _sharedSectionHeader(shared.length),
         ),
         const SizedBox(height: 4),
         Padding(
@@ -1464,7 +1474,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                     child: LinearProgressIndicator(
                         value: progress,
                         minHeight: 8,
-                        backgroundColor: _paper,
+                        backgroundColor: _paper.withOpacity(0.45),
                         valueColor: const AlwaysStoppedAnimation<Color>(_ink)),
                   ),
                 ),
@@ -1564,7 +1574,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                       child: LinearProgressIndicator(
                           value: progress,
                           minHeight: 7,
-                          backgroundColor: _paper,
+                          backgroundColor: _paper.withOpacity(0.45),
                           valueColor:
                               const AlwaysStoppedAnimation<Color>(_ink)),
                     ),
@@ -1789,7 +1799,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             const SizedBox(height: 30),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: _hPad),
-              child: _sharedSectionHeader(),
+              child: _sharedSectionHeader(docs.length),
             ),
             const SizedBox(height: 4),
             Padding(
@@ -1810,12 +1820,14 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     );
   }
 
-  Widget _sharedSectionHeader() => Row(
+  Widget _sharedSectionHeader(int count) => Row(
         children: [
           _accentMarker(_teal),
           const SizedBox(width: 10),
           Expanded(
-            child: Text('Shared Home Builds', style: _stepHeadlineStyle),
+            child: Text(
+                _plural(count, 'Shared Home Build', 'Shared Home Builds'),
+                style: _stepHeadlineStyle),
           ),
         ],
       );
@@ -2527,7 +2539,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               child: LinearProgressIndicator(
                   value: progress,
                   minHeight: 8,
-                  backgroundColor: Colors.white,
+                  backgroundColor: Colors.white.withOpacity(0.45),
                   valueColor: const AlwaysStoppedAnimation<Color>(_ink)),
             ),
             const SizedBox(height: 14),
@@ -2604,8 +2616,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                       borderRadius: BorderRadius.circular(_rPill),
                     ),
                     child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      const Icon(Icons.bolt,
-                          size: 12, color: Color(0xFF4E504F)),
+                      const Icon(Icons.bolt, size: 12, color: _paper),
                       const SizedBox(width: 4),
                       Text(_capitalize(status),
                           style: const TextStyle(
@@ -3308,7 +3319,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                     child: LinearProgressIndicator(
                         value: progress,
                         minHeight: 8,
-                        backgroundColor: _paper,
+                        backgroundColor: _paper.withOpacity(0.45),
                         valueColor: const AlwaysStoppedAnimation<Color>(_ink)),
                   ),
                 ),
@@ -3437,7 +3448,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                       child: LinearProgressIndicator(
                           value: progress,
                           minHeight: 7,
-                          backgroundColor: _paper,
+                          backgroundColor: _paper.withOpacity(0.45),
                           valueColor:
                               const AlwaysStoppedAnimation<Color>(_ink)),
                     ),
