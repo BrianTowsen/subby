@@ -45,6 +45,7 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _border = Color(0xFFEAEEF0);
   static const Color _green = Color(0xFF4E504F);
+  static const Color _success = Color(0xFF0CAC47); // success / awarded green
   static const Color _lime = Color(0xFFE7E247); // primary CTA / positive accent
   static const Color _sageBorder = Color(0xFFCBD8DD);
   static const Color _coral = Color(0xFF566670);
@@ -376,25 +377,26 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
                         ]),
                       ),
                     ),
-                    if (hasFile)
-                      Flexible(
-                        child: Row(mainAxisSize: MainAxisSize.min, children: [
-                          const Icon(Icons.picture_as_pdf_rounded,
-                              size: 16, color: _green),
-                          const SizedBox(width: 4),
-                          Flexible(
-                            child: Text(fileName,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                    fontFamily: _body,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: _inkMute)),
-                          ),
-                        ]),
-                      ),
                   ]),
+                  if (hasFile)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Row(children: [
+                        const Icon(Icons.picture_as_pdf_rounded,
+                            size: 16, color: _green),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(fileName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontFamily: _body,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: _ink)),
+                        ),
+                      ]),
+                    ),
                   if (!accepted) ...[
                     const SizedBox(height: 12),
                     Row(children: [
@@ -446,14 +448,14 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
                     Padding(
                       padding: const EdgeInsets.only(top: 10),
                       child: Row(children: const [
-                        Icon(Icons.verified_rounded, size: 16, color: _green),
+                        Icon(Icons.verified_rounded, size: 16, color: _success),
                         SizedBox(width: 6),
                         Text('Awarded',
                             style: TextStyle(
                                 fontFamily: _body,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w800,
-                                color: _green)),
+                                color: _success)),
                       ]),
                     ),
                 ],
