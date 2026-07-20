@@ -10,10 +10,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -122,7 +118,7 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(const SnackBar(
-            backgroundColor: _ink,
+            backgroundColor: const Color(0xFF3D4F66),
             content: Text(
                 'Set quoteDetailRouteName on QuotesReceivedView to open quotes.',
                 style: TextStyle(
