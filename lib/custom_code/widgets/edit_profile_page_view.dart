@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 // ✅ Auth helpers (currentUserReference, currentUserEmail, etc.)
 import '/auth/firebase_auth/auth_util.dart';
 
@@ -60,6 +62,19 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
   bool _uploadingPhoto = false;
 
   static const double _hPad = 20;
+
+  // Resolve the caller's users/{uid} doc. Prefer the FlutterFlow ref, fall
+  // back to the live FirebaseAuth uid so a transient null on the auth stream
+  // never trips the spurious "Not signed in" toast. (FIX 2)
+  DocumentReference<Object?>? _resolveUserRef() {
+    final ff = currentUserReference;
+    if (ff != null) return ff;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      return FirebaseFirestore.instance.collection('users').doc(uid);
+    }
+    return null;
+  }
 
   // =========================================================
   // TYPOGRAPHY
@@ -275,10 +290,11 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
 
   // =========================================================
   // ✅ CHANGE PHOTO — pick → upload to Storage → save photo_url
+  // Requires the storage.rules block for users/{uid}/** (owner write). (FIX 3)
   // =========================================================
   Future<void> _changePhoto() async {
     if (_uploadingPhoto) return;
-    final userRef = currentUserReference;
+    final userRef = _resolveUserRef();
     final user = FirebaseAuth.instance.currentUser;
     if (userRef == null || user == null) {
       _showToast('Not signed in.', success: false);
@@ -306,7 +322,8 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
       );
       final url = await ref.getDownloadURL();
 
-      await userRef.update(<String, dynamic>{'photo_url': url});
+      // Use the generated helper so the backing-field name is always correct.
+      await userRef.update(createUsersRecordData(photoUrl: url));
       try {
         await user.updatePhotoURL(url);
       } catch (_) {}
@@ -326,7 +343,9 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
     final formOk = _formKey.currentState?.validate() ?? false;
     if (!formOk) return;
 
-    final userRef = currentUserReference;
+    // Prefer the FlutterFlow ref, fall back to the live FirebaseAuth uid so a
+    // transient null never shows the spurious "Not signed in" toast. (FIX 2)
+    final userRef = _resolveUserRef();
     if (userRef == null) {
       _showToast('Not signed in. Please log in again.', success: false);
       return;
@@ -336,10 +355,13 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
     try {
       final displayName = _nameController.text.trim();
       final phone = _phoneController.text.trim();
-      await userRef.update(<String, dynamic>{
-        'display_name': displayName,
-        'phone_number': phone,
-      });
+      // Write via the generated helper so the Firestore keys always match the
+      // UsersRecord backing fields — fixes the phone number coming back blank
+      // after save when the raw key didn't match the schema field. (FIX 1)
+      await userRef.update(createUsersRecordData(
+        displayName: displayName,
+        phoneNumber: phone,
+      ));
       if (!mounted) return;
       _showToast('Profile updated.', success: true);
       context.safePop();
@@ -599,7 +621,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
       child: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, authSnap) {
-          final userRef = currentUserReference;
+          final userRef = _resolveUserRef();
 
           if (authSnap.connectionState == ConnectionState.waiting) {
             return _messageState(theme, width, height,
