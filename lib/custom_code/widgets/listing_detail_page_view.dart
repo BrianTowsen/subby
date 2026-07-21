@@ -287,28 +287,21 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
       context.pushNamed('loginPage');
       return;
     }
-    // Full-width confirm module — mirrors DetailSnagPageView's close-out dialog.
-    await _showConfirmDialog(
-      icon: Icons.playlist_add_rounded,
-      accent: const Color(0xFF0CAC47),
-      title: 'Add to Project?',
-      message:
-          'This trade will be added to your project so you can request quotes and track the job.',
-      confirmLabel: 'Add to project',
-      onConfirm: () => _showProjectPickerSheet(
-        sheetTitle: 'Add to Project',
-        sheetSubtitle: 'Choose which project to add this listing to.',
-        ctaLabel: 'Add to project',
-        ctaIcon: Icons.playlist_add_rounded,
-        onConfirm: (projectRef) => _addListingToProject(
-          projectRef: projectRef,
-          listingRef: listingRef,
-          addedBy: userRef,
-          title: title,
-          subTitle: subTitle,
-          ratingText: ratingText,
-          photoUrl: photoUrl,
-        ),
+    // Single full-width GREEN module — green header + inline project list so
+    // the user picks a project (when they have more than one) in ONE module.
+    await _showProjectPickerSheet(
+      sheetTitle: 'Add to Project',
+      sheetSubtitle: 'Choose which project to add this listing to.',
+      ctaLabel: 'Add to project',
+      ctaIcon: Icons.playlist_add_rounded,
+      onConfirm: (projectRef) => _addListingToProject(
+        projectRef: projectRef,
+        listingRef: listingRef,
+        addedBy: userRef,
+        title: title,
+        subTitle: subTitle,
+        ratingText: ratingText,
+        photoUrl: photoUrl,
       ),
     );
   }
@@ -497,11 +490,13 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                     height: 62,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: _ink.withOpacity(0.12),
+                      color: const Color(0xFF0CAC47).withOpacity(0.12),
                       shape: BoxShape.circle,
-                      border: Border.all(color: _ink.withOpacity(0.22)),
+                      border: Border.all(
+                          color: const Color(0xFF0CAC47).withOpacity(0.22)),
                     ),
-                    child: Icon(ctaIcon, color: _ink, size: 30),
+                    child:
+                        Icon(ctaIcon, color: const Color(0xFF0CAC47), size: 30),
                   ),
                   const SizedBox(height: 16),
                   Text(sheetTitle,
@@ -669,6 +664,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                               label: ctaLabel,
                               icon: ctaIcon,
                               filled: true,
+                              fillColor: const Color(0xFF0CAC47),
                               onTap: selectedRef == null
                                   ? null
                                   : () async {
@@ -1020,6 +1016,12 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                       minLines: 3,
                       maxLines: 5,
                       cursorColor: _ink,
+                      // Blue "Done" (tick) key on the keyboard — dismisses it
+                      // so the user is never stuck with the keyboard open.
+                      keyboardType: TextInputType.text,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => FocusScope.of(context).unfocus(),
+                      onTapOutside: (_) => FocusScope.of(context).unfocus(),
                       style: const TextStyle(
                           fontFamily: _bodyFont,
                           fontSize: 13,
