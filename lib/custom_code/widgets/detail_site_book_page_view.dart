@@ -3,6 +3,7 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
@@ -10,17 +11,10 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart'; // currentUserReference (owner gate)
+import '/custom_code/actions/index.dart';
 
 // ======================= DetailSiteBookPageView =============================
 //
@@ -29,7 +23,7 @@ import '/auth/firebase_auth/auth_util.dart'; // currentUserReference (owner gate
 // back for free — no in-widget overlay, no PopScope juggling.
 //
 // HEADER (this revision): the masthead is now a 1:1 match of
-// SiteBookPageView's hero — same 3D4F66 ink block, same paddings/spacers, a
+// SiteBookPageView's hero — same 2F3A4C ink block, same paddings/spacers, a
 // centered project-name + SITE ENTRY eyebrow top row (back circle left, an
 // owner-only delete circle + weather pill right), and a large stat block
 // (avatar + LOGGED BY / author name at 34px, with a right-aligned date + media
@@ -196,22 +190,14 @@ class _DetailSiteBookPageViewState extends State<DetailSiteBookPageView> {
       _back();
     } catch (e) {
       debugPrint('🔥 Delete site entry failed: $e');
-      if (mounted) _toast('Could not delete. Please try again.');
+      if (mounted)
+        _toast('Could not delete. Please try again.', success: false);
     }
   }
 
-  void _toast(String msg) {
+  void _toast(String msg, {bool success = true}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        backgroundColor: const Color(0xFF3D4F66), // slate
-        content: Text(msg,
-            style: const TextStyle(
-                fontFamily: _bodyFont,
-                color: _paper,
-                fontWeight: FontWeight.w700)),
-      ));
+    showAppToast(context, msg, success);
   }
 
   // Centred destructive confirm dialog — shared "delete warning" module
@@ -521,7 +507,7 @@ class _DetailSiteBookPageViewState extends State<DetailSiteBookPageView> {
         // 14-spacer, 38-row, 16-gap, 34px stat), so it ends the same height.
         Container(
           width: double.infinity,
-          color: const Color(0xFF3D4F66),
+          color: const Color(0xFF2F3A4C),
           padding: EdgeInsets.fromLTRB(_hPad, topInset + 14, _hPad, 18),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -803,7 +789,7 @@ class _DetailSiteBookPageViewState extends State<DetailSiteBookPageView> {
     final topInset = MediaQuery.of(context).viewPadding.top;
     return Container(
       width: double.infinity,
-      color: const Color(0xFF3D4F66),
+      color: const Color(0xFF2F3A4C),
       padding: EdgeInsets.fromLTRB(_hPad, topInset + 14, _hPad, 18),
       child: Row(
         children: [

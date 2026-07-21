@@ -3,11 +3,15 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import 'index.dart'; // Imports other custom widgets
+
+import '/custom_code/actions/index.dart';
 import 'index.dart'; // Imports other custom widgets
 
 import 'dart:async';
@@ -141,46 +145,27 @@ class _InviteViewState extends State<InviteView> {
       }
       if (sent == 0) {
         if (mounted) {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(SnackBar(
-                backgroundColor: _ink,
-                content: Text(
-                    'Couldn\'t invite ${skipped.length == 1 ? 'this trade' : 'these trades'} — no linked Subby account found. Ask them to claim their listing, then try again.',
-                    style: const TextStyle(
-                        fontFamily: _body,
-                        fontWeight: FontWeight.w700,
-                        color: _paper))));
+          showAppToast(
+              context,
+              'Couldn\'t invite ${skipped.length == 1 ? 'this trade' : 'these trades'} — no linked Subby account found. Ask them to claim their listing, then try again.',
+              false);
         }
         return;
       }
       await batch.commit();
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(
-            backgroundColor: _ink,
-            content: Text(
-                skipped.isEmpty
-                    ? 'Quote request sent to $sent trade${sent == 1 ? '' : 's'}.'
-                    : 'Sent to $sent; skipped ${skipped.length} trade${skipped.length == 1 ? '' : 's'} with no linked account.',
-                style: const TextStyle(
-                    fontFamily: _body,
-                    fontWeight: FontWeight.w700,
-                    color: _paper))));
+      showAppToast(
+          context,
+          skipped.isEmpty
+              ? 'Quote request sent to $sent trade${sent == 1 ? '' : 's'}.'
+              : 'Sent to $sent; skipped ${skipped.length} trade${skipped.length == 1 ? '' : 's'} with no linked account.',
+          true);
       final nav = Navigator.of(context);
       if (nav.canPop()) nav.pop();
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(const SnackBar(
-              backgroundColor: _ink,
-              content: Text('Couldn\'t send invites — check your connection.',
-                  style: TextStyle(
-                      fontFamily: _body,
-                      fontWeight: FontWeight.w700,
-                      color: _paper))));
+        showAppToast(
+            context, 'Couldn\'t send invites — check your connection.', false);
       }
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -201,7 +186,7 @@ class _InviteViewState extends State<InviteView> {
         children: [
           Container(
             width: double.infinity,
-            color: const Color(0xFF3D4F66), // steel — matches app hero headers
+            color: const Color(0xFF2F3A4C), // steel — matches app hero headers
             padding: EdgeInsets.fromLTRB(20, top + 14, 20, 20),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

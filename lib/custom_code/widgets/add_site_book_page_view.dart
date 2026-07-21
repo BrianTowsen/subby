@@ -3,10 +3,13 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
@@ -21,6 +24,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
+import '/custom_code/actions/index.dart';
 
 // ======================= AddSiteBookPageView ================================
 //
@@ -211,7 +215,7 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
     if (_uploading || _saving) return;
     final projectRef = _projectRef;
     if (projectRef == null) {
-      _toast('No project selected.');
+      _toast('No project selected.', success: false);
       return;
     }
     FocusScope.of(context).unfocus();
@@ -248,7 +252,7 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
       }
     } catch (e) {
       debugPrint('🔥 Site book media upload failed: $e');
-      _toast('Upload failed. Please try again.');
+      _toast('Upload failed. Please try again.', success: false);
     } finally {
       if (mounted) setState(() => _uploading = false);
     }
@@ -306,11 +310,11 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
     final note = _noteCtl.text.trim();
     // Save when there's a note OR media.
     if (note.isEmpty && _media.isEmpty) {
-      _toast('Add a note or a photo first.');
+      _toast('Add a note or a photo first.', success: false);
       return;
     }
     if (_projectRef == null) {
-      _toast('No project selected.');
+      _toast('No project selected.', success: false);
       return;
     }
 
@@ -339,24 +343,15 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
       _handleBack();
     } catch (e) {
       debugPrint('🔥 Failed to save site book entry: $e');
-      if (mounted) _toast('Could not save entry.');
+      if (mounted) _toast('Could not save entry.', success: false);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
   }
 
-  void _toast(String msg) {
+  void _toast(String msg, {bool success = true}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        backgroundColor: const Color(0xFF3D4F66),
-        content: Text(msg,
-            style: const TextStyle(
-                fontFamily: _bodyFont,
-                color: _paper,
-                fontWeight: FontWeight.w700)),
-      ));
+    showAppToast(context, msg, success);
   }
 
   // -----------------------------
@@ -469,7 +464,7 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
 
   Widget _addHero(String title, String subtitle) => Container(
         width: double.infinity,
-        color: const Color(0xFF3D4F66),
+        color: const Color(0xFF2F3A4C),
         padding: EdgeInsets.fromLTRB(
             _hPad, 14 + MediaQuery.of(context).padding.top, _hPad, 18),
         child: Column(

@@ -3,20 +3,11 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
@@ -71,7 +62,7 @@ class _HomePageViewState extends State<HomePageView> {
   static const Color _faint = Color(0xFF93A3AC); // subtitles / inactive
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
-  static const Color _steel = Color(0xFF3D4F66); // masthead hero
+  static const Color _steel = Color(0xFF2F3A4C); // masthead hero
   static const Color _lime = Color(0xFFE7E247); // primary accent
   static const Color _slate = Color(0xFF4E504F); // leading icons
   static const Color _hairline = Color(0xFFEAEEF0);

@@ -3,6 +3,7 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
@@ -10,19 +11,7 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -167,19 +156,10 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
 
   String _tabKey(int i) => i == 0 ? 'todo' : (i == 1 ? 'in_progress' : 'done');
 
-  // Standard app snackbar — ink background, white text.
-  void _snack(String msg) {
+  // Standard app snackbar — shared Subby toast style.
+  void _snack(String msg, {bool success = true}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        backgroundColor: const Color(0xFF3D4F66), // slate
-        content: Text(msg,
-            style: const TextStyle(
-                fontFamily: _bodyFont,
-                color: _paper,
-                fontWeight: FontWeight.w700)),
-      ));
+    showAppToast(context, msg, success);
   }
 
   // =========================================================
@@ -278,7 +258,8 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
       if (mounted) _snack('Task updated.'); // ✅ update snackbar
     } catch (e) {
       debugPrint('🔥 Quick toggle failed: $e');
-      if (mounted) _snack('Could not update. Please try again.');
+      if (mounted)
+        _snack('Could not update. Please try again.', success: false);
     }
   }
 
@@ -903,7 +884,7 @@ class _ToDoListPageViewState extends State<ToDoListPageView>
     final top = MediaQuery.of(context).padding.top;
     return Container(
       width: double.infinity,
-      color: const Color(0xFF3D4F66),
+      color: const Color(0xFF2F3A4C),
       padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

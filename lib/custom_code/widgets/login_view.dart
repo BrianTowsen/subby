@@ -3,6 +3,7 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
@@ -10,8 +11,7 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
+import '/custom_code/actions/index.dart';
 import 'index.dart'; // Imports other custom widgets
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -59,7 +59,7 @@ class _LoginViewState extends State<LoginView> {
   static const Color _hairline = Color(0xFFEAEEF0);
   static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
   // Steel hero + accent
-  static const Color _steel = Color(0xFF3D4F66); // hero header background
+  static const Color _steel = Color(0xFF2F3A4C); // hero header background
   static const Color _accent = Color(0xFFE7E247); // primary CTA fill
   // Status
   static const Color _coral = Color(0xFF566670);
@@ -127,11 +127,6 @@ class _LoginViewState extends State<LoginView> {
         fontWeight: FontWeight.w600,
         fontSize: 16,
         letterSpacing: 0.0,
-      );
-
-  TextStyle _snackTextStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: _bodyFont,
-        color: _ink,
       );
 
   TextStyle _otpDigitStyle(FlutterFlowTheme t) => t.bodyMedium.override(
@@ -231,42 +226,7 @@ class _LoginViewState extends State<LoginView> {
 
   void _showSubbySnack(String message, {bool success = true}) {
     if (!mounted) return;
-    final theme = FlutterFlowTheme.of(context);
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          elevation: 0,
-          backgroundColor: _surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: const BorderSide(color: _hairline, width: 1),
-          ),
-          duration: const Duration(milliseconds: 1600),
-          content: Row(
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: _ink.withOpacity(0.08),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  success ? Icons.check_rounded : Icons.info_outline_rounded,
-                  size: 16,
-                  color: _ink,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(child: Text(message, style: _snackTextStyle(theme))),
-            ],
-          ),
-        ),
-      );
+    showAppToast(context, message, success);
   }
 
   // ---------------------------

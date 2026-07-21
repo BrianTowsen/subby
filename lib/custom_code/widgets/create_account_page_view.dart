@@ -3,6 +3,7 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
@@ -12,14 +13,9 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '/custom_code/actions/index.dart';
 
 class CreateAccountPageView extends StatefulWidget {
   const CreateAccountPageView({
@@ -49,7 +45,7 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _hairline = Color(0xFFEAEEF0);
   static const Color _hairlineOnSurface = Color(0xFFDCE3E6);
-  static const Color _steel = Color(0xFF3D4F66); // hero header background
+  static const Color _steel = Color(0xFF2F3A4C); // hero header background
   static const Color _accent = Color(0xFFE7E247); // primary CTA fill
   static const Color _coral = Color(0xFF566670);
   static const String _displayFont = 'Inter Tight';
@@ -101,11 +97,6 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
         letterSpacing: 0.0,
       );
 
-  TextStyle _snackTextStyle(FlutterFlowTheme t) => t.bodySmall.override(
-        fontFamily: _bodyFont,
-        color: _paper,
-        fontWeight: FontWeight.w700,
-      );
   // =========================================================
 
   @override
@@ -130,42 +121,7 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
 
   void _showSubbySnack(String msg, {bool isError = false}) {
     if (!mounted) return;
-    final theme = FlutterFlowTheme.of(context);
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          elevation: 0,
-          backgroundColor: const Color(0xFF3D4F66),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: BorderSide.none,
-          ),
-          duration: const Duration(milliseconds: 1600),
-          content: Row(
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: _paper.withOpacity(0.16),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  isError ? Icons.error_outline_rounded : Icons.check_rounded,
-                  size: 16,
-                  color: _paper,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(child: Text(msg, style: _snackTextStyle(theme))),
-            ],
-          ),
-        ),
-      );
+    showAppToast(context, msg, !isError);
   }
 
   // =========================================================

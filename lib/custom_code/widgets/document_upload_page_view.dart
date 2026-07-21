@@ -3,16 +3,11 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
@@ -21,6 +16,7 @@ import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
+import '/custom_code/actions/index.dart';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -368,19 +364,11 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
       await snap.reference.delete();
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          _inkSnack('Document deleted.'),
-        );
+      showAppToast(context, 'Document deleted.', true);
     } catch (e) {
       debugPrint('🔥 Failed deleting project_documents doc: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          _inkSnack('Could not delete document.'),
-        );
+      showAppToast(context, 'Could not delete document.', false);
     }
   }
 
@@ -960,21 +948,6 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
     );
   }
 
-  // Standard app snackbar — slate background, white text.
-  SnackBar _inkSnack(String message) => SnackBar(
-        backgroundColor: const Color(0xFF3D4F66), // slate
-
-        content: Text(
-          message,
-          style: const TextStyle(
-            color: _paper,
-            fontFamily: _bodyFont,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0,
-          ),
-        ),
-      );
-
   IconData _iconForType(String type) {
     final t = type.toLowerCase();
     if (t.contains('pdf')) return Icons.picture_as_pdf_rounded;
@@ -1020,11 +993,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
       final f = result.files.first;
       final Uint8List? bytes = f.bytes;
       if (bytes == null || bytes.isEmpty) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            _inkSnack('Could not read that file. Try again.'),
-          );
+        showAppToast(context, 'Could not read that file. Try again.', false);
         return;
       }
 
@@ -1072,19 +1041,11 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
       }.withoutNulls);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          _inkSnack('Document uploaded.'),
-        );
+      showAppToast(context, 'Document uploaded.', true);
     } catch (e) {
       debugPrint('🔥 Document upload failed: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          _inkSnack('Upload failed. Please try again.'),
-        );
+      showAppToast(context, 'Upload failed. Please try again.', false);
     } finally {
       if (mounted) setState(() => _isUploading = false);
     }
@@ -1139,7 +1100,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
   // Dark ink hero (matches ProjectTimelinePageView).
   Widget _hero() => Container(
         width: double.infinity,
-        color: const Color(0xFF3D4F66),
+        color: const Color(0xFF2F3A4C),
         padding: EdgeInsets.fromLTRB(
             20, 6 + MediaQuery.of(context).padding.top, 20, 18),
         child: Column(

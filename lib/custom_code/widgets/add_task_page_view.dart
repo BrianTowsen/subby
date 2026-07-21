@@ -3,10 +3,13 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
@@ -21,6 +24,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
+import '/custom_code/actions/index.dart';
 
 // ─────────────────────────────────────────────────────────────────────
 // UPDATE (this revision): this screen now doubles as the EDIT screen.
@@ -199,7 +203,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
       if (mounted) setState(() {});
     } catch (e) {
       debugPrint('🔥 Load task for edit failed: $e');
-      if (mounted) _toast('Could not load this task.');
+      if (mounted) _toast('Could not load this task.', success: false);
     }
   }
 
@@ -546,7 +550,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
   Future<void> _pickAssignee({required bool isPerson}) async {
     final projectRef = _projectRef;
     if (projectRef == null) {
-      _toast('Select a project first.');
+      _toast('Select a project first.', success: false);
       return;
     }
     FocusScope.of(context).unfocus();
@@ -962,7 +966,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
     if (_uploading || _saving) return;
     final projectRef = _projectRef;
     if (projectRef == null) {
-      _toast('Select a project first.');
+      _toast('Select a project first.', success: false);
       return;
     }
     FocusScope.of(context).unfocus();
@@ -1003,7 +1007,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
       }
     } catch (e) {
       debugPrint('🔥 Attachment upload failed: $e');
-      _toast('Upload failed. Please try again.');
+      _toast('Upload failed. Please try again.', success: false);
     } finally {
       if (mounted) setState(() => _uploading = false);
     }
@@ -1052,7 +1056,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
     if (_saving || _uploading) return;
     final projectRef = _projectRef;
     if (projectRef == null && !_isEditing) {
-      _toast('No project selected.');
+      _toast('No project selected.', success: false);
       return;
     }
     if (!(_formKey.currentState?.validate() ?? false)) return;
@@ -1115,24 +1119,15 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
       _handleBack();
     } catch (e) {
       debugPrint('🔥 Save task failed: $e');
-      if (mounted) _toast('Could not save. Please try again.');
+      if (mounted) _toast('Could not save. Please try again.', success: false);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
   }
 
-  void _toast(String msg) {
+  void _toast(String msg, {bool success = true}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        backgroundColor: const Color(0xFF3D4F66), // slate
-        content: Text(msg,
-            style: const TextStyle(
-                fontFamily: _bodyFont,
-                color: _paper,
-                fontWeight: FontWeight.w700)),
-      ));
+    showAppToast(context, msg, success);
   }
 
   // =========================================================
@@ -1156,7 +1151,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
 
   Widget _addHero(String title, String subtitle) => Container(
         width: double.infinity,
-        color: const Color(0xFF3D4F66),
+        color: const Color(0xFF2F3A4C),
         padding: EdgeInsets.fromLTRB(
             20, 14 + MediaQuery.of(context).padding.top, 20, 18),
         child: Column(

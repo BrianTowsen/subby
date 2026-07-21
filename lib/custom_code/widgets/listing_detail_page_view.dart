@@ -3,11 +3,15 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import 'index.dart'; // Imports other custom widgets
+
+import '/custom_code/actions/index.dart';
 import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
@@ -43,7 +47,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
   static const Color _coral = Color(0xFF4E504F);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
-  static const Color _steel = Color(0xFF3D4F66);
+  static const Color _steel = Color(0xFF2F3A4C);
   static const Color _lime = Color(0xFFE7E247);
   static const Color _slate = Color(0xFF4E504F);
   static const Color _whatsapp = Color(0xFF25D366);
@@ -114,22 +118,9 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
     return false;
   }
 
-  void _snack(String msg) {
+  void _snack(String msg, {bool success = true}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        backgroundColor: _ink,
-        content: Text(msg,
-            style: const TextStyle(
-                fontFamily: _bodyFont,
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: Colors.white)),
-        duration: const Duration(milliseconds: 1400),
-      ));
+    showAppToast(context, msg, success);
   }
 
   Future<void> _toggleBookmark({
@@ -153,7 +144,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
       _snack(currentlySaved ? 'Removed from bookmarks' : 'Saved to bookmarks');
     } catch (e) {
       debugPrint('⚠️ toggle bookmark failed: $e');
-      _snack('Could not update bookmark.');
+      _snack('Could not update bookmark.', success: false);
     }
   }
 
@@ -173,7 +164,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
       await Clipboard.setData(ClipboardData(text: parts.join('\n')));
       _snack('Listing details copied. You can now paste and share.');
     } catch (_) {
-      _snack('Unable to share right now.');
+      _snack('Unable to share right now.', success: false);
     }
   }
 
@@ -183,10 +174,10 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
   Future<void> _launchUri(Uri uri, {required String failMessage}) async {
     try {
       final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
-      if (!ok) _snack(failMessage);
+      if (!ok) _snack(failMessage, success: false);
     } catch (e) {
       debugPrint('⚠️ launch failed: $e');
-      _snack(failMessage);
+      _snack(failMessage, success: false);
     }
   }
 
@@ -254,7 +245,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
           .limit(1)
           .get();
       if (dup.docs.isNotEmpty) {
-        _snack('Already added to this project.');
+        _snack('Already added to this project.', success: false);
         return;
       }
       await FirebaseFirestore.instance.collection('project_listings').add({
@@ -271,7 +262,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
       _snack('Added to project.');
     } catch (e) {
       debugPrint('⚠️ addListingToProject failed: $e');
-      _snack('Could not add to project.');
+      _snack('Could not add to project.', success: false);
     }
   }
 
@@ -606,7 +597,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
     try {
       context.pushNamed('AddProjects');
     } catch (_) {
-      _snack('Open My Projects to create a project.');
+      _snack('Open My Projects to create a project.', success: false);
     }
   }
 
@@ -1003,7 +994,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
       _snack('Thanks — your rating was saved.');
     } catch (e) {
       debugPrint('⚠️ submit review failed: $e');
-      _snack('Could not save your rating. Please try again.');
+      _snack('Could not save your rating. Please try again.', success: false);
     }
   }
 

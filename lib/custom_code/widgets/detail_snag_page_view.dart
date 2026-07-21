@@ -3,10 +3,13 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
@@ -26,6 +29,7 @@ import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-ba
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/auth/firebase_auth/auth_util.dart';
+import '/custom_code/actions/index.dart';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -380,7 +384,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
       if (mounted) _toast('Snag updated.');
     } catch (e) {
       debugPrint('🔥 Snag status update failed: $e');
-      _toast('Could not update. Please try again.');
+      _toast('Could not update. Please try again.', success: false);
     } finally {
       if (mounted) setState(() => _working = false);
     }
@@ -423,7 +427,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
       }
     } catch (e) {
       debugPrint('🔥 Fixed-media upload failed: $e');
-      _toast('Could not upload. Please try again.');
+      _toast('Could not upload. Please try again.', success: false);
     } finally {
       if (mounted) setState(() => _uploadingFixed = false);
     }
@@ -448,7 +452,8 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
   //    red Delete dialog) — the success/close “message” is green, not red.
   Future<void> _confirmCloseOut() async {
     if (_fixedMedia.isEmpty) {
-      _toast('Add a fixed photo or video to close this snag out.');
+      _toast('Add a fixed photo or video to close this snag out.',
+          success: false);
       return;
     }
     FocusScope.of(context).unfocus();
@@ -467,7 +472,8 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
     final ref = _snagRef;
     if (ref == null || _working) return;
     if (_fixedMedia.isEmpty) {
-      _toast('Add a fixed photo or video to close this snag out.');
+      _toast('Add a fixed photo or video to close this snag out.',
+          success: false);
       return;
     }
     setState(() => _working = true);
@@ -491,24 +497,15 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
       if (mounted) _toast('Snag closed out.');
     } catch (e) {
       debugPrint('🔥 Proof upload / close failed: $e');
-      _toast('Could not close out. Please try again.');
+      _toast('Could not close out. Please try again.', success: false);
     } finally {
       if (mounted) setState(() => _working = false);
     }
   }
 
-  void _toast(String msg) {
+  void _toast(String msg, {bool success = true}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        backgroundColor: const Color(0xFF3D4F66), // slate
-        content: Text(msg,
-            style: const TextStyle(
-                fontFamily: _bodyFont,
-                color: _paper,
-                fontWeight: FontWeight.w700)),
-      ));
+    showAppToast(context, msg, success);
   }
 
   // Parse a Firestore media list into a clean List<Map>.
@@ -715,7 +712,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
     final meta = parts.join('  ·  ').toUpperCase();
     return Container(
       width: double.infinity,
-      color: const Color(0xFF3D4F66),
+      color: const Color(0xFF2F3A4C),
       // Match the Snag List header height.
       constraints:
           BoxConstraints(minHeight: MediaQuery.of(context).padding.top + 138),
@@ -1585,7 +1582,8 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
       _handleBack();
     } catch (e) {
       debugPrint('🔥 Delete snag failed: $e');
-      if (mounted) _toast('Could not delete. Please try again.');
+      if (mounted)
+        _toast('Could not delete. Please try again.', success: false);
     }
   }
 

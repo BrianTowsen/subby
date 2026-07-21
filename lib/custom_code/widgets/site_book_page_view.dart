@@ -3,6 +3,7 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
@@ -10,13 +11,7 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart';
 
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -178,16 +173,7 @@ class _SiteBookPageViewState extends State<SiteBookPageView> {
 
   void _snack(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        backgroundColor: const Color(0xFF3D4F66),
-        content: Text(msg,
-            style: const TextStyle(
-                color: _paper,
-                fontFamily: _bodyFont,
-                fontWeight: FontWeight.w700)),
-      ));
+    showAppToast(context, msg, false);
   }
 
   // -----------------------------
@@ -339,7 +325,7 @@ class _SiteBookPageViewState extends State<SiteBookPageView> {
   // a large stat block (today's entries) with with-photos / contributors.
   Widget _hero(double topInset) => Container(
         width: double.infinity,
-        color: const Color(0xFF3D4F66),
+        color: const Color(0xFF2F3A4C),
         padding: EdgeInsets.fromLTRB(_hPad, topInset + 14, _hPad, 18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
