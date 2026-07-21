@@ -3,10 +3,13 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
@@ -106,7 +109,7 @@ class _CheckListPageViewState extends State<CheckListPageView>
   static const Color _chevron = Color(0xFFCBD8DD);
   static const Color _selTint = Color(0xFFE7EDF0);
   static const Color _green = Color(0xFF4E504F);
-  static const Color _header = Color(0xFF3D4F66);
+  static const Color _header = Color(0xFF2F3A4C);
   static const Color _yellow = Color(0xFFE7E247); // tick + active pill
 
   static const String _display = 'Inter Tight';

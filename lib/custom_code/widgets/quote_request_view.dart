@@ -3,10 +3,15 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import 'index.dart'; // Imports other custom widgets
+
+import '/custom_code/actions/index.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
@@ -138,15 +143,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
     if (r != null && r.isNotEmpty) {
       context.pushNamed(r);
     } else {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(const SnackBar(
-            backgroundColor: const Color(0xFF3D4F66),
-            content: Text('Continue to Submit Quote.',
-                style: TextStyle(
-                    fontFamily: _body,
-                    fontWeight: FontWeight.w700,
-                    color: _paper))));
+      showAppToast(context, 'Continue to Submit Quote.', true);
     }
   }
 
@@ -167,16 +164,10 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
     } catch (_) {}
     if (!mounted) return;
     setState(() => _saving = false);
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(
-          backgroundColor: const Color(0xFF3D4F66),
-          content: Text(
-              'Invitation accepted — review the drawings, then prepare your quote.',
-              style: TextStyle(
-                  fontFamily: _body,
-                  fontWeight: FontWeight.w700,
-                  color: _paper))));
+    showAppToast(
+        context,
+        'Invitation accepted — review the drawings, then prepare your quote.',
+        true);
   }
 
   // Trade declines the invitation. Sets 'declined' so the invite drops off
@@ -224,15 +215,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
     } catch (_) {}
     if (!mounted) return;
     setState(() => _saving = false);
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(
-          backgroundColor: const Color(0xFF3D4F66),
-          content: Text('Invite declined.',
-              style: TextStyle(
-                  fontFamily: _body,
-                  fontWeight: FontWeight.w700,
-                  color: _paper))));
+    showAppToast(context, 'Invite declined.', true);
     final nav = Navigator.of(context);
     if (nav.canPop()) nav.pop();
   }
@@ -328,7 +311,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
           Container(
             width: double.infinity,
             color: const Color(
-                0xFF3D4F66), // steel — matches DashboardPageView hero
+                0xFF2F3A4C), // steel — matches DashboardPageView hero
             padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -456,15 +439,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
       launchURL(url);
       return;
     }
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(
-          backgroundColor: const Color(0xFF3D4F66),
-          content: Text('No file attached to this document.',
-              style: TextStyle(
-                  fontFamily: _body,
-                  fontWeight: FontWeight.w700,
-                  color: _paper))));
+    showAppToast(context, 'No file attached to this document.', false);
   }
 
   Widget _docsSection(DocumentReference<Map<String, dynamic>> ref, String title,
@@ -589,15 +564,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
   }
 
   void _noContactSnack(String what) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-          backgroundColor: const Color(0xFF3D4F66),
-          content: Text('No $what for this project manager.',
-              style: const TextStyle(
-                  fontFamily: _body,
-                  fontWeight: FontWeight.w700,
-                  color: _paper))));
+    showAppToast(context, 'No $what for this project manager.', false);
   }
 
   // Project Manager calling card — mirrors the shared ProjectDetailPageView

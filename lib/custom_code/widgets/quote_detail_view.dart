@@ -3,6 +3,7 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
@@ -10,7 +11,7 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart';
 
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -122,15 +123,7 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
 
   Future<void> _downloadFile(String url) async {
     if (url.isEmpty) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(const SnackBar(
-            backgroundColor: Color(0xFF3D4F66),
-            content: Text('No file attached to this quote.',
-                style: TextStyle(
-                    fontFamily: _body,
-                    fontWeight: FontWeight.w700,
-                    color: _paper))));
+      showAppToast(context, 'No file attached to this quote.', false);
       return;
     }
     final uri = Uri.tryParse(url);
@@ -139,15 +132,7 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
       ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
     if (!ok && mounted) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(const SnackBar(
-            backgroundColor: Color(0xFF3D4F66),
-            content: Text('Could not open the file.',
-                style: TextStyle(
-                    fontFamily: _body,
-                    fontWeight: FontWeight.w700,
-                    color: _paper))));
+      showAppToast(context, 'Could not open the file.', false);
     }
   }
 
@@ -224,7 +209,7 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
               Container(
                 width: double.infinity,
                 color: const Color(
-                    0xFF3D4F66), // steel — matches DashboardPageView hero
+                    0xFF2F3A4C), // steel — matches DashboardPageView hero
                 padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

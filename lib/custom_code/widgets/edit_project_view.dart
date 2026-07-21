@@ -3,6 +3,7 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
@@ -10,9 +11,12 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/services.dart'; // SystemChrome / SystemUiOverlayStyle (dark status bar over white form)
+import '/custom_code/actions/index.dart';
 
 class EditProjectView extends StatefulWidget {
   const EditProjectView({
@@ -689,20 +693,8 @@ class _EditProjectViewState extends State<EditProjectView>
           currentUserReference != null &&
           owner.path != currentUserReference!.path) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              backgroundColor: const Color(0xFF3D4F66),
-              content: Text(
-                'You do not have permission to edit this project.',
-                style: FlutterFlowTheme.of(context).bodyMedium.override(
-                      fontFamily: FlutterFlowTheme.of(context).bodyMediumFamily,
-                      color: _paper,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.0,
-                    ),
-              ),
-            ),
-          );
+          showAppToast(context,
+              'You do not have permission to edit this project.', false);
           setState(() => _loading = false);
         }
         return;
@@ -736,20 +728,7 @@ class _EditProjectViewState extends State<EditProjectView>
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: const Color(0xFF3D4F66),
-          content: Text(
-            'Could not load project. Please try again.',
-            style: FlutterFlowTheme.of(context).bodyMedium.override(
-                  fontFamily: FlutterFlowTheme.of(context).bodyMediumFamily,
-                  color: _paper,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.0,
-                ),
-          ),
-        ),
-      );
+      showAppToast(context, 'Could not load project. Please try again.', false);
     }
   }
 
@@ -780,20 +759,7 @@ class _EditProjectViewState extends State<EditProjectView>
 
     final ref = widget.projectRef;
     if (ref == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: const Color(0xFF3D4F66),
-          content: Text(
-            'Missing project reference.',
-            style: FlutterFlowTheme.of(context).bodyMedium.override(
-                  fontFamily: FlutterFlowTheme.of(context).bodyMediumFamily,
-                  color: _paper,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.0,
-                ),
-          ),
-        ),
-      );
+      showAppToast(context, 'Missing project reference.', false);
       return;
     }
 
@@ -807,21 +773,7 @@ class _EditProjectViewState extends State<EditProjectView>
       if (!mounted) return;
 
       // ✅ show feedback BEFORE navigation so it always appears
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: const Color(0xFF3D4F66),
-          content: Text(
-            'Project updated.',
-            style: FlutterFlowTheme.of(context).bodyMedium.override(
-                  fontFamily: FlutterFlowTheme.of(context).bodyMediumFamily,
-                  color: _paper,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.0,
-                ),
-          ),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      showAppToast(context, 'Project updated.', true);
 
       final target = (widget.afterSaveRouteName ?? '').trim();
       if (target.isNotEmpty) {
@@ -844,20 +796,7 @@ class _EditProjectViewState extends State<EditProjectView>
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: const Color(0xFF3D4F66),
-          content: Text(
-            'Update failed. Please try again.',
-            style: FlutterFlowTheme.of(context).bodyMedium.override(
-                  fontFamily: FlutterFlowTheme.of(context).bodyMediumFamily,
-                  color: _paper,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.0,
-                ),
-          ),
-        ),
-      );
+      showAppToast(context, 'Update failed. Please try again.', false);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -879,21 +818,7 @@ class _EditProjectViewState extends State<EditProjectView>
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: const Color(0xFF3D4F66),
-          content: Text(
-            'Project deleted.',
-            style: FlutterFlowTheme.of(context).bodyMedium.override(
-                  fontFamily: FlutterFlowTheme.of(context).bodyMediumFamily,
-                  color: _paper,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.0,
-                ),
-          ),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      showAppToast(context, 'Project deleted.', true);
 
       final target = (widget.afterDeleteRouteName ?? '').trim();
       if (target.isNotEmpty) {
@@ -903,20 +828,7 @@ class _EditProjectViewState extends State<EditProjectView>
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: const Color(0xFF3D4F66),
-          content: Text(
-            'Delete failed. Please try again.',
-            style: FlutterFlowTheme.of(context).bodyMedium.override(
-                  fontFamily: FlutterFlowTheme.of(context).bodyMediumFamily,
-                  color: _paper,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.0,
-                ),
-          ),
-        ),
-      );
+      showAppToast(context, 'Delete failed. Please try again.', false);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -1204,7 +1116,7 @@ class _EditProjectViewState extends State<EditProjectView>
   // Dark ink hero (matches ProjectTimelinePageView).
   Widget _hero(FlutterFlowTheme theme) => Container(
         width: double.infinity,
-        color: const Color(0xFF3D4F66),
+        color: const Color(0xFF2F3A4C),
         padding: EdgeInsets.fromLTRB(
             20, 14 + MediaQuery.of(context).padding.top, 20, 18),
         child: Column(

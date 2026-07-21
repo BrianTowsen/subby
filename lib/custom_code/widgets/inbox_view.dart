@@ -3,6 +3,7 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
@@ -10,10 +11,7 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
+import '/custom_code/actions/index.dart';
 import 'index.dart'; // Imports other custom widgets
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -60,16 +58,8 @@ class _InboxViewState extends State<InboxView> {
     if (r != null && r.isNotEmpty) {
       context.pushNamed(r);
     } else {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(const SnackBar(
-            backgroundColor: _ink,
-            content: Text(
-                'Set quoteRequestRouteName on InboxView to open requests.',
-                style: TextStyle(
-                    fontFamily: _body,
-                    fontWeight: FontWeight.w700,
-                    color: _paper))));
+      showAppToast(context,
+          'Set quoteRequestRouteName on InboxView to open requests.', false);
     }
   }
 

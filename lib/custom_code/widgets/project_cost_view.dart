@@ -3,16 +3,11 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
@@ -60,7 +55,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
   static const Color _inkMute = Color(0xFF566670);
   static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
-  static const Color _header = Color(0xFF3D4F66);
+  static const Color _header = Color(0xFF2F3A4C);
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _band = Color(0xFFF2F5F6);
   static const Color _border = Color(0xFFECF0F2);

@@ -3,10 +3,13 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
@@ -15,6 +18,7 @@ import '/flutter_flow/custom_functions.dart' as functions;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '/auth/firebase_auth/auth_util.dart';
+import '/custom_code/actions/index.dart';
 
 class AddListingPageView extends StatefulWidget {
   const AddListingPageView({super.key, this.width, this.height});
@@ -33,7 +37,7 @@ class _AddListingPageViewState extends State<AddListingPageView> {
   static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
-  static const Color _steel = Color(0xFF3D4F66);
+  static const Color _steel = Color(0xFF2F3A4C);
   static const Color _lime = Color(0xFFE7E247);
   static const Color _slate = Color(0xFF4E504F);
   static const Color _hairline = Color(0xFFEAEEF0);
@@ -174,19 +178,7 @@ class _AddListingPageViewState extends State<AddListingPageView> {
 
   void _toast(String msg, {bool error = false}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        backgroundColor: const Color(0xFF3D4F66),
-        content: Text(msg,
-            style: const TextStyle(
-                fontFamily: _bodyFont,
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: Colors.white)),
-      ));
+    showAppToast(context, msg, !error);
   }
 
   List<String> _parseList(String raw) => raw

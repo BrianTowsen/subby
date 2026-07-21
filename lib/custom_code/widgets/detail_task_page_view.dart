@@ -3,6 +3,7 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
@@ -18,10 +19,13 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/auth/firebase_auth/auth_util.dart';
+import '/custom_code/actions/index.dart';
 
 // ─────────────────────────────────────────────────────────────────────
 // UPDATE (this revision):
@@ -361,7 +365,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
       if (mounted) _toast('Task updated.'); // ✅ update snackbar
     } catch (e) {
       debugPrint('🔥 Task status update failed: $e');
-      _toast('Could not update. Please try again.');
+      _toast('Could not update. Please try again.', success: false);
     } finally {
       if (mounted) setState(() => _working = false);
     }
@@ -554,18 +558,9 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
     );
   }
 
-  void _toast(String msg) {
+  void _toast(String msg, {bool success = true}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        backgroundColor: const Color(0xFF3D4F66),
-        content: Text(msg,
-            style: const TextStyle(
-                fontFamily: _bodyFont,
-                color: _paper,
-                fontWeight: FontWeight.w700)),
-      ));
+    showAppToast(context, msg, success);
   }
 
   // =========================================================
@@ -755,7 +750,7 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
     final eyebrow = parts.join('  ·  ').toUpperCase();
     return Container(
       width: double.infinity,
-      color: const Color(0xFF3D4F66),
+      color: const Color(0xFF2F3A4C),
       padding: EdgeInsets.fromLTRB(
           20, 14 + MediaQuery.of(context).padding.top, 20, 18),
       child: Column(
@@ -1416,7 +1411,8 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
       _handleBack();
     } catch (e) {
       debugPrint('🔥 Delete task failed: $e');
-      if (mounted) _toast('Could not delete. Please try again.');
+      if (mounted)
+        _toast('Could not delete. Please try again.', success: false);
     }
   }
 

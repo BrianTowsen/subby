@@ -3,6 +3,7 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
@@ -10,17 +11,7 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart';
 
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -691,19 +682,11 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     try {
       await ref.delete();
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          _inkSnack('Listing removed from project.'),
-        );
+      showAppToast(context, 'Listing removed from project.', true);
     } catch (e) {
       debugPrint('🔥 Failed removing project_listings doc: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          _inkSnack('Could not remove listing.'),
-        );
+      showAppToast(context, 'Could not remove listing.', false);
     }
   }
 
@@ -745,35 +728,13 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       await docSnap.reference.delete();
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          _inkSnack('Document deleted.'),
-        );
+      showAppToast(context, 'Document deleted.', true);
     } catch (e) {
       debugPrint('🔥 Failed deleting project_documents doc: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          _inkSnack('Could not delete document.'),
-        );
+      showAppToast(context, 'Could not delete document.', false);
     }
   }
-
-  // Standard app snackbar — ink background, white text.
-  SnackBar _inkSnack(String message) => SnackBar(
-        backgroundColor: const Color(0xFF3D4F66),
-        content: Text(
-          message,
-          style: const TextStyle(
-            color: _paper,
-            fontFamily: _bodyFont,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0,
-          ),
-        ),
-      );
 
   Widget _actionModuleRow({
     required FlutterFlowTheme theme,
@@ -1119,7 +1080,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       child: Container(
         width: double.infinity,
         decoration: const BoxDecoration(
-          color: Color(0xFF3D4F66),
+          color: Color(0xFF2F3A4C),
         ),
         padding: EdgeInsets.fromLTRB(20, topInset + 14, 20, 18),
         child: Column(
@@ -1568,9 +1529,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       final msg = next == 'shared'
           ? '$label is now shared with your team.'
           : '$label is now private.';
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(_inkSnack(msg));
+      showAppToast(context, msg, true);
     }
 
     try {
@@ -1608,10 +1567,10 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         'updatedAt': Timestamp.now(),
       });
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(_inkSnack(
-              '“$title” is now ${next == 'shared' ? 'shared.' : 'private.'}'));
+        showAppToast(
+            context,
+            '“$title” is now ${next == 'shared' ? 'shared.' : 'private.'}',
+            true);
       }
     } catch (e) {
       debugPrint('🔥 Failed to update document visibility: $e');

@@ -3,6 +3,7 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
@@ -10,7 +11,7 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart';
 
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -278,15 +279,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
       _fileName = '';
       _fileUrl = '';
     });
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-          backgroundColor: const Color(0xFF3D4F66),
-          content: Text(msg,
-              style: const TextStyle(
-                  fontFamily: _body,
-                  fontWeight: FontWeight.w700,
-                  color: _paper))));
+    showAppToast(context, msg, false);
   }
 
   void _removeFile() {
@@ -319,16 +312,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(
-          backgroundColor: const Color(0xFF3D4F66),
-          content: const Text('Quote submitted.',
-              style: TextStyle(
-                  fontFamily: _body,
-                  fontWeight: FontWeight.w700,
-                  color: _paper)),
-        ));
+      showAppToast(context, 'Quote submitted.', true);
       // Return to the Dashboard, clearing the quote flow off the stack.
       final route = (widget.dashboardRouteName ?? '').trim().isEmpty
           ? _fallbackDashboardRoute
@@ -336,15 +320,8 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
       context.goNamed(route);
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(const SnackBar(
-              backgroundColor: const Color(0xFF3D4F66),
-              content: Text('Couldn\'t submit — check your connection.',
-                  style: TextStyle(
-                      fontFamily: _body,
-                      fontWeight: FontWeight.w700,
-                      color: _paper))));
+        showAppToast(
+            context, 'Couldn\'t submit — check your connection.', false);
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -368,7 +345,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
           Container(
             width: double.infinity,
             color: const Color(
-                0xFF3D4F66), // steel — matches DashboardPageView hero
+                0xFF2F3A4C), // steel — matches DashboardPageView hero
             padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

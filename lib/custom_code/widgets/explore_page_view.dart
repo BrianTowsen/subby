@@ -3,22 +3,11 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
@@ -43,7 +32,7 @@ class _ExplorePageViewState extends State<ExplorePageView> {
   static const Color _faint = Color(0xFF93A3AC);
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
-  static const Color _steel = Color(0xFF3D4F66);
+  static const Color _steel = Color(0xFF2F3A4C);
   static const Color _lime = Color(0xFFE7E247);
   static const Color _slate = Color(0xFF4E504F);
   static const Color _hairline = Color(0xFFEAEEF0);
@@ -118,21 +107,8 @@ class _ExplorePageViewState extends State<ExplorePageView> {
 
   void _showBookmarkSnack({required bool wasSaved}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        backgroundColor: _ink,
-        content: Text(
-            wasSaved ? 'Saved to bookmarks' : 'Removed from bookmarks',
-            style: const TextStyle(
-                fontFamily: _bodyFont,
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: Colors.white)),
-        duration: const Duration(milliseconds: 1400),
-      ));
+    showAppToast(context,
+        wasSaved ? 'Saved to bookmarks' : 'Removed from bookmarks', true);
   }
 
   Future<void> _toggleSaved({
@@ -158,8 +134,7 @@ class _ExplorePageViewState extends State<ExplorePageView> {
     } catch (e) {
       debugPrint('⚠️ toggleSaved failed: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not update bookmark.')));
+      showAppToast(context, 'Could not update bookmark.', false);
     }
   }
 

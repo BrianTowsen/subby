@@ -3,6 +3,7 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
 // Begin custom widget code
@@ -10,9 +11,12 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status bar icons over ink hero)
+import '/custom_code/actions/index.dart';
 
 class AddProjectsPageView extends StatefulWidget {
   const AddProjectsPageView({
@@ -606,19 +610,8 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
     if (_saving) return;
 
     if (currentUserReference == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: const Color(0xFF3D4F66),
-          content: Text(
-            'You must be logged in to create a project.',
-            style: theme.bodyMedium.override(
-              fontFamily: _bodyFont,
-              color: _paper,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-      );
+      showAppToast(
+          context, 'You must be logged in to create a project.', false);
       return;
     }
 
@@ -652,38 +645,13 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: const Color(0xFF3D4F66),
-          content: Text(
-            'Project created!',
-            style: theme.bodyMedium.override(
-              fontFamily: _bodyFont,
-              color: _paper,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      showAppToast(context, 'Project created!', true);
 
       final nav = Navigator.of(context);
       if (nav.canPop()) nav.pop();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: const Color(0xFF3D4F66),
-          content: Text(
-            'Failed to save project: $e',
-            style: theme.bodyMedium.override(
-              fontFamily: _bodyFont,
-              color: _paper,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-      );
+      showAppToast(context, 'Failed to save project: $e', false);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -708,7 +676,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
   // Dark ink hero (matches ProjectTimelinePageView).
   Widget _hero() => Container(
         width: double.infinity,
-        color: const Color(0xFF3D4F66),
+        color: const Color(0xFF2F3A4C),
         padding: EdgeInsets.fromLTRB(
             20, MediaQuery.of(context).padding.top + 6, 20, 18),
         child: Column(
