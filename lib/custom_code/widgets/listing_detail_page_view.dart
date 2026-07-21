@@ -291,7 +291,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
     // the user picks a project (when they have more than one) in ONE module.
     await _showProjectPickerSheet(
       sheetTitle: 'Add to Project',
-      sheetSubtitle: 'Choose which project to add this listing to.',
+      sheetSubtitle: 'Select project to add to.',
       ctaLabel: 'Add to project',
       ctaIcon: Icons.playlist_add_rounded,
       onConfirm: (projectRef) => _addListingToProject(
@@ -303,142 +303,6 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
         ratingText: ratingText,
         photoUrl: photoUrl,
       ),
-    );
-  }
-
-  // Shared centred confirm dialog (full width, edge-to-edge) — copied from
-  // DetailSnagPageView so the Add-to-Project module matches the snag close-out.
-  Future<void> _showConfirmDialog({
-    required String title,
-    required String message,
-    required String confirmLabel,
-    required IconData icon,
-    required Future<void> Function() onConfirm,
-    Color accent = _warn,
-  }) async {
-    await showDialog(
-      context: context,
-      barrierColor: Colors.black.withOpacity(0.55),
-      builder: (ctx) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          insetPadding: EdgeInsets.zero,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: _paper,
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.30),
-                  blurRadius: 54,
-                  offset: const Offset(0, 22),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 62,
-                  height: 62,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: accent.withOpacity(0.12),
-                    shape: BoxShape.circle,
-                    border:
-                        Border.all(color: accent.withOpacity(0.22), width: 1),
-                  ),
-                  child: Icon(icon, color: accent, size: 30),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontFamily: _displayFont,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.4,
-                    fontSize: 18,
-                    color: _ink,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  message,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontFamily: _bodyFont,
-                    fontWeight: FontWeight.w500,
-                    height: 1.5,
-                    fontSize: 14,
-                    color: _inkMute,
-                  ),
-                ),
-                const SizedBox(height: 22),
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () async {
-                      Navigator.pop(ctx);
-                      await onConfirm();
-                    },
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: accent,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        confirmLabel,
-                        style: const TextStyle(
-                          fontFamily: _bodyFont,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                          color: _paper,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () => Navigator.pop(ctx),
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: _paper,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                            color: const Color(0xFFCBD8DD), width: 1.4),
-                      ),
-                      child: const Text(
-                        'Cancel',
-                        style: TextStyle(
-                          fontFamily: _bodyFont,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                          color: _ink,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -845,7 +709,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
       builder: (ctx) => Dialog(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 28),
+        insetPadding: EdgeInsets.zero,
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.all(24),
@@ -874,8 +738,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                     fontSize: 18,
                     color: _ink)),
             const SizedBox(height: 8),
-            Text(
-                'You can only rate a trade you’ve worked with. Add this listing to one of your projects, then rate them once the job’s underway.',
+            Text('You can only rate a trade you’ve worked with.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                     fontFamily: _bodyFont,
