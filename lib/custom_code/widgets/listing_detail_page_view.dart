@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -285,20 +287,165 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
       context.pushNamed('loginPage');
       return;
     }
-    await _showProjectPickerSheet(
-      sheetTitle: 'Add to Project',
-      sheetSubtitle: 'Choose which project to add this listing to.',
-      ctaLabel: 'Add to project',
-      ctaIcon: Icons.playlist_add_rounded,
-      onConfirm: (projectRef) => _addListingToProject(
-        projectRef: projectRef,
-        listingRef: listingRef,
-        addedBy: userRef,
-        title: title,
-        subTitle: subTitle,
-        ratingText: ratingText,
-        photoUrl: photoUrl,
+    // Full-width confirm module — mirrors DetailSnagPageView's close-out dialog.
+    await _showConfirmDialog(
+      icon: Icons.playlist_add_rounded,
+      accent: const Color(0xFF0CAC47),
+      title: 'Add to Project?',
+      message:
+          'This trade will be added to your project so you can request quotes and track the job.',
+      confirmLabel: 'Add to project',
+      onConfirm: () => _showProjectPickerSheet(
+        sheetTitle: 'Add to Project',
+        sheetSubtitle: 'Choose which project to add this listing to.',
+        ctaLabel: 'Add to project',
+        ctaIcon: Icons.playlist_add_rounded,
+        onConfirm: (projectRef) => _addListingToProject(
+          projectRef: projectRef,
+          listingRef: listingRef,
+          addedBy: userRef,
+          title: title,
+          subTitle: subTitle,
+          ratingText: ratingText,
+          photoUrl: photoUrl,
+        ),
       ),
+    );
+  }
+
+  // Shared centred confirm dialog (full width, edge-to-edge) — copied from
+  // DetailSnagPageView so the Add-to-Project module matches the snag close-out.
+  Future<void> _showConfirmDialog({
+    required String title,
+    required String message,
+    required String confirmLabel,
+    required IconData icon,
+    required Future<void> Function() onConfirm,
+    Color accent = _warn,
+  }) async {
+    await showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.55),
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          insetPadding: EdgeInsets.zero,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _paper,
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.30),
+                  blurRadius: 54,
+                  offset: const Offset(0, 22),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 62,
+                  height: 62,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: accent.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                    border:
+                        Border.all(color: accent.withOpacity(0.22), width: 1),
+                  ),
+                  child: Icon(icon, color: accent, size: 30),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontFamily: _displayFont,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.4,
+                    fontSize: 18,
+                    color: _ink,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontFamily: _bodyFont,
+                    fontWeight: FontWeight.w500,
+                    height: 1.5,
+                    fontSize: 14,
+                    color: _inkMute,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      await onConfirm();
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: accent,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        confirmLabel,
+                        style: const TextStyle(
+                          fontFamily: _bodyFont,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: _paper,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => Navigator.pop(ctx),
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _paper,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                            color: const Color(0xFFCBD8DD), width: 1.4),
+                      ),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: _ink,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -328,7 +475,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
           builder: (context, setLocal) => Dialog(
             backgroundColor: Colors.transparent,
             elevation: 0,
-            insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+            insetPadding: EdgeInsets.zero,
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
@@ -795,7 +942,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
           builder: (context, setLocal) => Dialog(
             backgroundColor: Colors.transparent,
             elevation: 0,
-            insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+            insetPadding: EdgeInsets.zero,
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
@@ -817,13 +964,12 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                     height: 62,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF2B01E).withOpacity(0.14),
+                      color: _lime.withOpacity(0.14),
                       shape: BoxShape.circle,
-                      border: Border.all(
-                          color: const Color(0xFFF2B01E).withOpacity(0.28)),
+                      border: Border.all(color: _lime.withOpacity(0.28)),
                     ),
-                    child: const Icon(Icons.star_rounded,
-                        color: Color(0xFFF2B01E), size: 30),
+                    child:
+                        const Icon(Icons.star_rounded, color: _lime, size: 30),
                   ),
                   const SizedBox(height: 16),
                   Text('Rate $name',
@@ -858,7 +1004,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                     ? Icons.star_rounded
                                     : Icons.star_outline_rounded,
                                 size: 40,
-                                color: on ? const Color(0xFFF2B01E) : _rule),
+                                color: on ? _lime : _rule),
                           ),
                         );
                       })),

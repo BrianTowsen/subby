@@ -20,6 +20,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -141,6 +143,9 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   static const Color _live =
       Color(0xFF566670); // clay — live / open-now / warning
   static const Color _coral = Color(0xFF566670);
+  // Warning / destructive accent — brown (shared "delete warning" module,
+  // matches DocumentUploadPageView._showDeleteDialog).
+  static const Color _warn = Color(0xFFAC0C0C);
   // Info / feed accent — true teal (matches the Dashboard activity signals)
   static const Color _infoTeal =
       Color(0xFF566670); // DS: snags/needs-you = clay
@@ -3370,7 +3375,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                         const SizedBox(height: 24),
                         _rDocuments(readOnly),
                         const SizedBox(height: 24),
-                        _rTeam(),
+                        _rTeam(readOnly),
                       ],
                     ),
                   ),
@@ -4224,7 +4229,138 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     ]);
   }
 
-  Widget _rTeam() {
+  // Confirm-before-remove — shared "delete warning" module, red (_warn),
+  // identical to DocumentUploadPageView._showDeleteDialog.
+  Future<void> _confirmRemoveTeamMember(
+    DocumentReference<Map<String, dynamic>> projectListingDocRef,
+    String title,
+  ) async {
+    FocusScope.of(context).unfocus();
+    final theme = FlutterFlowTheme.of(context);
+    await showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.55),
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          insetPadding: EdgeInsets.zero,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _paper,
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.30),
+                  blurRadius: 54,
+                  offset: const Offset(0, 22),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 62,
+                  height: 62,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: _warn.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                    border:
+                        Border.all(color: _warn.withOpacity(0.22), width: 1),
+                  ),
+                  child:
+                      const Icon(Icons.delete_rounded, color: _warn, size: 30),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Remove from team?',
+                  textAlign: TextAlign.center,
+                  style: theme.titleMedium.override(
+                    fontFamily: _displayFont,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.4,
+                    color: _ink,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '“$title” will be removed from the project team. This doesn’t delete their listing.',
+                  textAlign: TextAlign.center,
+                  style: theme.bodyMedium.override(
+                    fontFamily: _bodyFont,
+                    fontWeight: FontWeight.w500,
+                    lineHeight: 1.5,
+                    color: _inkMute,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      await _removeProjectListingDoc(projectListingDocRef);
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _warn,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        'Remove member',
+                        style: theme.bodyMedium.override(
+                          fontFamily: _bodyFont,
+                          fontWeight: FontWeight.w700,
+                          color: _paper,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => Navigator.pop(ctx),
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _paper,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                            color: const Color(0xFFCBD8DD), width: 1.4),
+                      ),
+                      child: Text(
+                        'Cancel',
+                        style: theme.bodyMedium.override(
+                          fontFamily: _bodyFont,
+                          fontWeight: FontWeight.w700,
+                          color: _ink,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _rTeam(bool readOnly) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
         _rSectionLabel('PROJECT TEAM'),
@@ -4325,6 +4461,24 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                       ],
                     ),
                   ),
+                  // Owner-only delete bin — red "delete warning" affordance,
+                  // mirrors DocumentUploadPageView's _uDocRow delete icon.
+                  if (!readOnly) ...[
+                    const SizedBox(width: 10),
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () =>
+                            _confirmRemoveTeamMember(s.reference, title),
+                        borderRadius: BorderRadius.circular(10),
+                        child: const Padding(
+                          padding: EdgeInsets.all(6),
+                          child: Icon(Icons.delete_outline_rounded,
+                              size: 20, color: _warn),
+                        ),
+                      ),
+                    ),
+                  ],
                 ]),
               ),
             ),

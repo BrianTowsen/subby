@@ -550,7 +550,7 @@ class _HomePageViewState extends State<HomePageView> {
                     ],
                   ),
                   const SizedBox(height: 14),
-                  const Text('MySubby Network',
+                  const Text('Subby Network',
                       style: TextStyle(
                         fontFamily: _displayFont,
                         fontSize: 28,
