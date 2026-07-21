@@ -682,11 +682,11 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     try {
       await ref.delete();
       if (!mounted) return;
-      showAppToast(context, 'Listing removed from project.', true);
+      showAppToast(context, 'Team Member removed from project.', true);
     } catch (e) {
       debugPrint('🔥 Failed removing project_listings doc: $e');
       if (!mounted) return;
-      showAppToast(context, 'Could not remove listing.', false);
+      showAppToast(context, 'Could not remove team member.', false);
     }
   }
 
@@ -978,10 +978,10 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     _showDeleteDialog(
       theme: theme,
       icon: Icons.delete_rounded,
-      title: 'Remove listing?',
+      title: 'Remove team member?',
       message:
           '“$listingTitle” will be removed from this project. This doesn’t delete the listing itself.',
-      confirmLabel: 'Remove listing',
+      confirmLabel: 'Remove team member',
       onConfirm: () => _removeProjectListingDoc(projectListingDocRef),
     );
   }
@@ -4342,7 +4342,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       else if (_listingRows.isEmpty)
         const Padding(
           padding: EdgeInsets.only(top: 8),
-          child: Text('No trades or suppliers added yet.',
+          child: Text('No team members added yet.',
               style: TextStyle(
                   fontFamily: _bodyFont,
                   fontSize: 13,

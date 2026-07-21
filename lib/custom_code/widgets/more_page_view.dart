@@ -311,19 +311,19 @@ class _MorePageViewState extends State<MorePageView> {
                       ),
                       _row(
                         icon: Icons.home_outlined,
-                        title: 'Directory',
+                        title: 'Network',
                         subtitle: 'Browse categories & locations',
                         onTap: () => _go(_homeRouteName),
                       ),
                       _row(
                         icon: Icons.search_outlined,
-                        title: 'Explore Directory',
+                        title: 'Explore Network',
                         subtitle: 'Search and filter listings',
                         onTap: () => _go(_exploreRouteName),
                       ),
                       _row(
                         icon: Icons.bookmark_border_rounded,
-                        title: 'Directory Saved',
+                        title: 'Network Saved',
                         subtitle: 'Your bookmarked listings',
                         onTap: () => _go(_savedRouteName),
                       ),
@@ -337,7 +337,7 @@ class _MorePageViewState extends State<MorePageView> {
                     const SizedBox(height: 28),
 
                     // ===== DIRECTORY =====
-                    _sectionHeader('Directory'),
+                    _sectionHeader('Network'),
                     _card([
                       _row(
                         icon: Icons.storefront_outlined,

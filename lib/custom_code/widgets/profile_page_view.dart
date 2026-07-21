@@ -540,7 +540,7 @@ class _ProfilePageViewState extends State<ProfilePageView> {
                         () => setState(
                             () => _section = _AccountSection.projects)),
                     _seg(
-                        'Directory',
+                        'Subby Network',
                         Icons.contacts_outlined,
                         !isProjects,
                         () => setState(
@@ -679,8 +679,8 @@ class _ProfilePageViewState extends State<ProfilePageView> {
   Widget _directorySection() => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader('Directory listing',
-              'How you appear to homeowners browsing the Directory.'),
+          _sectionHeader('Subby Network',
+              'How you appear to homeowners browsing the Network.'),
           const SizedBox(height: 14),
           _freeNote('List your business at no cost.'),
           const SizedBox(height: 16),

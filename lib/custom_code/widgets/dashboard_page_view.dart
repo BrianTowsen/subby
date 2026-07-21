@@ -806,7 +806,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: _hPad),
               child: Text(
-                  'Projects that invited you to quote. Open one to view the drawings and respond — no project access needed.',
+                  'Projects that invited you to quote. Open one to view the drawings and respond.',
                   style: _tileSubtitleStyle),
             ),
             const SizedBox(height: 12),
@@ -1329,7 +1329,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               const SizedBox(height: 16),
               const Center(
                 child: Text(
-                  'Building your own home?',
+                  'Building your home?',
                   style: TextStyle(
                     fontFamily: _bodyFont,
                     fontSize: 12,
@@ -1340,7 +1340,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               ),
               const SizedBox(height: 8),
               _secondaryButton(
-                label: 'Start your own build',
+                label: 'Start your build',
                 icon: Icons.add_rounded,
                 onTap: _goToAddProject,
               ),

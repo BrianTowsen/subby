@@ -19,7 +19,9 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// QuotesReceivedView — owner reviews & compares quotes on the active project.
+/// QuotesReceivedView — owner reviews & compares quotes on the active
+/// project.
+///
 /// Streams projects/{id}/quotes. Accept / Decline updates status.
 class QuotesReceivedView extends StatefulWidget {
   const QuotesReceivedView(
@@ -204,7 +206,7 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
                   _inviteBtn(),
                 ]),
                 const SizedBox(height: 16),
-                Text('COMPARE & AWARD TENDERS',
+                Text('COMPARE & ACCEPT QUOPTES',
                     style: TextStyle(
                         fontFamily: _body,
                         fontSize: 10.5,
@@ -301,7 +303,7 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
             borderRadius: BorderRadius.circular(10)),
         padding: const EdgeInsets.all(18),
         child: const Text(
-            'No trades invited yet. Invite trades from the project team to request quotes.',
+            'No team members invited yet. Invite team members from the project team to request quotes.',
             style: TextStyle(
                 fontFamily: _body,
                 fontSize: 13,
