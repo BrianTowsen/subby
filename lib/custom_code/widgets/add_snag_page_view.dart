@@ -752,7 +752,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                         return const Padding(
                           padding: EdgeInsets.symmetric(vertical: 18),
                           child: Text(
-                            'No team members on this project yet. Add one from the Directory first.',
+                            'No team members on this project yet. Add one from the Subby Network first.',
                             style: TextStyle(
                                 fontFamily: _bodyFont,
                                 fontSize: 13,

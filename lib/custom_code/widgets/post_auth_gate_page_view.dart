@@ -161,7 +161,7 @@ class _PostAuthGatePageViewState extends State<PostAuthGatePageView>
 
       setState(() {
         _working = false;
-        _error = 'Could not finish sign-in. Check Firestore rules.';
+        _error = 'Could not finish sign-in.';
       });
 
       _handled = false;

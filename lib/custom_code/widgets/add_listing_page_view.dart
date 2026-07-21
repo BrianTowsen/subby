@@ -761,7 +761,7 @@ class _AddListingPageViewState extends State<AddListingPageView> {
                   color: _paper,
                 )),
             const SizedBox(height: 8),
-            Text('Create your directory profile.',
+            Text('Create your network profile.',
                 style: TextStyle(
                   fontFamily: _bodyFont,
                   fontSize: 12,

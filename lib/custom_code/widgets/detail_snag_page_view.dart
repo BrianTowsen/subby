@@ -11,18 +11,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -999,7 +987,7 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
                           Icon(Icons.error_rounded,
                               size: 12, color: Colors.white),
                           SizedBox(width: 5),
-                          Text('BEFORE',
+                          Text('SNAG',
                               style: TextStyle(
                                   fontFamily: _bodyFont,
                                   fontSize: 10,

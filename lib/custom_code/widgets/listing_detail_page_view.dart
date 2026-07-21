@@ -162,7 +162,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
     ];
     try {
       await Clipboard.setData(ClipboardData(text: parts.join('\n')));
-      _snack('Listing details copied. You can now paste and share.');
+      _snack('Details copied. You can paste and share.');
     } catch (_) {
       _snack('Unable to share right now.', success: false);
     }
@@ -412,7 +412,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                         color: _ink)),
                                 SizedBox(height: 4),
                                 Text(
-                                    'Create a project first, then add this trade to it to request quotes.',
+                                    'Create a project first, then add as team member to request quotes.',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                         fontFamily: _bodyFont,
@@ -729,7 +729,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                     fontSize: 18,
                     color: _ink)),
             const SizedBox(height: 8),
-            Text('You can only rate a trade you’ve worked with.',
+            Text('You can only rate a team member.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                     fontFamily: _bodyFont,
@@ -887,7 +887,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.zero,
                         hintText:
-                            'Share how the job went — quality, timekeeping, value…',
+                            'Share your experience — quality, timekeeping, value…',
                         hintStyle: TextStyle(
                             fontFamily: _bodyFont,
                             fontSize: 13,
@@ -1043,7 +1043,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
             children: const [
               Icon(Icons.error_outline, color: _coral, size: 40),
               SizedBox(height: 12),
-              Text('Listing not found.',
+              Text('Not found.',
                   style: TextStyle(
                       fontFamily: _bodyFont,
                       fontSize: 16,
@@ -1167,7 +1167,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
               : 'No reviews yet';
 
           final String providerDisplay =
-              ownerName.isNotEmpty ? ownerName : 'Listing owner';
+              ownerName.isNotEmpty ? ownerName : 'Owner';
           final String phoneForCard =
               listingPhone.isNotEmpty ? listingPhone : '—';
 
@@ -1324,7 +1324,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                                                     liveHas
                                                         ? liveAvg
                                                             .toStringAsFixed(1)
-                                                        : 'Rate this trade',
+                                                        : 'Rate this member',
                                                     style: const TextStyle(
                                                         fontFamily: _bodyFont,
                                                         fontSize: 13,

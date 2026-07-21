@@ -13,6 +13,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -510,7 +512,7 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
             const SizedBox(width: 38),
           ]),
           const SizedBox(height: 16),
-          Text('REQUEST PRICING FROM SUPPLIERS',
+          Text('REQUEST PRICING FROM TEAM MEMBERS',
               style: TextStyle(
                   fontFamily: _bodyFont,
                   fontSize: 10.5,
@@ -567,6 +569,15 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
 
   // Live tender area: streams the project's quotes subcollection and renders
   // the status tiles + actions from real counts.
+  //
+  // TALLIES ARE CUMULATIVE (a funnel), not mutually-exclusive buckets, so the
+  // numbers always descend Invited ≥ Submitted ≥ Accepted:
+  //   • Invited   — everyone who was invited (all quote docs).
+  //   • Submitted — everyone who has submitted a quote (submitted + accepted;
+  //                 an accepted quote was, by definition, also submitted).
+  //   • Accepted  — quotes the owner has accepted.
+  // Base buckets: pending (invited / viewed / quoting — no live quote yet),
+  // quoted (submitted, awaiting a decision) and accepted.
   Widget _quotesArea(FlutterFlowTheme theme) {
     final ref = _projectRef;
     if (ref == null) return const SizedBox.shrink();
@@ -574,25 +585,29 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
       stream: ref.collection('quotes').snapshots(),
       builder: (context, snap) {
         final docs = snap.data?.docs ?? [];
-        int invited = 0, submitted = 0, accepted = 0;
+        int pending = 0, quoted = 0, accepted = 0;
         for (final d in docs) {
           final s = (d.data()['status'] ?? 'invited').toString();
           if (s == 'accepted') {
             accepted++;
           } else if (s == 'submitted') {
-            submitted++;
-          } else if (s == 'invited' || s == 'viewed') {
-            invited++;
+            quoted++;
+          } else {
+            // invited, viewed, quoting (withdrawn & re-editing), etc.
+            pending++;
           }
         }
-        final received = submitted + accepted;
+        final invitedTally = pending + quoted + accepted; // everyone invited
+        final submittedTally = quoted + accepted; // everyone who submitted
+        final acceptedTally = accepted; // accepted quotes
+        final received = submittedTally;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 22),
             Text('QUOTE STATUS', style: _uLabel(theme)),
             const SizedBox(height: 10),
-            _tenderStrip(invited, submitted, accepted),
+            _tenderStrip(invitedTally, submittedTally, acceptedTally),
             const SizedBox(height: 22),
             Text('ACTIONS', style: _uLabel(theme)),
             const SizedBox(height: 10),
@@ -605,7 +620,8 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
     );
   }
 
-  // Tender status: invited / submitted / accepted (accepted = lime).
+  // Tender status — funnel order: Invited → Submitted → Accepted (accepted =
+  // lime, the win). Each stage is a subset of the one before it.
   Widget _tenderStrip(int invited, int submitted, int accepted) {
     Widget tile(int value, String label, {bool lime = false}) => Expanded(
           child: Container(
@@ -634,9 +650,9 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
     return Row(children: [
       tile(invited, 'Invited'),
       const SizedBox(width: 10),
-      tile(accepted, 'Accepted'),
+      tile(submitted, 'Submitted'),
       const SizedBox(width: 10),
-      tile(submitted, 'Submitted', lime: true),
+      tile(accepted, 'Accepted', lime: true),
     ]);
   }
 
@@ -670,7 +686,7 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Invite trades to quote',
+                    const Text('Invite team members to quote',
                         style: TextStyle(
                             fontFamily: _displayFont,
                             fontSize: 16,

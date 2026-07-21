@@ -412,7 +412,7 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
                         const SizedBox(width: 8),
                         Text(
                             status == 'accepted'
-                                ? 'Awarded to this trade'
+                                ? 'Awarded to this team member'
                                 : 'Declined',
                             style: TextStyle(
                                 fontFamily: _body,

@@ -380,7 +380,7 @@ class _SavedPageViewState extends State<SavedPageView> {
                     fontWeight: FontWeight.w500,
                     color: _inkMute)),
             const SizedBox(height: 16),
-            _primaryPill('Explore listings', () {
+            _primaryPill('Explore network', () {
               try {
                 context.pushNamed('explorePage');
               } catch (_) {}

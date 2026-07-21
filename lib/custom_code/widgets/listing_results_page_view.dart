@@ -659,7 +659,7 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
                               if (sorted.isEmpty) {
                                 return _buildEmptyState(
                                   icon: Icons.search_off_rounded,
-                                  title: 'No listings found',
+                                  title: 'No Subbies found',
                                   subtitle:
                                       'Try clearing filters or searching a different keyword.',
                                 );

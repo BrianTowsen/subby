@@ -529,7 +529,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                         )
                       : Text(
                           isPerson
-                              ? 'Choose a project member'
+                              ? 'Choose a team member'
                               : 'Choose a team member on this project',
                           style: const TextStyle(
                               fontFamily: _bodyFont,
@@ -624,7 +624,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                           padding: const EdgeInsets.symmetric(vertical: 18),
                           child: Text(
                             isPerson
-                                ? 'No project members yet.'
+                                ? 'No team members yet.'
                                 : 'No team members added to this project yet.',
                             style: const TextStyle(
                                 fontFamily: _bodyFont,

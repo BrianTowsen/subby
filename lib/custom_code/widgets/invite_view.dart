@@ -19,8 +19,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// InviteView — owner invites selected project-team trades to quote.
-/// Streams project_listings for the active project; on send, seeds a quote doc
-/// (status 'invited') under projects/{id}/quotes/{listingId}.
+///
+/// Streams project_listings for the active project; on send, seeds a quote
+/// doc (status 'invited') under projects/{id}/quotes/{listingId}.
 class InviteView extends StatefulWidget {
   const InviteView({super.key, this.width, this.height});
   final double? width;
@@ -147,7 +148,7 @@ class _InviteViewState extends State<InviteView> {
         if (mounted) {
           showAppToast(
               context,
-              'Couldn\'t invite ${skipped.length == 1 ? 'this trade' : 'these trades'} — no linked Subby account found. Ask them to claim their listing, then try again.',
+              'Couldn\'t invite ${skipped.length == 1 ? 'this trade' : 'these trades'} — no linked Subby account found.',
               false);
         }
         return;
@@ -214,7 +215,7 @@ class _InviteViewState extends State<InviteView> {
                 const SizedBox(width: 38),
               ]),
               const SizedBox(height: 16),
-              const Text('Invite trades to quote',
+              const Text('Invite to quote',
                   style: TextStyle(
                       fontFamily: 'Inter Tight',
                       fontSize: 24,
@@ -222,7 +223,8 @@ class _InviteViewState extends State<InviteView> {
                       letterSpacing: -0.5,
                       color: _paper)),
               const SizedBox(height: 6),
-              Text('Selected trades will see the shared drawings & documents.',
+              Text(
+                  'Selected team members will see the shared drawings & documents.',
                   style: TextStyle(
                       fontFamily: _body,
                       fontSize: 12.5,
@@ -268,7 +270,7 @@ class _InviteViewState extends State<InviteView> {
                                         border: Border.all(color: _border)),
                                     padding: const EdgeInsets.all(18),
                                     child: const Text(
-                                        'No trades on the project team yet. Add trades to the project, then invite them to quote.',
+                                        'No project team yet. Add team members to the project, then invite them to quote.',
                                         style: TextStyle(
                                             fontFamily: _body,
                                             fontSize: 13,
@@ -283,7 +285,8 @@ class _InviteViewState extends State<InviteView> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      const Text('MESSAGE TO TRADES · optional',
+                                      const Text(
+                                          'MESSAGE TO TEAM MEMBERS · optional',
                                           style: TextStyle(
                                               fontFamily: _body,
                                               fontSize: 11,
@@ -340,7 +343,7 @@ class _InviteViewState extends State<InviteView> {
                                         SizedBox(width: 8),
                                         Expanded(
                                             child: Text(
-                                                'Invited trades can view the drawings & documents you marked shared.',
+                                                'Invited team members can view the drawings & documents you marked shared.',
                                                 style: TextStyle(
                                                     fontFamily: _body,
                                                     fontSize: 12,
@@ -388,7 +391,7 @@ class _InviteViewState extends State<InviteView> {
                                                 size: 19, color: _ink),
                                             const SizedBox(width: 8),
                                             Text(
-                                                'Send quote request (${_selected.length})',
+                                                'Send quote invite (${_selected.length})',
                                                 style: const TextStyle(
                                                     fontFamily: _body,
                                                     fontSize: 15,

@@ -13,6 +13,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import '/custom_code/actions/index.dart';
 
+import '/custom_code/actions/index.dart';
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -76,24 +78,55 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
   final TextEditingController _amountCtl = TextEditingController();
   final TextEditingController _notesCtl = TextEditingController();
 
+  // Scroll + focus plumbing so the inclusions/exclusions field lifts above
+  // the keyboard when it's being typed into.
+  final ScrollController _scrollCtl = ScrollController();
+  final FocusNode _notesFocus = FocusNode();
+  final GlobalKey _notesKey = GlobalKey();
+
   // Numeric fields use a decimal pad (no return key on iOS). A floating
   // "Done" accessory bar (iOS blue with a tick) gives them the same
   // blue-tick affordance every other numeric field in the app uses.
   final FocusNode _amountFocus = FocusNode();
   OverlayEntry? _kbBar;
 
+  // When the notes field gains focus, wait for the keyboard to animate in
+  // then scroll the field into the visible area above it.
+  void _onNotesFocusChange() {
+    if (!_notesFocus.hasFocus) return;
+    Future.delayed(const Duration(milliseconds: 250), () {
+      final ctx = _notesKey.currentContext;
+      if (!mounted || ctx == null) return;
+      Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+        alignment: 1.0, // pin the field to the bottom of the visible area
+      );
+    });
+  }
+
   bool _vatIncluded = true;
   int _leadWeeks = 2;
   int _depositPct = 40;
   bool _fileAttached = false;
+  bool _uploading = false;
   String _fileName = '';
   String _fileUrl = '';
   bool _saving = false;
+  bool _withdrawing = false;
+
+  // Current quote status. 'submitted' locks the form into the read-only
+  // submitted screen; 'invited'/'viewed'/'quoting' show the editable form.
+  // 'accepted' also locks it (owner has chosen this quote — no withdrawal).
+  String _status = 'invited';
+  bool _prefilled = false;
 
   @override
   void initState() {
     super.initState();
     _amountFocus.addListener(_onNumFocusChange);
+    _notesFocus.addListener(_onNotesFocusChange);
     _loadActiveProject();
   }
 
@@ -102,6 +135,8 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
     _projSub?.cancel();
     _hideKbBar();
     _amountFocus.dispose();
+    _notesFocus.dispose();
+    _scrollCtl.dispose();
     _amountCtl.dispose();
     _notesCtl.dispose();
     super.dispose();
@@ -198,7 +233,50 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
               .toString();
       if (mounted) setState(() => _projectName = name);
     });
+
+    // Load any existing quote once, so re-opening a submitted quote shows the
+    // submitted screen and pre-fills the figures for withdraw-and-edit.
+    await _loadExistingQuote();
   }
+
+  // One-time read of the existing quote doc. Sets _status and, on the first
+  // load only, pre-fills the fields (never clobbers what the user is typing).
+  Future<void> _loadExistingQuote() async {
+    final qref = _quoteRef;
+    if (qref == null) return;
+    try {
+      final snap = await qref.get();
+      final data = snap.data();
+      if (data == null || !mounted) return;
+      final status = (data['status'] ?? 'invited').toString();
+      if (!_prefilled) {
+        _prefilled = true;
+        final amt = data['amountExcl'];
+        if (amt is num && amt > 0) _amountCtl.text = _fmtPlain(amt);
+        final notes = (data['notes'] ?? '').toString();
+        if (notes.isNotEmpty) _notesCtl.text = notes;
+        _vatIncluded = data['vatIncluded'] is bool ? data['vatIncluded'] : true;
+        if (data['leadWeeks'] is num)
+          _leadWeeks = (data['leadWeeks'] as num).toInt();
+        if (data['depositPct'] is num)
+          _depositPct = (data['depositPct'] as num).toInt();
+        final fn = (data['fileName'] ?? '').toString();
+        final fu = (data['fileUrl'] ?? '').toString();
+        if (fn.isNotEmpty && fu.isNotEmpty) {
+          _fileAttached = true;
+          _fileName = fn;
+          _fileUrl = fu;
+        }
+      }
+      setState(() => _status = status);
+    } catch (_) {
+      // keep defaults on error
+    }
+  }
+
+  // Plain, un-spaced number for seeding the amount field's controller.
+  String _fmtPlain(num v) =>
+      v == v.roundToDouble() ? v.toInt().toString() : v.toString();
 
   double get _amountExcl => double.tryParse(_amountCtl.text.trim()) ?? 0;
   double get _vat => _vatIncluded ? _amountExcl * _vatPct / 100.0 : 0;
@@ -218,8 +296,9 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
   String _money(num v) => 'R ${_fmt(v)}';
 
   // Opens the native file picker, then uploads the chosen file to Firebase
-  // Storage and stores the download URL in _fileUrl. The file is only shown
-  // as "Attached" once the upload has actually succeeded.
+  // Storage and stores the download URL in _fileUrl. While the upload is in
+  // flight the box shows the file name with a spinner (_uploading == true);
+  // the file is only shown as "Attached" once the upload has succeeded.
   Future<void> _pickFile() async {
     try {
       final result = await FilePicker.platform.pickFiles(
@@ -245,6 +324,16 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
         return;
       }
 
+      // Show the uploading state (file name + spinner) while the bytes go up.
+      if (mounted) {
+        setState(() {
+          _uploading = true;
+          _fileAttached = false;
+          _fileName = name;
+          _fileUrl = '';
+        });
+      }
+
       final ext = name.contains('.') ? name.split('.').last.toLowerCase() : '';
       final contentType = switch (ext) {
         'pdf' => 'application/pdf',
@@ -259,6 +348,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
       final url = await ref.getDownloadURL();
       if (!mounted) return;
       setState(() {
+        _uploading = false;
         _fileAttached = true;
         _fileName = name;
         _fileUrl = url;
@@ -275,6 +365,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
   void _uploadError(String msg) {
     if (!mounted) return;
     setState(() {
+      _uploading = false;
       _fileAttached = false;
       _fileName = '';
       _fileUrl = '';
@@ -284,6 +375,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
 
   void _removeFile() {
     setState(() {
+      _uploading = false;
       _fileAttached = false;
       _fileName = '';
       _fileUrl = '';
@@ -313,11 +405,10 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
       }, SetOptions(merge: true));
       if (!mounted) return;
       showAppToast(context, 'Quote submitted.', true);
-      // Return to the Dashboard, clearing the quote flow off the stack.
-      final route = (widget.dashboardRouteName ?? '').trim().isEmpty
-          ? _fallbackDashboardRoute
-          : widget.dashboardRouteName!.trim();
-      context.goNamed(route);
+      // Stay on this screen and switch to the read-only submitted state, so the
+      // trade can withdraw & edit until the owner accepts. The back button
+      // (and iOS back-swipe) returns them to the Dashboard.
+      setState(() => _status = 'submitted');
     } catch (_) {
       if (mounted) {
         showAppToast(
@@ -328,8 +419,254 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
     }
   }
 
+  // Withdraw a submitted quote so it can be edited and re-submitted. Reverts
+  // the doc status to 'quoting' (an in-progress state the owner sees as
+  // "working on it") and clears submittedAt. Never allowed once 'accepted'.
+  Future<void> _withdraw() async {
+    final qref = _quoteRef;
+    if (qref == null || _withdrawing || _status == 'accepted') return;
+    setState(() => _withdrawing = true);
+    try {
+      await qref.set({
+        'status': 'quoting',
+        'submittedAt': FieldValue.delete(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      if (!mounted) return;
+      setState(() => _status = 'quoting');
+    } catch (_) {
+      if (mounted) {
+        showAppToast(
+            context, 'Couldn\'t withdraw — check your connection.', false);
+      }
+    } finally {
+      if (mounted) setState(() => _withdrawing = false);
+    }
+  }
+
+  void _goBack() {
+    final route = (widget.dashboardRouteName ?? '').trim().isEmpty
+        ? _fallbackDashboardRoute
+        : widget.dashboardRouteName!.trim();
+    final nav = Navigator.of(context);
+    if (nav.canPop()) {
+      nav.pop();
+    } else {
+      context.goNamed(route);
+    }
+  }
+
+  // Read-only submitted screen. Shown while status is 'submitted' (withdraw
+  // enabled) or 'accepted' (locked — the owner has chosen this quote).
+  Widget _buildSubmittedView(BuildContext context) {
+    final top = MediaQuery.of(context).padding.top;
+    final bottom = MediaQuery.of(context).padding.bottom;
+    final accepted = _status == 'accepted';
+
+    Widget summaryRow(String label, String value) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 13),
+          child: Row(children: [
+            Expanded(
+              child: Text(label,
+                  style: const TextStyle(
+                      fontFamily: _body,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: _inkMute)),
+            ),
+            Text(value,
+                style: const TextStyle(
+                    fontFamily: _body,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: _ink)),
+          ]),
+        );
+
+    return Container(
+      width: widget.width ?? double.infinity,
+      height: widget.height ?? double.infinity,
+      color: _paper,
+      child: Column(
+        children: [
+          // hero
+          Container(
+            width: double.infinity,
+            color: const Color(0xFF2F3A4C),
+            padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
+            child: Row(children: [
+              _circleBtn(Icons.arrow_back_ios_new_rounded, _goBack),
+              Expanded(
+                child: Column(children: [
+                  Text(_projectName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontFamily: _body,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: _paper)),
+                  const SizedBox(height: 2),
+                  Text(accepted ? 'QUOTE ACCEPTED' : 'QUOTE SUBMITTED',
+                      style: TextStyle(
+                          fontFamily: _body,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.7,
+                          color: _paper.withOpacity(0.5))),
+                ]),
+              ),
+              const SizedBox(width: 38),
+            ]),
+          ),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+              children: [
+                const SizedBox(height: 8),
+                Center(
+                  child: Container(
+                    width: 64,
+                    height: 64,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                        color: accepted ? _green : _lime,
+                        borderRadius: BorderRadius.circular(16)),
+                    child: Icon(
+                        accepted ? Icons.verified_rounded : Icons.check_rounded,
+                        size: 34,
+                        color: accepted ? _paper : _ink),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(accepted ? 'Quote accepted' : 'Quote submitted',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontFamily: _display,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.6,
+                        color: _ink)),
+                const SizedBox(height: 6),
+                Text(
+                    accepted
+                        ? 'The project owner has accepted this quote. It can no longer be changed.'
+                        : "Awaiting the project owner's decision. You can withdraw it and submit a new quote until it's accepted.",
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontFamily: _body,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: _inkMute,
+                        height: 1.45)),
+                const SizedBox(height: 22),
+                Container(
+                  decoration: BoxDecoration(
+                    color: _paper,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: _border),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Column(children: [
+                    summaryRow('Total', _money(_total)),
+                    Container(height: 1, color: _line),
+                    summaryRow('Can start in', '$_leadWeeks wks'),
+                    Container(height: 1, color: _line),
+                    summaryRow('Deposit', '$_depositPct%'),
+                    if (_fileAttached) ...[
+                      Container(height: 1, color: _line),
+                      summaryRow('Attachment', _fileName),
+                    ],
+                  ]),
+                ),
+              ],
+            ),
+          ),
+          // action bar
+          Container(
+            decoration: const BoxDecoration(
+              color: _paper,
+              border: Border(top: BorderSide(color: _surface)),
+            ),
+            padding: EdgeInsets.fromLTRB(20, 14, 20, bottom + 14),
+            child: accepted
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Icon(Icons.lock_rounded, size: 14, color: _faint),
+                      SizedBox(width: 6),
+                      Text('This quote is locked',
+                          style: TextStyle(
+                              fontFamily: _body,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: _faint)),
+                    ],
+                  )
+                : Column(mainAxisSize: MainAxisSize.min, children: [
+                    InkWell(
+                      onTap: _withdrawing ? null : _withdraw,
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        height: 52,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: _paper,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                              color: const Color(0xFFDCE3E6), width: 1.5),
+                        ),
+                        child: _withdrawing
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2.4,
+                                    valueColor:
+                                        AlwaysStoppedAnimation<Color>(_ink)))
+                            : Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  Icon(Icons.undo_rounded,
+                                      size: 18, color: _ink),
+                                  SizedBox(width: 8),
+                                  Text('Withdraw & edit quote',
+                                      style: TextStyle(
+                                          fontFamily: _body,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w800,
+                                          color: _ink)),
+                                ],
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.schedule_rounded, size: 13, color: _faint),
+                        SizedBox(width: 5),
+                        Text('Submitted · the owner has been notified',
+                            style: TextStyle(
+                                fontFamily: _body,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: _faint)),
+                      ],
+                    ),
+                  ]),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Submitted (or accepted) → read-only submitted screen.
+    if (_status == 'submitted' || _status == 'accepted') {
+      return _buildSubmittedView(context);
+    }
     final top = MediaQuery.of(context).padding.top;
     final bottom = MediaQuery.of(context).padding.bottom;
     final canSubmit = _amountExcl > 0;
@@ -404,7 +741,9 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
 
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
+              controller: _scrollCtl,
+              padding: EdgeInsets.fromLTRB(
+                  16, 18, 16, 24 + MediaQuery.of(context).viewInsets.bottom),
               children: [
                 _label('1 · UPLOAD YOUR QUOTE'),
                 const SizedBox(height: 10),
@@ -417,6 +756,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
                 _label('3 · INCLUSIONS / EXCLUSIONS'),
                 const SizedBox(height: 10),
                 Container(
+                  key: _notesKey,
                   decoration: BoxDecoration(
                     color: _paper,
                     borderRadius: BorderRadius.circular(6),
@@ -425,6 +765,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
                   padding: const EdgeInsets.all(13),
                   child: TextField(
                     controller: _notesCtl,
+                    focusNode: _notesFocus,
                     maxLines: 4,
                     textInputAction: TextInputAction.done, // blue tick
                     onChanged: (_) => setState(() {}),
@@ -537,6 +878,57 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
           color: _inkMute));
 
   Widget _uploadBox() {
+    // Uploading: show the file name with a spinner in the icon tile.
+    if (_uploading) {
+      return Container(
+        decoration: BoxDecoration(
+          color: _sage,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                  color: _ink, borderRadius: BorderRadius.circular(10)),
+              child: const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2.4,
+                    valueColor: AlwaysStoppedAnimation<Color>(_lime)),
+              ),
+            ),
+            const SizedBox(width: 11),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(_fileName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontFamily: _body,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: _ink)),
+                  const SizedBox(height: 2),
+                  const Text('Uploading…',
+                      style: TextStyle(
+                          fontFamily: _body,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: _inkMute)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     if (_fileAttached) {
       return Container(
         decoration: BoxDecoration(
@@ -770,7 +1162,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
           padding: const EdgeInsets.all(3),
           alignment: on ? Alignment.centerRight : Alignment.centerLeft,
           decoration: BoxDecoration(
-              color: on ? _green : const Color(0xFFCBD8DD),
+              color: on ? _lime : const Color(0xFFCBD8DD),
               borderRadius: BorderRadius.circular(999)),
           child: Container(
             width: 21,

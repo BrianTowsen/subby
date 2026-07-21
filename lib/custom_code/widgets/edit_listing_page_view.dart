@@ -980,7 +980,7 @@ class _EditListingPageViewState extends State<EditListingPageView> {
                             const SizedBox(height: 8),
                             Center(
                               child: Text(
-                                'Keep your description short and specific to rank better.',
+                                'Keep your description short and specific.',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontFamily: _bodyFont,
@@ -1292,7 +1292,7 @@ class _EditListingPageViewState extends State<EditListingPageView> {
                   color: _paper,
                 )),
             const SizedBox(height: 8),
-            Text('Update your directory profile.',
+            Text('Update your network profile.',
                 style: TextStyle(
                   fontFamily: _bodyFont,
                   fontSize: 12,
