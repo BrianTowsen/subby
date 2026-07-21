@@ -287,165 +287,22 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
       context.pushNamed('loginPage');
       return;
     }
-    // Full-width confirm module — mirrors DetailSnagPageView's close-out dialog.
-    await _showConfirmDialog(
-      icon: Icons.playlist_add_rounded,
-      accent: const Color(0xFF0CAC47),
-      title: 'Add to Project?',
-      message:
-          'This trade will be added to your project so you can request quotes and track the job.',
-      confirmLabel: 'Add to project',
-      onConfirm: () => _showProjectPickerSheet(
-        sheetTitle: 'Add to Project',
-        sheetSubtitle: 'Choose which project to add this listing to.',
-        ctaLabel: 'Add to project',
-        ctaIcon: Icons.playlist_add_rounded,
-        onConfirm: (projectRef) => _addListingToProject(
-          projectRef: projectRef,
-          listingRef: listingRef,
-          addedBy: userRef,
-          title: title,
-          subTitle: subTitle,
-          ratingText: ratingText,
-          photoUrl: photoUrl,
-        ),
+    // Single full-width GREEN module — green header + inline project list so
+    // the user picks a project (when they have more than one) in ONE module.
+    await _showProjectPickerSheet(
+      sheetTitle: 'Add to Project',
+      sheetSubtitle: 'Choose which project to add this listing to.',
+      ctaLabel: 'Add to project',
+      ctaIcon: Icons.playlist_add_rounded,
+      onConfirm: (projectRef) => _addListingToProject(
+        projectRef: projectRef,
+        listingRef: listingRef,
+        addedBy: userRef,
+        title: title,
+        subTitle: subTitle,
+        ratingText: ratingText,
+        photoUrl: photoUrl,
       ),
-    );
-  }
-
-  // Shared centred confirm dialog (full width, edge-to-edge) — copied from
-  // DetailSnagPageView so the Add-to-Project module matches the snag close-out.
-  Future<void> _showConfirmDialog({
-    required String title,
-    required String message,
-    required String confirmLabel,
-    required IconData icon,
-    required Future<void> Function() onConfirm,
-    Color accent = _warn,
-  }) async {
-    await showDialog(
-      context: context,
-      barrierColor: Colors.black.withOpacity(0.55),
-      builder: (ctx) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          insetPadding: EdgeInsets.zero,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: _paper,
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.30),
-                  blurRadius: 54,
-                  offset: const Offset(0, 22),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 62,
-                  height: 62,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: accent.withOpacity(0.12),
-                    shape: BoxShape.circle,
-                    border:
-                        Border.all(color: accent.withOpacity(0.22), width: 1),
-                  ),
-                  child: Icon(icon, color: accent, size: 30),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontFamily: _displayFont,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.4,
-                    fontSize: 18,
-                    color: _ink,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  message,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontFamily: _bodyFont,
-                    fontWeight: FontWeight.w500,
-                    height: 1.5,
-                    fontSize: 14,
-                    color: _inkMute,
-                  ),
-                ),
-                const SizedBox(height: 22),
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () async {
-                      Navigator.pop(ctx);
-                      await onConfirm();
-                    },
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: accent,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        confirmLabel,
-                        style: const TextStyle(
-                          fontFamily: _bodyFont,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                          color: _paper,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () => Navigator.pop(ctx),
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: _paper,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                            color: const Color(0xFFCBD8DD), width: 1.4),
-                      ),
-                      child: const Text(
-                        'Cancel',
-                        style: TextStyle(
-                          fontFamily: _bodyFont,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                          color: _ink,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -497,11 +354,13 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                     height: 62,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: _ink.withOpacity(0.12),
+                      color: const Color(0xFF0CAC47).withOpacity(0.12),
                       shape: BoxShape.circle,
-                      border: Border.all(color: _ink.withOpacity(0.22)),
+                      border: Border.all(
+                          color: const Color(0xFF0CAC47).withOpacity(0.22)),
                     ),
-                    child: Icon(ctaIcon, color: _ink, size: 30),
+                    child:
+                        Icon(ctaIcon, color: const Color(0xFF0CAC47), size: 30),
                   ),
                   const SizedBox(height: 16),
                   Text(sheetTitle,
@@ -669,6 +528,7 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                               label: ctaLabel,
                               icon: ctaIcon,
                               filled: true,
+                              fillColor: const Color(0xFF0CAC47),
                               onTap: selectedRef == null
                                   ? null
                                   : () async {
@@ -1020,6 +880,12 @@ class _ListingDetailPageViewState extends State<ListingDetailPageView> {
                       minLines: 3,
                       maxLines: 5,
                       cursorColor: _ink,
+                      // Blue "Done" (tick) key on the keyboard — dismisses it
+                      // so the user is never stuck with the keyboard open.
+                      keyboardType: TextInputType.text,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => FocusScope.of(context).unfocus(),
+                      onTapOutside: (_) => FocusScope.of(context).unfocus(),
                       style: const TextStyle(
                           fontFamily: _bodyFont,
                           fontSize: 13,
