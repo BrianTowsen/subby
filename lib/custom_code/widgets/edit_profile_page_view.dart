@@ -63,6 +63,24 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
 
   static const double _hPad = 20;
 
+  // Streams are created ONCE, not per build(). Creating them inside build()
+  // meant every rebuild (e.g. the keyboard opening when you tap a field)
+  // handed each StreamBuilder a brand-new stream, which reset it to its
+  // waiting state and remounted the whole form — so the field lost focus and
+  // the keyboard closed before you could type. (FIX 4)
+  final Stream<User?> _authStream = FirebaseAuth.instance.authStateChanges();
+
+  Stream<UsersRecord>? _userStream;
+  String? _userStreamKey;
+
+  Stream<UsersRecord> _userDocStream(DocumentReference ref) {
+    if (_userStream == null || _userStreamKey != ref.path) {
+      _userStreamKey = ref.path;
+      _userStream = UsersRecord.getDocument(ref);
+    }
+    return _userStream!;
+  }
+
   // Resolve the caller's users/{uid} doc. Prefer the FlutterFlow ref, fall
   // back to the live FirebaseAuth uid so a transient null on the auth stream
   // never trips the spurious "Not signed in" toast. (FIX 2)
@@ -619,7 +637,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
       width: width,
       height: height,
       child: StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
+        stream: _authStream,
         builder: (context, authSnap) {
           final userRef = _resolveUserRef();
 
@@ -639,7 +657,7 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
           }
 
           return StreamBuilder<UsersRecord>(
-            stream: UsersRecord.getDocument(userRef),
+            stream: _userDocStream(userRef),
             builder: (context, snapshot) {
               if (snapshot.hasError) {
                 final stillSignedIn = FirebaseAuth.instance.currentUser != null;
