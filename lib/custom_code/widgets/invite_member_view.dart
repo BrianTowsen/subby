@@ -104,12 +104,16 @@ class _InviteMemberViewState extends State<InviteMemberView> {
 /// Update this once a web landing / app link for invites exists.
 const String kSubbyInviteHint = 'Open Subby → More → Join a project';
 
-/// Opens the invite flow as a bottom sheet (used by ProjectDetailPageView's
-/// PROJECT TEAM header).
+/// Opens the invite flow as a bottom sheet (used by the ADMIN tiles'
+/// manage sheet). Pass [fixedRole] ('office' | 'client' | 'provider') to
+/// lock the role and hide the picker; [showPendingList] hides the pending
+/// invites list when the caller (AdminMembersView) already shows it.
 Future<void> showInviteMemberSheet(
   BuildContext context, {
   required DocumentReference projectRef,
   String? projectName,
+  String? fixedRole,
+  bool showPendingList = true,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -120,6 +124,8 @@ Future<void> showInviteMemberSheet(
       child: _InviteMemberSheet(
         projectRef: projectRef,
         projectName: projectName ?? 'Project',
+        fixedRole: fixedRole,
+        showPendingList: showPendingList,
       ),
     ),
   );
@@ -129,11 +135,15 @@ class _InviteMemberSheet extends StatefulWidget {
   const _InviteMemberSheet({
     required this.projectRef,
     required this.projectName,
+    this.fixedRole,
+    this.showPendingList = true,
     this.embedded = false,
   });
 
   final DocumentReference projectRef;
   final String projectName;
+  final String? fixedRole;
+  final bool showPendingList;
   final bool embedded;
 
   @override
@@ -159,6 +169,15 @@ class _InviteMemberSheetState extends State<_InviteMemberSheet> {
   bool _canViewCost = false;
   final TextEditingController _nameCtl = TextEditingController();
   final TextEditingController _companyCtl = TextEditingController();
+
+  bool get _isProvider => _role == 'provider';
+  bool get _roleLocked => widget.fixedRole != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.fixedRole != null) _role = widget.fixedRole!;
+  }
 
   bool _creating = false;
   String? _error;
@@ -215,6 +234,13 @@ class _InviteMemberSheetState extends State<_InviteMemberSheet> {
   String get _shareMessage {
     final who = _nameCtl.text.trim();
     final greet = who.isEmpty ? 'Hi!' : 'Hi $who!';
+    if (_isProvider) {
+      return '$greet You’ve been invited to join the team on '
+          '“${widget.projectName}” via Subby. Sign in to the Subby app '
+          '(register your business on the Network if you haven’t yet), '
+          'then: $kSubbyInviteHint and enter this code: $_code '
+          '(valid 14 days).';
+    }
     return '$greet You’ve been added to “${widget.projectName}” '
         'on Subby. Sign in to the Subby app, then: $kSubbyInviteHint and '
         'enter this code: $_code (valid 14 days).';
@@ -372,6 +398,7 @@ class _InviteMemberSheetState extends State<_InviteMemberSheet> {
       );
 
   Widget _pendingInvites() {
+    if (!widget.showPendingList) return const SizedBox.shrink();
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: FirebaseFirestore.instance
           .collection('project_invites')
@@ -379,7 +406,12 @@ class _InviteMemberSheetState extends State<_InviteMemberSheet> {
           .where('status', isEqualTo: 'pending')
           .snapshots(),
       builder: (context, snap) {
-        final docs = snap.data?.docs ?? const [];
+        var docs = snap.data?.docs ?? const [];
+        if (widget.fixedRole != null) {
+          docs = docs
+              .where((d) => (d.data()['role'] ?? '') == widget.fixedRole)
+              .toList();
+        }
         if (docs.isEmpty) return const SizedBox.shrink();
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -395,7 +427,9 @@ class _InviteMemberSheetState extends State<_InviteMemberSheet> {
                   ? 'Office / team'
                   : role == 'client'
                       ? 'Client (view-only)'
-                      : role;
+                      : role == 'provider'
+                          ? 'Service provider'
+                          : role;
               return Container(
                 padding: const EdgeInsets.symmetric(vertical: 9),
                 decoration: const BoxDecoration(
@@ -452,7 +486,7 @@ class _InviteMemberSheetState extends State<_InviteMemberSheet> {
       mainAxisSize: MainAxisSize.min,
       children: [
         _grabber(),
-        Text('Invite to project',
+        Text(_isProvider ? 'Invite a service provider' : 'Invite to project',
             style: const TextStyle(
               fontFamily: _displayFont,
               fontSize: 19,
@@ -461,65 +495,74 @@ class _InviteMemberSheetState extends State<_InviteMemberSheet> {
             )),
         const SizedBox(height: 3),
         Text(
-          'They only need a Subby login — no Network listing required.',
+          _isProvider
+              ? 'They join the project team with their Subby Network '
+                  'listing. If they aren’t registered yet, the code walks '
+                  'them through registration first.'
+              : 'They only need a Subby login — no Network listing required.',
           style: const TextStyle(
             fontFamily: _bodyFont,
             fontSize: 12.5,
             fontWeight: FontWeight.w600,
+            height: 1.4,
             color: _inkMute,
           ),
         ),
         const SizedBox(height: 18),
-        _label('Role'),
-        Row(children: [
-          _roleChip(
-            value: 'office',
-            title: 'Office / Team',
-            subtitle: 'Tasks, site book, snags, documents & quotes.',
-            icon: Icons.badge_outlined,
-          ),
-          const SizedBox(width: 10),
-          _roleChip(
-            value: 'client',
-            title: 'Client / Owner',
-            subtitle: 'Follows progress: timeline & documents, view-only.',
-            icon: Icons.visibility_outlined,
-          ),
-        ]),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text('Can view costs',
-                      style: TextStyle(
-                        fontFamily: _bodyFont,
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w700,
-                        color: _ink,
-                      )),
-                  SizedBox(height: 2),
-                  Text('Project cost & quote amounts stay hidden unless on.',
-                      style: TextStyle(
-                        fontFamily: _bodyFont,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: _faint,
-                      )),
-                ],
+        if (!_roleLocked) ...[
+          _label('Role'),
+          Row(children: [
+            _roleChip(
+              value: 'office',
+              title: 'Office / Team',
+              subtitle: 'Tasks, site book, snags, documents & quotes.',
+              icon: Icons.badge_outlined,
+            ),
+            const SizedBox(width: 10),
+            _roleChip(
+              value: 'client',
+              title: 'Client / Owner',
+              subtitle: 'Follows progress: timeline & documents, view-only.',
+              icon: Icons.visibility_outlined,
+            ),
+          ]),
+          const SizedBox(height: 16),
+        ],
+        if (!_isProvider) ...[
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text('Can view costs',
+                        style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
+                          color: _ink,
+                        )),
+                    SizedBox(height: 2),
+                    Text('Project cost & quote amounts stay hidden unless on.',
+                        style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: _faint,
+                        )),
+                  ],
+                ),
               ),
-            ),
-            Switch(
-              value: _canViewCost,
-              activeColor: _sparkInk,
-              activeTrackColor: _spark,
-              onChanged: (v) => setState(() => _canViewCost = v),
-            ),
-          ],
-        ),
-        const SizedBox(height: 14),
+              Switch(
+                value: _canViewCost,
+                activeColor: _sparkInk,
+                activeTrackColor: _spark,
+                onChanged: (v) => setState(() => _canViewCost = v),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+        ],
         _label('Their name (optional)'),
         TextField(
           controller: _nameCtl,
@@ -530,7 +573,9 @@ class _InviteMemberSheetState extends State<_InviteMemberSheet> {
             fontWeight: FontWeight.w700,
             color: _ink,
           ),
-          decoration: _fieldDecoration('e.g. Jane from the office'),
+          decoration: _fieldDecoration(_isProvider
+              ? 'e.g. Piet from ABC Plumbing'
+              : 'e.g. Jane from the office'),
         ),
         if (_role == 'office') ...[
           const SizedBox(height: 14),

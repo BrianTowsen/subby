@@ -1,3 +1,10 @@
+/* eslint-disable consistent-return */
+
+// createProjectInvite — a project owner/contractor invites someone onto a
+// project WITHOUT them registering a listing on the Network/Directory
+// (office staff, the homeowner/client). Generates a short join code
+// (e.g. SUB-4K7KQ2) that claimProjectInvite redeems.
+
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 
@@ -14,7 +21,10 @@ const CODE_CHARSET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
 const CODE_LENGTH = 6;
 const DEFAULT_EXPIRY_DAYS = 14;
 
-const ROLES = ["office", "client", "custom"];
+// 'provider' invites a tradesperson onto the project TEAM: they must own a
+// Network/Directory listing (subby_listings) — claim links their listing via
+// project_listings instead of creating a guest project_members doc.
+const ROLES = ["office", "client", "custom", "provider"];
 
 const PERMISSION_KEYS = [
   "viewTimeline",
