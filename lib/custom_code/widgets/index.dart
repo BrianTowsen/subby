@@ -44,4 +44,3 @@ export 'add_site_book_page_view.dart' show AddSiteBookPageView;
 export 'check_list_page_view.dart' show CheckListPageView;
 export 'invite_member_view.dart' show InviteMemberView;
 export 'join_project_view.dart' show JoinProjectView;
-export 'responsive_shell.dart' show ResponsiveShell;
