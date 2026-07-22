@@ -19,6 +19,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 import 'join_project_view.dart'
@@ -228,6 +230,11 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   int _sharedCount = 0;
   bool _archivedExpanded = false;
 
+  // Inline invite-code entry (signed-out + empty states). The claim itself
+  // still runs through showJoinProjectSheet so the redemption logic lives in
+  // one place; this field just lets the user start typing on this screen.
+  final TextEditingController _inviteCtrl = TextEditingController();
+
   // ─── CACHED STREAMS / FUTURES ──────────────────────────────────────
   // These are created ONCE and reused across rebuilds. Previously each of
   // these was built inline in the widget tree (e.g. `.snapshots()` directly
@@ -428,6 +435,12 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     });
   }
 
+  @override
+  void dispose() {
+    _inviteCtrl.dispose();
+    super.dispose();
+  }
+
   // ─── BUILT-TREE CACHE (back-swipe "snap" fix) ────────────────────────
   // The FlutterFlow page hosting this widget is rebuilt by go_router the
   // moment a pop is COMMITTED (at finger-lift, while the back-swipe settle
@@ -532,6 +545,14 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // Redeem an invite code — opens the SAME bottom sheet the More page uses
   // (join_project_view.dart), so the claim flow lives in exactly one place.
   void _goToJoinProject() => showJoinProjectSheet(context);
+
+  // Inline code entry (signed-out + empty). Dismisses the keyboard and opens
+  // the join sheet, which validates and claims the code. (The sheet owns the
+  // claim flow; to skip it entirely, expose that logic and call it here.)
+  void _redeemInlineCode() {
+    FocusScope.of(context).unfocus();
+    showJoinProjectSheet(context);
+  }
 
   // Open a single project — mirrors the contract used by MyProjectsHomePageView
   // (serialized DocumentReference in both queryParameters and extra).
@@ -1068,7 +1089,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   Widget _headerStatusLine() {
     final stream = _activeProjectsStreamCached();
     if (stream == null) {
-      return _headerStatusText('Manage your build — 30-day trial',
+      return _headerStatusText('Manage your build — free, no card needed',
           accent: false);
     }
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -3608,11 +3629,11 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             color: const Color(0xFFE7E247),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: const Icon(Icons.lock_open_rounded, size: 32, color: _ink),
+          child: const Icon(Icons.waving_hand_rounded, size: 32, color: _ink),
         ),
         const SizedBox(height: 20),
         const Text(
-          'Sign in to manage your home builds',
+          "Get started — it's free",
           style: TextStyle(
             fontFamily: _displayFont,
             fontSize: 26,
@@ -3624,8 +3645,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         ),
         const SizedBox(height: 12),
         const Text(
-          'Track plans, budget, programme, snags and quotes — all in '
-          'one place.',
+          "Manage your own build for free, or join one you've been invited "
+          'to. Listing your company is a paid add-on.',
           style: TextStyle(
             fontFamily: _bodyFont,
             fontSize: 14,
@@ -3634,22 +3655,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             color: _inkMute,
           ),
         ),
-        const SizedBox(height: 16),
-        _freeBanner(),
-        const SizedBox(height: 28),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: const [
-            _CapabilityChip('Plans'),
-            _CapabilityChip('Budget'),
-            _CapabilityChip('Programme'),
-            _CapabilityChip('Snags'),
-            _CapabilityChip('Quotes'),
-            _CapabilityChip('To-do list'),
-          ],
-        ),
-        const SizedBox(height: 28),
+        const SizedBox(height: 24),
         _primaryButton(
           label: 'Create account',
           icon: Icons.person_add_alt_1_rounded,
@@ -3661,6 +3667,12 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           icon: Icons.login_rounded,
           onTap: _goToLogin,
         ),
+        const SizedBox(height: 22),
+        _orDivider('OR JOIN A PROJECT'),
+        const SizedBox(height: 16),
+        _inviteCodeCard(),
+        const SizedBox(height: 10),
+        _directoryListingCard(),
       ],
     );
   }
@@ -3700,8 +3712,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         ),
         const SizedBox(height: 12),
         const Text(
-          "Plan a build of your own, or get hired onto someone else's. "
-          'Both come with a 30-day trial.',
+          "Plan a build of your own, or get hired onto someone else's — "
+          'free, for as long as it takes.',
           style: TextStyle(
             fontFamily: _bodyFont,
             fontSize: 14,
@@ -3710,16 +3722,14 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             color: _inkMute,
           ),
         ),
-        const SizedBox(height: 16),
-        _freeBanner(),
-        const SizedBox(height: 28),
+        const SizedBox(height: 24),
         _primaryButton(
           label: 'Start a home build',
           icon: Icons.add_rounded,
           onTap: _goToAddProject,
         ),
         const SizedBox(height: 14),
-        _orDivider(),
+        _orDivider('OR JOIN A PROJECT'),
         const SizedBox(height: 14),
         // Invitee fast-path FIRST: someone holding a code (admin / foreman /
         // client / provider) has a concrete next step — don't make them hunt.
@@ -3733,6 +3743,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // Trial banner — every plan starts with a 30-day trial: full access to plans,
   // budget, programme, snags and quotes, then a monthly plan after the trial.
   // Shown at the top of both empty states (signed-out + no builds).
+  // ignore: unused_element
   Widget _freeBanner() => Container(
         width: double.infinity,
         padding: const EdgeInsets.all(16),
@@ -3770,13 +3781,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         ),
       );
 
-  Widget _orDivider() => Row(
+  Widget _orDivider([String label = 'OR']) => Row(
         children: [
           const Expanded(child: Divider(color: _hairline, height: 1)),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Text(
-              'OR',
+              label,
               style: TextStyle(
                 fontFamily: _bodyFont,
                 fontSize: 11,
@@ -3820,68 +3831,140 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     );
   }
 
-  // "Have an invite code?" card — the invitee fast-path. An admin, site
-  // foreman or client who was sent a code (SUB-XXXXXX) taps this and redeems
-  // it right here via showJoinProjectSheet — no trip to More → Join a
-  // project. The yellow icon tile deliberately makes this the most visible
-  // card in the join-someone-else's-build group.
+  // "Have an invite code?" card with an INLINE entry field. An admin, site
+  // foreman or client who was sent a code (SUB-XXXXXX) can type it right here.
+  // Join / keyboard-go hands off to showJoinProjectSheet, which validates and
+  // claims the code (the sheet owns the claim flow).
   Widget _inviteCodeCard() {
-    return InkWell(
-      onTap: _goToJoinProject,
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: _surface,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFFDCE3E6)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE7E247),
-                borderRadius: BorderRadius.circular(10),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE7E247),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.key_rounded, size: 20, color: _ink),
               ),
-              child: const Icon(Icons.key_rounded, size: 20, color: _ink),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    'Have an invite code?',
-                    style: TextStyle(
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      'Have an invite code?',
+                      style: TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: _ink,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Enter the code you were sent to join.',
+                      style: TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        height: 1.4,
+                        color: _inkMute,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 44,
+                  child: TextField(
+                    controller: _inviteCtrl,
+                    textCapitalization: TextCapitalization.characters,
+                    textInputAction: TextInputAction.go,
+                    onSubmitted: (_) => _redeemInlineCode(),
+                    style: const TextStyle(
                       fontFamily: _bodyFont,
-                      fontSize: 13,
                       fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      letterSpacing: 1.5,
                       color: _ink,
                     ),
-                  ),
-                  SizedBox(height: 2),
-                  Text(
-                    'Enter the code you were sent to join the project team.',
-                    style: TextStyle(
-                      fontFamily: _bodyFont,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      height: 1.4,
-                      color: _inkMute,
+                    decoration: InputDecoration(
+                      isDense: true,
+                      filled: true,
+                      fillColor: _paper,
+                      hintText: 'SUB-XXXXXX',
+                      hintStyle: const TextStyle(
+                        fontFamily: _bodyFont,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        letterSpacing: 1.5,
+                        color: _faint,
+                      ),
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 14),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(
+                            color: Color(0xFFCBD8DD), width: 1.4),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(
+                            color: Color(0xFF007AFF), width: 2),
+                      ),
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            const Icon(Icons.chevron_right_rounded,
-                size: 20, color: Color(0xFFCBD8DD)),
-          ],
-        ),
+              const SizedBox(width: 8),
+              InkWell(
+                onTap: _redeemInlineCode,
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  height: 44,
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  decoration: BoxDecoration(
+                    color: _ink,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('Join',
+                          style: TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: _paper,
+                          )),
+                      SizedBox(width: 6),
+                      Icon(Icons.arrow_forward_rounded,
+                          size: 18, color: _paper),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -3906,7 +3989,6 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         decoration: BoxDecoration(
           color: _surface,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFFDCE3E6)),
         ),
         child: Row(
           children: [
@@ -3925,14 +4007,39 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontFamily: _bodyFont,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: _ink,
-                    ),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          title,
+                          style: const TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: _ink,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 7, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: _ink,
+                          borderRadius: BorderRadius.circular(_rPill),
+                        ),
+                        child: const Text(
+                          'PAID',
+                          style: TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.3,
+                            color: _paper,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -4176,6 +4283,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 // =====================================================================
 // Capability chip — the soft pills in the empty states (Plans, Budget…).
 // =====================================================================
+// ignore: unused_element
 class _CapabilityChip extends StatelessWidget {
   const _CapabilityChip(this.label);
 
