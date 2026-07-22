@@ -17,7 +17,12 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
+
+import 'join_project_view.dart'
+    show showJoinProjectSheet; // "Have an invite code?" → join sheet
 
 // ======================= DashboardPageView (FULL FILE) =======================
 //
@@ -49,6 +54,18 @@ import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark s
 //             • has listing → "You're listed in the Directory…"   (→ edit listing)
 //     Role is implicit (owner of builds you create, collaborator on builds you
 //     were added to) — no stored user role / signup question required.
+//   • INVITE CODE ENTRY ON THE DASHBOARD. Invitees (admin, site foreman, the
+//     client, service providers) no longer have to find More → "Join a
+//     project" to redeem their code — the same showJoinProjectSheet is now
+//     reachable straight from this screen in every signed-in layout:
+//        - Empty state        → prominent "Have an invite code?" card
+//          (between "Start a home build" and the Directory card).
+//        - Shared-primary     → "Enter invite code" button above
+//          "Start your build" (join another build).
+//        - Owner layout       → discreet "Have an invite code? Join a
+//          project" link at the end of the list.
+//     All three call _goToJoinProject() → showJoinProjectSheet(context);
+//     the sheet itself (claim logic, needsListing routing) is unchanged.
 //
 // PRESERVED: every constructor param (used + legacy), _safeNavigate /
 // _goToProject / _goToAddProject, the active-projects query, the archived
@@ -511,6 +528,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       );
     }
   }
+
+  // Redeem an invite code — opens the SAME bottom sheet the More page uses
+  // (join_project_view.dart), so the claim flow lives in exactly one place.
+  void _goToJoinProject() => showJoinProjectSheet(context);
 
   // Open a single project — mirrors the contract used by MyProjectsHomePageView
   // (serialized DocumentReference in both queryParameters and extra).
@@ -1223,6 +1244,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                     // Projects Feed — real activity log, grouped by day,
                     // scoped to owned + shared builds.
                     _buildActivityFeed(docs, shared),
+                    // Discreet invitee path — an owner can also be invited
+                    // onto someone else's build (foreman / admin / provider).
+                    const SizedBox(height: 18),
+                    Center(child: _joinCodeLink()),
                   ],
                 );
               },
@@ -1328,6 +1353,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           child: Column(
             children: [
               for (final sp in rest) _sharedPrimaryRow(sp),
+              const SizedBox(height: 16),
+              // Invited to ANOTHER build? Redeem the next code right here.
+              _secondaryButton(
+                label: 'Enter invite code',
+                icon: Icons.key_rounded,
+                onTap: _goToJoinProject,
+              ),
               const SizedBox(height: 16),
               const Center(
                 child: Text(
@@ -3689,6 +3721,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         const SizedBox(height: 14),
         _orDivider(),
         const SizedBox(height: 14),
+        // Invitee fast-path FIRST: someone holding a code (admin / foreman /
+        // client / provider) has a concrete next step — don't make them hunt.
+        _inviteCodeCard(),
+        const SizedBox(height: 10),
         _directoryListingCard(),
       ],
     );
@@ -3752,6 +3788,103 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           const Expanded(child: Divider(color: _hairline, height: 1)),
         ],
       );
+
+  // Small tappable "Have an invite code? Join a project" line — the quiet
+  // version of _inviteCodeCard for layouts that already have builds on
+  // screen (owner layout). Opens the same join sheet.
+  Widget _joinCodeLink() {
+    return InkWell(
+      onTap: _goToJoinProject,
+      borderRadius: BorderRadius.circular(_rPill),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            Icon(Icons.key_rounded, size: 15, color: _inkMute),
+            SizedBox(width: 6),
+            Text(
+              'Have an invite code? Join a project',
+              style: TextStyle(
+                fontFamily: _bodyFont,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: _inkMute,
+                decoration: TextDecoration.underline,
+                decorationColor: Color(0xFFCBD8DD),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // "Have an invite code?" card — the invitee fast-path. An admin, site
+  // foreman or client who was sent a code (SUB-XXXXXX) taps this and redeems
+  // it right here via showJoinProjectSheet — no trip to More → Join a
+  // project. The yellow icon tile deliberately makes this the most visible
+  // card in the join-someone-else's-build group.
+  Widget _inviteCodeCard() {
+    return InkWell(
+      onTap: _goToJoinProject,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: _surface,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFFDCE3E6)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE7E247),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.key_rounded, size: 20, color: _ink),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    'Have an invite code?',
+                    style: TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: _ink,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Enter the code you were sent to join the project team.',
+                    style: TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      height: 1.4,
+                      color: _inkMute,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.chevron_right_rounded,
+                size: 20, color: Color(0xFFCBD8DD)),
+          ],
+        ),
+      ),
+    );
+  }
 
   // Listing-aware Directory card. A tradesperson lists themselves so PMs can
   // find and add them; once listed, this reassures instead of re-prompting.
