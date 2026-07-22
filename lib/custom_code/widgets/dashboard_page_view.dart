@@ -15,6 +15,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 // ======================= DashboardPageView (FULL FILE) =======================
@@ -1708,25 +1710,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     final userRef = currentUserReference;
     if (userRef == null) return [];
     try {
-      final listingsSnap = await FirebaseFirestore.instance
-          .collection('subby_listings')
-          .where('ownerRef', isEqualTo: userRef)
-          .limit(10)
-          .get();
-      if (listingsSnap.docs.isEmpty) return [];
-
-      final listingRefs =
-          listingsSnap.docs.map((d) => d.reference).take(10).toList();
-
-      final plSnap = await FirebaseFirestore.instance
-          .collection('project_listings')
-          .where('listingRef', whereIn: listingRefs)
-          .get();
-
       final seen = <String>{};
       final futures = <Future<DocumentSnapshot<Map<String, dynamic>>>>[];
-      for (final d in plSnap.docs) {
-        final pr = d.data()['projectRef'];
+
+      void collectProjectRef(dynamic pr) {
         if (pr is DocumentReference && seen.add(pr.path)) {
           futures.add(
             pr
@@ -1738,11 +1725,49 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           );
         }
       }
+
+      // Source 1 — projects where one of my Network listings was added to
+      // the project team (project_listings).
+      final listingsSnap = await FirebaseFirestore.instance
+          .collection('subby_listings')
+          .where('ownerRef', isEqualTo: userRef)
+          .limit(10)
+          .get();
+      if (listingsSnap.docs.isNotEmpty) {
+        final listingRefs =
+            listingsSnap.docs.map((d) => d.reference).take(10).toList();
+        final plSnap = await FirebaseFirestore.instance
+            .collection('project_listings')
+            .where('listingRef', whereIn: listingRefs)
+            .get();
+        for (final d in plSnap.docs) {
+          collectProjectRef(d.data()['projectRef']);
+        }
+      }
+
+      // Source 2 — projects I was invited onto directly (project_members),
+      // e.g. as office staff or the client/owner. These members have no
+      // Network listing at all.
+      final pmSnap = await FirebaseFirestore.instance
+          .collection('project_members')
+          .where('userRef', isEqualTo: userRef)
+          .get();
+      for (final d in pmSnap.docs) {
+        collectProjectRef(d.data()['projectRef']);
+      }
+
+      if (futures.isEmpty) return [];
       final results = await Future.wait(futures);
 
       final out = <_SharedProject>[];
       for (final s in results.where((s) => s.exists)) {
         final data = s.data() ?? <String, dynamic>{};
+        // Skip projects I own — those already render in the owned grid.
+        final myOwnerRef = data['ownerRef'];
+        if (myOwnerRef is DocumentReference &&
+            myOwnerRef.path == userRef.path) {
+          continue;
+        }
         String pmName = (data['ownerName'] as String?)?.trim() ?? '';
         String pmPhoto = (data['ownerPhotoUrl'] as String?)?.trim() ?? '';
         final ownerRef = data['ownerRef'];

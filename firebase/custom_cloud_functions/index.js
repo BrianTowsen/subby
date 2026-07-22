@@ -25,3 +25,16 @@ exports.activityOnProgrammeUpdated =
 const activityOnSiteBookEntry = require("./activity_on_site_book_entry.js");
 exports.activityOnSiteBookEntry =
   activityOnSiteBookEntry.activityOnSiteBookEntry;
+const createProjectInvite = require("./create_project_invite.js");
+exports.createProjectInvite = createProjectInvite.createProjectInvite;
+const claimProjectInvite = require("./claim_project_invite.js");
+exports.claimProjectInvite = claimProjectInvite.claimProjectInvite;
+const revokeProjectInvite = require("./revoke_project_invite.js");
+exports.revokeProjectInvite = revokeProjectInvite.revokeProjectInvite;
+
+// No-op health check. Exists only so this aggregator file passes
+// FlutterFlow's "function name must appear in code" validation.
+const functions = require("firebase-functions");
+exports.index = functions
+  .region("us-central1")
+  .https.onCall(async () => ({ ok: true }));
