@@ -13,7 +13,7 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'invite_member_view.dart' show showInviteMemberSheet;
+import 'admin_members_view.dart' show showAdminMembersSheet;
 
 import '/custom_code/actions/index.dart';
 
@@ -3339,6 +3339,10 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                         _rDocuments(readOnly),
                         const SizedBox(height: 24),
                         _rTeam(readOnly),
+                        if (!readOnly) ...[
+                          const SizedBox(height: 24),
+                          _rAdmin(),
+                        ],
                       ],
                     ),
                   ),
@@ -4320,6 +4324,98 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
           ),
         );
       },
+    );
+  }
+
+  // ── ADMIN (owner only) ─────────────────────────────────────────────
+  // Invite + manage the people on this project by type. Office and
+  // Owner/Guest are code-invited guests (project_members, no Network
+  // listing); Service Providers join the team with their Network listing.
+  Widget _rAdmin() {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _rSectionLabel('ADMIN'),
+      const SizedBox(height: 10),
+      Row(children: [
+        _rAdminTile(
+          icon: Icons.badge_outlined,
+          title: 'Office',
+          subtitle: 'Your staff on this project',
+          role: 'office',
+        ),
+        const SizedBox(width: 10),
+        _rAdminTile(
+          icon: Icons.visibility_outlined,
+          title: 'Owner / Guest',
+          subtitle: 'Client follows the build',
+          role: 'client',
+        ),
+        const SizedBox(width: 10),
+        _rAdminTile(
+          icon: Icons.handyman_outlined,
+          title: 'Service Pro',
+          subtitle: 'Joins via the Network',
+          role: 'provider',
+        ),
+      ]),
+    ]);
+  }
+
+  Widget _rAdminTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required String role,
+  }) {
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            final ref = widget.projectRef;
+            if (ref == null) return;
+            showAdminMembersSheet(
+              context,
+              projectRef: ref,
+              projectName: (_projectData['name'] ?? 'Project').toString(),
+              role: role,
+            );
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 11),
+            decoration: BoxDecoration(
+              color: _surface,
+              border: Border.all(color: _hairlineOnSurface, width: 1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(icon, size: 20, color: _ink),
+                const SizedBox(height: 8),
+                Text(title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: _ink)),
+                const SizedBox(height: 2),
+                Text(subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        height: 1.3,
+                        color: _inkMute)),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 

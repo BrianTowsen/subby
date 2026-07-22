@@ -90,11 +90,30 @@ class _JoinProjectSheetState extends State<_JoinProjectSheet> {
   // ────────────────────────────────────────────────────────────────────
 
   static const String _kActiveProjectPath = 'subby_active_project_path';
+  static const String _kPendingInviteCode = 'subby_pending_invite_code';
   static const String _kProjectDetailRoute = 'ProjectDetailPage';
+  static const String _kAddListingRoute = 'addListingPage';
 
   final TextEditingController _codeCtl = TextEditingController();
   bool _joining = false;
+  bool _needsListing = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _prefillSavedCode();
+  }
+
+  // A provider who was told to register first gets their code pre-filled
+  // when they come back to this sheet.
+  Future<void> _prefillSavedCode() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = (prefs.getString(_kPendingInviteCode) ?? '').trim();
+    if (saved.isNotEmpty && mounted && _codeCtl.text.trim().isEmpty) {
+      setState(() => _codeCtl.text = saved);
+    }
+  }
 
   @override
   void dispose() {
@@ -111,6 +130,7 @@ class _JoinProjectSheetState extends State<_JoinProjectSheet> {
     }
     setState(() {
       _joining = true;
+      _needsListing = false;
       _error = null;
     });
     try {
@@ -120,6 +140,22 @@ class _JoinProjectSheetState extends State<_JoinProjectSheet> {
         'code': raw,
       });
       final data = Map<String, dynamic>.from(result.data as Map);
+
+      // Service-provider invite, but no Network listing yet: the invite is
+      // NOT consumed. Save the code and route them to registration — they
+      // come back here afterwards with the code pre-filled.
+      if (data['needsListing'] == true) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(_kPendingInviteCode, raw);
+        if (!mounted) return;
+        setState(() {
+          _joining = false;
+          _needsListing = true;
+          _error = null;
+        });
+        return;
+      }
+
       final projectPath = (data['projectPath'] ?? '').toString();
       final projectName = (data['projectName'] ?? 'the project').toString();
       final alreadyMember = data['alreadyMember'] == true;
@@ -129,9 +165,10 @@ class _JoinProjectSheetState extends State<_JoinProjectSheet> {
       }
 
       // Remember as the active project (same contract the rest of the app
-      // uses to resolve "current project").
+      // uses to resolve "current project"), and clear any saved invite code.
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_kActiveProjectPath, projectPath);
+      await prefs.remove(_kPendingInviteCode);
 
       if (!mounted) return;
 
@@ -274,6 +311,71 @@ class _JoinProjectSheetState extends State<_JoinProjectSheet> {
                   fontWeight: FontWeight.w700,
                   color: _warn,
                 )),
+          ],
+          if (_needsListing) ...[
+            const SizedBox(height: 14),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+              decoration: BoxDecoration(
+                color: _surface,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('One more step — register on the Network',
+                      style: TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w800,
+                        color: _ink,
+                      )),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'This invite adds you to the project team as a service '
+                    'provider, so your business needs a Subby Network '
+                    'listing first. Your code is saved — it will be filled '
+                    'in here when you come back.',
+                    style: TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      height: 1.4,
+                      color: _inkMute,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 42,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        final router = GoRouter.of(context);
+                        if (!widget.embedded) {
+                          Navigator.of(context).pop();
+                        }
+                        router.pushNamed(_kAddListingRoute);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _ink,
+                        foregroundColor: _paper,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(9),
+                        ),
+                      ),
+                      child: const Text('Register my business',
+                          style: TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w800,
+                          )),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
           const SizedBox(height: 16),
           SizedBox(
