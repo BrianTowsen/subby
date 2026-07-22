@@ -27,6 +27,15 @@ const ROLE_DEFAULT_PERMISSIONS = {
     snags: true,
     quotes: true,
   },
+  foreman: {
+    viewTimeline: true,
+    viewDocs: true,
+    viewCost: false,
+    editTasks: true,
+    siteBook: true,
+    snags: true,
+    quotes: false,
+  },
   client: {
     viewTimeline: true,
     viewDocs: true,
@@ -65,6 +74,19 @@ exports.claimProjectInvite = functions
     }
     const uid = context.auth.uid;
     const userRef = db.doc("users/" + uid);
+
+    // Resolve the claimant's display name so assignment pickers and team
+    // lists can show a real name instead of "Member".
+    let claimantName = "";
+    try {
+      const userSnap = await userRef.get();
+      const u = userSnap.exists ? userSnap.data() || {} : {};
+      claimantName = (u.display_name || u.displayName || u.email || "")
+        .toString()
+        .trim();
+    } catch (e) {
+      claimantName = "";
+    }
 
     const code = normalizeCode(data.code);
     if (!code) {
@@ -252,10 +274,12 @@ exports.claimProjectInvite = functions
           ? invite.permissions
           : ROLE_DEFAULT_PERMISSIONS[invite.role] || {};
 
+      const inviteeName = (invite.inviteeName || "").toString().trim();
       const memberRef = db.collection("project_members").doc();
       tx.set(memberRef, {
         projectRef: projectRef,
         userRef: userRef,
+        name: claimantName || inviteeName,
         role: (invite.role || "client").toString(),
         canViewCost: permissions.viewCost === true,
         permissions: permissions,

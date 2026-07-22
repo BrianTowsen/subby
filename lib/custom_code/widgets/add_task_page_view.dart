@@ -13,6 +13,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -199,6 +201,15 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
 
       _listingRef = data['assignedListingRef'] as DocumentReference?;
       _listingName = (data['assignedListingName'] ?? '').toString();
+
+      _userRef = data['assignedUserRef'] as DocumentReference?;
+      _userName = (data['assignedToName'] ?? '').toString();
+      _userSubtitle = (data['assignedToSubtitle'] ?? '').toString();
+      // A person-only assignment mirrors the person's name into
+      // assignedListingName for display — don't show it as a listing chip.
+      if (_listingRef == null && _listingName == _userName) {
+        _listingName = '';
+      }
 
       if (mounted) setState(() {});
     } catch (e) {
@@ -547,6 +558,22 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
     );
   }
 
+  // Friendly subtitle for a project_members row: "BuildCo · Site foreman".
+  String _memberSubtitle(Map<String, dynamic> d) {
+    final company = (d['displayCompany'] ?? '').toString().trim();
+    final role = (d['role'] ?? '').toString();
+    final roleLabel = role == 'office'
+        ? 'Office / team'
+        : role == 'foreman'
+            ? 'Site foreman'
+            : role == 'client'
+                ? 'Owner / guest'
+                : role == 'provider'
+                    ? 'Service provider'
+                    : (role.isEmpty ? 'Project member' : role);
+    return company.isEmpty ? roleLabel : '$company · $roleLabel';
+  }
+
   Future<void> _pickAssignee({required bool isPerson}) async {
     final projectRef = _projectRef;
     if (projectRef == null) {
@@ -649,12 +676,11 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                                   : (d['title'] ?? d['name'] ?? 'Team member'))
                               .toString();
                           final subtitle = (isPerson
-                                  ? (d['role'] ??
-                                      d['title'] ??
-                                      'Project member')
+                                  ? _memberSubtitle(d)
                                   : (d['subtitle'] ??
-                                      d['ratingText'] ??
-                                      'Added to project'))
+                                          d['ratingText'] ??
+                                          'Added to project')
+                                      .toString())
                               .toString();
                           final ref = isPerson
                               ? (d['userRef'] ?? d['memberRef'])
@@ -663,14 +689,23 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                           return InkWell(
                             onTap: () {
                               setState(() {
+                                // One assignee at a time — picking a person
+                                // clears a listing assignment and vice versa,
+                                // so rules/read-receipts stay unambiguous.
                                 if (isPerson) {
                                   _userRef = ref ?? docs[i].reference;
                                   _userName = name;
                                   _userSubtitle = subtitle;
+                                  _listingRef = null;
+                                  _listingName = '';
+                                  _listingSubtitle = '';
                                 } else {
                                   _listingRef = ref ?? docs[i].reference;
                                   _listingName = name;
                                   _listingSubtitle = subtitle;
+                                  _userRef = null;
+                                  _userName = '';
+                                  _userSubtitle = '';
                                 }
                               });
                               Navigator.of(ctx).pop();
@@ -1070,7 +1105,15 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
       DocumentReference? assignedListingOwnerRef;
       if (_listingRef != null) {
         assignedListingOwnerRef = await _resolveListingOwner(_listingRef!);
+      } else if (_userRef != null) {
+        // Person-only assignment (office / foreman / owner-guest member):
+        // the person IS the accountable party — reuse the same denormalized
+        // field the security rules and read-receipts already gate on.
+        assignedListingOwnerRef = _userRef;
       }
+      // Display name shown in lists/detail: listing wins, else the person.
+      final displayAssignedName =
+          _listingName.isNotEmpty ? _listingName : _userName;
 
       if (_isEditing) {
         // ✅ UPDATE existing task — preserve status / createdBy / createdAt.
@@ -1082,8 +1125,11 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
           'checklist': _checklist,
           'attachments': _attachments,
           'assignedListingRef': _listingRef,
-          'assignedListingName': _listingName,
+          'assignedListingName': displayAssignedName,
           'assignedListingOwnerRef': assignedListingOwnerRef,
+          'assignedUserRef': _userRef,
+          'assignedToName': _userName,
+          'assignedToSubtitle': _userSubtitle,
           'updatedAt': now,
         });
 
@@ -1105,8 +1151,11 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
         'checklist': _checklist,
         'attachments': _attachments,
         'assignedListingRef': _listingRef,
-        'assignedListingName': _listingName,
+        'assignedListingName': displayAssignedName,
         'assignedListingOwnerRef': assignedListingOwnerRef,
+        'assignedUserRef': _userRef,
+        'assignedToName': _userName,
+        'assignedToSubtitle': _userSubtitle,
         'readByListingAt': null,
         'createdBy': currentUserReference,
         'createdByName': currentUserDisplayName,
@@ -1374,6 +1423,14 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                                   name: _listingName,
                                   subtitle: _listingSubtitle,
                                   onTap: () => _pickAssignee(isPerson: false),
+                                ),
+                                _assignRow(
+                                  label: 'Assign to person',
+                                  isPerson: true,
+                                  has: _userRef != null || _userName.isNotEmpty,
+                                  name: _userName,
+                                  subtitle: _userSubtitle,
+                                  onTap: () => _pickAssignee(isPerson: true),
                                 ),
                                 _checklistField(),
                                 _attachmentsField(),

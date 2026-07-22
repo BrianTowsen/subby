@@ -170,6 +170,15 @@ class _AdminMembersSheetState extends State<_AdminMembersSheet> {
       'snags': true,
       'quotes': true,
     },
+    'foreman': {
+      'viewTimeline': true,
+      'viewDocs': true,
+      'viewCost': false,
+      'editTasks': true,
+      'siteBook': true,
+      'snags': true,
+      'quotes': false,
+    },
     'client': {
       'viewTimeline': true,
       'viewDocs': true,
@@ -189,6 +198,8 @@ class _AdminMembersSheetState extends State<_AdminMembersSheet> {
     switch (widget.role) {
       case 'office':
         return 'Office / Team';
+      case 'foreman':
+        return 'Site Foreman';
       case 'client':
         return 'Owner / Guest';
       case 'provider':
@@ -203,6 +214,9 @@ class _AdminMembersSheetState extends State<_AdminMembersSheet> {
       case 'office':
         return 'Your staff working on this project — no Network listing '
             'needed.';
+      case 'foreman':
+        return 'Runs the site day-to-day — tasks, site book, snags and '
+            'drawings. No Network listing needed.';
       case 'client':
         return 'The client or a guest following the project — view access '
             'by default.';
