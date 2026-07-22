@@ -13,6 +13,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'admin_members_view.dart' show showAdminMembersSheet;
 
 import '/custom_code/actions/index.dart';
@@ -3711,62 +3713,61 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       );
     }
 
+    // Vertical grid card: icon chip + trailing on top, title + status below.
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(10),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: const Color(0xFFEDF1F3),
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(10),
           ),
-          child: Row(children: [
-            Container(
-              width: 46,
-              height: 46,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: attention ? const Color(0xFFF7E4E4) : _paper,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon,
-                  size: 24, color: attention ? const Color(0xFFAC0C0C) : _ink),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(children: [
-                    Expanded(
-                      child: Text(title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                              fontFamily: _displayFont,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -0.3,
-                              color: _ink)),
+                  Container(
+                    width: 44,
+                    height: 44,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: attention ? const Color(0xFFF7E4E4) : _paper,
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    const SizedBox(width: 8),
-                    trailing,
-                  ]),
-                  const SizedBox(height: 5),
-                  Text(status,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontFamily: _bodyFont,
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF93A3AC))),
+                    child: Icon(icon,
+                        size: 23,
+                        color: attention ? const Color(0xFFAC0C0C) : _ink),
+                  ),
+                  const Spacer(),
+                  trailing,
                 ],
               ),
-            ),
-          ]),
+              const SizedBox(height: 12),
+              Text(title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontFamily: _displayFont,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.3,
+                      color: _ink)),
+              const SizedBox(height: 3),
+              Text(status,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF93A3AC))),
+            ],
+          ),
         ),
       ),
     );
@@ -4015,22 +4016,47 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
           featured: m[6] as bool,
         );
 
+    // Featured tiles (Timeline) stay full-width; the rest lay out in a
+    // 2-column grid, matching the ADMIN grid below.
+    final mgmtFeatured = mgmt.where((m) => m[6] as bool).toList();
+    final mgmtGrid = mgmt.where((m) => !(m[6] as bool)).toList();
+
     final children = <Widget>[];
-    for (var i = 0; i < mgmt.length; i++) {
-      children.add(tile(mgmt[i]));
-      if (i != mgmt.length - 1) children.add(const SizedBox(height: 10));
+    for (var i = 0; i < mgmtFeatured.length; i++) {
+      children.add(tile(mgmtFeatured[i]));
+      children.add(const SizedBox(height: 10));
     }
+    children.addAll(_gridTiles(mgmtGrid, tile));
+
     if (cost.isNotEmpty) {
       if (mgmt.isNotEmpty) children.add(const SizedBox(height: 20));
       children.add(_rSectionLabel('PROJECT COST CONTROL'));
       children.add(const SizedBox(height: 10));
-      for (var i = 0; i < cost.length; i++) {
-        children.add(tile(cost[i]));
-        if (i != cost.length - 1) children.add(const SizedBox(height: 10));
-      }
+      children.addAll(_gridTiles(cost, tile));
     }
     return Column(
         crossAxisAlignment: CrossAxisAlignment.start, children: children);
+  }
+
+  // Lay a list of module descriptors out two-per-row (equal height).
+  List<Widget> _gridTiles(
+      List<List<dynamic>> items, Widget Function(List<dynamic>) tile) {
+    final rows = <Widget>[];
+    for (var i = 0; i < items.length; i += 2) {
+      final hasRight = i + 1 < items.length;
+      rows.add(IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(child: tile(items[i])),
+            const SizedBox(width: 10),
+            Expanded(child: hasRight ? tile(items[i + 1]) : const SizedBox()),
+          ],
+        ),
+      ));
+      if (i + 2 < items.length) rows.add(const SizedBox(height: 10));
+    }
+    return rows;
   }
 
   Widget _rDocGroup(String label, int count) => Padding(
@@ -4394,7 +4420,6 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 11),
             decoration: BoxDecoration(
               color: _surface,
-              border: Border.all(color: _hairlineOnSurface, width: 1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
