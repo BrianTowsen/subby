@@ -76,6 +76,7 @@ class _DashboardPageWidgetState extends State<DashboardPageWidget> {
                 projectsRouteName: 'dashboardPage',
                 directoryRouteName: 'homePage',
                 accountRouteName: 'profilePage',
+                moreRouteName: 'morePage',
               ),
             ),
           ),

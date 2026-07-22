@@ -68,6 +68,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                   projectsRouteName: 'dashboardPage',
                   directoryRouteName: 'homePage',
                   accountRouteName: 'profilePage',
+                  moreRouteName: 'morePage',
                 ),
               ),
             ),

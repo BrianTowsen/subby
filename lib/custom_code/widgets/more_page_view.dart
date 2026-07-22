@@ -13,6 +13,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'join_project_view.dart' show showJoinProjectSheet;
 
 import '/custom_code/actions/index.dart';
@@ -135,46 +137,6 @@ class _MorePageViewState extends State<MorePageView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => Navigator.of(context).maybePop(),
-                  borderRadius: BorderRadius.circular(999),
-                  child: Container(
-                    width: 38,
-                    height: 38,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                        color: _paper.withOpacity(0.12),
-                        shape: BoxShape.circle),
-                    child: const Icon(Icons.arrow_back_ios_new_rounded,
-                        size: 16, color: _paper),
-                  ),
-                ),
-              ),
-              const Spacer(),
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => Navigator.of(context).maybePop(),
-                  borderRadius: BorderRadius.circular(999),
-                  child: Container(
-                    width: 38,
-                    height: 38,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                        color: _paper.withOpacity(0.14),
-                        shape: BoxShape.circle),
-                    child: const Icon(Icons.close_rounded,
-                        size: 18, color: _paper),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
           const Text('More',
               style: TextStyle(
                   fontFamily: _displayFont,

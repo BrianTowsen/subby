@@ -21,6 +21,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 
 import 'join_project_view.dart'
@@ -518,6 +520,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       );
 
   // Top-right menu button → the More hub (Manage · Support · Legal).
+  // ignore: unused_element
   void _goToMore() => _openMore();
 
   void _openMore() {
@@ -988,27 +991,25 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     final firstName = hasName ? name.split(RegExp(r'\s+')).first : '';
     final now = DateTime.now();
 
+    // Light, in-flow header: sits on the white page background and scrolls
+    // with the rest of the content (no dark hero band, no top status-bar fill).
     return Column(
       children: [
-        Container(height: topInset, color: _heroBg),
+        Container(height: topInset, color: _paper),
         Container(
           width: double.infinity,
-          color: _heroBg,
-          padding: const EdgeInsets.fromLTRB(_hPad, 14, _hPad, 24),
+          color: _paper,
+          padding: const EdgeInsets.fromLTRB(_hPad, 14, _hPad, 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
                   _logo(),
-                  const Spacer(),
-                  _menuButton(),
                 ],
               ),
               const SizedBox(height: 18),
-              // Avatar (photo → initials) + greeting. The translucent-white
-              // circle mirrors ProjectDetailPageView's back-button circle so
-              // the hero reads consistently when this page flows into it.
+              // Avatar (photo → initials) + greeting, on the light surface.
               Row(
                 children: [
                   _headerAvatar(name),
@@ -1019,8 +1020,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                       children: [
                         Text(_eyebrowDate(now),
                             style: _eyebrowStyle.copyWith(
-                                color: _paper.withOpacity(0.55),
-                                fontSize: 11.5)),
+                                color: _faint, fontSize: 11.5)),
                         const SizedBox(height: 3),
                         Text(
                           hasName ? '${_greeting()}, $firstName' : _greeting(),
@@ -1032,7 +1032,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                             fontWeight: FontWeight.w800,
                             letterSpacing: -0.5,
                             height: 1.05,
-                            color: _paper,
+                            color: _ink,
                           ),
                         ),
                       ],
@@ -1055,14 +1055,14 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     final photo = currentUserPhoto.trim();
     final fallback = Container(
       alignment: Alignment.center,
-      color: Colors.white.withOpacity(0.14),
+      color: _surface,
       child: Text(
         _initials(name),
         style: const TextStyle(
           fontFamily: _displayFont,
           fontSize: 15,
           fontWeight: FontWeight.w800,
-          color: Color(0xFFE7E247),
+          color: _ink,
         ),
       ),
     );
@@ -1124,11 +1124,11 @@ class _DashboardPageViewState extends State<DashboardPageView> {
               text,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: _bodyFont,
                 fontSize: 12.5,
                 fontWeight: FontWeight.w600,
-                color: _paper.withOpacity(0.85),
+                color: _inkMute,
               ),
             ),
           ),
@@ -1139,8 +1139,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // Loads the green Subby house PNG from FlutterFlow asset storage; falls back to
   // the painted _SubbyMarkPainter if the network image fails (offline / cold
   // start) so the logo never renders blank.
+  // Dark wordmark for the light header (was the white PNG for the old dark hero).
   static const String _logoUrl =
-      'https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/winston-9dy48u/assets/vkvx0d5tvzte/subby_logo_white.png';
+      'https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/winston-9dy48u/assets/vkvx0d5tvzte/subby_logo_dark.png';
 
   // Non-square mark: anchor on height (36) and leave width unconstrained so
   // the image renders at its natural aspect ratio rather than being squeezed
@@ -1154,26 +1155,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           errorBuilder: (context, error, stackTrace) => CustomPaint(
             size: const Size(36, 36),
             painter: const _SubbyMarkPainter(
-              peak: Color(0xFF4E504F), // Subby brand green
-              base: Color(0xFF4E504F),
+              peak: _ink, // dark mark on the light header
+              base: _ink,
             ),
           ),
-        ),
-      );
-
-  Widget _menuButton() => InkWell(
-        onTap: _goToMore,
-        borderRadius: BorderRadius.circular(_rLarge),
-        child: Container(
-          width: 42,
-          height: 42,
-          margin: const EdgeInsets.only(right: 4),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: _surface,
-            borderRadius: BorderRadius.circular(_rLarge),
-          ),
-          child: const Icon(Icons.menu_rounded, size: 22, color: _ink),
         ),
       );
 
@@ -3918,8 +3903,8 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                         letterSpacing: 1.5,
                         color: _faint,
                       ),
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 14),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 12),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                         borderSide: const BorderSide(
@@ -4243,22 +4228,19 @@ class _DashboardPageViewState extends State<DashboardPageView> {
           width: widget.width ?? double.infinity,
           height: widget.height ?? double.infinity,
           color: _paper,
-          // Welcome header is PINNED (fixed) — only the body below it scrolls.
+          // Welcome header now scrolls WITH the page content (it used to be
+          // pinned above the scroll view as a dark hero band).
           child: Column(
             children: [
-              // Zero-size. Watches this page's route and fires _onRouteSettled
-              // AFTER a covering page (e.g. ProjectDetail) has fully animated
-              // away — never mid back-swipe. Keeping the ModalRoute dependency
-              // on this leaf means isCurrent flips rebuild ONLY this SizedBox.
               _RouteSettleNotifier(
                 onCovered: _onRouteCovered,
                 onSettled: _onRouteSettled,
               ),
-              _buildWelcomeHeader(),
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
+                      _buildWelcomeHeader(),
                       _buildQuoteInvites(),
                       _buildBody(),
                       // Archived builds — collapsed, pinned to the bottom.
