@@ -45,3 +45,4 @@ export 'check_list_page_view.dart' show CheckListPageView;
 export 'invite_member_view.dart' show InviteMemberView;
 export 'join_project_view.dart' show JoinProjectView;
 export 'admin_members_view.dart' show AdminMembersView;
+export 'responsive_shell.dart' show ResponsiveShell;
