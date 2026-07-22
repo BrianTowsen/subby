@@ -11,6 +11,10 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
+import 'join_project_view.dart' show showJoinProjectSheet;
+
 import '/custom_code/actions/index.dart';
 import 'index.dart'; // Imports other custom widgets
 
@@ -332,6 +336,12 @@ class _MorePageViewState extends State<MorePageView> {
                         title: 'Account',
                         subtitle: 'Profile, listing & plan',
                         onTap: () => _go(_profileRouteName),
+                      ),
+                      _row(
+                        icon: Icons.key_rounded,
+                        title: 'Join a project',
+                        subtitle: 'Been sent an invite code? Enter it here',
+                        onTap: () => showJoinProjectSheet(context),
                       ),
                     ]),
                     const SizedBox(height: 28),

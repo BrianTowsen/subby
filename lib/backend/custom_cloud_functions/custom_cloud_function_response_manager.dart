@@ -96,3 +96,47 @@ class ActivityOnSiteBookEntryCloudFunctionCallResponse {
   bool? succeeded;
   dynamic jsonBody;
 }
+
+class IndexCloudFunctionCallResponse {
+  IndexCloudFunctionCallResponse({
+    this.errorCode,
+    this.succeeded,
+    this.jsonBody,
+  });
+  String? errorCode;
+  bool? succeeded;
+  dynamic jsonBody;
+}
+
+class CreateProjectInviteCloudFunctionCallResponse {
+  CreateProjectInviteCloudFunctionCallResponse({
+    this.errorCode,
+    this.succeeded,
+    this.jsonBody,
+  });
+  String? errorCode;
+  bool? succeeded;
+  dynamic jsonBody;
+}
+
+class ClaimProjectInviteCloudFunctionCallResponse {
+  ClaimProjectInviteCloudFunctionCallResponse({
+    this.errorCode,
+    this.succeeded,
+    this.jsonBody,
+  });
+  String? errorCode;
+  bool? succeeded;
+  dynamic jsonBody;
+}
+
+class RevokeProjectInviteCloudFunctionCallResponse {
+  RevokeProjectInviteCloudFunctionCallResponse({
+    this.errorCode,
+    this.succeeded,
+    this.jsonBody,
+  });
+  String? errorCode;
+  bool? succeeded;
+  dynamic jsonBody;
+}
