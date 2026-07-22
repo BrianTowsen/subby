@@ -65,6 +65,7 @@ class _ProfilePageWidgetState extends State<ProfilePageWidget> {
                   projectsRouteName: 'dashboardPage',
                   directoryRouteName: 'homePage',
                   accountRouteName: 'profilePage',
+                  moreRouteName: 'morePage',
                 ),
               ),
             ),

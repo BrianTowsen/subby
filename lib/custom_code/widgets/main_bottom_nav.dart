@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // HapticFeedback (medium impact on tab tap)
 
 import '/custom_code/widgets/index.dart'; // (kept if FF expects it)
@@ -41,17 +43,19 @@ class MainBottomNav extends StatefulWidget {
     this.projectsRouteName,
     this.directoryRouteName,
     this.accountRouteName,
+    this.moreRouteName,
   });
 
   final double? width;
   final double? height;
 
-  /// 0 Projects · 1 Directory · 2 Account
+  /// 0 Projects · 1 Network · 2 Account · 3 More
   final int currentIndex;
 
   final String? projectsRouteName;
   final String? directoryRouteName;
   final String? accountRouteName;
+  final String? moreRouteName;
 
   @override
   State<MainBottomNav> createState() => _MainBottomNavState();
@@ -79,6 +83,8 @@ class _MainBottomNavState extends State<MainBottomNav> {
         return widget.directoryRouteName;
       case 2:
         return widget.accountRouteName;
+      case 3:
+        return widget.moreRouteName;
       default:
         return null;
     }
@@ -91,6 +97,16 @@ class _MainBottomNavState extends State<MainBottomNav> {
     if (index == widget.currentIndex) return;
 
     final route = (_routeFor(index) ?? '').trim();
+
+    // More tab: fall back to pushing the MorePageView directly when no named
+    // route is supplied (it's a custom widget, not a FF page route).
+    if (index == 3 && route.isEmpty) {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const MorePageView()),
+      );
+      return;
+    }
+
     if (route.isEmpty) return;
 
     // Fade between tabs — no slide. Slowed to 320ms so the cross-fade reads.
@@ -198,6 +214,12 @@ class _MainBottomNavState extends State<MainBottomNav> {
             activeIcon: Icons.person_rounded,
             inactiveIcon: Icons.person_outline_rounded,
             label: 'Account',
+          ),
+          _navItem(
+            index: 3,
+            activeIcon: Icons.menu_rounded,
+            inactiveIcon: Icons.menu_rounded,
+            label: 'More',
           ),
         ],
       ),
