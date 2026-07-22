@@ -24,7 +24,7 @@ const DEFAULT_EXPIRY_DAYS = 14;
 // 'provider' invites a tradesperson onto the project TEAM: they must own a
 // Network/Directory listing (subby_listings) — claim links their listing via
 // project_listings instead of creating a guest project_members doc.
-const ROLES = ["office", "client", "custom", "provider"];
+const ROLES = ["office", "foreman", "client", "custom", "provider"];
 
 const PERMISSION_KEYS = [
   "viewTimeline",
@@ -45,6 +45,15 @@ const ROLE_DEFAULT_PERMISSIONS = {
     siteBook: true,
     snags: true,
     quotes: true,
+  },
+  foreman: {
+    viewTimeline: true,
+    viewDocs: true,
+    viewCost: false,
+    editTasks: true,
+    siteBook: true,
+    snags: true,
+    quotes: false,
   },
   client: {
     viewTimeline: true,

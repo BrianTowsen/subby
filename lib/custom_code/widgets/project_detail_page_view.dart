@@ -4344,6 +4344,15 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         ),
         const SizedBox(width: 10),
         _rAdminTile(
+          icon: Icons.engineering_outlined,
+          title: 'Site Foreman',
+          subtitle: 'Runs the site day-to-day',
+          role: 'foreman',
+        ),
+      ]),
+      const SizedBox(height: 10),
+      Row(children: [
+        _rAdminTile(
           icon: Icons.visibility_outlined,
           title: 'Owner / Guest',
           subtitle: 'Client follows the build',

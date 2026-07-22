@@ -13,6 +13,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -94,9 +96,11 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
   // Each entry: { 'url', 'type' ('image'|'video'), 'storagePath' }
   final List<Map<String, dynamic>> _media = [];
 
-  // The snag is assigned to a TEAM MEMBER on the project (a listing record).
+  // The snag is assigned to a TEAM MEMBER on the project (a listing record)
+  // OR to a person (a project_members guest: office / foreman / owner).
   DocumentReference?
       _assignedListingRef; // -> project_listings / subby_listings
+  DocumentReference? _assignedUserRef; // -> users (person assignment)
   String _assignedListingName = '';
   String _assignedListingSubtitle = '';
 
@@ -182,6 +186,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
       }
 
       _assignedListingRef = data['assignedListingRef'] as DocumentReference?;
+      _assignedUserRef = data['assignedUserRef'] as DocumentReference?;
       _assignedListingName =
           (data['assignedListingName'] ?? data['assignedToName'] ?? '')
               .toString();
@@ -679,8 +684,56 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
     return null;
   }
 
+  // Combined assignee list: service providers on the team (project_listings)
+  // plus invited people (project_members: office / foreman / owner-guest).
+  Future<List<Map<String, dynamic>>> _loadAssignees(
+      DocumentReference projectRef) async {
+    final results = await Future.wait([
+      FirebaseFirestore.instance
+          .collection('project_listings')
+          .where('projectRef', isEqualTo: projectRef)
+          .get(),
+      FirebaseFirestore.instance
+          .collection('project_members')
+          .where('projectRef', isEqualTo: projectRef)
+          .get(),
+    ]);
+    final out = <Map<String, dynamic>>[];
+    for (final doc in results[0].docs) {
+      final d = doc.data();
+      out.add(<String, dynamic>{
+        'isPerson': false,
+        'name': (d['title'] ?? d['name'] ?? 'Team member').toString(),
+        'subtitle':
+            (d['subtitle'] ?? d['ratingText'] ?? 'Added to project').toString(),
+        'ref': (d['listingRef'] as DocumentReference?) ?? doc.reference,
+      });
+    }
+    for (final doc in results[1].docs) {
+      final d = doc.data();
+      final company = (d['displayCompany'] ?? '').toString().trim();
+      final role = (d['role'] ?? '').toString();
+      final roleLabel = role == 'office'
+          ? 'Office / team'
+          : role == 'foreman'
+              ? 'Site foreman'
+              : role == 'client'
+                  ? 'Owner / guest'
+                  : role == 'provider'
+                      ? 'Service provider'
+                      : (role.isEmpty ? 'Project member' : role);
+      out.add(<String, dynamic>{
+        'isPerson': true,
+        'name': (d['name'] ?? 'Member').toString(),
+        'subtitle': company.isEmpty ? roleLabel : '$company · $roleLabel',
+        'ref': (d['userRef'] as DocumentReference?) ?? doc.reference,
+      });
+    }
+    return out;
+  }
+
   // =========================================================
-  // Assign-to picker (project_listings for this project)
+  // Assign-to picker (providers + invited people on this project)
   // =========================================================
   Future<void> _pickListing() async {
     final projectRef = _projectRef;
@@ -726,11 +779,8 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                 const SizedBox(height: 12),
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxHeight: 360),
-                  child: FutureBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                    future: FirebaseFirestore.instance
-                        .collection('project_listings')
-                        .where('projectRef', isEqualTo: projectRef)
-                        .get(),
+                  child: FutureBuilder<List<Map<String, dynamic>>>(
+                    future: _loadAssignees(projectRef),
                     builder: (context, snap) {
                       if (snap.connectionState == ConnectionState.waiting) {
                         return const Padding(
@@ -747,12 +797,12 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                           ),
                         );
                       }
-                      final docs = snap.data?.docs ?? const [];
+                      final docs = snap.data ?? const <Map<String, dynamic>>[];
                       if (docs.isEmpty) {
                         return const Padding(
                           padding: EdgeInsets.symmetric(vertical: 18),
                           child: Text(
-                            'No team members on this project yet. Add one from the Subby Network first.',
+                            'Nobody on this project yet. Add a provider from the Subby Network, or invite people from the ADMIN section.',
                             style: TextStyle(
                                 fontFamily: _bodyFont,
                                 fontSize: 13,
@@ -767,23 +817,26 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                         separatorBuilder: (_, __) =>
                             const Divider(height: 1, color: _hairline),
                         itemBuilder: (context, i) {
-                          final d = docs[i].data();
-                          final name =
-                              (d['title'] ?? d['name'] ?? 'Team member')
-                                  .toString();
-                          final subtitle = (d['subtitle'] ??
-                                  d['ratingText'] ??
-                                  'Added to project')
-                              .toString();
-                          final listingRef =
-                              d['listingRef'] as DocumentReference?;
-                          final selected =
-                              listingRef?.path == _assignedListingRef?.path;
+                          final entry = docs[i];
+                          final isPerson = entry['isPerson'] == true;
+                          final name = (entry['name'] ?? '').toString();
+                          final subtitle = (entry['subtitle'] ?? '').toString();
+                          final ref = entry['ref'] as DocumentReference?;
+                          final selected = isPerson
+                              ? ref?.path == _assignedUserRef?.path &&
+                                  _assignedUserRef != null
+                              : ref?.path == _assignedListingRef?.path &&
+                                  _assignedListingRef != null;
                           return InkWell(
                             onTap: () {
                               setState(() {
-                                _assignedListingRef =
-                                    listingRef ?? docs[i].reference;
+                                if (isPerson) {
+                                  _assignedUserRef = ref;
+                                  _assignedListingRef = null;
+                                } else {
+                                  _assignedListingRef = ref;
+                                  _assignedUserRef = null;
+                                }
                                 _assignedListingName = name;
                                 _assignedListingSubtitle = subtitle;
                               });
@@ -925,6 +978,10 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
       if (_assignedListingRef != null) {
         assignedListingOwnerRef =
             await _resolveListingOwner(_assignedListingRef!);
+      } else if (_assignedUserRef != null) {
+        // Person assignment (office / foreman / owner-guest): the person IS
+        // the accountable party — same field the rules & read-receipts use.
+        assignedListingOwnerRef = _assignedUserRef;
       }
 
       if (_isEditing) {
@@ -938,6 +995,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
           'media': _media,
           'photoUrl': photoUrl,
           'assignedListingRef': _assignedListingRef,
+          'assignedUserRef': _assignedUserRef,
           'assignedListingName': _assignedListingName,
           'assignedToName': _assignedListingName,
           'assignedListingOwnerRef': assignedListingOwnerRef,
@@ -963,6 +1021,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
         'media': _media,
         'photoUrl': photoUrl, // SnagListPageView reads this
         'assignedListingRef': _assignedListingRef,
+        'assignedUserRef': _assignedUserRef,
         'assignedListingName': _assignedListingName,
         'assignedToName': _assignedListingName, // SnagList back-compat
         'assignedListingOwnerRef':

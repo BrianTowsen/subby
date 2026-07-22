@@ -207,7 +207,9 @@ class _InviteMemberSheetState extends State<_InviteMemberSheet> {
         'role': _role,
         'permissions': {'viewCost': _canViewCost},
         'inviteeName': _nameCtl.text.trim(),
-        'displayCompany': _role == 'office' ? _companyCtl.text.trim() : '',
+        'displayCompany': (_role == 'office' || _role == 'foreman')
+            ? _companyCtl.text.trim()
+            : '',
       });
       final data = Map<String, dynamic>.from(result.data as Map);
       if (!mounted) return;
@@ -425,11 +427,13 @@ class _InviteMemberSheetState extends State<_InviteMemberSheet> {
               final name = (data['inviteeName'] ?? '').toString().trim();
               final roleLabel = role == 'office'
                   ? 'Office / team'
-                  : role == 'client'
-                      ? 'Client (view-only)'
-                      : role == 'provider'
-                          ? 'Service provider'
-                          : role;
+                  : role == 'foreman'
+                      ? 'Site foreman'
+                      : role == 'client'
+                          ? 'Client (view-only)'
+                          : role == 'provider'
+                              ? 'Service provider'
+                              : role;
               return Container(
                 padding: const EdgeInsets.symmetric(vertical: 9),
                 decoration: const BoxDecoration(
@@ -577,7 +581,7 @@ class _InviteMemberSheetState extends State<_InviteMemberSheet> {
               ? 'e.g. Piet from ABC Plumbing'
               : 'e.g. Jane from the office'),
         ),
-        if (_role == 'office') ...[
+        if (_role == 'office' || _role == 'foreman') ...[
           const SizedBox(height: 14),
           _label('Acting for (company shown on their updates)'),
           TextField(
