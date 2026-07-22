@@ -4430,6 +4430,34 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 color: _rFaint)),
+        const Spacer(),
+        // Invite people who aren't on the Network (office staff, the
+        // client/owner) — opens the invite-code sheet.
+        if (!readOnly && widget.projectRef != null)
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => showInviteMemberSheet(
+                context,
+                projectRef: widget.projectRef!,
+                projectName: (_projectData['name'] ?? 'Project').toString(),
+              ),
+              borderRadius: BorderRadius.circular(8),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(Icons.person_add_alt, size: 15, color: _ink),
+                  SizedBox(width: 5),
+                  Text('Invite',
+                      style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: _ink)),
+                ]),
+              ),
+            ),
+          ),
       ]),
       const SizedBox(height: 6),
       if (!_listingsLoadedOnce)
