@@ -11,20 +11,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 import 'package:flutter/rendering.dart'; // ScrollDirection (hide/show the bottom nav on scroll)
 
@@ -4229,7 +4215,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
       // Dark (black) status-bar icons over the white dashboard. Because the
       // visible route's AnnotatedRegion wins, this reasserts dark icons the
       // moment ProjectDetailPageView (which forces light) is popped.
-      value: SystemUiOverlayStyle.light,
+      value: SystemUiOverlayStyle.dark,
       // RepaintBoundary: while a page above slides during the back-swipe,
       // this page is only translated (Cupertino under-parallax) — its own
       // layer lets the compositor reuse the cached texture instead of
