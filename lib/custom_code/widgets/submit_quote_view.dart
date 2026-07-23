@@ -13,6 +13,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/custom_code/actions/index.dart';
 
 import 'dart:async';
@@ -683,7 +685,7 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
             width: double.infinity,
             color: const Color(
                 0xFF2F3A4C), // steel — matches DashboardPageView hero
-            padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
+            padding: EdgeInsets.fromLTRB(20, top + 14, 20, 14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -718,23 +720,6 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
                     const SizedBox(width: 38),
                   ],
                 ),
-                const SizedBox(height: 16),
-                Text('PREPARE YOUR SUBMISSION',
-                    style: TextStyle(
-                        fontFamily: _body,
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 1,
-                        color: _paper.withOpacity(0.55))),
-                const SizedBox(height: 4),
-                const Text('Submit Quote',
-                    style: TextStyle(
-                        fontFamily: _display,
-                        fontSize: 34,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -1,
-                        height: 1.0,
-                        color: _paper)),
               ],
             ),
           ),
@@ -742,46 +727,81 @@ class _SubmitQuoteViewState extends State<SubmitQuoteView> {
           Expanded(
             child: ListView(
               controller: _scrollCtl,
-              padding: EdgeInsets.fromLTRB(
-                  16, 18, 16, 24 + MediaQuery.of(context).viewInsets.bottom),
+              padding: EdgeInsets.zero,
               children: [
-                _label('1 · UPLOAD YOUR QUOTE'),
-                const SizedBox(height: 10),
-                _uploadBox(),
-                const SizedBox(height: 20),
-                _label('2 · KEY FIGURES'),
-                const SizedBox(height: 10),
-                _figuresCard(),
-                const SizedBox(height: 20),
-                _label('3 · INCLUSIONS / EXCLUSIONS'),
-                const SizedBox(height: 10),
+                // Hero lower block scrolls away; only the bar pins.
                 Container(
-                  key: _notesKey,
-                  decoration: BoxDecoration(
-                    color: _paper,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: _border),
+                  width: double.infinity,
+                  color: const Color(0xFF2F3A4C),
+                  padding: const EdgeInsets.fromLTRB(20, 2, 20, 18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('PREPARE YOUR SUBMISSION',
+                          style: TextStyle(
+                              fontFamily: _body,
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 1,
+                              color: _paper.withOpacity(0.55))),
+                      const SizedBox(height: 4),
+                      const Text('Submit Quote',
+                          style: TextStyle(
+                              fontFamily: _display,
+                              fontSize: 34,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -1,
+                              height: 1.0,
+                              color: _paper)),
+                    ],
                   ),
-                  padding: const EdgeInsets.all(13),
-                  child: TextField(
-                    controller: _notesCtl,
-                    focusNode: _notesFocus,
-                    maxLines: 4,
-                    textInputAction: TextInputAction.done, // blue tick
-                    onChanged: (_) => setState(() {}),
-                    style: const TextStyle(
-                        fontFamily: _body,
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                        color: _ink,
-                        height: 1.45),
-                    decoration: const InputDecoration(
-                      isCollapsed: true,
-                      border: InputBorder.none,
-                      hintText:
-                          'What\'s included, what\'s excluded, deposit terms…',
-                      hintStyle: TextStyle(color: _faint),
-                    ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(16, 18, 16,
+                      24 + MediaQuery.of(context).viewInsets.bottom),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _label('1 · UPLOAD YOUR QUOTE'),
+                      const SizedBox(height: 10),
+                      _uploadBox(),
+                      const SizedBox(height: 20),
+                      _label('2 · KEY FIGURES'),
+                      const SizedBox(height: 10),
+                      _figuresCard(),
+                      const SizedBox(height: 20),
+                      _label('3 · INCLUSIONS / EXCLUSIONS'),
+                      const SizedBox(height: 10),
+                      Container(
+                        key: _notesKey,
+                        decoration: BoxDecoration(
+                          color: _paper,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: _border),
+                        ),
+                        padding: const EdgeInsets.all(13),
+                        child: TextField(
+                          controller: _notesCtl,
+                          focusNode: _notesFocus,
+                          maxLines: 4,
+                          textInputAction: TextInputAction.done, // blue tick
+                          onChanged: (_) => setState(() {}),
+                          style: const TextStyle(
+                              fontFamily: _body,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              color: _ink,
+                              height: 1.45),
+                          decoration: const InputDecoration(
+                            isCollapsed: true,
+                            border: InputBorder.none,
+                            hintText:
+                                'What\'s included, what\'s excluded, deposit terms…',
+                            hintStyle: TextStyle(color: _faint),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],

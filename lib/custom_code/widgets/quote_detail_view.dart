@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/custom_code/actions/index.dart';
 
 import 'dart:async';
@@ -210,7 +212,7 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
                 width: double.infinity,
                 color: const Color(
                     0xFF2F3A4C), // steel — matches DashboardPageView hero
-                padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
+                padding: EdgeInsets.fromLTRB(20, top + 14, 20, 14),
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -237,108 +239,129 @@ class _QuoteDetailViewState extends State<QuoteDetailView> {
                         ])),
                         const SizedBox(width: 38),
                       ]),
-                      const SizedBox(height: 16),
-                      Text(vatIncl ? 'TOTAL INCL. VAT' : 'TOTAL (NO VAT)',
-                          style: TextStyle(
-                              fontFamily: _body,
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 1,
-                              color: _paper.withOpacity(0.55))),
-                      const SizedBox(height: 4),
-                      Text('R ${_fmt(total)}',
-                          style: const TextStyle(
-                              fontFamily: _display,
-                              fontSize: 34,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -1,
-                              color: _paper,
-                              height: 1.0)),
                     ]),
               ),
               Expanded(
                 child: ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
+                  padding: EdgeInsets.zero,
                   children: [
-                    _card([
-                      _row('Amount (excl. VAT)', 'R ${_fmt(excl)}'),
-                      _line1(),
-                      _row('VAT', 'R ${_fmt(vat)}'),
-                      _line1(),
-                      _row('Total', 'R ${_fmt(total)}', bold: true),
-                    ]),
-                    const SizedBox(height: 12),
-                    Row(children: [
-                      Expanded(child: _stat('LEAD TIME', 'Start in $lead wks')),
-                      const SizedBox(width: 10),
-                      Expanded(child: _stat('DEPOSIT', '$dep% upfront')),
-                    ]),
-                    const SizedBox(height: 12),
-                    if (notes.isNotEmpty)
-                      _card([
-                        const Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text('INCLUSIONS / EXCLUSIONS',
+                    // Hero lower block scrolls away; only the bar pins.
+                    Container(
+                      width: double.infinity,
+                      color: const Color(0xFF2F3A4C),
+                      padding: const EdgeInsets.fromLTRB(20, 2, 20, 18),
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(vatIncl ? 'TOTAL INCL. VAT' : 'TOTAL (NO VAT)',
                                 style: TextStyle(
                                     fontFamily: _body,
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 0.4,
-                                    color: _faint))),
-                        const SizedBox(height: 6),
-                        Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(notes,
-                                style: const TextStyle(
-                                    fontFamily: _body,
-                                    fontSize: 13,
+                                    fontSize: 10.5,
                                     fontWeight: FontWeight.w600,
-                                    color: _ink,
-                                    height: 1.45))),
-                      ]),
-                    if (hasFile) ...[
-                      const SizedBox(height: 12),
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () => _downloadFile(fileUrl),
-                          borderRadius: BorderRadius.circular(10),
-                          child: Container(
-                            decoration: BoxDecoration(
-                                color: _paper,
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: _border)),
-                            padding: const EdgeInsets.all(13),
-                            child: Row(children: [
-                              Container(
-                                  width: 40,
-                                  height: 40,
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                      color: _ink,
-                                      borderRadius: BorderRadius.circular(10)),
-                                  child: const Icon(
-                                      Icons.picture_as_pdf_rounded,
-                                      size: 21,
-                                      color: _paper)),
-                              const SizedBox(width: 11),
-                              Expanded(
-                                  child: Text(
-                                      (d['fileName'] ?? 'Quote.pdf').toString(),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                    letterSpacing: 1,
+                                    color: _paper.withOpacity(0.55))),
+                            const SizedBox(height: 4),
+                            Text('R ${_fmt(total)}',
+                                style: const TextStyle(
+                                    fontFamily: _display,
+                                    fontSize: 34,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: -1,
+                                    color: _paper,
+                                    height: 1.0)),
+                          ]),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _card([
+                            _row('Amount (excl. VAT)', 'R ${_fmt(excl)}'),
+                            _line1(),
+                            _row('VAT', 'R ${_fmt(vat)}'),
+                            _line1(),
+                            _row('Total', 'R ${_fmt(total)}', bold: true),
+                          ]),
+                          const SizedBox(height: 12),
+                          Row(children: [
+                            Expanded(
+                                child:
+                                    _stat('LEAD TIME', 'Start in $lead wks')),
+                            const SizedBox(width: 10),
+                            Expanded(child: _stat('DEPOSIT', '$dep% upfront')),
+                          ]),
+                          const SizedBox(height: 12),
+                          if (notes.isNotEmpty)
+                            _card([
+                              const Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text('INCLUSIONS / EXCLUSIONS',
+                                      style: TextStyle(
+                                          fontFamily: _body,
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: 0.4,
+                                          color: _faint))),
+                              const SizedBox(height: 6),
+                              Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(notes,
                                       style: const TextStyle(
                                           fontFamily: _body,
                                           fontSize: 13,
-                                          fontWeight: FontWeight.w800,
-                                          color: _ink))),
-                              const Icon(Icons.download_rounded,
-                                  size: 20, color: _ink),
+                                          fontWeight: FontWeight.w600,
+                                          color: _ink,
+                                          height: 1.45))),
                             ]),
-                          ),
-                        ),
+                          if (hasFile) ...[
+                            const SizedBox(height: 12),
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => _downloadFile(fileUrl),
+                                borderRadius: BorderRadius.circular(10),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                      color: _paper,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(color: _border)),
+                                  padding: const EdgeInsets.all(13),
+                                  child: Row(children: [
+                                    Container(
+                                        width: 40,
+                                        height: 40,
+                                        alignment: Alignment.center,
+                                        decoration: BoxDecoration(
+                                            color: _ink,
+                                            borderRadius:
+                                                BorderRadius.circular(10)),
+                                        child: const Icon(
+                                            Icons.picture_as_pdf_rounded,
+                                            size: 21,
+                                            color: _paper)),
+                                    const SizedBox(width: 11),
+                                    Expanded(
+                                        child: Text(
+                                            (d['fileName'] ?? 'Quote.pdf')
+                                                .toString(),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                                fontFamily: _body,
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w800,
+                                                color: _ink))),
+                                    const Icon(Icons.download_rounded,
+                                        size: 20, color: _ink),
+                                  ]),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                    ],
+                    ),
                   ],
                 ),
               ),

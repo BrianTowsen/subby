@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/custom_code/actions/index.dart';
 
 import 'index.dart'; // Imports other custom widgets
@@ -312,7 +314,7 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
             width: double.infinity,
             color: const Color(
                 0xFF2F3A4C), // steel — matches DashboardPageView hero
-            padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
+            padding: EdgeInsets.fromLTRB(20, top + 14, 20, 14),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(children: [
@@ -354,45 +356,6 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
                               color: Color(0xFFCBD8DD))),
                     ])),
               ]),
-              const SizedBox(height: 14),
-              Container(
-                decoration: BoxDecoration(
-                    color: _paper.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(10)),
-                padding: const EdgeInsets.all(11),
-                child: Row(children: [
-                  Container(
-                      width: 34,
-                      height: 34,
-                      alignment: Alignment.center,
-                      decoration: const BoxDecoration(
-                          color: _green, shape: BoxShape.circle),
-                      child: const Text('JM',
-                          style: TextStyle(
-                              fontFamily: 'Inter Tight',
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                              color: _paper))),
-                  const SizedBox(width: 10),
-                  Expanded(
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                        const Text('Invited by the project manager',
-                            style: TextStyle(
-                                fontFamily: _body,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                                color: _paper)),
-                        Text('Review the drawings, then quote',
-                            style: TextStyle(
-                                fontFamily: _body,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: _paper.withOpacity(0.55))),
-                      ])),
-                ]),
-              ),
             ]),
           ),
           Expanded(
@@ -404,20 +367,73 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
                             color: _faint,
                             fontWeight: FontWeight.w600)))
                 : ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                    padding: EdgeInsets.zero,
                     children: [
-                      _pmCard(),
-                      const SizedBox(height: 18),
-                      if (_pmMessage.isNotEmpty) ...[
-                        _messageCard(),
-                        const SizedBox(height: 16),
-                      ],
-                      _docsSection(ref, 'DRAWINGS', 'drawing',
-                          Icons.architecture_rounded),
-                      const SizedBox(height: 14),
-                      _docsSection(ref, 'DOCUMENTS', 'document',
-                          Icons.description_rounded),
-                      const SizedBox(height: 16),
+                      // Hero lower block scrolls away; only the bar pins.
+                      Container(
+                        width: double.infinity,
+                        color: const Color(0xFF2F3A4C),
+                        padding: const EdgeInsets.fromLTRB(20, 2, 20, 18),
+                        child: Container(
+                          decoration: BoxDecoration(
+                              color: _paper.withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.all(11),
+                          child: Row(children: [
+                            Container(
+                                width: 34,
+                                height: 34,
+                                alignment: Alignment.center,
+                                decoration: const BoxDecoration(
+                                    color: _green, shape: BoxShape.circle),
+                                child: const Text('JM',
+                                    style: TextStyle(
+                                        fontFamily: 'Inter Tight',
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w800,
+                                        color: _paper))),
+                            const SizedBox(width: 10),
+                            Expanded(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                  const Text('Invited by the project manager',
+                                      style: TextStyle(
+                                          fontFamily: _body,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w800,
+                                          color: _paper)),
+                                  Text('Review the drawings, then quote',
+                                      style: TextStyle(
+                                          fontFamily: _body,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: _paper.withOpacity(0.55))),
+                                ])),
+                          ]),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _pmCard(),
+                            const SizedBox(height: 18),
+                            if (_pmMessage.isNotEmpty) ...[
+                              _messageCard(),
+                              const SizedBox(height: 16),
+                            ],
+                            _docsSection(ref, 'DRAWINGS', 'drawing',
+                                Icons.architecture_rounded),
+                            const SizedBox(height: 14),
+                            _docsSection(ref, 'DOCUMENTS', 'document',
+                                Icons.description_rounded),
+                            const SizedBox(height: 16),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
           ),
