@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart'; // currentUserReference (owner gate)
@@ -568,88 +570,94 @@ class _DetailSiteBookPageViewState extends State<DetailSiteBookPageView> {
                     const SizedBox(width: 38, height: 38),
                 ],
               ),
-              const SizedBox(height: 16),
-              // stat block pinned to the same height as SiteBookPageView's
-              // hero stat (~51) so the masthead ends at an identical height.
-              SizedBox(
-                height: 51,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                                color: _paper.withOpacity(0.14),
-                                shape: BoxShape.circle),
-                            child: Text(_initials(author),
-                                style: const TextStyle(
-                                    fontFamily: _displayFont,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w800,
-                                    color: _paper)),
-                          ),
-                          const SizedBox(width: 13),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('LOGGED BY',
-                                    style: TextStyle(
-                                        fontFamily: _bodyFont,
-                                        fontSize: 10.5,
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: 1,
-                                        color: _paper.withOpacity(0.55))),
-                                const SizedBox(height: 4),
-                                Text(author,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                        fontFamily: _displayFont,
-                                        fontSize: 27,
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: -0.6,
-                                        height: 1.05,
-                                        color: _paper)),
-                              ],
-                            ),
-                          ),
-                        ],
+            ],
+          ),
+        ),
+        // Author stat now on WHITE, in a bordered card (matches ProjectDetailPageView).
+        Container(
+          width: double.infinity,
+          color: _paper,
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 4),
+          child: Container(
+            decoration: BoxDecoration(
+                color: _paper,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFEAEEF0))),
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        alignment: Alignment.center,
+                        decoration: const BoxDecoration(
+                            color: _surface, shape: BoxShape.circle),
+                        child: Text(_initials(author),
+                            style: const TextStyle(
+                                fontFamily: _displayFont,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: _ink)),
                       ),
-                    ),
-                    const SizedBox(width: 14),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(dateShort,
-                              style: TextStyle(
-                                  fontFamily: _bodyFont,
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: _paper.withOpacity(0.6))),
-                          if (metaLabel.isNotEmpty) ...[
-                            const SizedBox(height: 2),
-                            Text(metaLabel,
+                      const SizedBox(width: 13),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('LOGGED BY',
                                 style: TextStyle(
                                     fontFamily: _bodyFont,
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w600,
-                                    color: _paper.withOpacity(0.45))),
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 1,
+                                    color: _inkMute)),
+                            const SizedBox(height: 4),
+                            Text(author,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    fontFamily: _displayFont,
+                                    fontSize: 26,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: -0.6,
+                                    height: 1.05,
+                                    color: _ink)),
                           ],
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 14),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(dateShort,
+                          style: const TextStyle(
+                              fontFamily: _bodyFont,
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              color: _inkMute)),
+                      if (metaLabel.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(metaLabel,
+                            style: const TextStyle(
+                                fontFamily: _bodyFont,
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF93A3AC))),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         // body

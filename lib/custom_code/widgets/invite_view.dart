@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/custom_code/actions/index.dart';
 import 'index.dart'; // Imports other custom widgets
 
@@ -187,49 +189,53 @@ class _InviteViewState extends State<InviteView> {
         children: [
           Container(
             width: double.infinity,
-            color: const Color(0xFF2F3A4C), // steel — matches app hero headers
-            padding: EdgeInsets.fromLTRB(20, top + 14, 20, 20),
+            color: const Color(0xFF2F3A4C),
+            padding: EdgeInsets.fromLTRB(20, top + 14, 20, 14),
+            child: Row(children: [
+              _circleBtn(),
+              Expanded(
+                  child: Column(children: [
+                Text(_projectName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontFamily: _body,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: _paper)),
+                const SizedBox(height: 2),
+                Text('GET QUOTES',
+                    style: TextStyle(
+                        fontFamily: _body,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.7,
+                        color: _paper.withOpacity(0.5))),
+              ])),
+              const SizedBox(width: 38),
+            ]),
+          ),
+          Container(
+            width: double.infinity,
+            color: _paper,
+            padding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [
-                _circleBtn(),
-                Expanded(
-                    child: Column(children: [
-                  Text(_projectName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontFamily: _body,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: _paper)),
-                  const SizedBox(height: 2),
-                  Text('GET QUOTES',
-                      style: TextStyle(
-                          fontFamily: _body,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.7,
-                          color: _paper.withOpacity(0.5))),
-                ])),
-                const SizedBox(width: 38),
-              ]),
-              const SizedBox(height: 16),
               const Text('Invite to quote',
                   style: TextStyle(
                       fontFamily: 'Inter Tight',
-                      fontSize: 24,
+                      fontSize: 30,
                       fontWeight: FontWeight.w900,
-                      letterSpacing: -0.5,
-                      color: _paper)),
+                      letterSpacing: -0.6,
+                      color: _ink)),
               const SizedBox(height: 6),
-              Text(
+              const Text(
                   'Selected team members will see the shared drawings & documents.',
                   style: TextStyle(
                       fontFamily: _body,
                       fontSize: 12.5,
                       fontWeight: FontWeight.w600,
-                      color: _paper.withOpacity(0.6))),
+                      color: _inkMute)),
             ]),
           ),
           Expanded(

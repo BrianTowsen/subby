@@ -17,6 +17,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -537,27 +539,27 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
   Widget _inkHeaderLower(FlutterFlowTheme theme) {
     return Container(
       width: double.infinity,
-      color: const Color(0xFF2F3A4C),
-      padding: const EdgeInsets.fromLTRB(20, 2, 20, 18),
+      color: _paper,
+      padding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('REQUEST PRICING FROM TEAM MEMBERS',
+          const Text('REQUEST PRICING FROM TEAM MEMBERS',
               style: TextStyle(
                   fontFamily: _bodyFont,
                   fontSize: 10.5,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w800,
                   letterSpacing: 1,
-                  color: _paper.withOpacity(0.55))),
-          const SizedBox(height: 4),
-          Text('Get Quotes',
+                  color: Color(0xFF93A3AC))),
+          const SizedBox(height: 6),
+          const Text('Get Quotes',
               style: TextStyle(
                   fontFamily: _displayFont,
-                  fontSize: 34,
+                  fontSize: 32,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -1,
                   height: 1.0,
-                  color: _paper)),
+                  color: _ink)),
         ],
       ),
     );

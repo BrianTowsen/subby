@@ -13,6 +13,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/custom_code/actions/index.dart';
 
 import 'index.dart'; // Imports other custom widgets
@@ -372,11 +374,11 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
                       // Hero lower block scrolls away; only the bar pins.
                       Container(
                         width: double.infinity,
-                        color: const Color(0xFF2F3A4C),
-                        padding: const EdgeInsets.fromLTRB(20, 2, 20, 18),
+                        color: _paper,
+                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 4),
                         child: Container(
                           decoration: BoxDecoration(
-                              color: _paper.withOpacity(0.08),
+                              color: _surface,
                               borderRadius: BorderRadius.circular(10)),
                           padding: const EdgeInsets.all(11),
                           child: Row(children: [
@@ -403,13 +405,13 @@ class _QuoteRequestViewState extends State<QuoteRequestView> {
                                           fontFamily: _body,
                                           fontSize: 13,
                                           fontWeight: FontWeight.w800,
-                                          color: _paper)),
+                                          color: _ink)),
                                   Text('Review the drawings, then quote',
                                       style: TextStyle(
                                           fontFamily: _body,
                                           fontSize: 11,
                                           fontWeight: FontWeight.w600,
-                                          color: _paper.withOpacity(0.55))),
+                                          color: _inkMute)),
                                 ])),
                           ]),
                         ),

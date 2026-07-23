@@ -17,6 +17,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'admin_members_view.dart' show showAdminMembersSheet;
 
 import '/custom_code/actions/index.dart';
@@ -3339,24 +3341,19 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Hero lower block scrolls away with the page; only the
-                      // back / title / Edit bar above stays pinned.
-                      _inkHeroLower(
-                        theme: theme,
-                        address: projectAddress,
-                        dates: projectDates,
-                        progress: progressVal,
-                      ),
+                      // Completion + location now live on a white card at the
+                      // top of the body (moved off the dark hero).
                       Padding(
                         padding: EdgeInsets.fromLTRB(
-                            _hPad, 18, _hPad, _vPad + bottomInset),
+                            _hPad, 20, _hPad, _vPad + bottomInset),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // -- Redesigned body (matches DetailTask / DetailSnag) --
                             _rPills(theme),
-                            const SizedBox(height: 18),
-                            _rCompletion(theme),
+                            const SizedBox(height: 16),
+                            _rOverviewCard(theme, projectAddress, projectDates,
+                                endLabel, progressVal),
                             if (readOnly) ...[
                               const SizedBox(height: 18),
                               _rOwnerCard(theme, ownerProfileRef),
@@ -3487,6 +3484,109 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         ),
       ),
     ]);
+  }
+
+  // White completion overview card — completion %, target date, progress
+  // bar and location/dates (ported off the dark hero to a light surface).
+  Widget _rOverviewCard(FlutterFlowTheme theme, String address, String dates,
+      String targetLabel, double progress) {
+    final p = progress.clamp(0.0, 1.0);
+    return Container(
+      decoration: BoxDecoration(
+          color: _paper,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFEAEEF0))),
+      padding: const EdgeInsets.all(16),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('COMPLETION',
+                    style: TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1,
+                        color: _inkMute)),
+                const SizedBox(height: 6),
+                Text('${(p * 100).round()}%',
+                    style: const TextStyle(
+                        fontFamily: _displayFont,
+                        fontSize: 38,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -1.4,
+                        height: 0.95,
+                        color: _ink)),
+              ]),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      const Text('TARGET',
+                          style: TextStyle(
+                              fontFamily: _bodyFont,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.8,
+                              color: _rFaint)),
+                      const SizedBox(height: 3),
+                      Text(targetLabel,
+                          style: const TextStyle(
+                              fontFamily: _bodyFont,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: _ink)),
+                    ]),
+              ),
+            ]),
+        const SizedBox(height: 12),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: LinearProgressIndicator(
+            value: p,
+            minHeight: 6,
+            backgroundColor: _surface,
+            valueColor: const AlwaysStoppedAnimation<Color>(_ink),
+          ),
+        ),
+        const SizedBox(height: 14),
+        Container(height: 1, color: const Color(0xFFF2F5F6)),
+        const SizedBox(height: 12),
+        if (address.trim().isNotEmpty)
+          Row(children: [
+            const Icon(Icons.location_on_rounded, size: 16, color: _rFaint),
+            const SizedBox(width: 8),
+            Expanded(
+                child: Text(address,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: _inkMute))),
+          ]),
+        if (dates.trim().isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Row(children: [
+            const Icon(Icons.event_rounded, size: 16, color: _rFaint),
+            const SizedBox(width: 8),
+            Expanded(
+                child: Text(dates,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: _inkMute))),
+          ]),
+        ],
+      ]),
+    );
   }
 
   Widget _rRound(IconData icon, Color bg, Color fg, VoidCallback onTap) =>

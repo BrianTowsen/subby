@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -94,7 +96,7 @@ class _AdminMembersViewState extends State<AdminMembersView> {
 }
 
 /// Opens the per-role manage sheet from the project page's ADMIN tiles.
-/// role: 'office' | 'client' | 'provider'.
+/// role: 'office' | 'foreman' | 'client' | 'provider'.
 Future<void> showAdminMembersSheet(
   BuildContext context, {
   required DocumentReference projectRef,
@@ -141,6 +143,9 @@ class _AdminMembersSheetState extends State<_AdminMembersSheet> {
   static const Color _paper = Color(0xFFFFFFFF);
   static const Color _surface = Color(0xFFECF0F2);
   static const Color _hairline = Color(0xFFEAEEF0);
+  static const Color _editorBg = Color(0xFFF6F8F9);
+  static const Color _avatarTint = Color(0xFFE7EDF0);
+  static const Color _trackOff = Color(0xFFCBD8DD);
   static const Color _spark = Color(0xFFE7E247);
   static const Color _sparkInk = Color(0xFF1E282E);
   static const Color _warn = Color(0xFFAC0C0C);
@@ -152,13 +157,23 @@ class _AdminMembersSheetState extends State<_AdminMembersSheet> {
   // files — FlutterFlow regenerates those).
   static const List<Map<String, String>> _permDefs = [
     {'key': 'viewTimeline', 'label': 'View timeline'},
-    {'key': 'viewDocs', 'label': 'View documents & drawings'},
-    {'key': 'viewCost', 'label': 'View costs & quote amounts'},
+    {'key': 'viewDocs', 'label': 'Documents & drawings'},
+    {'key': 'viewCost', 'label': 'Costs & quote amounts'},
     {'key': 'editTasks', 'label': 'Work on tasks'},
     {'key': 'siteBook', 'label': 'Post in site book'},
     {'key': 'snags', 'label': 'Work on snags'},
     {'key': 'quotes', 'label': 'View quotes module'},
   ];
+
+  static const Map<String, IconData> _permIcons = {
+    'viewTimeline': Icons.timeline_rounded,
+    'viewDocs': Icons.description_outlined,
+    'viewCost': Icons.payments_outlined,
+    'editTasks': Icons.checklist_rounded,
+    'siteBook': Icons.menu_book_outlined,
+    'snags': Icons.fact_check_outlined,
+    'quotes': Icons.request_quote_outlined,
+  };
 
   static const Map<String, Map<String, bool>> _roleDefaults = {
     'office': {
@@ -229,6 +244,36 @@ class _AdminMembersSheetState extends State<_AdminMembersSheet> {
     }
   }
 
+  IconData get _roleIcon {
+    switch (widget.role) {
+      case 'office':
+        return Icons.badge_outlined;
+      case 'foreman':
+        return Icons.engineering_outlined;
+      case 'client':
+        return Icons.visibility_outlined;
+      case 'provider':
+        return Icons.handyman_outlined;
+      default:
+        return Icons.group_rounded;
+    }
+  }
+
+  String get _ctaLabel {
+    switch (widget.role) {
+      case 'office':
+        return 'Invite office / team';
+      case 'foreman':
+        return 'Invite site foreman';
+      case 'client':
+        return 'Invite owner / guest';
+      case 'provider':
+        return 'Invite a service provider';
+      default:
+        return 'Invite ${_roleTitle.toLowerCase()}';
+    }
+  }
+
   // ── Data ───────────────────────────────────────────────────────────
 
   Stream<QuerySnapshot<Map<String, dynamic>>> _membersStream() =>
@@ -259,6 +304,9 @@ class _AdminMembersSheetState extends State<_AdminMembersSheet> {
     }
     return out;
   }
+
+  int _grantedCount(Map<String, dynamic> member) =>
+      _effectivePerms(member).values.where((v) => v).length;
 
   Future<void> _savePerms(DocumentReference memberRef) async {
     if (_saving) return;
@@ -347,8 +395,8 @@ class _AdminMembersSheetState extends State<_AdminMembersSheet> {
 
   // ── UI ─────────────────────────────────────────────────────────────
 
-  Widget _label(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 6, top: 18),
+  Widget _sectionLabel(String text) => Padding(
+        padding: const EdgeInsets.only(bottom: 10, top: 4),
         child: Text(
           text.toUpperCase(),
           style: const TextStyle(
@@ -361,62 +409,134 @@ class _AdminMembersSheetState extends State<_AdminMembersSheet> {
         ),
       );
 
+  // Yellow/ink pill toggle — matches the module visibility affordance.
+  Widget _pillToggle(bool value) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
+      width: 44,
+      height: 26,
+      decoration: BoxDecoration(
+        color: value ? _spark : _trackOff,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: AnimatedAlign(
+        duration: const Duration(milliseconds: 150),
+        alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.all(3),
+          child: Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              color: value ? _ink : _paper,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _initialsAvatar(String name) {
+    final parts =
+        name.trim().split(RegExp(r'\s+')).where((s) => s.isNotEmpty).toList();
+    String initials = '–';
+    if (parts.length == 1 && parts.first.isNotEmpty) {
+      initials = parts.first.substring(0, 1).toUpperCase();
+    } else if (parts.length >= 2) {
+      initials =
+          (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
+    }
+    return Container(
+      width: 42,
+      height: 42,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: _avatarTint,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(initials,
+          style: const TextStyle(
+              fontFamily: _displayFont,
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: _ink)),
+    );
+  }
+
   Widget _memberRow(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data();
     final userRef = data['userRef'];
     final company = (data['displayCompany'] ?? '').toString().trim();
     final expanded = _expandedMemberPath == doc.reference.path;
+    final granted = _grantedCount(data);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        InkWell(
-          onTap: () {
-            setState(() {
-              if (expanded) {
-                _expandedMemberPath = null;
-              } else {
-                _expandedMemberPath = doc.reference.path;
-                _editPerms = _effectivePerms(data);
-              }
-            });
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 11),
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: _hairline, width: 1)),
-            ),
-            child: Row(children: [
-              Expanded(
-                child: FutureBuilder<DocumentSnapshot>(
-                  // future is nullable — a member doc without a userRef just
-                  // renders the fallback labels instead of crashing.
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: _paper,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _hairline, width: 1),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: () {
+              setState(() {
+                if (expanded) {
+                  _expandedMemberPath = null;
+                } else {
+                  _expandedMemberPath = doc.reference.path;
+                  _editPerms = _effectivePerms(data);
+                }
+              });
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+              child: Row(children: [
+                FutureBuilder<DocumentSnapshot>(
                   future: userRef is DocumentReference ? userRef.get() : null,
                   builder: (context, snap) {
                     final u =
                         snap.data?.data() as Map<String, dynamic>? ?? const {};
                     final name = (u['display_name'] ?? '').toString().trim();
-                    final email = (u['email'] ?? '').toString().trim();
-                    final title = name.isNotEmpty
-                        ? name
-                        : (email.isNotEmpty ? email : 'Member');
-                    final sub = company.isNotEmpty
-                        ? company
-                        : (name.isNotEmpty ? email : '');
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontFamily: _bodyFont,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: _ink)),
-                        if (sub.isNotEmpty) ...[
+                    return _initialsAvatar(name.isNotEmpty ? name : 'Member');
+                  },
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FutureBuilder<DocumentSnapshot>(
+                    future: userRef is DocumentReference ? userRef.get() : null,
+                    builder: (context, snap) {
+                      final u = snap.data?.data() as Map<String, dynamic>? ??
+                          const {};
+                      final name = (u['display_name'] ?? '').toString().trim();
+                      final email = (u['email'] ?? '').toString().trim();
+                      final title = name.isNotEmpty
+                          ? name
+                          : (email.isNotEmpty ? email : 'Member');
+                      final subBits = <String>[
+                        if (company.isNotEmpty)
+                          company
+                        else if (name.isNotEmpty && email.isNotEmpty)
+                          email,
+                        '$granted of ${_permDefs.length} permissions',
+                      ];
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontFamily: _bodyFont,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  color: _ink)),
                           const SizedBox(height: 2),
-                          Text(sub,
+                          Text(subBits.join(' · '),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
@@ -425,59 +545,77 @@ class _AdminMembersSheetState extends State<_AdminMembersSheet> {
                                   fontWeight: FontWeight.w600,
                                   color: _faint)),
                         ],
-                      ],
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
-              ),
-              Icon(
-                expanded ? Icons.expand_less_rounded : Icons.tune_rounded,
-                size: 18,
-                color: _inkMute,
-              ),
-            ]),
+                const SizedBox(width: 10),
+                Container(
+                  width: 32,
+                  height: 32,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: _surface,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    expanded ? Icons.expand_less_rounded : Icons.tune_rounded,
+                    size: 18,
+                    color: _inkMute,
+                  ),
+                ),
+              ]),
+            ),
           ),
-        ),
-        if (expanded) _permEditor(doc.reference),
-      ],
+          if (expanded) _permEditor(doc.reference),
+        ],
+      ),
     );
   }
 
   Widget _permEditor(DocumentReference memberRef) {
     return Container(
-      margin: const EdgeInsets.only(top: 8, bottom: 12),
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
-      decoration: BoxDecoration(
-        color: _surface,
-        borderRadius: BorderRadius.circular(12),
+      decoration: const BoxDecoration(
+        color: _editorBg,
+        border: Border(top: BorderSide(color: _hairline, width: 1)),
       ),
+      padding: const EdgeInsets.fromLTRB(14, 6, 14, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ..._permDefs.map((d) {
             final k = d['key']!;
-            return Row(children: [
-              Expanded(
-                child: Text(d['label']!,
-                    style: const TextStyle(
-                        fontFamily: _bodyFont,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: _ink)),
+            final on = _editPerms[k] ?? false;
+            return InkWell(
+              onTap: () => setState(() => _editPerms[k] = !on),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: const BoxDecoration(
+                  border:
+                      Border(bottom: BorderSide(color: _hairline, width: 1)),
+                ),
+                child: Row(children: [
+                  Icon(_permIcons[k] ?? Icons.circle_outlined,
+                      size: 19, color: _inkMute),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(d['label']!,
+                        style: const TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: _ink)),
+                  ),
+                  _pillToggle(on),
+                ]),
               ),
-              Switch(
-                value: _editPerms[k] ?? false,
-                activeColor: _sparkInk,
-                activeTrackColor: _spark,
-                onChanged: (v) => setState(() => _editPerms[k] = v),
-              ),
-            ]);
+            );
           }),
-          const SizedBox(height: 6),
+          const SizedBox(height: 14),
           Row(children: [
             Expanded(
               child: SizedBox(
-                height: 40,
+                height: 42,
                 child: ElevatedButton(
                   onPressed: _saving ? null : () => _savePerms(memberRef),
                   style: ElevatedButton.styleFrom(
@@ -485,7 +623,7 @@ class _AdminMembersSheetState extends State<_AdminMembersSheet> {
                     foregroundColor: _sparkInk,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(9)),
+                        borderRadius: BorderRadius.circular(11)),
                   ),
                   child: Text(_saving ? 'Saving…' : 'Save permissions',
                       style: const TextStyle(
@@ -498,7 +636,7 @@ class _AdminMembersSheetState extends State<_AdminMembersSheet> {
             ),
             const SizedBox(width: 10),
             SizedBox(
-              height: 40,
+              height: 42,
               child: OutlinedButton(
                 onPressed: () async {
                   final snap = await memberRef.get();
@@ -518,9 +656,9 @@ class _AdminMembersSheetState extends State<_AdminMembersSheet> {
                 },
                 style: OutlinedButton.styleFrom(
                   foregroundColor: _warn,
-                  side: const BorderSide(color: _warn, width: 1),
+                  side: const BorderSide(color: _warn, width: 1.4),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(9)),
+                      borderRadius: BorderRadius.circular(11)),
                 ),
                 child: const Text('Remove',
                     style: TextStyle(
@@ -535,23 +673,34 @@ class _AdminMembersSheetState extends State<_AdminMembersSheet> {
     );
   }
 
-  Widget _membersSection() {
-    if (widget.role == 'provider') {
-      return Padding(
-        padding: const EdgeInsets.only(top: 4),
-        child: Text(
-          'Providers who join appear under PROJECT TEAM on the project '
-          'page, with their Network listing.',
-          style: const TextStyle(
-            fontFamily: _bodyFont,
-            fontSize: 12.5,
-            fontWeight: FontWeight.w600,
-            height: 1.4,
-            color: _inkMute,
+  Widget _providerInfo() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: const [
+        Icon(Icons.info_outline_rounded, size: 22, color: _inkMute),
+        SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            'Providers who join appear under Project Team on the project page, '
+            'with their Network listing.',
+            style: TextStyle(
+              fontFamily: _bodyFont,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+              height: 1.5,
+              color: _inkMute,
+            ),
           ),
         ),
-      );
-    }
+      ]),
+    );
+  }
+
+  Widget _membersSection() {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: _membersStream(),
       builder: (context, snap) {
@@ -575,7 +724,13 @@ class _AdminMembersSheetState extends State<_AdminMembersSheet> {
                     color: _faint)),
           );
         }
-        return Column(children: docs.map(_memberRow).toList());
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _sectionLabel('On this project'),
+            ...docs.map(_memberRow),
+          ],
+        );
       },
     );
   }
@@ -591,33 +746,62 @@ class _AdminMembersSheetState extends State<_AdminMembersSheet> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _label('Pending invites'),
+            const SizedBox(height: 6),
+            _sectionLabel('Pending invites'),
             ...docs.map((d) {
               final data = d.data();
               final code = (data['code'] ?? '').toString();
               final name = (data['inviteeName'] ?? '').toString().trim();
               return Container(
-                padding: const EdgeInsets.symmetric(vertical: 9),
-                decoration: const BoxDecoration(
-                  border:
-                      Border(bottom: BorderSide(color: _hairline, width: 1)),
+                margin: const EdgeInsets.only(bottom: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: _surface,
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(children: [
+                  const Icon(Icons.mail_outline_rounded,
+                      size: 20, color: _inkMute),
+                  const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      name.isEmpty ? code : '$name · $code',
-                      style: const TextStyle(
-                          fontFamily: _bodyFont,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: _ink),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(name.isEmpty ? 'Invitee' : name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontFamily: _bodyFont,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: _ink)),
+                        if (code.isNotEmpty) ...[
+                          const SizedBox(height: 1),
+                          Text(code,
+                              style: const TextStyle(
+                                  fontFamily: _bodyFont,
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.4,
+                                  color: _faint)),
+                        ],
+                      ],
                     ),
                   ),
-                  IconButton(
-                    onPressed: () => _revokeInvite(d.reference),
-                    icon:
-                        const Icon(Icons.close_rounded, size: 18, color: _warn),
-                    tooltip: 'Revoke invite',
+                  const SizedBox(width: 10),
+                  InkWell(
+                    onTap: () => _revokeInvite(d.reference),
+                    borderRadius: BorderRadius.circular(999),
+                    child: Container(
+                      width: 30,
+                      height: 30,
+                      alignment: Alignment.center,
+                      decoration: const BoxDecoration(
+                          color: _paper, shape: BoxShape.circle),
+                      child: const Icon(Icons.close_rounded,
+                          size: 17, color: _warn),
+                    ),
                   ),
                 ]),
               );
@@ -628,87 +812,152 @@ class _AdminMembersSheetState extends State<_AdminMembersSheet> {
     );
   }
 
+  Widget _header() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(
+          width: 46,
+          height: 46,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: _ink,
+            borderRadius: BorderRadius.circular(13),
+          ),
+          child: Icon(_roleIcon, size: 24, color: _paper),
+        ),
+        const SizedBox(width: 13),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(_roleTitle,
+                  style: const TextStyle(
+                    fontFamily: _displayFont,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.4,
+                    color: _ink,
+                  )),
+              const SizedBox(height: 4),
+              Text(_roleSubtitle,
+                  style: const TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    height: 1.45,
+                    color: _inkMute,
+                  )),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        InkWell(
+          onTap: () => Navigator.of(context).maybePop(),
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            width: 32,
+            height: 32,
+            alignment: Alignment.center,
+            decoration:
+                const BoxDecoration(color: _surface, shape: BoxShape.circle),
+            child: const Icon(Icons.close_rounded, size: 18, color: _inkMute),
+          ),
+        ),
+      ]),
+    );
+  }
+
+  Widget _footer(double bottomInset) {
+    return Container(
+      width: double.infinity,
+      // Paper colour continues into the bottom safe area — no gap of a
+      // different colour beneath the button.
+      padding: EdgeInsets.fromLTRB(20, 12, 20, 12 + bottomInset),
+      decoration: const BoxDecoration(
+        color: _paper,
+        border: Border(top: BorderSide(color: _hairline, width: 1)),
+      ),
+      child: SizedBox(
+        height: 50,
+        child: ElevatedButton.icon(
+          onPressed: () => showInviteMemberSheet(
+            context,
+            projectRef: widget.projectRef,
+            projectName: widget.projectName,
+            fixedRole: widget.role,
+            showPendingList: false,
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _spark,
+            foregroundColor: _sparkInk,
+            elevation: 0,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+          ),
+          icon: const Icon(Icons.person_add_alt, size: 19),
+          label: Text(
+            _ctaLabel,
+            style: const TextStyle(
+                fontFamily: _bodyFont,
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: _sparkInk),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final content = Container(
+    final bottomInset =
+        widget.embedded ? 0.0 : MediaQuery.of(context).padding.bottom;
+    final maxHeight = MediaQuery.of(context).size.height * 0.88;
+
+    final sheet = Container(
+      constraints:
+          widget.embedded ? null : BoxConstraints(maxHeight: maxHeight),
       decoration: BoxDecoration(
         color: _paper,
         borderRadius: widget.embedded
             ? BorderRadius.zero
-            : const BorderRadius.vertical(top: Radius.circular(18)),
+            : const BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           if (!widget.embedded)
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 14),
-                decoration: BoxDecoration(
-                  color: _hairline,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+            Container(
+              width: 38,
+              height: 4,
+              margin: const EdgeInsets.only(top: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFDCE3E6),
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
-          Text(_roleTitle,
-              style: const TextStyle(
-                fontFamily: _displayFont,
-                fontSize: 19,
-                fontWeight: FontWeight.w800,
-                color: _ink,
-              )),
-          const SizedBox(height: 3),
-          Text(_roleSubtitle,
-              style: const TextStyle(
-                fontFamily: _bodyFont,
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
-                height: 1.4,
-                color: _inkMute,
-              )),
-          const SizedBox(height: 8),
-          _membersSection(),
-          _invitesSection(),
-          const SizedBox(height: 18),
-          SizedBox(
-            width: double.infinity,
-            height: 46,
-            child: ElevatedButton.icon(
-              onPressed: () => showInviteMemberSheet(
-                context,
-                projectRef: widget.projectRef,
-                projectName: widget.projectName,
-                fixedRole: widget.role,
-                showPendingList: false,
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _spark,
-                foregroundColor: _sparkInk,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-              ),
-              icon: const Icon(Icons.person_add_alt, size: 18),
-              label: Text(
-                widget.role == 'provider'
-                    ? 'Invite a service provider'
-                    : 'Invite ${_roleTitle.toLowerCase()}',
-                style: const TextStyle(
-                    fontFamily: _bodyFont,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: _sparkInk),
+          _header(),
+          Flexible(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (widget.role == 'provider')
+                    _providerInfo()
+                  else
+                    _membersSection(),
+                  _invitesSection(),
+                ],
               ),
             ),
           ),
+          _footer(bottomInset),
         ],
       ),
     );
-    if (widget.embedded) return SingleChildScrollView(child: content);
-    return SafeArea(top: false, child: SingleChildScrollView(child: content));
+
+    return sheet;
   }
 }

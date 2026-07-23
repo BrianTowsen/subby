@@ -13,6 +13,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/custom_code/actions/index.dart';
 
 import 'index.dart'; // Imports other custom widgets
@@ -219,27 +221,27 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
   // Scrolls away with the page — dark colour continues below the pinned bar.
   Widget _heroLower() => Container(
         width: double.infinity,
-        color: const Color(0xFF2F3A4C),
-        padding: const EdgeInsets.fromLTRB(20, 2, 20, 18),
+        color: _paper,
+        padding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('COMPARE & ACCEPT QUOPTES',
+            const Text('COMPARE & ACCEPT QUOTES',
                 style: TextStyle(
                     fontFamily: _body,
                     fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w800,
                     letterSpacing: 1,
-                    color: _paper.withOpacity(0.55))),
-            const SizedBox(height: 4),
+                    color: Color(0xFF93A3AC))),
+            const SizedBox(height: 6),
             const Text('Quotes Received',
                 style: TextStyle(
                     fontFamily: _display,
-                    fontSize: 34,
+                    fontSize: 32,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -1,
                     height: 1.0,
-                    color: _paper)),
+                    color: _ink)),
           ],
         ),
       );

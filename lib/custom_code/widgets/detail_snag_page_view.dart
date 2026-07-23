@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'media_source_helper.dart'; // Camera / gallery source helper
 
 import 'index.dart'; // Imports other custom widgets
@@ -724,19 +726,16 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
     if (dueHint.isNotEmpty) parts.add(dueHint);
     // Eyebrow above the title — uppercased, matching the other snag headers.
     final meta = parts.join('  ·  ').toUpperCase();
-    return Container(
-      width: double.infinity,
-      color: const Color(0xFF2F3A4C),
-      // Match the Snag List header height.
-      constraints:
-          BoxConstraints(minHeight: MediaQuery.of(context).padding.top + 138),
-      padding: EdgeInsets.fromLTRB(
-          20, 14 + MediaQuery.of(context).padding.top, 20, 18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Centered project name + eyebrow, back on the left, delete on right.
-          Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Ink masthead — top bar only (matches redesigned ProjectDetailPageView).
+        Container(
+          width: double.infinity,
+          color: const Color(0xFF2F3A4C),
+          padding: EdgeInsets.fromLTRB(
+              20, 14 + MediaQuery.of(context).padding.top, 20, 14),
+          child: Row(
             children: [
               _heroCircle(Icons.arrow_back_ios_new_rounded, _handleBack),
               Expanded(
@@ -764,31 +763,41 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
                 const SizedBox(width: 38, height: 38),
             ],
           ),
-          const SizedBox(height: 16),
-          if (meta.isNotEmpty) ...[
-            Text(meta,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                    fontFamily: _bodyFont,
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1,
-                    color: _paper.withOpacity(0.55))),
-            const SizedBox(height: 4),
-          ],
-          Text(title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                  fontFamily: _displayFont,
-                  fontSize: 26,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.6,
-                  height: 1.1,
-                  color: _paper)),
-        ],
-      ),
+        ),
+        // Title block on white.
+        Container(
+          width: double.infinity,
+          color: _paper,
+          padding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (meta.isNotEmpty) ...[
+                Text(meta,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1,
+                        color: Color(0xFF93A3AC))),
+                const SizedBox(height: 6),
+              ],
+              Text(title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontFamily: _displayFont,
+                      fontSize: 30,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.8,
+                      height: 1.05,
+                      color: _ink)),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

@@ -13,6 +13,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/custom_code/actions/index.dart';
 
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle
@@ -374,10 +376,12 @@ class _SiteBookPageViewState extends State<SiteBookPageView> {
       );
 
   // Scrolls away with the page — dark colour continues below the pinned bar.
+  // Stat block now sits on WHITE, in a bordered card below the pinned ink
+  // masthead (matches the redesigned ProjectDetailPageView overview card).
   Widget _heroLower() => Container(
         width: double.infinity,
-        color: const Color(0xFF2F3A4C),
-        padding: const EdgeInsets.fromLTRB(_hPad, 2, _hPad, 18),
+        color: _paper,
+        padding: const EdgeInsets.fromLTRB(_hPad, 20, _hPad, 4),
         child: _heroStat(),
       );
 
@@ -461,55 +465,61 @@ class _SiteBookPageViewState extends State<SiteBookPageView> {
 
   // Large stat block: today's entries + with-photos / contributors.
   Widget _heroStat() =>
-      _entryCounts((total, today, withPhotos, contributors) => Row(
+      _entryCounts((total, today, withPhotos, contributors) => Container(
+          decoration: BoxDecoration(
+              color: _paper,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFEAEEF0))),
+          padding: const EdgeInsets.all(16),
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('TODAY',
+                  const Text('TODAY',
                       style: TextStyle(
                           fontFamily: _bodyFont,
                           fontSize: 10.5,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w800,
                           letterSpacing: 1,
-                          color: _paper.withOpacity(0.55))),
-                  const SizedBox(height: 4),
+                          color: _inkMute)),
+                  const SizedBox(height: 6),
                   Text('$today ${today == 1 ? 'entry' : 'entries'}',
                       style: const TextStyle(
                           fontFamily: _displayFont,
-                          fontSize: 34,
+                          fontSize: 36,
                           fontWeight: FontWeight.w900,
-                          letterSpacing: -1,
-                          color: _paper,
-                          height: 1.0)),
+                          letterSpacing: -1.4,
+                          color: _ink,
+                          height: 0.95)),
                 ],
               ),
-              const SizedBox(width: 14),
+              const Spacer(),
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text('$withPhotos with photos',
-                        style: TextStyle(
+                        style: const TextStyle(
                             fontFamily: _bodyFont,
                             fontSize: 11.5,
-                            fontWeight: FontWeight.w600,
-                            color: _paper.withOpacity(0.6))),
+                            fontWeight: FontWeight.w700,
+                            color: _inkMute)),
                     const SizedBox(height: 2),
                     Text(
                         '$contributors ${contributors == 1 ? 'contributor' : 'contributors'}',
-                        style: TextStyle(
+                        style: const TextStyle(
                             fontFamily: _bodyFont,
                             fontSize: 11.5,
-                            fontWeight: FontWeight.w600,
-                            color: _paper.withOpacity(0.45))),
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF93A3AC))),
                   ],
                 ),
               ),
             ],
-          ));
+          )));
 
   Widget _circleBtn(IconData icon, VoidCallback onTap, {double size = 16}) =>
       Material(
