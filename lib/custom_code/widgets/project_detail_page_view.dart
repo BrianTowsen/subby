@@ -15,6 +15,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'admin_members_view.dart' show showAdminMembersSheet;
 
 import '/custom_code/actions/index.dart';
@@ -1088,7 +1090,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
         decoration: const BoxDecoration(
           color: Color(0xFF2F3A4C),
         ),
-        padding: EdgeInsets.fromLTRB(20, topInset + 14, 20, 18),
+        padding: EdgeInsets.fromLTRB(20, topInset + 14, 20, 14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1177,67 +1179,82 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
               ],
             ),
             const SizedBox(height: 16),
-            // Completion stat block + location / target date, mirroring
-            // SiteBookPageView's large TODAY stat masthead.
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('COMPLETION',
-                        style: TextStyle(
-                            fontFamily: _bodyFont,
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 1,
-                            color: _paper.withOpacity(0.55))),
-                    const SizedBox(height: 4),
-                    Text('${(progress * 100).round()}%',
-                        style: const TextStyle(
-                            fontFamily: _displayFont,
-                            fontSize: 34,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -1,
-                            color: _paper,
-                            height: 1.0)),
-                  ],
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (address.trim().isNotEmpty)
-                          Text(address,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                  fontFamily: _bodyFont,
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: _paper.withOpacity(0.6))),
-                        if (dates.trim().isNotEmpty) ...[
-                          const SizedBox(height: 2),
-                          Text(dates,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                  fontFamily: _bodyFont,
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: _paper.withOpacity(0.45))),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            // Completion + location moved OUT of the pinned bar into
+            // _inkHeroLower so they scroll away with the page.
           ],
         ),
+      ),
+    );
+  }
+
+  // Scrolls away with the page: completion stat + location / target date.
+  // The dark colour continues seamlessly below the pinned top bar.
+  Widget _inkHeroLower({
+    required FlutterFlowTheme theme,
+    required String address,
+    required String dates,
+    required double progress,
+  }) {
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(color: Color(0xFF2F3A4C)),
+      padding: const EdgeInsets.fromLTRB(20, 2, 20, 18),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('COMPLETION',
+                  style: TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1,
+                      color: _paper.withOpacity(0.55))),
+              const SizedBox(height: 4),
+              Text('${(progress * 100).round()}%',
+                  style: const TextStyle(
+                      fontFamily: _displayFont,
+                      fontSize: 34,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -1,
+                      color: _paper,
+                      height: 1.0)),
+            ],
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (address.trim().isNotEmpty)
+                    Text(address,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: _paper.withOpacity(0.6))),
+                  if (dates.trim().isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(dates,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: _paper.withOpacity(0.45))),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -3319,34 +3336,47 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                 child: SingleChildScrollView(
                   controller: _scrollController,
                   physics: const BouncingScrollPhysics(),
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                        _hPad, 18, _hPad, _vPad + bottomInset),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // -- Redesigned body (matches DetailTask / DetailSnag) --
-                        _rPills(theme),
-                        const SizedBox(height: 18),
-                        _rCompletion(theme),
-                        if (readOnly) ...[
-                          const SizedBox(height: 18),
-                          _rOwnerCard(theme, ownerProfileRef),
-                        ],
-                        const SizedBox(height: 20),
-                        _rSectionLabel('PROJECT MANAGEMENT'),
-                        const SizedBox(height: 10),
-                        _rModules(readOnly),
-                        const SizedBox(height: 24),
-                        _rDocuments(readOnly),
-                        const SizedBox(height: 24),
-                        _rTeam(readOnly),
-                        if (!readOnly) ...[
-                          const SizedBox(height: 24),
-                          _rAdmin(),
-                        ],
-                      ],
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Hero lower block scrolls away with the page; only the
+                      // back / title / Edit bar above stays pinned.
+                      _inkHeroLower(
+                        theme: theme,
+                        address: projectAddress,
+                        dates: projectDates,
+                        progress: progressVal,
+                      ),
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(
+                            _hPad, 18, _hPad, _vPad + bottomInset),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // -- Redesigned body (matches DetailTask / DetailSnag) --
+                            _rPills(theme),
+                            const SizedBox(height: 18),
+                            _rCompletion(theme),
+                            if (readOnly) ...[
+                              const SizedBox(height: 18),
+                              _rOwnerCard(theme, ownerProfileRef),
+                            ],
+                            const SizedBox(height: 20),
+                            _rSectionLabel('PROJECT MANAGEMENT'),
+                            const SizedBox(height: 10),
+                            _rModules(readOnly),
+                            const SizedBox(height: 24),
+                            _rDocuments(readOnly),
+                            const SizedBox(height: 24),
+                            _rTeam(readOnly),
+                            if (!readOnly) ...[
+                              const SizedBox(height: 24),
+                              _rAdmin(),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

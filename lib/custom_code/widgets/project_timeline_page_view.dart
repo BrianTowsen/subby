@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:intl/intl.dart';
@@ -1456,6 +1458,8 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Hero lower block scrolls away; only the top bar pins.
+                _heroLower(totalCeil),
                 if (_showBanner && !_readOnly) _banner(),
                 if (hasRows) _tapHint(),
                 Padding(
@@ -1578,7 +1582,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
     return Container(
       width: double.infinity,
       color: _header,
-      padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
+      padding: EdgeInsets.fromLTRB(20, top + 14, 20, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1617,7 +1621,21 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
               _isOwner ? _visBtn() : _viewOnlyPill(),
             ],
           ),
-          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  // Scrolls away with the page — the dark colour continues seamlessly below
+  // the pinned _hero bar. Holds the duration stat, completion bar and zoom.
+  Widget _heroLower(int totalCeil) {
+    return Container(
+      width: double.infinity,
+      color: _header,
+      padding: const EdgeInsets.fromLTRB(20, 2, 20, 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [

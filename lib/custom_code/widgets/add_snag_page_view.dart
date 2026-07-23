@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'media_source_helper.dart'; // Camera / gallery source helper
 
 import 'index.dart'; // Imports other custom widgets
@@ -1098,7 +1100,7 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
         width: double.infinity,
         color: const Color(0xFF2F3A4C),
         padding: EdgeInsets.fromLTRB(
-            20, 14 + MediaQuery.of(context).padding.top, 20, 18),
+            20, 14 + MediaQuery.of(context).padding.top, 20, 14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1127,7 +1129,18 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                 const SizedBox(width: 38, height: 38),
               ],
             ),
-            const SizedBox(height: 16),
+          ],
+        ),
+      );
+
+  // Scrolls away with the page — dark colour continues below the pinned bar.
+  Widget _addHeroLower(String title, String subtitle) => Container(
+        width: double.infinity,
+        color: const Color(0xFF2F3A4C),
+        padding: const EdgeInsets.fromLTRB(20, 2, 20, 18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Text(subtitle.toUpperCase(),
                 style: TextStyle(
                     fontFamily: _bodyFont,
@@ -1274,57 +1287,72 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
                 children: [
                   SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(_hPad, 16, _hPad, 96),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _mediaSection(),
-                          const SizedBox(height: 6),
-                          Text('DETAILS', style: _uLabel()),
-                          const SizedBox(height: 10),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: _paper,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: _hairline),
-                            ),
-                            clipBehavior: Clip.antiAlias,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: EdgeInsets.zero,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Hero lower block scrolls away; only the bar pins.
+                        _addHeroLower(headerTitle, headerSubtitle),
+                        Padding(
+                          padding:
+                              const EdgeInsets.fromLTRB(_hPad, 16, _hPad, 96),
+                          child: Form(
+                            key: _formKey,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _uText(
-                                  label: 'Title',
-                                  controller: _titleCtrl,
-                                  icon: Icons.title_rounded,
-                                  hint: 'e.g. Cracked tile in ensuite',
-                                  validator: (v) => (v ?? '').trim().isEmpty
-                                      ? 'Give the snag a title'
-                                      : null,
+                                _mediaSection(),
+                                const SizedBox(height: 6),
+                                Text('DETAILS', style: _uLabel()),
+                                const SizedBox(height: 10),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: _paper,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: _hairline),
+                                  ),
+                                  clipBehavior: Clip.antiAlias,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      _uText(
+                                        label: 'Title',
+                                        controller: _titleCtrl,
+                                        icon: Icons.title_rounded,
+                                        hint: 'e.g. Cracked tile in ensuite',
+                                        validator: (v) =>
+                                            (v ?? '').trim().isEmpty
+                                                ? 'Give the snag a title'
+                                                : null,
+                                      ),
+                                      _uText(
+                                        label: 'Description',
+                                        controller: _descCtrl,
+                                        icon: Icons.notes_rounded,
+                                        hint:
+                                            'What is wrong, and where exactly…',
+                                        maxLines: 3,
+                                      ),
+                                      _uText(
+                                        label: 'Area / Room',
+                                        controller: _areaCtrl,
+                                        icon: Icons.place_outlined,
+                                        hint: 'e.g. Master Ensuite',
+                                      ),
+                                      _severityField(),
+                                      _dueDateField(),
+                                      _assignField(),
+                                    ],
+                                  ),
                                 ),
-                                _uText(
-                                  label: 'Description',
-                                  controller: _descCtrl,
-                                  icon: Icons.notes_rounded,
-                                  hint: 'What is wrong, and where exactly…',
-                                  maxLines: 3,
-                                ),
-                                _uText(
-                                  label: 'Area / Room',
-                                  controller: _areaCtrl,
-                                  icon: Icons.place_outlined,
-                                  hint: 'e.g. Master Ensuite',
-                                ),
-                                _severityField(),
-                                _dueDateField(),
-                                _assignField(),
                               ],
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                   Positioned(
