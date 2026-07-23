@@ -13,6 +13,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // HapticFeedback (medium impact on tab tap)
 
 import '/custom_code/widgets/index.dart'; // (kept if FF expects it)
@@ -99,10 +101,17 @@ class _MainBottomNavState extends State<MainBottomNav> {
     final route = (_routeFor(index) ?? '').trim();
 
     // More tab: fall back to pushing the MorePageView directly when no named
-    // route is supplied (it's a custom widget, not a FF page route).
+    // route is supplied (it's a custom widget, not a FF page route). Push it
+    // with a cross-fade so it matches the tab-to-tab fade.
     if (index == 3 && route.isEmpty) {
       Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const MorePageView()),
+        PageRouteBuilder(
+          transitionDuration: const Duration(milliseconds: 320),
+          reverseTransitionDuration: const Duration(milliseconds: 320),
+          pageBuilder: (_, __, ___) => const MorePageView(),
+          transitionsBuilder: (_, animation, __, child) =>
+              FadeTransition(opacity: animation, child: child),
+        ),
       );
       return;
     }

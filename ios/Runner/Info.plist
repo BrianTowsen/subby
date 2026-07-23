@@ -55,9 +55,13 @@
 
 
 	<key>NSLocationWhenInUseUsageDescription</key>
-    <string>Allow location to see Subbies close to you.</string>
+    <string>Allow location to see search close to you.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
     <string>Subby uses your photo library to let you upload drawings, certificates, and other project documents.</string>
+	<key>NSCameraUsageDescription</key>
+    <string>Subby needs permission to use your camera.</string>
+	<key>NSMicrophoneUsageDescription</key>
+    <string>Subby needs permission to use your microphone.</string>
 
 
 
