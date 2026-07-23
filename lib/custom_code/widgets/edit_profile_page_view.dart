@@ -11,6 +11,10 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'media_source_helper.dart'; // Camera / gallery source helper
+
+import 'index.dart'; // Imports other custom widgets
+
 import '/custom_code/actions/index.dart';
 
 import 'index.dart'; // Imports other custom widgets
@@ -284,18 +288,38 @@ class _EditProfilePageViewState extends State<EditProfilePageView> {
     }
 
     try {
-      final picker = ImagePicker();
-      final XFile? picked = await picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 1024,
-        maxHeight: 1024,
-        imageQuality: 82,
+      // Camera or gallery — user picks the source.
+      final source = await showMediaSourceSheet(
+        context,
+        allowPhoto: true,
+        allowVideo: false,
+        title: 'Change photo',
       );
-      if (picked == null) return;
+      if (source == null) return;
+
+      Uint8List bytes;
+      if (source == MediaPickSource.gallery) {
+        final picker = ImagePicker();
+        final XFile? picked = await picker.pickImage(
+          source: ImageSource.gallery,
+          maxWidth: 1024,
+          maxHeight: 1024,
+          imageQuality: 82,
+        );
+        if (picked == null) return;
+        bytes = await picked.readAsBytes();
+      } else {
+        final shot = await captureWithCamera(
+          source,
+          imageQuality: 82,
+          maxWidth: 1024,
+          maxHeight: 1024,
+        );
+        if (shot == null) return;
+        bytes = shot.bytes;
+      }
 
       setState(() => _uploadingPhoto = true);
-
-      final bytes = await picked.readAsBytes();
       final ref =
           FirebaseStorage.instance.ref().child('users/${user.uid}/profile.jpg');
       await ref.putData(
