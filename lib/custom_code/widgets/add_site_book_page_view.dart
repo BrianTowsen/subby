@@ -13,6 +13,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'media_source_helper.dart'; // Camera / gallery source helper
 
 import 'index.dart'; // Imports other custom widgets
@@ -541,27 +543,27 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
   // Scrolls away with the page — dark colour continues below the pinned bar.
   Widget _addHeroLower(String title, String subtitle) => Container(
         width: double.infinity,
-        color: const Color(0xFF2F3A4C),
-        padding: const EdgeInsets.fromLTRB(_hPad, 2, _hPad, 18),
+        color: _paper,
+        padding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(subtitle,
-                style: TextStyle(
+                style: const TextStyle(
                     fontFamily: _bodyFont,
                     fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w800,
                     letterSpacing: 1,
-                    color: _paper.withOpacity(0.55))),
-            const SizedBox(height: 4),
+                    color: Color(0xFF93A3AC))),
+            const SizedBox(height: 6),
             Text(title,
                 style: const TextStyle(
                     fontFamily: _displayFont,
-                    fontSize: 34,
+                    fontSize: 32,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -1,
                     height: 1.0,
-                    color: _paper)),
+                    color: _ink)),
           ],
         ),
       );

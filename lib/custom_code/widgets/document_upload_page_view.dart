@@ -13,6 +13,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -1168,28 +1170,30 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
 
   // Scrolls away with the page — dark colour continues seamlessly below the
   // pinned _hero bar. Holds the big "Documents" title + subtitle.
+  // Title block now sits on WHITE, below the pinned ink masthead (matches
+  // the redesigned ProjectDetailPageView). The dark hero is just the top bar.
   Widget _heroLower() => Container(
         width: double.infinity,
-        color: const Color(0xFF2F3A4C),
-        padding: const EdgeInsets.fromLTRB(20, 2, 20, 18),
+        color: _paper,
+        padding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('Documents',
                 style: TextStyle(
                     fontFamily: _displayFont,
-                    fontSize: 34,
+                    fontSize: 32,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -1,
                     height: 1.0,
-                    color: _paper)),
+                    color: _ink)),
             const SizedBox(height: 8),
-            Text('Upload and manage project files.',
+            const Text('Upload and manage project files.',
                 style: TextStyle(
                     fontFamily: _bodyFont,
-                    fontSize: 12,
+                    fontSize: 12.5,
                     fontWeight: FontWeight.w600,
-                    color: _paper.withOpacity(0.6))),
+                    color: _inkMute)),
           ],
         ),
       );
@@ -1248,7 +1252,7 @@ class _DocumentUploadPageViewState extends State<DocumentUploadPageView>
                       _heroLower(),
                       Padding(
                         padding:
-                            const EdgeInsets.fromLTRB(_hPad, 12, _hPad, _vPad),
+                            const EdgeInsets.fromLTRB(_hPad, 18, _hPad, _vPad),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [

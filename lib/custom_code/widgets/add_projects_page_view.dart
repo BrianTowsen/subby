@@ -15,6 +15,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status bar icons over ink hero)
@@ -712,26 +714,26 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
   // pinned _hero bar. Holds the big "Add project" title + subtitle.
   Widget _heroLower() => Container(
         width: double.infinity,
-        color: const Color(0xFF2F3A4C),
-        padding: const EdgeInsets.fromLTRB(20, 2, 20, 18),
+        color: _paper,
+        padding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('Add project',
                 style: TextStyle(
                     fontFamily: _displayFont,
-                    fontSize: 34,
+                    fontSize: 32,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -1,
                     height: 1.0,
-                    color: _paper)),
+                    color: _ink)),
             const SizedBox(height: 8),
-            Text('Create a workspace for tasks, costs & snags.',
+            const Text('Create a workspace for tasks, costs & snags.',
                 style: TextStyle(
                     fontFamily: _bodyFont,
-                    fontSize: 12,
+                    fontSize: 12.5,
                     fontWeight: FontWeight.w600,
-                    color: _paper.withOpacity(0.6))),
+                    color: _inkMute)),
           ],
         ),
       );

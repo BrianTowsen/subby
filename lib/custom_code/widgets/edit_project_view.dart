@@ -15,6 +15,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/services.dart'; // SystemChrome / SystemUiOverlayStyle (dark status bar over white form)
@@ -1161,29 +1163,31 @@ class _EditProjectViewState extends State<EditProjectView>
 
   // Scrolls away with the page — the dark colour continues seamlessly below
   // the pinned _hero bar. Holds the eyebrow + big "Edit Project" title.
+  // Title block now sits on WHITE, below the pinned ink masthead (matches
+  // the redesigned ProjectDetailPageView). The dark hero is just the top bar.
   Widget _heroLower() => Container(
         width: double.infinity,
-        color: const Color(0xFF2F3A4C),
-        padding: const EdgeInsets.fromLTRB(20, 2, 20, 18),
+        color: _paper,
+        padding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('UPDATE DETAILS, DATES AND NOTES',
+            const Text('UPDATE DETAILS, DATES AND NOTES',
                 style: TextStyle(
                     fontFamily: _bodyFont,
                     fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w800,
                     letterSpacing: 1,
-                    color: _paper.withOpacity(0.55))),
-            const SizedBox(height: 4),
+                    color: Color(0xFF93A3AC))),
+            const SizedBox(height: 6),
             const Text('Edit Project',
                 style: TextStyle(
                     fontFamily: _displayFont,
-                    fontSize: 34,
+                    fontSize: 32,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -1,
                     height: 1.0,
-                    color: _paper)),
+                    color: _ink)),
           ],
         ),
       );
@@ -1321,7 +1325,7 @@ class _EditProjectViewState extends State<EditProjectView>
                       _heroLower(),
                       Padding(
                         padding:
-                            const EdgeInsets.fromLTRB(_hPad, 10, _hPad, 24),
+                            const EdgeInsets.fromLTRB(_hPad, 20, _hPad, 24),
                         child: Form(
                           key: _formKey,
                           child: Column(

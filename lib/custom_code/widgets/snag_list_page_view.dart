@@ -13,6 +13,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/custom_code/actions/index.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -740,10 +742,12 @@ class _SnagListPageViewState extends State<SnagListPageView>
   }
 
   // Scrolls away with the page — dark colour continues below the pinned bar.
+  // Stat block now sits on WHITE, in a bordered card below the pinned ink
+  // masthead (matches the redesigned ProjectDetailPageView overview card).
   Widget _heroLower() => Container(
         width: double.infinity,
-        color: const Color(0xFF2F3A4C),
-        padding: const EdgeInsets.fromLTRB(20, 2, 20, 18),
+        color: _paper,
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 4),
         child: _heroStat(),
       );
 
@@ -844,54 +848,64 @@ class _SnagListPageViewState extends State<SnagListPageView>
             ),
           ));
 
-  Widget _heroStat() => _snagCounts((total, active, closed, critical) => Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('OPEN SNAGS',
-                  style: TextStyle(
-                      fontFamily: _bodyFont,
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 1,
-                      color: _paper.withOpacity(0.55))),
-              const SizedBox(height: 4),
-              Text('$active ${active == 1 ? 'snag' : 'snags'}',
-                  style: const TextStyle(
-                      fontFamily: _displayFont,
-                      fontSize: 34,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -1,
-                      color: _paper,
-                      height: 1.0)),
-            ],
-          ),
-          const SizedBox(width: 14),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _heroStat() =>
+      _snagCounts((total, active, closed, critical) => Container(
+            decoration: BoxDecoration(
+                color: _paper,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFEAEEF0))),
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text('$closed closed',
-                    style: TextStyle(
-                        fontFamily: _bodyFont,
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        color: _paper.withOpacity(0.6))),
-                const SizedBox(height: 2),
-                Text('$critical critical',
-                    style: TextStyle(
-                        fontFamily: _bodyFont,
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        color: _paper.withOpacity(0.45))),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('OPEN SNAGS',
+                        style: TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1,
+                            color: _inkMute)),
+                    const SizedBox(height: 6),
+                    Text('$active ${active == 1 ? 'snag' : 'snags'}',
+                        style: const TextStyle(
+                            fontFamily: _displayFont,
+                            fontSize: 36,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1.4,
+                            color: _ink,
+                            height: 0.95)),
+                  ],
+                ),
+                const Spacer(),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text('$closed closed',
+                          style: const TextStyle(
+                              fontFamily: _bodyFont,
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              color: _inkMute)),
+                      const SizedBox(height: 2),
+                      Text('$critical critical',
+                          style: TextStyle(
+                              fontFamily: _bodyFont,
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              color: critical > 0
+                                  ? const Color(0xFFAC0C0C)
+                                  : const Color(0xFF93A3AC))),
+                    ],
+                  ),
+                ),
               ],
             ),
-          ),
-        ],
-      ));
+          ));
 
   // Bright-white elevated footer (matches the Timeline inspector shell).
   Widget _footerBar() => Container(

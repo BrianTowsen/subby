@@ -13,6 +13,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -1397,27 +1399,27 @@ class _ProjectCostViewState extends State<ProjectCostView> {
       style: TextStyle(
         fontFamily: _body,
         fontSize: 10.5,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w800,
         letterSpacing: 1,
-        color: _paper.withOpacity(0.55),
+        color: _inkMute,
       ));
 
   Widget _bigNumber(String t) => Text(t,
       style: const TextStyle(
         fontFamily: _display,
-        fontSize: 34,
+        fontSize: 36,
         fontWeight: FontWeight.w900,
-        letterSpacing: -1,
-        color: _paper,
-        height: 1.0,
+        letterSpacing: -1.4,
+        color: _ink,
+        height: 0.95,
       ));
 
   Widget _heroSub(String t) => Text(t,
-      style: TextStyle(
+      style: const TextStyle(
         fontFamily: _body,
         fontSize: 11.5,
-        fontWeight: FontWeight.w600,
-        color: _paper.withOpacity(0.6),
+        fontWeight: FontWeight.w700,
+        color: _inkMute,
       ));
 
   // ─── TAB BAR ───────────────────────────────────────────────────────
@@ -1513,8 +1515,8 @@ class _ProjectCostViewState extends State<ProjectCostView> {
               // Hero lower block scrolls away; only the top bar pins.
               Container(
                 width: double.infinity,
-                color: _header,
-                padding: const EdgeInsets.fromLTRB(20, 2, 20, 18),
+                color: _paper,
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 6),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -2442,8 +2444,8 @@ class _ProjectCostViewState extends State<ProjectCostView> {
               // Hero lower block scrolls away; only the top bar pins.
               Container(
                 width: double.infinity,
-                color: _header,
-                padding: const EdgeInsets.fromLTRB(20, 2, 20, 18),
+                color: _paper,
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 6),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -2763,8 +2765,8 @@ class _ProjectCostViewState extends State<ProjectCostView> {
               // Hero lower block scrolls away; only the top bar pins.
               Container(
                 width: double.infinity,
-                color: _header,
-                padding: const EdgeInsets.fromLTRB(20, 2, 20, 18),
+                color: _paper,
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 6),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

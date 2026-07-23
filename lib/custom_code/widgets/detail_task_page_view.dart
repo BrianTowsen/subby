@@ -21,6 +21,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -748,16 +750,16 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
     if (dueHint.isNotEmpty) parts.add(dueHint);
     // Uppercase eyebrow above the big title — matches the List / Add heroes.
     final eyebrow = parts.join('  ·  ').toUpperCase();
-    return Container(
-      width: double.infinity,
-      color: const Color(0xFF2F3A4C),
-      padding: EdgeInsets.fromLTRB(
-          20, 14 + MediaQuery.of(context).padding.top, 20, 18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Centered project name + TASK DETAIL eyebrow top row.
-          Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Ink masthead — top bar only (matches redesigned ProjectDetailPageView).
+        Container(
+          width: double.infinity,
+          color: const Color(0xFF2F3A4C),
+          padding: EdgeInsets.fromLTRB(
+              20, 14 + MediaQuery.of(context).padding.top, 20, 14),
+          child: Row(
             children: [
               _heroCircle(Icons.arrow_back_ios_new_rounded, _handleBack),
               Expanded(
@@ -785,28 +787,38 @@ class _DetailTaskPageViewState extends State<DetailTaskPageView> {
                 const SizedBox(width: 38, height: 38),
             ],
           ),
-          const SizedBox(height: 16),
-          if (eyebrow.isNotEmpty)
-            Text(eyebrow,
-                style: TextStyle(
-                    fontFamily: _bodyFont,
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1,
-                    color: _paper.withOpacity(0.55))),
-          if (eyebrow.isNotEmpty) const SizedBox(height: 4),
-          Text(title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                  fontFamily: _displayFont,
-                  fontSize: 34,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -1,
-                  height: 1.0,
-                  color: _paper)),
-        ],
-      ),
+        ),
+        // Title block on white.
+        Container(
+          width: double.infinity,
+          color: _paper,
+          padding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (eyebrow.isNotEmpty)
+                Text(eyebrow,
+                    style: const TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1,
+                        color: Color(0xFF93A3AC))),
+              if (eyebrow.isNotEmpty) const SizedBox(height: 6),
+              Text(title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontFamily: _displayFont,
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -1,
+                      height: 1.02,
+                      color: _ink)),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

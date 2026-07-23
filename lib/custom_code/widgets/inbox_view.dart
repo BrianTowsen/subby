@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/custom_code/actions/index.dart';
 import 'index.dart'; // Imports other custom widgets
 
@@ -76,29 +78,35 @@ class _InboxViewState extends State<InboxView> {
         children: [
           Container(
             width: double.infinity,
-            color: _ink,
-            padding: EdgeInsets.fromLTRB(20, top + 14, 20, 20),
+            color: const Color(0xFF2F3A4C),
+            padding: EdgeInsets.fromLTRB(20, top + 14, 20, 14),
             child: Row(children: [
               _circleBtn(),
-              Expanded(
-                  child: Column(children: const [
-                Text('Quote requests',
-                    style: TextStyle(
-                        fontFamily: _body,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: _paper)),
-                SizedBox(height: 2),
-                Text('YOUR INBOX',
+              const Expanded(
+                  child: Center(
+                child: Text('YOUR INBOX',
                     style: TextStyle(
                         fontFamily: _body,
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.7,
                         color: Color(0x80FFFFFF))),
-              ])),
+              )),
               const SizedBox(width: 38),
             ]),
+          ),
+          Container(
+            width: double.infinity,
+            color: _paper,
+            padding: const EdgeInsets.fromLTRB(24, 22, 24, 4),
+            child: const Text('Quote requests',
+                style: TextStyle(
+                    fontFamily: 'Inter Tight',
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -1,
+                    height: 1.0,
+                    color: _ink)),
           ),
           Expanded(
             child: me == null
