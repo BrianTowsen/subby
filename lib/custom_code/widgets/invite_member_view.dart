@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 /// InviteMemberView — invite people onto a project WITHOUT them registering
 /// a listing on the Network/Directory (office staff, the homeowner/client).
 ///
@@ -19,8 +21,10 @@ import 'index.dart'; // Imports other custom widgets
 /// (More → Join a project, or JoinProjectView). Membership itself is only
 /// ever created server-side by claimProjectInvite.
 ///
-/// Use [showInviteMemberSheet] to present this as a bottom sheet from the
-/// Project Team section.
+/// Use [showInviteMemberSheet] to present this as a centred full-width
+/// dialog from the Project Team section. The dialog styling mirrors the
+/// Snag List close-out module: 55%-black scrim, centred white card, full
+/// width, 10-radius corners, drop shadow.
 
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -104,8 +108,10 @@ class _InviteMemberViewState extends State<InviteMemberView> {
 /// Update this once a web landing / app link for invites exists.
 const String kSubbyInviteHint = 'Open Subby → More → Join a project';
 
-/// Opens the invite flow as a bottom sheet (used by the ADMIN tiles'
-/// manage sheet). Pass [fixedRole] ('office' | 'client' | 'provider') to
+/// Opens the invite flow as a centred, full-width dialog (used by the ADMIN
+/// tiles' manage sheet). Styled like the Snag List close-out module — card
+/// in the middle of the screen, full width, corner radius, dark scrim.
+/// Pass [fixedRole] ('office' | 'client' | 'provider') to
 /// lock the role and hide the picker; [showPendingList] hides the pending
 /// invites list when the caller (AdminMembersView) already shows it.
 Future<void> showInviteMemberSheet(
@@ -115,12 +121,13 @@ Future<void> showInviteMemberSheet(
   String? fixedRole,
   bool showPendingList = true,
 }) {
-  return showModalBottomSheet<void>(
+  return showDialog<void>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (ctx) => Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+    barrierColor: Colors.black.withOpacity(0.55),
+    builder: (ctx) => Dialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      insetPadding: EdgeInsets.zero,
       child: _InviteMemberSheet(
         projectRef: projectRef,
         projectName: projectName ?? 'Project',
@@ -289,34 +296,67 @@ class _InviteMemberSheetState extends State<_InviteMemberSheet> {
 
   // ── UI pieces ──────────────────────────────────────────────────────
 
+  // Centred-dialog card — mirrors the Snag List close-out module (white
+  // card, full width, 10-radius corners, deep drop shadow). Embedded mode
+  // (page widget) keeps a flat, square container.
   Widget _sheetShell({required Widget child}) {
     final content = Container(
-      decoration: BoxDecoration(
-        color: _paper,
-        borderRadius: widget.embedded
-            ? BorderRadius.zero
-            : const BorderRadius.vertical(top: Radius.circular(18)),
-      ),
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+      width: double.infinity,
+      decoration: widget.embedded
+          ? const BoxDecoration(color: _paper)
+          : BoxDecoration(
+              color: _paper,
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.30),
+                  blurRadius: 54,
+                  offset: const Offset(0, 22),
+                ),
+              ],
+            ),
+      padding: widget.embedded
+          ? const EdgeInsets.fromLTRB(20, 14, 20, 24)
+          : const EdgeInsets.all(24),
       child: child,
     );
-    if (widget.embedded) return SingleChildScrollView(child: content);
-    return SafeArea(top: false, child: SingleChildScrollView(child: content));
+    return SingleChildScrollView(child: content);
   }
 
-  Widget _grabber() => widget.embedded
-      ? const SizedBox.shrink()
-      : Center(
+  // Outlined cancel/close — same treatment as the Snag List close-out
+  // module's cancel action. Hidden in embedded (page-widget) mode.
+  Widget _dialogDismissButton(String label) {
+    if (widget.embedded) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => Navigator.of(context).pop(),
+          borderRadius: BorderRadius.circular(10),
           child: Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.only(bottom: 14),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: _hairline,
-              borderRadius: BorderRadius.circular(2),
+              color: _paper,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFCBD8DD), width: 1.4),
+            ),
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontFamily: _bodyFont,
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                color: _ink,
+              ),
             ),
           ),
-        );
+        ),
+      ),
+    );
+  }
 
   Widget _label(String text) => Padding(
         padding: const EdgeInsets.only(bottom: 6),
@@ -489,7 +529,6 @@ class _InviteMemberSheetState extends State<_InviteMemberSheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        _grabber(),
         Text(_isProvider ? 'Invite a service provider' : 'Invite to project',
             style: const TextStyle(
               fontFamily: _displayFont,
@@ -639,6 +678,7 @@ class _InviteMemberSheetState extends State<_InviteMemberSheet> {
           ),
         ),
         _pendingInvites(),
+        _dialogDismissButton('Cancel'),
       ],
     );
   }
@@ -648,7 +688,6 @@ class _InviteMemberSheetState extends State<_InviteMemberSheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        _grabber(),
         Text('Invite ready',
             style: const TextStyle(
               fontFamily: _displayFont,
@@ -767,6 +806,7 @@ class _InviteMemberSheetState extends State<_InviteMemberSheet> {
                 )),
           ),
         ),
+        _dialogDismissButton('Close'),
       ],
     );
   }

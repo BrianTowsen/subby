@@ -11,8 +11,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,6 +18,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/rendering.dart'; // ScrollDirection (hide/show the bottom nav on scroll)
+import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the steel masthead)
 
 class HomePageView extends StatefulWidget {
   const HomePageView({
@@ -523,222 +522,228 @@ class _HomePageViewState extends State<HomePageView> {
     final subs = _subcategories[category] ?? const <String>[];
     final tabs = ['Professionals', 'Trades', 'Suppliers', 'Associations'];
 
-    return SizedBox(
-      width: width,
-      height: height,
-      child: Container(
-        color: _steel,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Steel masthead ──
-            Container(
-              width: double.infinity,
-              color: _steel,
-              // Top pad matches DashboardPageView (topInset + 14) so the logo +
-              // menu button sit at the identical vertical position on both.
-              padding: EdgeInsets.fromLTRB(_hPad, topInset + 14, _hPad, 30),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Logo + menu button — matches DashboardPageView masthead.
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _logo(),
-                      _menuButton(),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  const Text('Subby Network',
-                      style: TextStyle(
-                        fontFamily: _displayFont,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -0.6,
-                        height: 1.08,
-                        color: _paper,
-                      )),
-                  const SizedBox(height: 8),
-                  Text('Find trades, pros & suppliers near you.',
-                      style: TextStyle(
-                        fontFamily: _bodyFont,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: _paper.withOpacity(0.55),
-                      )),
-                ],
+    // White status-bar icons (clock / battery / signal) over the steel
+    // masthead — same treatment as MorePageView / ProfilePageView.
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: SizedBox(
+        width: width,
+        height: height,
+        child: Container(
+          color: _steel,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Steel masthead ──
+              Container(
+                width: double.infinity,
+                color: _steel,
+                // Top pad matches DashboardPageView (topInset + 14) so the logo +
+                // menu button sit at the identical vertical position on both.
+                padding: EdgeInsets.fromLTRB(_hPad, topInset + 14, _hPad, 30),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Logo + menu button — matches DashboardPageView masthead.
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _logo(),
+                        _menuButton(),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    const Text('Subby Network',
+                        style: TextStyle(
+                          fontFamily: _displayFont,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.6,
+                          height: 1.08,
+                          color: _paper,
+                        )),
+                    const SizedBox(height: 8),
+                    Text('Find trades, pros & suppliers near you.',
+                        style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: _paper.withOpacity(0.55),
+                        )),
+                  ],
+                ),
               ),
-            ),
-            // ── White content block (flush, no radius) ──
-            Expanded(
-              child: Stack(
-                children: [
-                  Container(
-                    color: _paper,
-                    child: NotificationListener<UserScrollNotification>(
-                      onNotification: (n) {
-                        if (n.direction == ScrollDirection.reverse) {
-                          _navVisible.value = false;
-                        } else if (n.direction == ScrollDirection.forward) {
-                          _navVisible.value = true;
-                        }
-                        return false;
-                      },
-                      child: SingleChildScrollView(
-                        physics: const BouncingScrollPhysics(),
-                        padding: EdgeInsets.fromLTRB(_hPad, 22, _hPad,
-                            24 + 72 + MediaQuery.of(context).padding.bottom),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _uLabel('LOCATION'),
-                            const SizedBox(height: 10),
-                            _card(Column(children: [
-                              _selectRow(
-                                icon: Icons.location_on_outlined,
-                                label: 'Province',
-                                value: _selectedProvince,
-                                onTap: _selectProvince,
-                                divider: true,
-                              ),
-                              _selectRow(
-                                icon: Icons.place_outlined,
-                                label: 'Region',
-                                value: _selectedRegion,
-                                onTap: _selectRegion,
-                              ),
-                            ])),
-                            const SizedBox(height: 14),
-                            _card(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 13),
-                              Row(children: [
-                                const Icon(Icons.search,
-                                    size: 20, color: _slate),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: TextField(
-                                    controller: _searchController,
-                                    focusNode: _searchFocusNode,
-                                    cursorColor: _ink,
-                                    textInputAction: TextInputAction.search,
-                                    onSubmitted: (_) =>
-                                        _goToResultsFromSearch(),
-                                    style: const TextStyle(
-                                        fontFamily: _bodyFont,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w600,
-                                        color: _ink),
-                                    decoration: const InputDecoration(
-                                      isDense: true,
-                                      border: InputBorder.none,
-                                      contentPadding: EdgeInsets.zero,
-                                      hintText: 'Trade, contractor or supplier',
-                                      hintStyle: TextStyle(
+              // ── White content block (flush, no radius) ──
+              Expanded(
+                child: Stack(
+                  children: [
+                    Container(
+                      color: _paper,
+                      child: NotificationListener<UserScrollNotification>(
+                        onNotification: (n) {
+                          if (n.direction == ScrollDirection.reverse) {
+                            _navVisible.value = false;
+                          } else if (n.direction == ScrollDirection.forward) {
+                            _navVisible.value = true;
+                          }
+                          return false;
+                        },
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          padding: EdgeInsets.fromLTRB(_hPad, 22, _hPad,
+                              24 + 72 + MediaQuery.of(context).padding.bottom),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _uLabel('LOCATION'),
+                              const SizedBox(height: 10),
+                              _card(Column(children: [
+                                _selectRow(
+                                  icon: Icons.location_on_outlined,
+                                  label: 'Province',
+                                  value: _selectedProvince,
+                                  onTap: _selectProvince,
+                                  divider: true,
+                                ),
+                                _selectRow(
+                                  icon: Icons.place_outlined,
+                                  label: 'Region',
+                                  value: _selectedRegion,
+                                  onTap: _selectRegion,
+                                ),
+                              ])),
+                              const SizedBox(height: 14),
+                              _card(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 13),
+                                Row(children: [
+                                  const Icon(Icons.search,
+                                      size: 20, color: _slate),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _searchController,
+                                      focusNode: _searchFocusNode,
+                                      cursorColor: _ink,
+                                      textInputAction: TextInputAction.search,
+                                      onSubmitted: (_) =>
+                                          _goToResultsFromSearch(),
+                                      style: const TextStyle(
                                           fontFamily: _bodyFont,
                                           fontSize: 15,
                                           fontWeight: FontWeight.w600,
-                                          color: _faint),
+                                          color: _ink),
+                                      decoration: const InputDecoration(
+                                        isDense: true,
+                                        border: InputBorder.none,
+                                        contentPadding: EdgeInsets.zero,
+                                        hintText:
+                                            'Trade, contractor or supplier',
+                                        hintStyle: TextStyle(
+                                            fontFamily: _bodyFont,
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
+                                            color: _faint),
+                                      ),
                                     ),
                                   ),
-                                ),
-                                InkWell(
-                                  onTap: () => _openLocationSelect(
-                                      searchText: _searchController.text),
-                                  child: const Icon(Icons.tune_rounded,
-                                      size: 20, color: _inkMute),
-                                ),
-                              ]),
-                            ),
-                            const SizedBox(height: 22),
-                            // ── Category pills ──
-                            SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Row(
-                                children: List.generate(tabs.length, (index) {
-                                  final selected =
-                                      _selectedMainTabIndex == index;
-                                  return Padding(
-                                    padding: EdgeInsets.only(
-                                        right:
-                                            index == tabs.length - 1 ? 0 : 8),
-                                    child: GestureDetector(
-                                      onTap: () async {
-                                        if (_selectedMainTabIndex == index)
-                                          return;
-                                        setState(() =>
-                                            _selectedMainTabIndex = index);
-                                        await _persistCategory();
-                                      },
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 16, vertical: 9),
-                                        decoration: BoxDecoration(
-                                          color: selected ? _lime : _surface,
-                                          borderRadius:
-                                              BorderRadius.circular(999),
-                                        ),
-                                        child: Text(
-                                          tabs[index],
-                                          style: TextStyle(
-                                            fontFamily: _bodyFont,
-                                            fontSize: 13,
-                                            fontWeight: selected
-                                                ? FontWeight.w800
-                                                : FontWeight.w700,
-                                            color: selected ? _ink : _inkMute,
+                                  InkWell(
+                                    onTap: () => _openLocationSelect(
+                                        searchText: _searchController.text),
+                                    child: const Icon(Icons.tune_rounded,
+                                        size: 20, color: _inkMute),
+                                  ),
+                                ]),
+                              ),
+                              const SizedBox(height: 22),
+                              // ── Category pills ──
+                              SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  children: List.generate(tabs.length, (index) {
+                                    final selected =
+                                        _selectedMainTabIndex == index;
+                                    return Padding(
+                                      padding: EdgeInsets.only(
+                                          right:
+                                              index == tabs.length - 1 ? 0 : 8),
+                                      child: GestureDetector(
+                                        onTap: () async {
+                                          if (_selectedMainTabIndex == index)
+                                            return;
+                                          setState(() =>
+                                              _selectedMainTabIndex = index);
+                                          await _persistCategory();
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 16, vertical: 9),
+                                          decoration: BoxDecoration(
+                                            color: selected ? _lime : _surface,
+                                            borderRadius:
+                                                BorderRadius.circular(999),
+                                          ),
+                                          child: Text(
+                                            tabs[index],
+                                            style: TextStyle(
+                                              fontFamily: _bodyFont,
+                                              fontSize: 13,
+                                              fontWeight: selected
+                                                  ? FontWeight.w800
+                                                  : FontWeight.w700,
+                                              color: selected ? _ink : _inkMute,
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  );
-                                }),
+                                    );
+                                  }),
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 22),
-                            _uLabel(
-                                'BROWSE ${category.toUpperCase()} · ${subs.length}'),
-                            const SizedBox(height: 10),
-                            _card(
-                              padding: EdgeInsets.zero,
-                              Column(
-                                children: [
-                                  for (int i = 0; i < subs.length; i++)
-                                    _subRow(subs[i], category,
-                                        divider: i != subs.length - 1),
-                                ],
+                              const SizedBox(height: 22),
+                              _uLabel(
+                                  'BROWSE ${category.toUpperCase()} · ${subs.length}'),
+                              const SizedBox(height: 10),
+                              _card(
+                                padding: EdgeInsets.zero,
+                                Column(
+                                  children: [
+                                    for (int i = 0; i < subs.length; i++)
+                                      _subRow(subs[i], category,
+                                          divider: i != subs.length - 1),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Bottom nav — only when signed in. Slides with scroll dir.
-                  if (currentUserReference != null)
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      child: ValueListenableBuilder<bool>(
-                        valueListenable: _navVisible,
-                        builder: (context, visible, _) => AnimatedSlide(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeOutCubic,
-                          offset: Offset(0, visible ? 0 : 1),
-                          child: MainBottomNav(
-                            currentIndex: 1,
-                            projectsRouteName: widget.dashboardRouteName,
-                            accountRouteName: 'profilePage',
+                            ],
                           ),
                         ),
                       ),
                     ),
-                ],
+                    // Bottom nav — only when signed in. Slides with scroll dir.
+                    if (currentUserReference != null)
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: ValueListenableBuilder<bool>(
+                          valueListenable: _navVisible,
+                          builder: (context, visible, _) => AnimatedSlide(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeOutCubic,
+                            offset: Offset(0, visible ? 0 : 1),
+                            child: MainBottomNav(
+                              currentIndex: 1,
+                              projectsRouteName: widget.dashboardRouteName,
+                              accountRouteName: 'profilePage',
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
