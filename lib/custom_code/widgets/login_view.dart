@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/custom_code/actions/index.dart';
 import 'index.dart'; // Imports other custom widgets
 
@@ -387,15 +389,15 @@ class _LoginViewState extends State<LoginView> {
         ),
       );
 
-  Widget _hero() => Container(
-        width: double.infinity,
-        color: _steel,
-        padding: EdgeInsets.fromLTRB(
-            _hPad, MediaQuery.of(context).padding.top + 8, _hPad, 22),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+  Widget _hero() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            color: _steel,
+            padding: EdgeInsets.fromLTRB(
+                _hPad, MediaQuery.of(context).padding.top + 8, _hPad, 14),
+            child: Row(
               children: [
                 _heroCircle(
                     Icons.arrow_back_ios_new_rounded, () => context.safePop()),
@@ -413,24 +415,33 @@ class _LoginViewState extends State<LoginView> {
                 const SizedBox(width: 38, height: 38),
               ],
             ),
-            const SizedBox(height: 16),
-            const Text('Log in',
-                style: TextStyle(
-                    fontFamily: _displayFont,
-                    fontSize: 32,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -1,
-                    height: 1.0,
-                    color: _paper)),
-            const SizedBox(height: 8),
-            Text('Welcome back — access your Subby account.',
-                style: TextStyle(
-                    fontFamily: _bodyFont,
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
-                    color: _paper.withOpacity(0.6))),
-          ],
-        ),
+          ),
+          Container(
+            width: double.infinity,
+            color: _paper,
+            padding: const EdgeInsets.fromLTRB(_hPad, 22, _hPad, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text('Log in',
+                    style: TextStyle(
+                        fontFamily: _displayFont,
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -1,
+                        height: 1.0,
+                        color: _ink)),
+                SizedBox(height: 8),
+                Text('Welcome back — access your Subby account.',
+                    style: TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: _inkMute)),
+              ],
+            ),
+          ),
+        ],
       );
 
   // ---------------------------

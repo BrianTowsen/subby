@@ -19,6 +19,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'join_project_view.dart' show showJoinProjectSheet;
 
 import '/custom_code/actions/index.dart';
@@ -156,8 +158,8 @@ class _MorePageViewState extends State<MorePageView> {
     final topInset = MediaQuery.of(context).padding.top;
     return Container(
       width: double.infinity,
-      color: _steel,
-      padding: EdgeInsets.fromLTRB(_hPad, topInset + 14, _hPad, 18),
+      color: _paper,
+      padding: EdgeInsets.fromLTRB(_hPad, topInset + 18, _hPad, 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -168,14 +170,14 @@ class _MorePageViewState extends State<MorePageView> {
                   fontWeight: FontWeight.w900,
                   letterSpacing: -1,
                   height: 1.0,
-                  color: _paper)),
+                  color: _ink)),
           const SizedBox(height: 8),
-          Text('Jump anywhere, or read the legal bits.',
+          const Text('Jump anywhere, or read the legal bits.',
               style: TextStyle(
                   fontFamily: _bodyFont,
                   fontSize: 12.5,
                   fontWeight: FontWeight.w600,
-                  color: _paper.withOpacity(0.6))),
+                  color: _inkMute)),
         ],
       ),
     );

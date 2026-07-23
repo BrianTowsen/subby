@@ -13,6 +13,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/custom_code/actions/index.dart';
 
 // ✅ provides currentUserReference, currentUserEmail, etc.
@@ -421,19 +423,19 @@ class _ProfilePageViewState extends State<ProfilePageView> {
   Widget _hero(String displayName, String email, String photoUrl) {
     return Container(
       width: double.infinity,
-      color: _steel,
+      color: _paper,
       padding: EdgeInsets.fromLTRB(
-          _hPad, MediaQuery.of(context).padding.top + 10, _hPad, 24),
+          _hPad, MediaQuery.of(context).padding.top + 14, _hPad, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('ACCOUNT',
+          const Text('ACCOUNT',
               style: TextStyle(
                   fontFamily: _bodyFont,
                   fontSize: 10,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w800,
                   letterSpacing: 0.8,
-                  color: _paper.withOpacity(0.55))),
+                  color: Color(0xFF93A3AC))),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -449,17 +451,17 @@ class _ProfilePageViewState extends State<ProfilePageView> {
                         style: const TextStyle(
                             fontFamily: _displayFont,
                             fontWeight: FontWeight.w900,
-                            fontSize: 21,
-                            color: _paper)),
+                            fontSize: 22,
+                            color: _ink)),
                     const SizedBox(height: 3),
                     Text(email.isEmpty ? '—' : email,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
+                        style: const TextStyle(
                             fontFamily: _bodyFont,
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: _paper.withOpacity(0.6))),
+                            color: _inkMute)),
                   ],
                 ),
               ),
@@ -472,11 +474,10 @@ class _ProfilePageViewState extends State<ProfilePageView> {
                     width: 38,
                     height: 38,
                     alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                        color: _paper.withOpacity(0.14),
-                        shape: BoxShape.circle),
-                    child: const Icon(Icons.edit_outlined,
-                        size: 18, color: _paper),
+                    decoration: const BoxDecoration(
+                        color: _surface, shape: BoxShape.circle),
+                    child:
+                        const Icon(Icons.edit_outlined, size: 18, color: _ink),
                   ),
                 ),
               ),
