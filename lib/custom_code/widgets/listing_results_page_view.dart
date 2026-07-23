@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -490,51 +492,55 @@ class _ListingResultsPageViewState extends State<ListingResultsPageView> {
             Container(
               width: double.infinity,
               color: _steel,
-              padding: EdgeInsets.fromLTRB(_hPad, topInset + 10, _hPad, 30),
+              padding: EdgeInsets.fromLTRB(_hPad, topInset + 10, _hPad, 14),
+              child: Row(children: [
+                _circleButton(
+                    Icons.arrow_back_ios_new_rounded, () => context.pop()),
+                Expanded(
+                  child: Center(
+                    child: Text('RESULTS',
+                        style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.7,
+                          color: _paper.withOpacity(0.5),
+                        )),
+                  ),
+                ),
+                const SizedBox(width: 38),
+              ]),
+            ),
+            Container(
+              width: double.infinity,
+              color: _paper,
+              padding: const EdgeInsets.fromLTRB(_hPad, 22, _hPad, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(children: [
-                    _circleButton(
-                        Icons.arrow_back_ios_new_rounded, () => context.pop()),
-                    Expanded(
-                      child: Center(
-                        child: Text('RESULTS',
-                            style: TextStyle(
-                              fontFamily: _bodyFont,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.7,
-                              color: _paper.withOpacity(0.5),
-                            )),
-                      ),
-                    ),
-                    const SizedBox(width: 38),
-                  ]),
-                  const SizedBox(height: 14),
                   Text(title,
                       style: const TextStyle(
                         fontFamily: _displayFont,
-                        fontSize: 28,
+                        fontSize: 30,
                         fontWeight: FontWeight.w900,
                         letterSpacing: -0.6,
                         height: 1.08,
-                        color: _paper,
+                        color: _ink,
                       )),
                   const SizedBox(height: 8),
                   Row(children: [
-                    Icon(Icons.location_on_outlined,
-                        size: 15, color: _paper.withOpacity(0.55)),
+                    const Icon(Icons.location_on_outlined,
+                        size: 15, color: _inkMute),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(subtitle,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontFamily: _bodyFont,
-                            fontSize: 12,
+                            fontSize: 12.5,
                             fontWeight: FontWeight.w600,
-                            color: _paper.withOpacity(0.55),
+                            color: _inkMute,
                           )),
                     ),
                   ]),

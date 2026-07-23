@@ -13,6 +13,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'dart:typed_data';
@@ -1242,14 +1244,14 @@ class _EditListingPageViewState extends State<EditListingPageView> {
     );
   }
 
-  Widget _masthead(double topInset) => Container(
-        width: double.infinity,
-        color: _steel,
-        padding: EdgeInsets.fromLTRB(_hPad, topInset + 10, _hPad, 30),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(children: [
+  Widget _masthead(double topInset) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            color: _steel,
+            padding: EdgeInsets.fromLTRB(_hPad, topInset + 10, _hPad, 14),
+            child: Row(children: [
               Material(
                 color: Colors.transparent,
                 child: InkWell(
@@ -1281,26 +1283,35 @@ class _EditListingPageViewState extends State<EditListingPageView> {
               ),
               const SizedBox(width: 38),
             ]),
-            const SizedBox(height: 16),
-            const Text('Edit listing',
-                style: TextStyle(
-                  fontFamily: _displayFont,
-                  fontSize: 34,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -1,
-                  height: 1.0,
-                  color: _paper,
-                )),
-            const SizedBox(height: 8),
-            Text('Update your network profile.',
-                style: TextStyle(
-                  fontFamily: _bodyFont,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: _paper.withOpacity(0.55),
-                )),
-          ],
-        ),
+          ),
+          Container(
+            width: double.infinity,
+            color: _paper,
+            padding: const EdgeInsets.fromLTRB(_hPad, 22, _hPad, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text('Edit listing',
+                    style: TextStyle(
+                      fontFamily: _displayFont,
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -1,
+                      height: 1.0,
+                      color: _ink,
+                    )),
+                SizedBox(height: 8),
+                Text('Update your network profile.',
+                    style: TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: _inkMute,
+                    )),
+              ],
+            ),
+          ),
+        ],
       );
 
   Widget _buildEmptyState(double topInset) {

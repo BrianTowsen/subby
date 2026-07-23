@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -446,14 +448,14 @@ class _SavedPageViewState extends State<SavedPageView> {
         ),
       );
 
-  Widget _masthead(double topInset) => Container(
-        width: double.infinity,
-        color: _steel,
-        padding: EdgeInsets.fromLTRB(_hPad, topInset + 10, _hPad, 30),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(children: [
+  Widget _masthead(double topInset) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            color: _steel,
+            padding: EdgeInsets.fromLTRB(_hPad, topInset + 10, _hPad, 14),
+            child: Row(children: [
               Material(
                 color: Colors.transparent,
                 child: InkWell(
@@ -488,25 +490,34 @@ class _SavedPageViewState extends State<SavedPageView> {
               ),
               const SizedBox(width: 38),
             ]),
-            const SizedBox(height: 14),
-            const Text('Saved',
-                style: TextStyle(
-                  fontFamily: _displayFont,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.6,
-                  height: 1.08,
-                  color: _paper,
-                )),
-            const SizedBox(height: 8),
-            Text('Your bookmarked listings.',
-                style: TextStyle(
-                  fontFamily: _bodyFont,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: _paper.withOpacity(0.55),
-                )),
-          ],
-        ),
+          ),
+          Container(
+            width: double.infinity,
+            color: _paper,
+            padding: const EdgeInsets.fromLTRB(_hPad, 22, _hPad, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text('Saved',
+                    style: TextStyle(
+                      fontFamily: _displayFont,
+                      fontSize: 30,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.6,
+                      height: 1.08,
+                      color: _ink,
+                    )),
+                SizedBox(height: 8),
+                Text('Your bookmarked listings.',
+                    style: TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: _inkMute,
+                    )),
+              ],
+            ),
+          ),
+        ],
       );
 }
