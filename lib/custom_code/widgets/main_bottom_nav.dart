@@ -11,10 +11,6 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
-import 'index.dart'; // Imports other custom widgets
-
-import 'index.dart'; // Imports other custom widgets
-
 import 'package:flutter/services.dart'; // HapticFeedback (medium impact on tab tap)
 
 import '/custom_code/widgets/index.dart'; // (kept if FF expects it)
@@ -118,8 +114,21 @@ class _MainBottomNavState extends State<MainBottomNav> {
 
     if (route.isEmpty) return;
 
+    // Grab the router BEFORE popping — this bar may live inside a pushed
+    // slide-over (MorePageView), whose context is defunct once popped.
+    final router = GoRouter.of(context);
+
+    // If this bar sits inside a pushed pageless overlay (the MorePageView
+    // slide-over), pop it first. goNamed alone leaves the overlay covering
+    // the destination page, and is a silent no-op when the destination is
+    // already the page underneath — which made the Account tab (and the
+    // others) appear dead on the More page. Page-based routes have a Page
+    // in their settings; pageless Navigator.push routes don't, so this is
+    // a no-op on normal pages.
+    Navigator.of(context).popUntil((r) => r.settings is Page);
+
     // Fade between tabs — no slide. Slowed to 320ms so the cross-fade reads.
-    context.goNamed(
+    router.goNamed(
       route,
       extra: <String, dynamic>{
         kTransitionInfoKey: const TransitionInfo(

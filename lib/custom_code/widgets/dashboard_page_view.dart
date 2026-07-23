@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
 import 'package:flutter/rendering.dart'; // ScrollDirection (hide/show the bottom nav on scroll)
 
@@ -195,6 +197,10 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
   // Spacing rhythm
   static const double _titleToDesc = 8;
+
+  // Inline invite-code entry — the code field and the Join button share this
+  // exact height so they always match.
+  static const double _kInlineJoinH = 44;
 
   // Route fallbacks
   static const String _fallbackProfileRoute = 'profilePage';
@@ -542,16 +548,17 @@ class _DashboardPageViewState extends State<DashboardPageView> {
     }
   }
 
-  // Redeem an invite code — opens the SAME bottom sheet the More page uses
-  // (join_project_view.dart), so the claim flow lives in exactly one place.
+  // Redeem an invite code — opens the SAME centred join dialog the More page
+  // uses (join_project_view.dart), so the claim flow lives in exactly one
+  // place.
   void _goToJoinProject() => showJoinProjectSheet(context);
 
   // Inline code entry (signed-out + empty). Dismisses the keyboard and opens
-  // the join sheet, which validates and claims the code. (The sheet owns the
-  // claim flow; to skip it entirely, expose that logic and call it here.)
+  // the join dialog with the typed code pre-filled; the dialog validates and
+  // claims it. (The dialog owns the claim flow.)
   void _redeemInlineCode() {
     FocusScope.of(context).unfocus();
-    showJoinProjectSheet(context);
+    showJoinProjectSheet(context, initialCode: _inviteCtrl.text.trim());
   }
 
   // Open a single project — mirrors the contract used by MyProjectsHomePageView
@@ -3813,8 +3820,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
 
   // "Have an invite code?" card with an INLINE entry field. An admin, site
   // foreman or client who was sent a code (SUB-XXXXXX) can type it right here.
-  // Join / keyboard-go hands off to showJoinProjectSheet, which validates and
-  // claims the code (the sheet owns the claim flow).
+  // Join / keyboard-go hands off to showJoinProjectSheet (now a centred
+  // dialog) with the typed code pre-filled; the dialog validates and claims
+  // the code (it owns the claim flow).
   Widget _inviteCodeCard() {
     return Container(
       width: double.infinity,
@@ -3869,15 +3877,21 @@ class _DashboardPageViewState extends State<DashboardPageView> {
             ],
           ),
           const SizedBox(height: 12),
+          // Field + button share ONE fixed height (_kInlineJoinH) and the
+          // field centres its text vertically, so the two always render
+          // exactly the same height side by side.
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
                 child: SizedBox(
-                  height: 44,
+                  height: _kInlineJoinH,
                   child: TextField(
                     controller: _inviteCtrl,
                     textCapitalization: TextCapitalization.characters,
                     textInputAction: TextInputAction.go,
+                    maxLines: 1,
+                    textAlignVertical: TextAlignVertical.center,
                     onSubmitted: (_) => _redeemInlineCode(),
                     style: const TextStyle(
                       fontFamily: _bodyFont,
@@ -3899,7 +3913,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                         color: _faint,
                       ),
                       contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 12),
+                          horizontal: 14, vertical: 0),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                         borderSide: const BorderSide(
@@ -3919,8 +3933,9 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                 onTap: _redeemInlineCode,
                 borderRadius: BorderRadius.circular(10),
                 child: Container(
-                  height: 44,
+                  height: _kInlineJoinH,
                   padding: const EdgeInsets.symmetric(horizontal: 18),
+                  alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: _ink,
                     borderRadius: BorderRadius.circular(10),

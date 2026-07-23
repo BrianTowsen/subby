@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 /// JoinProjectView — redeem a project invite code (e.g. SUB-4K7KQ2).
 ///
 /// Counterpart of InviteMemberView: an invited person (office staff, the
@@ -19,8 +21,11 @@ import 'index.dart'; // Imports other custom widgets
 /// project_members doc server-side. On success we set the active project and
 /// open it.
 ///
-/// Use [showJoinProjectSheet] to present as a bottom sheet (e.g. from the
-/// More page), or embed JoinProjectView as a page widget.
+/// Use [showJoinProjectSheet] to present as a centred full-width dialog
+/// (e.g. from the More page or the Dashboard invite-code card), or embed
+/// JoinProjectView as a page widget. The dialog styling mirrors the Snag
+/// List close-out module: 55%-black scrim, centred white card, full width,
+/// 10-radius corners, drop shadow.
 
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -52,23 +57,29 @@ class _JoinProjectViewState extends State<JoinProjectView> {
   }
 }
 
-/// Opens the join flow as a bottom sheet (used by MorePageView).
-Future<void> showJoinProjectSheet(BuildContext context) {
-  return showModalBottomSheet<void>(
+/// Opens the join flow as a centred, full-width dialog (used by MorePageView
+/// and the Dashboard). Styled like the Snag List close-out module — card in
+/// the middle of the screen, full width, corner radius, dark scrim.
+/// [initialCode] pre-fills the code field (e.g. from the Dashboard's inline
+/// invite-code entry).
+Future<void> showJoinProjectSheet(BuildContext context, {String? initialCode}) {
+  return showDialog<void>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (ctx) => Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
-      child: const _JoinProjectSheet(),
+    barrierColor: Colors.black.withOpacity(0.55),
+    builder: (ctx) => Dialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      insetPadding: EdgeInsets.zero,
+      child: _JoinProjectSheet(initialCode: initialCode),
     ),
   );
 }
 
 class _JoinProjectSheet extends StatefulWidget {
-  const _JoinProjectSheet({this.embedded = false});
+  const _JoinProjectSheet({this.embedded = false, this.initialCode});
 
   final bool embedded;
+  final String? initialCode;
 
   @override
   State<_JoinProjectSheet> createState() => _JoinProjectSheetState();
@@ -102,6 +113,8 @@ class _JoinProjectSheetState extends State<_JoinProjectSheet> {
   @override
   void initState() {
     super.initState();
+    final passed = (widget.initialCode ?? '').trim();
+    if (passed.isNotEmpty) _codeCtl.text = passed.toUpperCase();
     _prefillSavedCode();
   }
 
@@ -222,30 +235,31 @@ class _JoinProjectSheetState extends State<_JoinProjectSheet> {
 
   @override
   Widget build(BuildContext context) {
+    // Centred-dialog card — mirrors the Snag List close-out module (white
+    // card, full width, 10-radius corners, deep drop shadow). Embedded mode
+    // (page widget) keeps a flat, square container.
     final content = Container(
-      decoration: BoxDecoration(
-        color: _paper,
-        borderRadius: widget.embedded
-            ? BorderRadius.zero
-            : const BorderRadius.vertical(top: Radius.circular(18)),
-      ),
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+      width: double.infinity,
+      decoration: widget.embedded
+          ? const BoxDecoration(color: _paper)
+          : BoxDecoration(
+              color: _paper,
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.30),
+                  blurRadius: 54,
+                  offset: const Offset(0, 22),
+                ),
+              ],
+            ),
+      padding: widget.embedded
+          ? const EdgeInsets.fromLTRB(20, 14, 20, 24)
+          : const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (!widget.embedded)
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 14),
-                decoration: BoxDecoration(
-                  color: _hairline,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
           const Text('Join a project',
               style: TextStyle(
                 fontFamily: _displayFont,
@@ -409,10 +423,41 @@ class _JoinProjectSheetState extends State<_JoinProjectSheet> {
                       )),
             ),
           ),
+          if (!widget.embedded) ...[
+            const SizedBox(height: 10),
+            // Outlined Cancel — same treatment as the Snag List close-out
+            // module's cancel action.
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => Navigator.of(context).pop(),
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: _paper,
+                    borderRadius: BorderRadius.circular(10),
+                    border:
+                        Border.all(color: const Color(0xFFCBD8DD), width: 1.4),
+                  ),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontFamily: _bodyFont,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: _ink,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
-    if (widget.embedded) return SingleChildScrollView(child: content);
-    return SafeArea(top: false, child: SingleChildScrollView(child: content));
+    return SingleChildScrollView(child: content);
   }
 }
