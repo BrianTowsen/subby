@@ -15,6 +15,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -372,88 +374,103 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
           _inkHeader(theme),
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(_hPad, 18, _hPad,
-                  _hPad + MediaQuery.of(context).padding.bottom),
+              padding: EdgeInsets.zero,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('PROJECT', style: _uLabel(theme)),
-                  const SizedBox(height: 10),
-                  if (_projectRef == null)
-                    _flatCard(
-                      padding: const EdgeInsets.all(14),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(Icons.folder_open_rounded,
-                              color: _teal, size: 22),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
+                  // Hero lower block scrolls away; only the top bar pins.
+                  _inkHeaderLower(theme),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(_hPad, 18, _hPad,
+                        _hPad + MediaQuery.of(context).padding.bottom),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('PROJECT', style: _uLabel(theme)),
+                        const SizedBox(height: 10),
+                        if (_projectRef == null)
+                          _flatCard(
+                            padding: const EdgeInsets.all(14),
+                            Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  'No project selected',
-                                  style: theme.titleMedium.override(
-                                    fontFamily: _displayFont,
-                                    color: _ink,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 15,
-                                    letterSpacing: -0.1,
+                                const Icon(Icons.folder_open_rounded,
+                                    color: _teal, size: 22),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'No project selected',
+                                        style: theme.titleMedium.override(
+                                          fontFamily: _displayFont,
+                                          color: _ink,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 15,
+                                          letterSpacing: -0.1,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Select a project in My Projects to request quotes.',
+                                        style: _metaStyle(theme),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Select a project in My Projects to request quotes.',
-                                  style: _metaStyle(theme),
                                 ),
                               ],
                             ),
+                          )
+                        else
+                          StreamBuilder<DocumentSnapshot<Object?>>(
+                            stream: _projectRef!.snapshots(),
+                            builder: (context, snap) {
+                              final raw = snap.data?.data();
+                              final data = raw is Map<String, dynamic>
+                                  ? raw
+                                  : <String, dynamic>{};
+
+                              final name = (data['name'] ??
+                                      data['projectName'] ??
+                                      data['title'] ??
+                                      'Project')
+                                  .toString();
+                              final status = (data['status'] ?? 'Active')
+                                  .toString()
+                                  .trim();
+                              final province =
+                                  (data['province'] ?? '').toString().trim();
+                              final city =
+                                  (data['city'] ?? '').toString().trim();
+                              final location = [city, province]
+                                  .where((x) => x.trim().isNotEmpty)
+                                  .join(', ');
+                              final updatedAt = data['updatedAt'];
+                              final updatedLabel = (updatedAt is Timestamp)
+                                  ? dateTimeFormat(
+                                      'relative', updatedAt.toDate())
+                                  : 'recently';
+
+                              return _projectTile(
+                                theme: theme,
+                                accent: quotesColour,
+                                name: name,
+                                location: location.isEmpty
+                                    ? 'South Africa'
+                                    : location,
+                                status: status,
+                                lastUpdated: updatedLabel,
+                                icon: Icons.request_quote_outlined,
+                                onTap: () {},
+                              );
+                            },
                           ),
-                        ],
-                      ),
-                    )
-                  else
-                    StreamBuilder<DocumentSnapshot<Object?>>(
-                      stream: _projectRef!.snapshots(),
-                      builder: (context, snap) {
-                        final raw = snap.data?.data();
-                        final data = raw is Map<String, dynamic>
-                            ? raw
-                            : <String, dynamic>{};
-
-                        final name = (data['name'] ??
-                                data['projectName'] ??
-                                data['title'] ??
-                                'Project')
-                            .toString();
-                        final status =
-                            (data['status'] ?? 'Active').toString().trim();
-                        final province =
-                            (data['province'] ?? '').toString().trim();
-                        final city = (data['city'] ?? '').toString().trim();
-                        final location = [city, province]
-                            .where((x) => x.trim().isNotEmpty)
-                            .join(', ');
-                        final updatedAt = data['updatedAt'];
-                        final updatedLabel = (updatedAt is Timestamp)
-                            ? dateTimeFormat('relative', updatedAt.toDate())
-                            : 'recently';
-
-                        return _projectTile(
-                          theme: theme,
-                          accent: quotesColour,
-                          name: name,
-                          location:
-                              location.isEmpty ? 'South Africa' : location,
-                          status: status,
-                          lastUpdated: updatedLabel,
-                          icon: Icons.request_quote_outlined,
-                          onTap: () {},
-                        );
-                      },
+                        _quotesArea(theme),
+                      ],
                     ),
-                  _quotesArea(theme),
+                  ),
                 ],
               ),
             ),
@@ -469,7 +486,7 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
     return Container(
       width: double.infinity,
       color: const Color(0xFF2F3A4C), // steel — matches DashboardPageView hero
-      padding: EdgeInsets.fromLTRB(20, topInset + 14, 20, 18),
+      padding: EdgeInsets.fromLTRB(20, topInset + 14, 20, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -511,7 +528,20 @@ class _GetQuotesPageViewState extends State<GetQuotesPageView> {
             ),
             const SizedBox(width: 38),
           ]),
-          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  // Scrolls away with the page — dark colour continues below the pinned bar.
+  Widget _inkHeaderLower(FlutterFlowTheme theme) {
+    return Container(
+      width: double.infinity,
+      color: const Color(0xFF2F3A4C),
+      padding: const EdgeInsets.fromLTRB(20, 2, 20, 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Text('REQUEST PRICING FROM TEAM MEMBERS',
               style: TextStyle(
                   fontFamily: _bodyFont,

@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/custom_code/actions/index.dart';
 
 import 'index.dart'; // Imports other custom widgets
@@ -177,7 +179,7 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
             width: double.infinity,
             color: const Color(
                 0xFF2F3A4C), // steel — matches DashboardPageView hero
-            padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
+            padding: EdgeInsets.fromLTRB(20, top + 14, 20, 14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -205,23 +207,6 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
                   ),
                   _inviteBtn(),
                 ]),
-                const SizedBox(height: 16),
-                Text('COMPARE & ACCEPT QUOPTES',
-                    style: TextStyle(
-                        fontFamily: _body,
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 1,
-                        color: _paper.withOpacity(0.55))),
-                const SizedBox(height: 4),
-                const Text('Quotes Received',
-                    style: TextStyle(
-                        fontFamily: _display,
-                        fontSize: 34,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -1,
-                        height: 1.0,
-                        color: _paper)),
               ],
             ),
           ),
@@ -230,6 +215,34 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
       ),
     );
   }
+
+  // Scrolls away with the page — dark colour continues below the pinned bar.
+  Widget _heroLower() => Container(
+        width: double.infinity,
+        color: const Color(0xFF2F3A4C),
+        padding: const EdgeInsets.fromLTRB(20, 2, 20, 18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('COMPARE & ACCEPT QUOPTES',
+                style: TextStyle(
+                    fontFamily: _body,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1,
+                    color: _paper.withOpacity(0.55))),
+            const SizedBox(height: 4),
+            const Text('Quotes Received',
+                style: TextStyle(
+                    fontFamily: _display,
+                    fontSize: 34,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -1,
+                    height: 1.0,
+                    color: _paper)),
+          ],
+        ),
+      );
 
   Widget _list() {
     final ref = _projectRef;
@@ -278,19 +291,29 @@ class _QuotesReceivedViewState extends State<QuotesReceivedView> {
         if (viewed > 0) summaryParts.add('$viewed viewed');
         final summary = summaryParts.join(' · ');
         return ListView(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+          padding: EdgeInsets.zero,
           children: [
-            Text(summary,
-                style: const TextStyle(
-                    fontFamily: 'Roboto Mono',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: _inkMute)),
-            const SizedBox(height: 14),
-            if (docs.isEmpty)
-              _emptyCard()
-            else
-              for (var i = 0; i < docs.length; i++) _quoteCard(docs[i]),
+            // Hero lower block scrolls away; only the top bar pins.
+            _heroLower(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(summary,
+                      style: const TextStyle(
+                          fontFamily: 'Roboto Mono',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: _inkMute)),
+                  const SizedBox(height: 14),
+                  if (docs.isEmpty)
+                    _emptyCard()
+                  else
+                    for (var i = 0; i < docs.length; i++) _quoteCard(docs[i]),
+                ],
+              ),
+            ),
           ],
         );
       },
