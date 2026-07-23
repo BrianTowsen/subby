@@ -1086,8 +1086,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   Widget _headerStatusLine() {
     final stream = _activeProjectsStreamCached();
     if (stream == null) {
-      return _headerStatusText('Manage your build — free, no card needed',
-          accent: false);
+      return _headerStatusText('Manage your build — free', accent: false);
     }
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: stream,
@@ -3694,8 +3693,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
         ),
         const SizedBox(height: 12),
         const Text(
-          "Plan a build of your own, or get hired onto someone else's — "
-          'free, for as long as it takes.',
+          "Plan a build of your own, or get hired.",
           style: TextStyle(
             fontFamily: _bodyFont,
             fontSize: 14,
