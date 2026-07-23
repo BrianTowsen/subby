@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'media_source_helper.dart'; // Camera / gallery source helper
 
 import 'index.dart'; // Imports other custom widgets
@@ -430,27 +432,37 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
                   SingleChildScrollView(
                     controller: _editorScroll,
                     physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(18, 16, 18, 96),
+                    padding: EdgeInsets.zero,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _authorRow(),
-                        const SizedBox(height: 16),
-                        _label('SITE NOTE'),
-                        const SizedBox(height: 8),
-                        _noteField(),
-                        const SizedBox(height: 18),
-                        _label('WEATHER'),
-                        const SizedBox(height: 8),
-                        _weatherSelector(),
-                        const SizedBox(height: 18),
-                        _label('PHOTOS & VIDEOS'),
-                        const SizedBox(height: 8),
-                        _mediaSelector(),
-                        const SizedBox(height: 18),
-                        _label('TAGS'),
-                        const SizedBox(height: 8),
-                        _tagEditor(reuse),
+                        // Hero lower block scrolls away; only the bar pins.
+                        _addHeroLower('Add Site Entry', 'SITE NOTE'),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(18, 16, 18, 96),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _authorRow(),
+                              const SizedBox(height: 16),
+                              _label('SITE NOTE'),
+                              const SizedBox(height: 8),
+                              _noteField(),
+                              const SizedBox(height: 18),
+                              _label('WEATHER'),
+                              const SizedBox(height: 8),
+                              _weatherSelector(),
+                              const SizedBox(height: 18),
+                              _label('PHOTOS & VIDEOS'),
+                              const SizedBox(height: 8),
+                              _mediaSelector(),
+                              const SizedBox(height: 18),
+                              _label('TAGS'),
+                              const SizedBox(height: 8),
+                              _tagEditor(reuse),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -492,7 +504,7 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
         width: double.infinity,
         color: const Color(0xFF2F3A4C),
         padding: EdgeInsets.fromLTRB(
-            _hPad, 14 + MediaQuery.of(context).padding.top, _hPad, 18),
+            _hPad, 14 + MediaQuery.of(context).padding.top, _hPad, 14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -522,7 +534,18 @@ class _AddSiteBookPageViewState extends State<AddSiteBookPageView> {
                 const SizedBox(width: 38, height: 38),
               ],
             ),
-            const SizedBox(height: 16),
+          ],
+        ),
+      );
+
+  // Scrolls away with the page — dark colour continues below the pinned bar.
+  Widget _addHeroLower(String title, String subtitle) => Container(
+        width: double.infinity,
+        color: const Color(0xFF2F3A4C),
+        padding: const EdgeInsets.fromLTRB(_hPad, 2, _hPad, 18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Text(subtitle,
                 style: TextStyle(
                     fontFamily: _bodyFont,

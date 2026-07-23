@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/custom_code/actions/index.dart';
 
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle
@@ -300,15 +302,25 @@ class _SiteBookPageViewState extends State<SiteBookPageView> {
                     final all = snap.data?.docs ?? const [];
                     final docs = all.where((d) => _matches(d.data())).toList();
                     return SingleChildScrollView(
-                      padding: EdgeInsets.fromLTRB(_hPad, 18, _hPad, 40),
+                      padding: EdgeInsets.zero,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _searchField(),
-                          if (docs.isEmpty)
-                            _empty()
-                          else
-                            ..._buildGroupedEntries(docs),
+                          // Hero stat scrolls away; only the top bar pins.
+                          _heroLower(),
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(_hPad, 18, _hPad, 40),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _searchField(),
+                                if (docs.isEmpty)
+                                  _empty()
+                                else
+                                  ..._buildGroupedEntries(docs),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     );
@@ -326,7 +338,7 @@ class _SiteBookPageViewState extends State<SiteBookPageView> {
   Widget _hero(double topInset) => Container(
         width: double.infinity,
         color: const Color(0xFF2F3A4C),
-        padding: EdgeInsets.fromLTRB(_hPad, topInset + 14, _hPad, 18),
+        padding: EdgeInsets.fromLTRB(_hPad, topInset + 14, _hPad, 14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -357,10 +369,16 @@ class _SiteBookPageViewState extends State<SiteBookPageView> {
                 _heroCountPill(),
               ],
             ),
-            const SizedBox(height: 16),
-            _heroStat(),
           ],
         ),
+      );
+
+  // Scrolls away with the page — dark colour continues below the pinned bar.
+  Widget _heroLower() => Container(
+        width: double.infinity,
+        color: const Color(0xFF2F3A4C),
+        padding: const EdgeInsets.fromLTRB(_hPad, 2, _hPad, 18),
+        child: _heroStat(),
       );
 
   // Centered project name (streamed from the project doc).

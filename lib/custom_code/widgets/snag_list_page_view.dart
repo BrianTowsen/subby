@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/custom_code/actions/index.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -704,7 +706,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
     return Container(
       width: double.infinity,
       color: const Color(0xFF2F3A4C),
-      padding: EdgeInsets.fromLTRB(20, top + 14, 20, 18),
+      padding: EdgeInsets.fromLTRB(20, top + 14, 20, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -732,12 +734,18 @@ class _SnagListPageViewState extends State<SnagListPageView>
               _heroCountPill(),
             ],
           ),
-          const SizedBox(height: 16),
-          _heroStat(),
         ],
       ),
     );
   }
+
+  // Scrolls away with the page — dark colour continues below the pinned bar.
+  Widget _heroLower() => Container(
+        width: double.infinity,
+        color: const Color(0xFF2F3A4C),
+        padding: const EdgeInsets.fromLTRB(20, 2, 20, 18),
+        child: _heroStat(),
+      );
 
   Widget _heroCircle(IconData icon, VoidCallback onTap) => Material(
         color: Colors.transparent,
@@ -942,6 +950,8 @@ class _SnagListPageViewState extends State<SnagListPageView>
                 child: NestedScrollView(
                   headerSliverBuilder: (context, inner) {
                     return [
+                      // Hero stat scrolls away; the tabs pin under the bar.
+                      SliverToBoxAdapter(child: _heroLower()),
                       SliverPersistentHeader(
                         pinned: true,
                         delegate: _StickyHeaderDelegate(

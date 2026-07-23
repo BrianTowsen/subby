@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -1501,54 +1503,67 @@ class _ProjectCostViewState extends State<ProjectCostView> {
         Container(
           width: double.infinity,
           color: _header,
-          padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _moduleHeader('COST ESTIMATE'),
-              const SizedBox(height: 16),
-              _capLabel('YOUR TOTAL INCL. VAT'),
-              const SizedBox(height: 4),
-              _bigNumber(_money(total)),
-              const SizedBox(height: 10),
-              _heroSub(
-                  '$started of ${_sections.length} sections started · $items items'),
-            ],
-          ),
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
+          child: _moduleHeader('COST ESTIMATE'),
         ),
         Expanded(
           child: ListView(
-            padding: EdgeInsets.fromLTRB(14, 18, 14, 24 + bottomInset),
-            children: _sections.isEmpty
-                ? [
-                    _sectionsHeaderRow(),
-                    const SizedBox(height: 14),
-                    _emptySections(),
-                  ]
-                : [
-                    _sectionsHeaderRow(),
-                    const SizedBox(height: 14),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: _paper,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: _border),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: Column(
-                        children: [
-                          for (var i = 0; i < _sections.length; i++)
-                            _sectionBlock(i, _sections[i]),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    if (!_readOnly) _addSectionButton(),
-                    const SizedBox(height: 14),
-                    _breakdownCard(net, contAmount, vat, total),
-                    const SizedBox(height: 14),
-                    _savedCue(),
+            padding: EdgeInsets.zero,
+            children: [
+              // Hero lower block scrolls away; only the top bar pins.
+              Container(
+                width: double.infinity,
+                color: _header,
+                padding: const EdgeInsets.fromLTRB(20, 2, 20, 18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _capLabel('YOUR TOTAL INCL. VAT'),
+                    const SizedBox(height: 4),
+                    _bigNumber(_money(total)),
+                    const SizedBox(height: 10),
+                    _heroSub(
+                        '$started of ${_sections.length} sections started · $items items'),
                   ],
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.fromLTRB(14, 18, 14, 24 + bottomInset),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: _sections.isEmpty
+                      ? [
+                          _sectionsHeaderRow(),
+                          const SizedBox(height: 14),
+                          _emptySections(),
+                        ]
+                      : [
+                          _sectionsHeaderRow(),
+                          const SizedBox(height: 14),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: _paper,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: _border),
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: Column(
+                              children: [
+                                for (var i = 0; i < _sections.length; i++)
+                                  _sectionBlock(i, _sections[i]),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          if (!_readOnly) _addSectionButton(),
+                          const SizedBox(height: 14),
+                          _breakdownCard(net, contAmount, vat, total),
+                          const SizedBox(height: 14),
+                          _savedCue(),
+                        ],
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -2417,110 +2432,128 @@ class _ProjectCostViewState extends State<ProjectCostView> {
         Container(
           width: double.infinity,
           color: _header,
-          padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _moduleHeader('PAYMENTS'),
-              const SizedBox(height: 16),
-              _capLabel('PAYMENTS TO DATE'),
-              const SizedBox(height: 4),
-              _bigNumber(_money(invoiced)),
-              const SizedBox(height: 10),
-              _heroSub('${_payments.length} payments · ${_money(paid)} paid'),
-            ],
-          ),
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
+          child: _moduleHeader('PAYMENTS'),
         ),
         Expanded(
           child: ListView(
-            padding: EdgeInsets.fromLTRB(14, 14, 14, 24 + bottomInset),
+            padding: EdgeInsets.zero,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    _paymentFilter == null
-                        ? (shown.length == 1
-                            ? '1 payment'
-                            : '${shown.length} payments')
-                        : '${shown.length} ${shown.length == 1 ? 'payment' : 'payments'} · ${_sections[_paymentFilter!].name}',
-                    style: const TextStyle(
-                      fontFamily: _display,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
-                      color: _ink,
-                    ),
-                  ),
-                  if (!_readOnly)
-                    InkWell(
-                      onTap: _addPayment,
-                      borderRadius: BorderRadius.circular(999),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 7),
-                        decoration: BoxDecoration(
-                          color: _brandYellow,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: const [
-                            Icon(Icons.add_rounded, size: 15, color: _ink),
-                            SizedBox(width: 5),
-                            Text('New payment',
-                                style: TextStyle(
-                                  fontFamily: _body,
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w800,
-                                  color: _ink,
-                                )),
-                          ],
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              // section filter chips
-              SizedBox(
-                height: 34,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
+              // Hero lower block scrolls away; only the top bar pins.
+              Container(
+                width: double.infinity,
+                color: _header,
+                padding: const EdgeInsets.fromLTRB(20, 2, 20, 18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _filterChip('All', _payments.length, _paymentFilter == null,
-                        () => setState(() => _paymentFilter = null)),
-                    for (final i in secsWithPay)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 7),
-                        child: _filterChip(
-                          _sections[i].name,
-                          _payments.where((p) => p.secIndex == i).length,
-                          _paymentFilter == i,
-                          () => setState(() => _paymentFilter = i),
-                        ),
-                      ),
+                    _capLabel('PAYMENTS TO DATE'),
+                    const SizedBox(height: 4),
+                    _bigNumber(_money(invoiced)),
+                    const SizedBox(height: 10),
+                    _heroSub(
+                        '${_payments.length} payments · ${_money(paid)} paid'),
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
-              if (shown.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(14, 30, 14, 30),
-                  child: Center(
-                    child: Text('No payments in this section yet.',
-                        style: TextStyle(
-                          fontFamily: _body,
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
-                          color: _faint,
-                        )),
-                  ),
-                )
-              else
-                for (final p in shown) ...[
-                  _paymentCard(p),
-                  const SizedBox(height: 10),
-                ],
+              Padding(
+                padding: EdgeInsets.fromLTRB(14, 14, 14, 24 + bottomInset),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _paymentFilter == null
+                              ? (shown.length == 1
+                                  ? '1 payment'
+                                  : '${shown.length} payments')
+                              : '${shown.length} ${shown.length == 1 ? 'payment' : 'payments'} · ${_sections[_paymentFilter!].name}',
+                          style: const TextStyle(
+                            fontFamily: _display,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w900,
+                            color: _ink,
+                          ),
+                        ),
+                        if (!_readOnly)
+                          InkWell(
+                            onTap: _addPayment,
+                            borderRadius: BorderRadius.circular(999),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 7),
+                              decoration: BoxDecoration(
+                                color: _brandYellow,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  Icon(Icons.add_rounded,
+                                      size: 15, color: _ink),
+                                  SizedBox(width: 5),
+                                  Text('New payment',
+                                      style: TextStyle(
+                                        fontFamily: _body,
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w800,
+                                        color: _ink,
+                                      )),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    // section filter chips
+                    SizedBox(
+                      height: 34,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          _filterChip(
+                              'All',
+                              _payments.length,
+                              _paymentFilter == null,
+                              () => setState(() => _paymentFilter = null)),
+                          for (final i in secsWithPay)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 7),
+                              child: _filterChip(
+                                _sections[i].name,
+                                _payments.where((p) => p.secIndex == i).length,
+                                _paymentFilter == i,
+                                () => setState(() => _paymentFilter = i),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    if (shown.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(14, 30, 14, 30),
+                        child: Center(
+                          child: Text('No payments in this section yet.',
+                              style: TextStyle(
+                                fontFamily: _body,
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                                color: _faint,
+                              )),
+                        ),
+                      )
+                    else
+                      for (final p in shown) ...[
+                        _paymentCard(p),
+                        const SizedBox(height: 10),
+                      ],
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -2720,54 +2753,70 @@ class _ProjectCostViewState extends State<ProjectCostView> {
         Container(
           width: double.infinity,
           color: _header,
-          padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _moduleHeader('COST CONTROL'),
-              const SizedBox(height: 16),
-              _capLabel('COST TO COMPLETE'),
-              const SizedBox(height: 4),
-              _bigNumber(_money(ctc)),
-              const SizedBox(height: 10),
-              _heroSub(
-                  '$pctSpent% of budget in payments · forecast ${_money(forecast)}'),
-            ],
-          ),
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
+          child: _moduleHeader('COST CONTROL'),
         ),
         Expanded(
           child: ListView(
-            padding: EdgeInsets.fromLTRB(14, 14, 14, 24 + bottomInset),
+            padding: EdgeInsets.zero,
             children: [
-              _costSummaryCard(budget, invoiced, paid, ctc, pctSpent, over),
-              const SizedBox(height: 12),
-              _varianceBanner(over, variance, forecast, budget),
-              const SizedBox(height: 16),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(2, 0, 2, 10),
-                child: Text('By trade section',
-                    style: TextStyle(
-                      fontFamily: _display,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
-                      color: _ink,
-                    )),
+              // Hero lower block scrolls away; only the top bar pins.
+              Container(
+                width: double.infinity,
+                color: _header,
+                padding: const EdgeInsets.fromLTRB(20, 2, 20, 18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _capLabel('COST TO COMPLETE'),
+                    const SizedBox(height: 4),
+                    _bigNumber(_money(ctc)),
+                    const SizedBox(height: 10),
+                    _heroSub(
+                        '$pctSpent% of budget in payments · forecast ${_money(forecast)}'),
+                  ],
+                ),
               ),
-              for (final r in rows) ...[r, const SizedBox(height: 10)],
-              const SizedBox(height: 4),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.info_outline_rounded, size: 13, color: _green),
-                  SizedBox(width: 5),
-                  Text('Cost to complete = total incl. VAT − payments to date',
-                      style: TextStyle(
-                        fontFamily: _body,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: _faint,
-                      )),
-                ],
+              Padding(
+                padding: EdgeInsets.fromLTRB(14, 14, 14, 24 + bottomInset),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _costSummaryCard(
+                        budget, invoiced, paid, ctc, pctSpent, over),
+                    const SizedBox(height: 12),
+                    _varianceBanner(over, variance, forecast, budget),
+                    const SizedBox(height: 16),
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(2, 0, 2, 10),
+                      child: Text('By trade section',
+                          style: TextStyle(
+                            fontFamily: _display,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w900,
+                            color: _ink,
+                          )),
+                    ),
+                    for (final r in rows) ...[r, const SizedBox(height: 10)],
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.info_outline_rounded,
+                            size: 13, color: _green),
+                        SizedBox(width: 5),
+                        Text(
+                            'Cost to complete = total incl. VAT − payments to date',
+                            style: TextStyle(
+                              fontFamily: _body,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: _faint,
+                            )),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

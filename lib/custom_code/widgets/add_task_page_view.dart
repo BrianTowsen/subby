@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'media_source_helper.dart'; // Camera / gallery source helper
 
 import 'index.dart'; // Imports other custom widgets
@@ -1229,7 +1231,7 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
         width: double.infinity,
         color: const Color(0xFF2F3A4C),
         padding: EdgeInsets.fromLTRB(
-            20, 14 + MediaQuery.of(context).padding.top, 20, 18),
+            20, 14 + MediaQuery.of(context).padding.top, 20, 14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1258,7 +1260,18 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                 const SizedBox(width: 38, height: 38),
               ],
             ),
-            const SizedBox(height: 16),
+          ],
+        ),
+      );
+
+  // Scrolls away with the page — dark colour continues below the pinned bar.
+  Widget _addHeroLower(String title, String subtitle) => Container(
+        width: double.infinity,
+        color: const Color(0xFF2F3A4C),
+        padding: const EdgeInsets.fromLTRB(20, 2, 20, 18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Text(subtitle.toUpperCase(),
                 style: TextStyle(
                     fontFamily: _bodyFont,
@@ -1405,67 +1418,84 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
                 children: [
                   SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(_hPad, 16, _hPad, 96),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('DETAILS', style: _uLabel()),
-                          const SizedBox(height: 10),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: _paper,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: _hairline),
-                            ),
-                            clipBehavior: Clip.antiAlias,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: EdgeInsets.zero,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Hero lower block scrolls away; only the bar pins.
+                        _addHeroLower(headerTitle, headerSubtitle),
+                        Padding(
+                          padding:
+                              const EdgeInsets.fromLTRB(_hPad, 16, _hPad, 96),
+                          child: Form(
+                            key: _formKey,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _uText(
-                                  label: 'Title',
-                                  controller: _titleCtrl,
-                                  icon: Icons.title_rounded,
-                                  hint: 'e.g. Confirm tiler site visit',
-                                  validator: (v) => (v ?? '').trim().isEmpty
-                                      ? 'Give the task a title'
-                                      : null,
+                                Text('DETAILS', style: _uLabel()),
+                                const SizedBox(height: 10),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: _paper,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: _hairline),
+                                  ),
+                                  clipBehavior: Clip.antiAlias,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      _uText(
+                                        label: 'Title',
+                                        controller: _titleCtrl,
+                                        icon: Icons.title_rounded,
+                                        hint: 'e.g. Confirm tiler site visit',
+                                        validator: (v) =>
+                                            (v ?? '').trim().isEmpty
+                                                ? 'Give the task a title'
+                                                : null,
+                                      ),
+                                      _uText(
+                                        label: 'Notes',
+                                        controller: _descCtrl,
+                                        icon: Icons.notes_rounded,
+                                        hint: 'Any detail or context…',
+                                        maxLines: 3,
+                                      ),
+                                      _dueDateField(),
+                                      _priorityField(),
+                                      _assignRow(
+                                        label: 'Assign to team member',
+                                        isPerson: false,
+                                        has: _listingRef != null ||
+                                            _listingName.isNotEmpty,
+                                        name: _listingName,
+                                        subtitle: _listingSubtitle,
+                                        onTap: () =>
+                                            _pickAssignee(isPerson: false),
+                                      ),
+                                      _assignRow(
+                                        label: 'Assign to person',
+                                        isPerson: true,
+                                        has: _userRef != null ||
+                                            _userName.isNotEmpty,
+                                        name: _userName,
+                                        subtitle: _userSubtitle,
+                                        onTap: () =>
+                                            _pickAssignee(isPerson: true),
+                                      ),
+                                      _checklistField(),
+                                      _attachmentsField(),
+                                    ],
+                                  ),
                                 ),
-                                _uText(
-                                  label: 'Notes',
-                                  controller: _descCtrl,
-                                  icon: Icons.notes_rounded,
-                                  hint: 'Any detail or context…',
-                                  maxLines: 3,
-                                ),
-                                _dueDateField(),
-                                _priorityField(),
-                                _assignRow(
-                                  label: 'Assign to team member',
-                                  isPerson: false,
-                                  has: _listingRef != null ||
-                                      _listingName.isNotEmpty,
-                                  name: _listingName,
-                                  subtitle: _listingSubtitle,
-                                  onTap: () => _pickAssignee(isPerson: false),
-                                ),
-                                _assignRow(
-                                  label: 'Assign to person',
-                                  isPerson: true,
-                                  has: _userRef != null || _userName.isNotEmpty,
-                                  name: _userName,
-                                  subtitle: _userSubtitle,
-                                  onTap: () => _pickAssignee(isPerson: true),
-                                ),
-                                _checklistField(),
-                                _attachmentsField(),
                               ],
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                   Positioned(

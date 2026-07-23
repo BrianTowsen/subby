@@ -13,6 +13,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status bar icons over ink hero)
@@ -678,7 +680,7 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
         width: double.infinity,
         color: const Color(0xFF2F3A4C),
         padding: EdgeInsets.fromLTRB(
-            20, MediaQuery.of(context).padding.top + 6, 20, 18),
+            20, MediaQuery.of(context).padding.top + 6, 20, 14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -702,7 +704,19 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
                 const SizedBox(width: 38, height: 38),
               ],
             ),
-            const SizedBox(height: 16),
+          ],
+        ),
+      );
+
+  // Scrolls away with the page — dark colour continues seamlessly below the
+  // pinned _hero bar. Holds the big "Add project" title + subtitle.
+  Widget _heroLower() => Container(
+        width: double.infinity,
+        color: const Color(0xFF2F3A4C),
+        padding: const EdgeInsets.fromLTRB(20, 2, 20, 18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             const Text('Add project',
                 style: TextStyle(
                     fontFamily: _displayFont,
@@ -775,101 +789,114 @@ class _AddProjectsPageViewState extends State<AddProjectsPageView>
                   Expanded(
                     child: SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(_hPad, 10, _hPad, 24),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('PROJECT DETAILS', style: _uLabelStyle(theme)),
-                            const SizedBox(height: 10),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: _paper,
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: _hairline),
-                              ),
-                              clipBehavior: Clip.antiAlias,
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Hero lower block scrolls away; only the top bar pins.
+                          _heroLower(),
+                          Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(_hPad, 10, _hPad, 24),
+                            child: Form(
+                              key: _formKey,
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  _uText(
-                                    theme: theme,
-                                    label: 'Project name',
-                                    controller: _nameCtrl,
-                                    icon: Icons.home_work_outlined,
-                                    hint: 'e.g. Winston Ridge Renovation',
-                                    validator: (v) {
-                                      if ((v ?? '').trim().isEmpty) {
-                                        return 'Project name is required';
-                                      }
-                                      return null;
-                                    },
+                                  Text('PROJECT DETAILS',
+                                      style: _uLabelStyle(theme)),
+                                  const SizedBox(height: 10),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: _paper,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(color: _hairline),
+                                    ),
+                                    clipBehavior: Clip.antiAlias,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _uText(
+                                          theme: theme,
+                                          label: 'Project name',
+                                          controller: _nameCtrl,
+                                          icon: Icons.home_work_outlined,
+                                          hint: 'e.g. Winston Ridge Renovation',
+                                          validator: (v) {
+                                            if ((v ?? '').trim().isEmpty) {
+                                              return 'Project name is required';
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                        _uScope(theme),
+                                        _uSelect(
+                                          theme: theme,
+                                          label: 'Status',
+                                          icon: Icons.flag_outlined,
+                                          value: _status,
+                                          items: _statusOptions,
+                                          onChanged: (v) =>
+                                              setState(() => _status = v),
+                                        ),
+                                        _uSelect(
+                                          theme: theme,
+                                          label: 'Province',
+                                          icon: Icons.map_outlined,
+                                          value: _province,
+                                          items: _provinceOptions,
+                                          onChanged: (v) =>
+                                              setState(() => _province = v),
+                                        ),
+                                        _uText(
+                                          theme: theme,
+                                          label: 'City / Area',
+                                          controller: _cityCtrl,
+                                          icon: Icons.location_city_outlined,
+                                          hint: 'e.g. Durbanville',
+                                        ),
+                                        _uText(
+                                          theme: theme,
+                                          label: 'Address',
+                                          controller: _addressCtrl,
+                                          icon: Icons.place_outlined,
+                                          hint: 'Street address (optional)',
+                                        ),
+                                        _uDate(
+                                          theme: theme,
+                                          label: 'Start date',
+                                          icon: Icons.calendar_month_outlined,
+                                          value: _dateLabel(_startDate),
+                                          onTap: () => _pickDate(isStart: true),
+                                        ),
+                                        _uDate(
+                                          theme: theme,
+                                          label: 'End date',
+                                          icon: Icons.event_outlined,
+                                          value: _dateLabel(_endDate),
+                                          onTap: () =>
+                                              _pickDate(isStart: false),
+                                        ),
+                                        _uText(
+                                          theme: theme,
+                                          label: 'Notes',
+                                          controller: _notesCtrl,
+                                          icon: Icons.notes_outlined,
+                                          hint:
+                                              'Anything important (budget notes, build phases, key contacts)…',
+                                          maxLines: 4,
+                                        ),
+                                        _uArchiveRow(theme),
+                                      ],
+                                    ),
                                   ),
-                                  _uScope(theme),
-                                  _uSelect(
-                                    theme: theme,
-                                    label: 'Status',
-                                    icon: Icons.flag_outlined,
-                                    value: _status,
-                                    items: _statusOptions,
-                                    onChanged: (v) =>
-                                        setState(() => _status = v),
-                                  ),
-                                  _uSelect(
-                                    theme: theme,
-                                    label: 'Province',
-                                    icon: Icons.map_outlined,
-                                    value: _province,
-                                    items: _provinceOptions,
-                                    onChanged: (v) =>
-                                        setState(() => _province = v),
-                                  ),
-                                  _uText(
-                                    theme: theme,
-                                    label: 'City / Area',
-                                    controller: _cityCtrl,
-                                    icon: Icons.location_city_outlined,
-                                    hint: 'e.g. Durbanville',
-                                  ),
-                                  _uText(
-                                    theme: theme,
-                                    label: 'Address',
-                                    controller: _addressCtrl,
-                                    icon: Icons.place_outlined,
-                                    hint: 'Street address (optional)',
-                                  ),
-                                  _uDate(
-                                    theme: theme,
-                                    label: 'Start date',
-                                    icon: Icons.calendar_month_outlined,
-                                    value: _dateLabel(_startDate),
-                                    onTap: () => _pickDate(isStart: true),
-                                  ),
-                                  _uDate(
-                                    theme: theme,
-                                    label: 'End date',
-                                    icon: Icons.event_outlined,
-                                    value: _dateLabel(_endDate),
-                                    onTap: () => _pickDate(isStart: false),
-                                  ),
-                                  _uText(
-                                    theme: theme,
-                                    label: 'Notes',
-                                    controller: _notesCtrl,
-                                    icon: Icons.notes_outlined,
-                                    hint:
-                                        'Anything important (budget notes, build phases, key contacts)…',
-                                    maxLines: 4,
-                                  ),
-                                  _uArchiveRow(theme),
                                 ],
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
