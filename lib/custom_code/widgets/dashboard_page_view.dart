@@ -23,7 +23,10 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (reassert dark status bar on return)
+import 'package:flutter/rendering.dart'; // ScrollDirection (hide/show the bottom nav on scroll)
 
 import 'join_project_view.dart'
     show showJoinProjectSheet; // "Have an invite code?" → join sheet
@@ -237,6 +240,13 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   // one place; this field just lets the user start typing on this screen.
   final TextEditingController _inviteCtrl = TextEditingController();
 
+  // Bottom-nav visibility — driven by scroll DIRECTION (see the
+  // NotificationListener in _buildTree). Held in a ValueNotifier (not
+  // setState) so scrolling only rebuilds the nav itself, leaving the
+  // built-tree cache intact. Slides down off-screen when the user scrolls the
+  // page up (reverse), back up into view when they scroll down (forward).
+  final ValueNotifier<bool> _navVisible = ValueNotifier<bool>(true);
+
   // ─── CACHED STREAMS / FUTURES ──────────────────────────────────────
   // These are created ONCE and reused across rebuilds. Previously each of
   // these was built inline in the widget tree (e.g. `.snapshots()` directly
@@ -440,6 +450,7 @@ class _DashboardPageViewState extends State<DashboardPageView> {
   @override
   void dispose() {
     _inviteCtrl.dispose();
+    _navVisible.dispose();
     super.dispose();
   }
 
@@ -4237,21 +4248,62 @@ class _DashboardPageViewState extends State<DashboardPageView> {
                 onSettled: _onRouteSettled,
               ),
               Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      _buildWelcomeHeader(),
-                      _buildQuoteInvites(),
-                      _buildBody(),
-                      // Archived builds — collapsed, pinned to the bottom.
-                      _buildArchivedCollapsible(),
-                      // Clear the overlaid MainBottomNav (72) + breathing room
-                      // (28) + system gesture inset.
-                      SizedBox(
-                          height:
-                              72 + 28 + MediaQuery.of(context).padding.bottom),
-                    ],
-                  ),
+                child: Stack(
+                  children: [
+                    // Scroll body. UserScrollNotification reports the drag
+                    // DIRECTION: reverse == finger up (page scrolls up) ->
+                    // hide the nav; forward == finger down -> reveal it.
+                    NotificationListener<UserScrollNotification>(
+                      onNotification: (n) {
+                        if (n.direction == ScrollDirection.reverse) {
+                          _navVisible.value = false;
+                        } else if (n.direction == ScrollDirection.forward) {
+                          _navVisible.value = true;
+                        }
+                        return false;
+                      },
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            _buildWelcomeHeader(),
+                            _buildQuoteInvites(),
+                            _buildBody(),
+                            // Archived builds — collapsed, pinned to the bottom.
+                            _buildArchivedCollapsible(),
+                            // Clear the overlaid MainBottomNav (72) + breathing
+                            // room (28) + system gesture inset.
+                            SizedBox(
+                                height: 72 +
+                                    28 +
+                                    MediaQuery.of(context).padding.bottom),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // Bottom nav — only when signed in (the FF page no longer
+                    // renders one). Slides in/out with scroll direction.
+                    if (currentUserReference != null)
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: ValueListenableBuilder<bool>(
+                          valueListenable: _navVisible,
+                          builder: (context, visible, _) => AnimatedSlide(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeOutCubic,
+                            offset: Offset(0, visible ? 0 : 1),
+                            child: MainBottomNav(
+                              currentIndex: 0,
+                              projectsRouteName: widget.projectsRouteName,
+                              directoryRouteName: widget.directoryRouteName,
+                              accountRouteName: widget.profileRouteName,
+                              moreRouteName: widget.moreRouteName,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ],

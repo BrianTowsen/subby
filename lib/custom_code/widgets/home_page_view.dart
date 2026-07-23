@@ -11,12 +11,15 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/rendering.dart'; // ScrollDirection (hide/show the bottom nav on scroll)
 
 class HomePageView extends StatefulWidget {
   const HomePageView({
@@ -92,6 +95,11 @@ class _HomePageViewState extends State<HomePageView> {
 
   bool _checkingListing = true;
   DocumentReference? _myListingRef;
+
+  // Bottom-nav visibility — driven by scroll DIRECTION. Slides down off-screen
+  // when the user scrolls the page up (reverse), back into view on scroll down
+  // (forward). ValueNotifier so scrolling only rebuilds the nav.
+  final ValueNotifier<bool> _navVisible = ValueNotifier<bool>(true);
 
   String get _selectedCategoryLabel {
     switch (_selectedMainTabIndex) {
@@ -501,6 +509,7 @@ class _HomePageViewState extends State<HomePageView> {
   void dispose() {
     _searchController.dispose();
     _searchFocusNode.dispose();
+    _navVisible.dispose();
     super.dispose();
   }
 
@@ -563,129 +572,170 @@ class _HomePageViewState extends State<HomePageView> {
             ),
             // ── White content block (flush, no radius) ──
             Expanded(
-              child: Container(
-                color: _paper,
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: EdgeInsets.fromLTRB(_hPad, 22, _hPad,
-                      24 + MediaQuery.of(context).padding.bottom),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _uLabel('LOCATION'),
-                      const SizedBox(height: 10),
-                      _card(Column(children: [
-                        _selectRow(
-                          icon: Icons.location_on_outlined,
-                          label: 'Province',
-                          value: _selectedProvince,
-                          onTap: _selectProvince,
-                          divider: true,
-                        ),
-                        _selectRow(
-                          icon: Icons.place_outlined,
-                          label: 'Region',
-                          value: _selectedRegion,
-                          onTap: _selectRegion,
-                        ),
-                      ])),
-                      const SizedBox(height: 14),
-                      _card(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 13),
-                        Row(children: [
-                          const Icon(Icons.search, size: 20, color: _slate),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: TextField(
-                              controller: _searchController,
-                              focusNode: _searchFocusNode,
-                              cursorColor: _ink,
-                              textInputAction: TextInputAction.search,
-                              onSubmitted: (_) => _goToResultsFromSearch(),
-                              style: const TextStyle(
-                                  fontFamily: _bodyFont,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: _ink),
-                              decoration: const InputDecoration(
-                                isDense: true,
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.zero,
-                                hintText: 'Trade, contractor or supplier',
-                                hintStyle: TextStyle(
-                                    fontFamily: _bodyFont,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                    color: _faint),
+              child: Stack(
+                children: [
+                  Container(
+                    color: _paper,
+                    child: NotificationListener<UserScrollNotification>(
+                      onNotification: (n) {
+                        if (n.direction == ScrollDirection.reverse) {
+                          _navVisible.value = false;
+                        } else if (n.direction == ScrollDirection.forward) {
+                          _navVisible.value = true;
+                        }
+                        return false;
+                      },
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: EdgeInsets.fromLTRB(_hPad, 22, _hPad,
+                            24 + 72 + MediaQuery.of(context).padding.bottom),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _uLabel('LOCATION'),
+                            const SizedBox(height: 10),
+                            _card(Column(children: [
+                              _selectRow(
+                                icon: Icons.location_on_outlined,
+                                label: 'Province',
+                                value: _selectedProvince,
+                                onTap: _selectProvince,
+                                divider: true,
                               ),
-                            ),
-                          ),
-                          InkWell(
-                            onTap: () => _openLocationSelect(
-                                searchText: _searchController.text),
-                            child: const Icon(Icons.tune_rounded,
-                                size: 20, color: _inkMute),
-                          ),
-                        ]),
-                      ),
-                      const SizedBox(height: 22),
-                      // ── Category pills ──
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: List.generate(tabs.length, (index) {
-                            final selected = _selectedMainTabIndex == index;
-                            return Padding(
-                              padding: EdgeInsets.only(
-                                  right: index == tabs.length - 1 ? 0 : 8),
-                              child: GestureDetector(
-                                onTap: () async {
-                                  if (_selectedMainTabIndex == index) return;
-                                  setState(() => _selectedMainTabIndex = index);
-                                  await _persistCategory();
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 9),
-                                  decoration: BoxDecoration(
-                                    color: selected ? _lime : _surface,
-                                    borderRadius: BorderRadius.circular(999),
-                                  ),
-                                  child: Text(
-                                    tabs[index],
-                                    style: TextStyle(
-                                      fontFamily: _bodyFont,
-                                      fontSize: 13,
-                                      fontWeight: selected
-                                          ? FontWeight.w800
-                                          : FontWeight.w700,
-                                      color: selected ? _ink : _inkMute,
+                              _selectRow(
+                                icon: Icons.place_outlined,
+                                label: 'Region',
+                                value: _selectedRegion,
+                                onTap: _selectRegion,
+                              ),
+                            ])),
+                            const SizedBox(height: 14),
+                            _card(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 13),
+                              Row(children: [
+                                const Icon(Icons.search,
+                                    size: 20, color: _slate),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _searchController,
+                                    focusNode: _searchFocusNode,
+                                    cursorColor: _ink,
+                                    textInputAction: TextInputAction.search,
+                                    onSubmitted: (_) =>
+                                        _goToResultsFromSearch(),
+                                    style: const TextStyle(
+                                        fontFamily: _bodyFont,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                        color: _ink),
+                                    decoration: const InputDecoration(
+                                      isDense: true,
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.zero,
+                                      hintText: 'Trade, contractor or supplier',
+                                      hintStyle: TextStyle(
+                                          fontFamily: _bodyFont,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                          color: _faint),
                                     ),
                                   ),
                                 ),
+                                InkWell(
+                                  onTap: () => _openLocationSelect(
+                                      searchText: _searchController.text),
+                                  child: const Icon(Icons.tune_rounded,
+                                      size: 20, color: _inkMute),
+                                ),
+                              ]),
+                            ),
+                            const SizedBox(height: 22),
+                            // ── Category pills ──
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: List.generate(tabs.length, (index) {
+                                  final selected =
+                                      _selectedMainTabIndex == index;
+                                  return Padding(
+                                    padding: EdgeInsets.only(
+                                        right:
+                                            index == tabs.length - 1 ? 0 : 8),
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        if (_selectedMainTabIndex == index)
+                                          return;
+                                        setState(() =>
+                                            _selectedMainTabIndex = index);
+                                        await _persistCategory();
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16, vertical: 9),
+                                        decoration: BoxDecoration(
+                                          color: selected ? _lime : _surface,
+                                          borderRadius:
+                                              BorderRadius.circular(999),
+                                        ),
+                                        child: Text(
+                                          tabs[index],
+                                          style: TextStyle(
+                                            fontFamily: _bodyFont,
+                                            fontSize: 13,
+                                            fontWeight: selected
+                                                ? FontWeight.w800
+                                                : FontWeight.w700,
+                                            color: selected ? _ink : _inkMute,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }),
                               ),
-                            );
-                          }),
-                        ),
-                      ),
-                      const SizedBox(height: 22),
-                      _uLabel(
-                          'BROWSE ${category.toUpperCase()} · ${subs.length}'),
-                      const SizedBox(height: 10),
-                      _card(
-                        padding: EdgeInsets.zero,
-                        Column(
-                          children: [
-                            for (int i = 0; i < subs.length; i++)
-                              _subRow(subs[i], category,
-                                  divider: i != subs.length - 1),
+                            ),
+                            const SizedBox(height: 22),
+                            _uLabel(
+                                'BROWSE ${category.toUpperCase()} · ${subs.length}'),
+                            const SizedBox(height: 10),
+                            _card(
+                              padding: EdgeInsets.zero,
+                              Column(
+                                children: [
+                                  for (int i = 0; i < subs.length; i++)
+                                    _subRow(subs[i], category,
+                                        divider: i != subs.length - 1),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
+                  // Bottom nav — only when signed in. Slides with scroll dir.
+                  if (currentUserReference != null)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: ValueListenableBuilder<bool>(
+                        valueListenable: _navVisible,
+                        builder: (context, visible, _) => AnimatedSlide(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOutCubic,
+                          offset: Offset(0, visible ? 0 : 1),
+                          child: MainBottomNav(
+                            currentIndex: 1,
+                            projectsRouteName: widget.dashboardRouteName,
+                            accountRouteName: 'profilePage',
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ],

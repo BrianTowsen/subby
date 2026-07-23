@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/custom_code/actions/index.dart';
 
 // ✅ provides currentUserReference, currentUserEmail, etc.
@@ -18,6 +20,7 @@ import '/auth/firebase_auth/auth_util.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/rendering.dart'; // ScrollDirection (hide/show the bottom nav on scroll)
 
 // =============================================================================
 // ProfilePageView — ACCOUNT hub (v7, steel/accent restyle)
@@ -88,10 +91,20 @@ class _ProfilePageViewState extends State<ProfilePageView> {
   bool _listingChecked = false;
   bool _hasListingDoc = false;
 
+  // Bottom-nav visibility — driven by scroll DIRECTION (see NotificationListener
+  // in build). ValueNotifier so scrolling only rebuilds the nav.
+  final ValueNotifier<bool> _navVisible = ValueNotifier<bool>(true);
+
   @override
   void initState() {
     super.initState();
     _checkListing();
+  }
+
+  @override
+  void dispose() {
+    _navVisible.dispose();
+    super.dispose();
   }
 
   Future<void> _checkListing() async {
@@ -801,42 +814,77 @@ class _ProfilePageViewState extends State<ProfilePageView> {
               children: [
                 _hero(displayName, email, photoUrl),
                 Expanded(
-                  child: SingleChildScrollView(
-                    // bottom padding clears the overlaid MainBottomNav (~84px).
-                    padding: const EdgeInsets.fromLTRB(_hPad, 24, _hPad, 108),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _switcher(),
-                        const SizedBox(height: 24),
-                        _section == _AccountSection.projects
-                            ? _projectsSection()
-                            : _directorySection(),
-                        const SizedBox(height: 28),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _outlineButton(
-                                label: 'Logout',
-                                icon: Icons.logout,
-                                onTap: _logout,
+                  child: Stack(
+                    children: [
+                      NotificationListener<UserScrollNotification>(
+                        onNotification: (n) {
+                          if (n.direction == ScrollDirection.reverse) {
+                            _navVisible.value = false;
+                          } else if (n.direction == ScrollDirection.forward) {
+                            _navVisible.value = true;
+                          }
+                          return false;
+                        },
+                        child: SingleChildScrollView(
+                          // bottom padding clears the overlaid MainBottomNav (~84px).
+                          padding:
+                              const EdgeInsets.fromLTRB(_hPad, 24, _hPad, 108),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _switcher(),
+                              const SizedBox(height: 24),
+                              _section == _AccountSection.projects
+                                  ? _projectsSection()
+                                  : _directorySection(),
+                              const SizedBox(height: 28),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _outlineButton(
+                                      label: 'Logout',
+                                      icon: Icons.logout,
+                                      onTap: _logout,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: _outlineButton(
+                                      label: 'Delete',
+                                      icon: Icons.delete_outline,
+                                      borderColor: _coral.withOpacity(0.5),
+                                      textColor: _coral,
+                                      iconColor: _coral,
+                                      onTap: _confirmAndDeleteProfile,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: _outlineButton(
-                                label: 'Delete',
-                                icon: Icons.delete_outline,
-                                borderColor: _coral.withOpacity(0.5),
-                                textColor: _coral,
-                                iconColor: _coral,
-                                onTap: _confirmAndDeleteProfile,
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
+                      ),
+                      // Account tab — bottom nav slides with scroll direction.
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: ValueListenableBuilder<bool>(
+                          valueListenable: _navVisible,
+                          builder: (context, visible, _) => AnimatedSlide(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeOutCubic,
+                            offset: Offset(0, visible ? 0 : 1),
+                            child: const MainBottomNav(
+                              currentIndex: 2,
+                              projectsRouteName: 'dashboardPage',
+                              directoryRouteName: 'homePage',
+                              accountRouteName: 'profilePage',
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
