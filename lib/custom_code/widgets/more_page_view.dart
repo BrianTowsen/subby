@@ -15,12 +15,17 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'join_project_view.dart' show showJoinProjectSheet;
 
 import '/custom_code/actions/index.dart';
 import 'index.dart'; // Imports other custom widgets
 
-// =============================================================================
+import '/auth/firebase_auth/auth_util.dart'; // currentUserReference (nav only when signed in)
+import 'package:flutter/rendering.dart'; // ScrollDirection (hide/show the bottom nav on scroll)
+
+// ===========================================================================
 // MorePageView (v7, steel/accent restyle) — the "everything else" hub.
 //
 //   • Steel hero with the yellow app-mark tile + close button.
@@ -78,6 +83,16 @@ class _MorePageViewState extends State<MorePageView> {
   // Listing presence → "My listing" pushes add vs edit.
   static const String _listingCollection = 'subby_listings';
   bool _hasListing = false;
+
+  // Bottom-nav visibility — driven by scroll DIRECTION. ValueNotifier so
+  // scrolling only rebuilds the nav.
+  final ValueNotifier<bool> _navVisible = ValueNotifier<bool>(true);
+
+  @override
+  void dispose() {
+    _navVisible.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -260,123 +275,160 @@ class _MorePageViewState extends State<MorePageView> {
           children: [
             _hero(),
             Expanded(
-              child: SingleChildScrollView(
-                padding:
-                    EdgeInsets.fromLTRB(_hPad, 24, _hPad, bottomInset + 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ===== NAVIGATE =====
-                    _sectionHeader('Navigate'),
-                    _card([
-                      _row(
-                        icon: Icons.grid_view_rounded,
-                        title: 'Projects',
-                        subtitle: 'Your home build projects',
-                        onTap: () => _go(_projectsRouteName),
-                      ),
-                      _row(
-                        icon: Icons.home_outlined,
-                        title: 'Network',
-                        subtitle: 'Browse categories & locations',
-                        onTap: () => _go(_homeRouteName),
-                      ),
-                      _row(
-                        icon: Icons.search_outlined,
-                        title: 'Explore Network',
-                        subtitle: 'Search and filter listings',
-                        onTap: () => _go(_exploreRouteName),
-                      ),
-                      _row(
-                        icon: Icons.bookmark_border_rounded,
-                        title: 'Network Saved',
-                        subtitle: 'Your bookmarked listings',
-                        onTap: () => _go(_savedRouteName),
-                      ),
-                      _row(
-                        icon: Icons.person_outline,
-                        title: 'Account',
-                        subtitle: 'Profile, listing & plan',
-                        onTap: () => _go(_profileRouteName),
-                      ),
-                      _row(
-                        icon: Icons.key_rounded,
-                        title: 'Join a project',
-                        subtitle: 'Been sent an invite code? Enter it here',
-                        onTap: () => showJoinProjectSheet(context),
-                      ),
-                    ]),
-                    const SizedBox(height: 28),
+              child: Stack(
+                children: [
+                  NotificationListener<UserScrollNotification>(
+                    onNotification: (n) {
+                      if (n.direction == ScrollDirection.reverse) {
+                        _navVisible.value = false;
+                      } else if (n.direction == ScrollDirection.forward) {
+                        _navVisible.value = true;
+                      }
+                      return false;
+                    },
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.fromLTRB(
+                          _hPad, 24, _hPad, bottomInset + 24 + 72),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // ===== NAVIGATE =====
+                          _sectionHeader('Navigate'),
+                          _card([
+                            _row(
+                              icon: Icons.grid_view_rounded,
+                              title: 'Projects',
+                              subtitle: 'Your home build projects',
+                              onTap: () => _go(_projectsRouteName),
+                            ),
+                            _row(
+                              icon: Icons.home_outlined,
+                              title: 'Network',
+                              subtitle: 'Browse categories & locations',
+                              onTap: () => _go(_homeRouteName),
+                            ),
+                            _row(
+                              icon: Icons.search_outlined,
+                              title: 'Explore Network',
+                              subtitle: 'Search and filter listings',
+                              onTap: () => _go(_exploreRouteName),
+                            ),
+                            _row(
+                              icon: Icons.bookmark_border_rounded,
+                              title: 'Network Saved',
+                              subtitle: 'Your bookmarked listings',
+                              onTap: () => _go(_savedRouteName),
+                            ),
+                            _row(
+                              icon: Icons.person_outline,
+                              title: 'Account',
+                              subtitle: 'Profile, listing & plan',
+                              onTap: () => _go(_profileRouteName),
+                            ),
+                            _row(
+                              icon: Icons.key_rounded,
+                              title: 'Join a project',
+                              subtitle:
+                                  'Been sent an invite code? Enter it here',
+                              onTap: () => showJoinProjectSheet(context),
+                            ),
+                          ]),
+                          const SizedBox(height: 28),
 
-                    // ===== DIRECTORY =====
-                    _sectionHeader('Network'),
-                    _card([
-                      _row(
-                        icon: Icons.storefront_outlined,
-                        title: 'My listing',
-                        subtitle: 'Create or edit your business listing',
-                        onTap: () => _push(_hasListing
-                            ? _editListingRouteName
-                            : _addListingRouteName),
-                      ),
-                      _row(
-                        icon: Icons.ios_share_rounded,
-                        title: 'Invite a tradesperson',
-                        subtitle: 'Share Subby with your team',
-                        onTap: () => _push(_inviteRouteName),
-                      ),
-                    ]),
-                    const SizedBox(height: 28),
+                          // ===== DIRECTORY =====
+                          _sectionHeader('Network'),
+                          _card([
+                            _row(
+                              icon: Icons.storefront_outlined,
+                              title: 'My listing',
+                              subtitle: 'Create or edit your business listing',
+                              onTap: () => _push(_hasListing
+                                  ? _editListingRouteName
+                                  : _addListingRouteName),
+                            ),
+                            _row(
+                              icon: Icons.ios_share_rounded,
+                              title: 'Invite a tradesperson',
+                              subtitle: 'Share Subby with your team',
+                              onTap: () => _push(_inviteRouteName),
+                            ),
+                          ]),
+                          const SizedBox(height: 28),
 
-                    // ===== SUPPORT =====
-                    _sectionHeader('Support'),
-                    _card([
-                      _row(
-                        icon: Icons.help_outline_rounded,
-                        title: 'Help & FAQs',
-                        subtitle: 'Answers to common questions',
-                        onTap: () => _toast('Help & FAQs coming soon.'),
-                      ),
-                      _row(
-                        icon: Icons.mail_outline_rounded,
-                        title: 'Contact us',
-                        subtitle: 'Get in touch with the team',
-                        onTap: () => _toast('Contact options coming soon.'),
-                      ),
-                      _row(
-                        icon: Icons.rate_review_outlined,
-                        title: 'Send feedback',
-                        subtitle: 'Help shape Subby during beta',
-                        onTap: () => _toast('Feedback form coming soon.'),
-                      ),
-                    ]),
-                    const SizedBox(height: 28),
+                          // ===== SUPPORT =====
+                          _sectionHeader('Support'),
+                          _card([
+                            _row(
+                              icon: Icons.help_outline_rounded,
+                              title: 'Help & FAQs',
+                              subtitle: 'Answers to common questions',
+                              onTap: () => _toast('Help & FAQs coming soon.'),
+                            ),
+                            _row(
+                              icon: Icons.mail_outline_rounded,
+                              title: 'Contact us',
+                              subtitle: 'Get in touch with the team',
+                              onTap: () =>
+                                  _toast('Contact options coming soon.'),
+                            ),
+                            _row(
+                              icon: Icons.rate_review_outlined,
+                              title: 'Send feedback',
+                              subtitle: 'Help shape Subby during beta',
+                              onTap: () => _toast('Feedback form coming soon.'),
+                            ),
+                          ]),
+                          const SizedBox(height: 28),
 
-                    // ===== LEGAL =====
-                    _sectionHeader('Legal'),
-                    _card([
-                      _row(
-                        icon: Icons.description_outlined,
-                        title: 'Terms of Service',
-                        onTap: () => _push(_termsRouteName),
+                          // ===== LEGAL =====
+                          _sectionHeader('Legal'),
+                          _card([
+                            _row(
+                              icon: Icons.description_outlined,
+                              title: 'Terms of Service',
+                              onTap: () => _push(_termsRouteName),
+                            ),
+                            _row(
+                              icon: Icons.privacy_tip_outlined,
+                              title: 'Privacy Policy',
+                              onTap: () => _push(_privacyRouteName),
+                            ),
+                          ]),
+                          const SizedBox(height: 20),
+                          Center(
+                            child: Text(_appVersion,
+                                style: const TextStyle(
+                                    fontFamily: _bodyFont,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: _faint)),
+                          ),
+                        ],
                       ),
-                      _row(
-                        icon: Icons.privacy_tip_outlined,
-                        title: 'Privacy Policy',
-                        onTap: () => _push(_privacyRouteName),
-                      ),
-                    ]),
-                    const SizedBox(height: 20),
-                    Center(
-                      child: Text(_appVersion,
-                          style: const TextStyle(
-                              fontFamily: _bodyFont,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: _faint)),
                     ),
-                  ],
-                ),
+                  ),
+                  // More tab — bottom nav slides with scroll direction.
+                  if (currentUserReference != null)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: ValueListenableBuilder<bool>(
+                        valueListenable: _navVisible,
+                        builder: (context, visible, _) => AnimatedSlide(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOutCubic,
+                          offset: Offset(0, visible ? 0 : 1),
+                          child: const MainBottomNav(
+                            currentIndex: 3,
+                            projectsRouteName: _projectsRouteName,
+                            directoryRouteName: _homeRouteName,
+                            accountRouteName: _profileRouteName,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ],
