@@ -11,6 +11,10 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'media_source_helper.dart'; // Camera / gallery source helper
+
+import 'index.dart'; // Imports other custom widgets
+
 import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
@@ -267,20 +271,42 @@ class _AddSnagPageViewState extends State<AddSnagPageView> {
     FocusScope.of(context).unfocus();
 
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.media, // images + videos
-        allowMultiple: true,
-        withData: true,
+      // Camera (photo / video) or gallery — user picks the source.
+      final source = await showMediaSourceSheet(
+        context,
+        allowPhoto: true,
+        allowVideo: true,
+        title: 'Add photo or video',
       );
-      if (result == null || result.files.isEmpty) return;
+      if (source == null) return;
+
+      final files = <PickedCameraFile>[];
+      if (source == MediaPickSource.gallery) {
+        final result = await FilePicker.platform.pickFiles(
+          type: FileType.media, // images + videos
+          allowMultiple: true,
+          withData: true,
+        );
+        if (result == null || result.files.isEmpty) return;
+        for (final f in result.files) {
+          final Uint8List? bytes = f.bytes;
+          if (bytes == null || bytes.isEmpty) continue;
+          files.add(PickedCameraFile(
+              name: f.name.isNotEmpty ? f.name : 'media', bytes: bytes));
+        }
+      } else {
+        final shot = await captureWithCamera(source);
+        if (shot == null) return;
+        files.add(shot);
+      }
+      if (files.isEmpty) return;
 
       setState(() => _uploading = true);
 
-      for (final f in result.files) {
-        final Uint8List? bytes = f.bytes;
-        if (bytes == null || bytes.isEmpty) continue;
+      for (final f in files) {
+        final Uint8List bytes = f.bytes;
 
-        final rawName = (f.name.isNotEmpty ? f.name : 'media');
+        final rawName = f.name;
         final fileName = p.basename(rawName);
         final safeName = fileName.replaceAll(RegExp(r'[^\w\.\- ]+'), '_');
         final ts = DateTime.now().millisecondsSinceEpoch;

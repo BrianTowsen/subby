@@ -11,6 +11,10 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'media_source_helper.dart'; // Camera / gallery source helper
+
+import 'index.dart'; // Imports other custom widgets
+
 import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
@@ -1007,20 +1011,43 @@ class _AddTaskPageViewState extends State<AddTaskPageView> {
     FocusScope.of(context).unfocus();
 
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.any,
-        allowMultiple: true,
-        withData: true,
+      // Camera (photo / video) or file browser — user picks the source.
+      final source = await showMediaSourceSheet(
+        context,
+        allowPhoto: true,
+        allowVideo: true,
+        galleryLabel: 'Browse files',
+        title: 'Add attachment',
       );
-      if (result == null || result.files.isEmpty) return;
+      if (source == null) return;
+
+      final files = <PickedCameraFile>[];
+      if (source == MediaPickSource.gallery) {
+        final result = await FilePicker.platform.pickFiles(
+          type: FileType.any,
+          allowMultiple: true,
+          withData: true,
+        );
+        if (result == null || result.files.isEmpty) return;
+        for (final f in result.files) {
+          final Uint8List? bytes = f.bytes;
+          if (bytes == null || bytes.isEmpty) continue;
+          files.add(PickedCameraFile(
+              name: f.name.isNotEmpty ? f.name : 'file', bytes: bytes));
+        }
+      } else {
+        final shot = await captureWithCamera(source);
+        if (shot == null) return;
+        files.add(shot);
+      }
+      if (files.isEmpty) return;
 
       setState(() => _uploading = true);
 
-      for (final f in result.files) {
-        final Uint8List? bytes = f.bytes;
-        if (bytes == null || bytes.isEmpty) continue;
+      for (final f in files) {
+        final Uint8List bytes = f.bytes;
 
-        final fileName = p.basename(f.name.isNotEmpty ? f.name : 'file');
+        final fileName = p.basename(f.name);
         final safeName = fileName.replaceAll(RegExp(r'[^\w\.\- ]+'), '_');
         final ts = DateTime.now().millisecondsSinceEpoch;
         final storagePath = 'projects/${projectRef.id}/tasks/${ts}_$safeName';

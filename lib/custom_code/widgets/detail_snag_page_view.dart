@@ -11,6 +11,10 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'media_source_helper.dart'; // Camera / gallery source helper
+
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:typed_data';
 import 'package:flutter/services.dart'; // SystemUiOverlayStyle (white status-bar icons over the ink hero)
 
@@ -385,20 +389,42 @@ class _DetailSnagPageViewState extends State<DetailSnagPageView> {
     if (ref == null || _uploadingFixed || _working) return;
 
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.media, // images + videos
-        allowMultiple: true,
-        withData: true,
+      // Camera (photo / video) or gallery — user picks the source.
+      final source = await showMediaSourceSheet(
+        context,
+        allowPhoto: true,
+        allowVideo: true,
+        title: 'Add fix photo or video',
       );
-      if (result == null || result.files.isEmpty) return;
+      if (source == null) return;
+
+      final files = <PickedCameraFile>[];
+      if (source == MediaPickSource.gallery) {
+        final result = await FilePicker.platform.pickFiles(
+          type: FileType.media, // images + videos
+          allowMultiple: true,
+          withData: true,
+        );
+        if (result == null || result.files.isEmpty) return;
+        for (final f in result.files) {
+          final Uint8List? bytes = f.bytes;
+          if (bytes == null || bytes.isEmpty) continue;
+          files.add(PickedCameraFile(
+              name: f.name.isNotEmpty ? f.name : 'fixed', bytes: bytes));
+        }
+      } else {
+        final shot = await captureWithCamera(source);
+        if (shot == null) return;
+        files.add(shot);
+      }
+      if (files.isEmpty) return;
 
       setState(() => _uploadingFixed = true);
 
-      for (final f in result.files) {
-        final Uint8List? bytes = f.bytes;
-        if (bytes == null || bytes.isEmpty) continue;
+      for (final f in files) {
+        final Uint8List bytes = f.bytes;
 
-        final fileName = p.basename(f.name.isNotEmpty ? f.name : 'fixed');
+        final fileName = p.basename(f.name);
         final safeName = fileName.replaceAll(RegExp(r'[^\w\.\- ]+'), '_');
         final ts = DateTime.now().millisecondsSinceEpoch;
         final storagePath = 'snags/${ref.id}/fixed/${ts}_$safeName';
