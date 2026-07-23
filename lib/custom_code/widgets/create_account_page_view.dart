@@ -13,6 +13,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/custom_code/actions/index.dart';
@@ -299,15 +301,15 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
         ),
       );
 
-  Widget _hero() => Container(
-        width: double.infinity,
-        color: _steel,
-        padding: EdgeInsets.fromLTRB(
-            _hPad, MediaQuery.of(context).padding.top + 8, _hPad, 22),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+  Widget _hero() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            color: _steel,
+            padding: EdgeInsets.fromLTRB(
+                _hPad, MediaQuery.of(context).padding.top + 8, _hPad, 14),
+            child: Row(
               children: [
                 _heroCircle(
                     Icons.arrow_back_ios_new_rounded, () => context.safePop()),
@@ -325,24 +327,33 @@ class _CreateAccountPageViewState extends State<CreateAccountPageView> {
                 const SizedBox(width: 38, height: 38),
               ],
             ),
-            const SizedBox(height: 16),
-            const Text('Create account',
-                style: TextStyle(
-                    fontFamily: _displayFont,
-                    fontSize: 32,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -1,
-                    height: 1.0,
-                    color: _paper)),
-            const SizedBox(height: 8),
-            Text('Set up your Subby account in seconds.',
-                style: TextStyle(
-                    fontFamily: _bodyFont,
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
-                    color: _paper.withOpacity(0.6))),
-          ],
-        ),
+          ),
+          Container(
+            width: double.infinity,
+            color: _paper,
+            padding: const EdgeInsets.fromLTRB(_hPad, 22, _hPad, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text('Create account',
+                    style: TextStyle(
+                        fontFamily: _displayFont,
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -1,
+                        height: 1.0,
+                        color: _ink)),
+                SizedBox(height: 8),
+                Text('Set up your Subby account in seconds.',
+                    style: TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: _inkMute)),
+              ],
+            ),
+          ),
+        ],
       );
 
   Future<void> _createAccount() async {
