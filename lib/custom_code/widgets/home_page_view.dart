@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/flutter_flow/custom_functions.dart' as functions;
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -538,37 +540,39 @@ class _HomePageViewState extends State<HomePageView> {
               Container(
                 width: double.infinity,
                 color: _steel,
-                // Top pad matches DashboardPageView (topInset + 14) so the logo +
-                // menu button sit at the identical vertical position on both.
-                padding: EdgeInsets.fromLTRB(_hPad, topInset + 14, _hPad, 30),
+                padding: EdgeInsets.fromLTRB(_hPad, topInset + 14, _hPad, 14),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _logo(),
+                    _menuButton(),
+                  ],
+                ),
+              ),
+              // Title block on white (matches redesigned ProjectDetailPageView).
+              Container(
+                width: double.infinity,
+                color: _paper,
+                padding: const EdgeInsets.fromLTRB(_hPad, 22, _hPad, 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Logo + menu button — matches DashboardPageView masthead.
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _logo(),
-                        _menuButton(),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
                     const Text('Subby Network',
                         style: TextStyle(
                           fontFamily: _displayFont,
-                          fontSize: 28,
+                          fontSize: 30,
                           fontWeight: FontWeight.w900,
                           letterSpacing: -0.6,
                           height: 1.08,
-                          color: _paper,
+                          color: _ink,
                         )),
                     const SizedBox(height: 8),
-                    Text('Find trades, pros & suppliers near you.',
+                    const Text('Find trades, pros & suppliers near you.',
                         style: TextStyle(
                           fontFamily: _bodyFont,
-                          fontSize: 12,
+                          fontSize: 12.5,
                           fontWeight: FontWeight.w600,
-                          color: _paper.withOpacity(0.55),
+                          color: _inkMute,
                         )),
                   ],
                 ),
