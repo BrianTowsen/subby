@@ -19,6 +19,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'admin_members_view.dart' show showAdminMembersSheet;
 
 import '/custom_code/actions/index.dart';
@@ -314,6 +316,9 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   bool _feedOpen = false;
   bool _docsOpen = false;
   bool _teamOpen = false;
+
+  // Project Team hub tab: 0 = Admin · 1 = Consultants · 2 = Companies
+  int _teamTab = 1;
 
   // Project Feed — read-only activity log (project_activity collection)
   List<QueryDocumentSnapshot<Map<String, dynamic>>> _activityRows = [];
@@ -3365,11 +3370,7 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                             const SizedBox(height: 24),
                             _rDocuments(readOnly),
                             const SizedBox(height: 24),
-                            _rTeam(readOnly),
-                            if (!readOnly) ...[
-                              const SizedBox(height: 24),
-                              _rAdmin(),
-                            ],
+                            _rTeamHub(readOnly),
                           ],
                         ),
                       ),
@@ -4487,6 +4488,402 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   // Invite + manage the people on this project by type. Office and
   // Owner/Guest are code-invited guests (project_members, no Network
   // listing); Service Providers join the team with their Network listing.
+  // ===================================================================
+  // PROJECT TEAM HUB — segmented Admin · Consultants · Companies.
+  // One card, a sliding yellow pill (matches CheckListPageView._pillTabs),
+  // three bordered-list panels sharing the same row design.
+  // ===================================================================
+  static const List<List<dynamic>> _consultantDefs = <List<dynamic>>[
+    [
+      Icons.architecture_rounded,
+      'Architect',
+      <String>['architect']
+    ],
+    [
+      Icons.design_services_rounded,
+      'Interior Architect',
+      <String>['interior']
+    ],
+    [
+      Icons.engineering_rounded,
+      'Engineer',
+      <String>['engineer', 'structural']
+    ],
+    [
+      Icons.calculate_rounded,
+      'Quantity Surveyor',
+      <String>['quantity', ' qs']
+    ],
+    [
+      Icons.square_foot_rounded,
+      'Land Surveyor',
+      <String>['land']
+    ],
+  ];
+
+  String _listingTrade(Map<String, dynamic> d) =>
+      (d['profession'] ?? d['trade'] ?? d['subtitle'] ?? d['subTitle'] ?? '')
+          .toString()
+          .toLowerCase();
+
+  QueryDocumentSnapshot<Map<String, dynamic>>? _consultantFor(
+      List<String> kws) {
+    for (final s in _listingRows) {
+      final t = _listingTrade(s.data());
+      for (final kw in kws) {
+        if (t.contains(kw)) return s;
+      }
+    }
+    return null;
+  }
+
+  bool _isConsultantListing(Map<String, dynamic> d) {
+    final t = _listingTrade(d);
+    for (final def in _consultantDefs) {
+      for (final kw in (def[2] as List).cast<String>()) {
+        if (t.contains(kw)) return true;
+      }
+    }
+    return false;
+  }
+
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> _companyRows() =>
+      _listingRows.where((s) => !_isConsultantListing(s.data())).toList();
+
+  int _consultantFilledCount() {
+    var n = 0;
+    for (final def in _consultantDefs) {
+      if (_consultantFor((def[2] as List).cast<String>()) != null) n++;
+    }
+    return n;
+  }
+
+  void _openAdmin(String role) {
+    final ref = widget.projectRef;
+    if (ref == null) return;
+    showAdminMembersSheet(
+      context,
+      projectRef: ref,
+      projectName: (_projectData['name'] ?? 'Project').toString(),
+      role: role,
+    );
+  }
+
+  IconData _companyIcon(String trade) {
+    final t = trade.toLowerCase();
+    if (t.contains('plumb')) return Icons.plumbing_rounded;
+    if (t.contains('electric')) return Icons.bolt_rounded;
+    if (t.contains('paint')) return Icons.format_paint_rounded;
+    if (t.contains('roof')) return Icons.roofing_rounded;
+    if (t.contains('tile') || t.contains('tiling'))
+      return Icons.grid_on_rounded;
+    return Icons.apartment_rounded;
+  }
+
+  Widget _rTeamHub(bool readOnly) {
+    final total =
+        _listingRows.length + (_consultantFilledCount() > 0 ? 0 : 0) + 2;
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        _rSectionLabel('PROJECT TEAM'),
+        Text('$total people',
+            style: const TextStyle(
+                fontFamily: _bodyFont,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: _rFaint)),
+      ]),
+      const SizedBox(height: 12),
+      _rTeamTabs(),
+      const SizedBox(height: 16),
+      if (_teamTab == 0)
+        _rAdminPanel(readOnly)
+      else if (_teamTab == 1)
+        _rConsultantsPanel(readOnly)
+      else
+        _rCompaniesPanel(readOnly),
+    ]);
+  }
+
+  Widget _rTeamTabs() {
+    const labels = ['Admin', 'Consultants', 'Companies'];
+    final counts = [3, _consultantFilledCount(), _companyRows().length];
+    final current = _teamTab;
+    return Container(
+      height: 44,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+          color: _surface, borderRadius: BorderRadius.circular(999)),
+      child: LayoutBuilder(builder: (context, c) {
+        final segW = c.maxWidth / 3;
+        return Stack(children: [
+          AnimatedAlign(
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment((-1 + current).toDouble(), 0),
+            child: Container(
+              width: segW,
+              height: double.infinity,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE7E247),
+                borderRadius: BorderRadius.circular(999),
+                boxShadow: const [
+                  BoxShadow(
+                      color: Color(0x1A000000),
+                      blurRadius: 3,
+                      offset: Offset(0, 1)),
+                ],
+              ),
+            ),
+          ),
+          Row(
+              children: List.generate(3, (i) {
+            final active = i == current;
+            return Expanded(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => setState(() => _teamTab = i),
+                child: Center(
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    Text(labels[i],
+                        style: TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 12.5,
+                            fontWeight:
+                                active ? FontWeight.w800 : FontWeight.w600,
+                            color: active ? _ink : _rFaint)),
+                    const SizedBox(width: 5),
+                    Text('${counts[i]}',
+                        style: TextStyle(
+                            fontFamily: _bodyFont,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color:
+                                (active ? _ink : _rFaint).withOpacity(0.75))),
+                  ]),
+                ),
+              ),
+            );
+          })),
+        ]);
+      }),
+    );
+  }
+
+  // Shared row for every hub panel (consultant-style).
+  Widget _rHubRow({
+    required IconData icon,
+    required bool filled,
+    required String title,
+    required String sub,
+    required bool subIsCta,
+    required bool showBorder,
+    VoidCallback? onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+              border: showBorder
+                  ? const Border(bottom: BorderSide(color: Color(0xFFF2F5F6)))
+                  : null),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(children: [
+            Container(
+              width: 38,
+              height: 38,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: filled ? _tealTint : const Color(0xFFF5F7F8),
+                borderRadius: BorderRadius.circular(10),
+                border: filled
+                    ? null
+                    : Border.all(color: const Color(0xFFCBD8DD), width: 1),
+              ),
+              child: Icon(icon, size: 20, color: filled ? _ink : _rFaint),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w800,
+                          color: filled ? _ink : _rFaint)),
+                  const SizedBox(height: 2),
+                  Text(sub,
+                      style: TextStyle(
+                          fontFamily: _bodyFont,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: subIsCta ? const Color(0xFFAC0C0C) : _rFaint)),
+                ],
+              ),
+            ),
+            Icon(filled ? Icons.call_rounded : Icons.add_circle,
+                size: 20, color: filled ? _ink : const Color(0xFFAC0C0C)),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  Widget _rHubCard(List<Widget> rows) => Container(
+        decoration: BoxDecoration(
+            color: _paper,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFEAEEF0))),
+        clipBehavior: Clip.antiAlias,
+        child: Column(children: rows),
+      );
+
+  Widget _rInviteBtn(String label, VoidCallback onTap) => Padding(
+        padding: const EdgeInsets.only(top: 14),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 13),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                  color: _ink, borderRadius: BorderRadius.circular(12)),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                const Icon(Icons.person_add_alt_1_rounded,
+                    size: 18, color: _paper),
+                const SizedBox(width: 8),
+                Text(label,
+                    style: const TextStyle(
+                        fontFamily: _bodyFont,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: _paper)),
+              ]),
+            ),
+          ),
+        ),
+      );
+
+  Widget _rAdminPanel(bool readOnly) {
+    final rows = <Widget>[
+      _rHubRow(
+          icon: Icons.badge_outlined,
+          filled: false,
+          title: 'Office',
+          sub: 'Your staff on this project',
+          subIsCta: false,
+          showBorder: true,
+          onTap: () => _openAdmin('office')),
+      _rHubRow(
+          icon: Icons.engineering_outlined,
+          filled: false,
+          title: 'Site Foreman',
+          sub: 'Runs the site day-to-day',
+          subIsCta: false,
+          showBorder: true,
+          onTap: () => _openAdmin('foreman')),
+      _rHubRow(
+          icon: Icons.visibility_outlined,
+          filled: false,
+          title: 'Owner / Guest',
+          sub: 'Client follows the build',
+          subIsCta: false,
+          showBorder: false,
+          onTap: () => _openAdmin('client')),
+    ];
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _rHubCard(rows),
+      if (!readOnly) _rInviteBtn('Invite to admin', () => _openAdmin('office')),
+    ]);
+  }
+
+  Widget _rConsultantsPanel(bool readOnly) {
+    final rows = <Widget>[];
+    for (var i = 0; i < _consultantDefs.length; i++) {
+      final def = _consultantDefs[i];
+      final icon = def[0] as IconData;
+      final role = def[1] as String;
+      final kws = (def[2] as List).cast<String>();
+      final match = _consultantFor(kws);
+      final last = i == _consultantDefs.length - 1;
+      if (match != null) {
+        final d = match.data();
+        final name = (d['title'] ?? d['name'] ?? role).toString();
+        final ref = _extractListingRef(d);
+        rows.add(_rHubRow(
+            icon: icon,
+            filled: true,
+            title: name,
+            sub: role,
+            subIsCta: false,
+            showBorder: !last,
+            onTap: () {
+              if (ref != null) _navigateToListing(ref);
+            }));
+      } else {
+        rows.add(_rHubRow(
+            icon: icon,
+            filled: false,
+            title: role,
+            sub: readOnly ? 'Not added' : 'Tap to invite',
+            subIsCta: !readOnly,
+            showBorder: !last,
+            onTap: readOnly ? null : _navigateToDirectory));
+      }
+    }
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _rHubCard(rows),
+      if (!readOnly) _rInviteBtn('Invite a consultant', _navigateToDirectory),
+    ]);
+  }
+
+  Widget _rCompaniesPanel(bool readOnly) {
+    final companies = _companyRows();
+    final rows = <Widget>[];
+    if (companies.isEmpty) {
+      rows.add(_rHubRow(
+          icon: Icons.apartment_rounded,
+          filled: false,
+          title: 'No companies yet',
+          sub: readOnly ? 'None added' : 'Tap to add a company',
+          subIsCta: !readOnly,
+          showBorder: false,
+          onTap: readOnly ? null : _navigateToDirectory));
+    } else {
+      for (var i = 0; i < companies.length; i++) {
+        final d = companies[i].data();
+        final name = (d['title'] ?? d['name'] ?? 'Company').toString();
+        final trade =
+            (d['trade'] ?? d['subtitle'] ?? d['subTitle'] ?? 'Contractor')
+                .toString();
+        final ref = _extractListingRef(d);
+        rows.add(_rHubRow(
+            icon: _companyIcon(trade),
+            filled: true,
+            title: name,
+            sub: trade,
+            subIsCta: false,
+            showBorder: i != companies.length - 1,
+            onTap: () {
+              if (ref != null) _navigateToListing(ref);
+            }));
+      }
+    }
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _rHubCard(rows),
+      if (!readOnly) _rInviteBtn('Invite a company', _navigateToDirectory),
+    ]);
+  }
+
   Widget _rAdmin() {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       _rSectionLabel('ADMIN'),

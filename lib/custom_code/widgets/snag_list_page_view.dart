@@ -15,6 +15,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import '/custom_code/actions/index.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -99,6 +101,10 @@ class _SnagListPageViewState extends State<SnagListPageView>
     _tabController = TabController(length: 3, vsync: this);
     // Rebuild so the sliding pill + segment weights track the selected tab.
     _tabController.addListener(() {
+      if (mounted) setState(() {});
+    });
+    // Follow the swipe continuously so the pill slides with the finger.
+    _tabController.animation?.addListener(() {
       if (mounted) setState(() {});
     });
     // NOTE: route reading must happen in didChangeDependencies (needs context).
@@ -430,7 +436,8 @@ class _SnagListPageViewState extends State<SnagListPageView>
       padding: const EdgeInsets.fromLTRB(_contentHPad, 4, _contentHPad, 10),
       alignment: Alignment.bottomLeft,
       child: _pillTabs(
-        current: _tabController.index,
+        current:
+            _tabController.animation?.value ?? _tabController.index.toDouble(),
         labels: const ['Open', 'In Progress', 'Closed'],
         statusKeys: const ['open', 'in_progress', 'closed'],
         collection: 'snags',
@@ -442,7 +449,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
   // Reusable segmented pill: a surface track with a GREEN pill that slides to
   // the active segment; each segment shows its label + a live count.
   Widget _pillTabs({
-    required int current,
+    required double current,
     required List<String> labels,
     required List<String> statusKeys,
     required String collection,
@@ -486,7 +493,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
               // Tappable labels.
               Row(
                 children: List.generate(n, (i) {
-                  final active = i == current;
+                  final active = current.round() == i;
                   return Expanded(
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
@@ -978,7 +985,7 @@ class _SnagListPageViewState extends State<SnagListPageView>
                   },
                   body: TabBarView(
                     controller: _tabController,
-                    physics: const NeverScrollableScrollPhysics(),
+                    physics: const BouncingScrollPhysics(),
                     children: List.generate(3, (tabIndex) {
                       final stream = _snagStreamForTab(tabIndex);
 
