@@ -15,6 +15,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:intl/intl.dart';
@@ -143,12 +145,23 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
   final TextEditingController _nameCtl = TextEditingController();
   final ScrollController _vCtl = ScrollController();
   final ScrollController _editScrollCtl = ScrollController();
+  // Board horizontal scroll: body drives, header follows (pinned date row).
+  final ScrollController _hBody = ScrollController();
+  final ScrollController _hHead = ScrollController();
+  bool _hSyncing = false;
 
   @override
   void initState() {
     super.initState();
     _sections = buildProgramme('gf'); // harmless placeholder behind START
     _syncNameCtl();
+    _hBody.addListener(() {
+      if (_hSyncing || !_hHead.hasClients) return;
+      _hSyncing = true;
+      final max = _hHead.position.maxScrollExtent;
+      _hHead.jumpTo(_hBody.offset.clamp(0.0, max));
+      _hSyncing = false;
+    });
     // NOTE: project resolution happens in didChangeDependencies (route
     // reading needs context).
   }
@@ -205,6 +218,8 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
     _nameCtl.dispose();
     _vCtl.dispose();
     _editScrollCtl.dispose();
+    _hBody.dispose();
+    _hHead.dispose();
     super.dispose();
   }
 
@@ -1450,29 +1465,220 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
     final weeksCount = (totalCeil / 5).ceil().clamp(1, 9999);
     final hasRows = _sections.isNotEmpty;
 
+    final parts = hasRows ? _board(sch, weeksCount) : null;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _hero(totalCeil),
         Expanded(
-          child: SingleChildScrollView(
+          child: CustomScrollView(
             controller: _vCtl,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Hero lower block scrolls away; only the top bar pins.
-                _heroLower(totalCeil),
-                if (_showBanner && !_readOnly) _banner(),
-                if (hasRows) _tapHint(),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 4, 14, 24),
-                  child: hasRows ? _board(sch, weeksCount) : _emptyState(),
+            slivers: [
+              if (_showBanner && !_readOnly)
+                SliverToBoxAdapter(child: _banner()),
+              SliverToBoxAdapter(child: _overviewCard(totalCeil)),
+              if (hasRows) SliverToBoxAdapter(child: _tapHint()),
+              if (hasRows) SliverToBoxAdapter(child: _zoomRow()),
+              if (hasRows)
+                const SliverToBoxAdapter(child: SizedBox(height: 12)),
+              if (hasRows)
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  sliver: SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _BoardHeaderDelegate(
+                        extent: _headH + 1, child: parts!.header),
+                  ),
                 ),
-              ],
-            ),
+              if (hasRows)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 24),
+                    child: parts!.body,
+                  ),
+                )
+              else
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 4, 14, 24),
+                    child: _emptyState(),
+                  ),
+                ),
+            ],
           ),
         ),
       ],
+    );
+  }
+
+  // White overview card — programme duration + completion (matches
+  // ProjectDetailPageView's _rOverviewCard treatment).
+  Widget _overviewCard(int totalCeil) {
+    final weeks = (totalCeil / 5).round();
+    final pct = _completionPct();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      child: Container(
+        decoration: BoxDecoration(
+            color: _paper,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: _border)),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('PROGRAMME',
+                        style: TextStyle(
+                            fontFamily: _body,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1,
+                            color: _inkMute)),
+                    const SizedBox(height: 6),
+                    Text('$weeks weeks',
+                        style: const TextStyle(
+                            fontFamily: _display,
+                            fontSize: 38,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1.4,
+                            height: 0.95,
+                            color: _ink)),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text('DURATION',
+                          style: TextStyle(
+                              fontFamily: _body,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.8,
+                              color: _faint)),
+                      const SizedBox(height: 3),
+                      Text('$totalCeil days',
+                          style: const TextStyle(
+                              fontFamily: _body,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: _ink)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: Container(
+                height: 6,
+                color: _surface,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: FractionallySizedBox(
+                    widthFactor: _completionFrac(),
+                    child: Container(
+                      decoration: BoxDecoration(
+                          color: _ink,
+                          borderRadius: BorderRadius.circular(999)),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Container(height: 1, color: _line),
+            const SizedBox(height: 12),
+            Row(children: [
+              const Icon(Icons.event_rounded, size: 16, color: _faint),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                    '${_long(_start)} → ${_long(_wd(totalCeil.toDouble()))}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontFamily: _body,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: _inkMute)),
+              ),
+            ]),
+            const SizedBox(height: 8),
+            Row(children: [
+              const Icon(Icons.check_circle_rounded, size: 16, color: _faint),
+              const SizedBox(width: 8),
+              Text('$pct% complete · $totalCeil working days',
+                  style: const TextStyle(
+                      fontFamily: _body,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: _inkMute)),
+            ]),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _zoomRow() {
+    if (_sections.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 16, 14, 0),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: Container(
+          padding: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+              color: _surface, borderRadius: BorderRadius.circular(999)),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _zoomSegLight('days', 'Day'),
+              _zoomSegLight('weeks', 'Week'),
+              _zoomSegLight('months', 'Month'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _zoomSegLight(String k, String label) {
+    final active = _zoom == k;
+    return GestureDetector(
+      onTap: () => _setZoom(k),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: active ? _paper : Colors.transparent,
+          borderRadius: BorderRadius.circular(999),
+          boxShadow: active
+              ? const [
+                  BoxShadow(
+                      color: Color(0x1A000000),
+                      blurRadius: 3,
+                      offset: Offset(0, 1))
+                ]
+              : null,
+        ),
+        child: Text(label,
+            style: TextStyle(
+                fontFamily: _body,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: active ? _ink : _inkMute)),
+      ),
     );
   }
 
@@ -1841,7 +2047,7 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
       );
 
   // ----------------------------------------------------------------- board
-  Widget _board(_Schedule sch, int weeksCount) {
+  _BoardParts _board(_Schedule sch, int weeksCount) {
     double totalDays = 0;
     for (final e in sch.secEnd) {
       if (e > totalDays) totalDays = e;
@@ -1955,115 +2161,136 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
       }
     }
 
-    final timeline = SizedBox(
-      width: timelineW,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    final headerInner = SizedBox(
+      height: _headH,
+      child: Stack(
         children: [
-          // month header + TODAY pill
-          SizedBox(
-            height: _headH,
+          Row(
+            children: [
+              for (var i = 0; i < monthSegs.length; i++)
+                Container(
+                  width: monthSegs[i].days * pxPerDay,
+                  height: _headH,
+                  alignment: Alignment.centerLeft,
+                  padding: const EdgeInsets.only(left: 8),
+                  decoration: BoxDecoration(
+                    color: i.isEven ? _paper : const Color(0xFFFAFBFC),
+                    border: const Border(
+                      right: BorderSide(color: _line),
+                      bottom: BorderSide(color: _border),
+                    ),
+                  ),
+                  child: Text(monthSegs[i].label,
+                      style: const TextStyle(
+                          fontFamily: _body,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                          color: _inkMute)),
+                ),
+            ],
+          ),
+          if (todayShow)
+            Positioned(
+              left: todayX,
+              top: 5,
+              child: FractionalTranslation(
+                translation: const Offset(-0.5, 0),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                      color: const Color(0xFFAC0C0C),
+                      borderRadius: BorderRadius.circular(999)),
+                  child: const Text('TODAY',
+                      style: TextStyle(
+                          fontFamily: _body,
+                          fontSize: 8,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.4,
+                          color: _paper)),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+
+    final lanesInner = Stack(
+      children: [
+        Positioned.fill(
+          child: IgnorePointer(
             child: Stack(
               children: [
-                Row(
-                  children: [
-                    for (var i = 0; i < monthSegs.length; i++)
-                      Container(
-                        width: monthSegs[i].days * pxPerDay,
-                        height: _headH,
-                        alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.only(left: 8),
-                        decoration: BoxDecoration(
-                          color: i.isEven ? _paper : const Color(0xFFFAFBFC),
-                          border: const Border(
-                            right: BorderSide(color: _line),
-                            bottom: BorderSide(color: _border),
-                          ),
-                        ),
-                        child: Text(monthSegs[i].label,
-                            style: const TextStyle(
-                                fontFamily: _body,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.5,
-                                color: _inkMute)),
-                      ),
-                  ],
-                ),
-                if (todayShow)
+                for (final gx in gridXs)
                   Positioned(
-                    left: todayX,
-                    top: 5,
-                    child: FractionalTranslation(
-                      translation: const Offset(-0.5, 0),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                            color: const Color(0xFFAC0C0C),
-                            borderRadius: BorderRadius.circular(999)),
-                        child: const Text('TODAY',
-                            style: TextStyle(
-                                fontFamily: _body,
-                                fontSize: 8,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.4,
-                                color: _paper)),
-                      ),
-                    ),
+                    left: gx,
+                    top: 0,
+                    bottom: 0,
+                    child: Container(width: 1, color: _line),
                   ),
               ],
             ),
           ),
-          // lanes with gridlines behind + today line on top
-          Stack(
-            children: [
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: Stack(
-                    children: [
-                      for (final gx in gridXs)
-                        Positioned(
-                          left: gx,
-                          top: 0,
-                          bottom: 0,
-                          child: Container(width: 1, color: _line),
-                        ),
-                    ],
+        ),
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: lanes),
+        if (todayShow)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: Stack(
+                children: [
+                  Positioned(
+                    left: todayX - 1,
+                    top: 0,
+                    bottom: 0,
+                    child: Container(
+                        width: 2,
+                        color: const Color(0xFFAC0C0C).withOpacity(0.85)),
                   ),
-                ),
+                ],
               ),
-              Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: lanes),
-              if (todayShow)
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: Stack(
-                      children: [
-                        Positioned(
-                          left: todayX - 1,
-                          top: 0,
-                          bottom: 0,
-                          child: Container(
-                              width: 2,
-                              color: const Color(0xFFAC0C0C).withOpacity(0.85)),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
+            ),
+          ),
+      ],
+    );
+
+    final header = Container(
+      decoration: const BoxDecoration(
+        color: _paper,
+        border: Border(
+          top: BorderSide(color: _border),
+          left: BorderSide(color: _border),
+          right: BorderSide(color: _border),
+        ),
+        borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(10), topRight: Radius.circular(10)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Row(
+        children: [
+          _cornerCell(),
+          Expanded(
+            child: SingleChildScrollView(
+              controller: _hHead,
+              scrollDirection: Axis.horizontal,
+              physics: const NeverScrollableScrollPhysics(),
+              child: SizedBox(width: timelineW, child: headerInner),
+            ),
           ),
         ],
       ),
     );
 
-    return Container(
-      decoration: BoxDecoration(
+    final body = Container(
+      decoration: const BoxDecoration(
         color: _paper,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _border),
+        border: Border(
+          left: BorderSide(color: _border),
+          right: BorderSide(color: _border),
+          bottom: BorderSide(color: _border),
+        ),
+        borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -2074,17 +2301,13 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
               children: [
                 SizedBox(
                   width: _leftW,
-                  child: Column(
-                    children: [
-                      _cornerCell(),
-                      ...leftCells,
-                    ],
-                  ),
+                  child: Column(children: leftCells),
                 ),
                 Expanded(
                   child: SingleChildScrollView(
+                    controller: _hBody,
                     scrollDirection: Axis.horizontal,
-                    child: timeline,
+                    child: SizedBox(width: timelineW, child: lanesInner),
                   ),
                 ),
               ],
@@ -2100,6 +2323,8 @@ class _ProjectTimelinePageViewState extends State<ProjectTimelinePageView> {
         ],
       ),
     );
+
+    return _BoardParts(header: header, body: body);
   }
 
   Widget _cornerCell() => Container(
@@ -3168,6 +3393,31 @@ class _MonthSeg {
   final String label;
   final int weeks;
   const _MonthSeg(this.label, this.weeks);
+}
+
+class _BoardParts {
+  final Widget header;
+  final Widget body;
+  _BoardParts({required this.header, required this.body});
+}
+
+// Pinned board header (PHASE label + month/date row) — stays visible while
+// the phase rows scroll under it.
+class _BoardHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final double extent;
+  final Widget child;
+  _BoardHeaderDelegate({required this.extent, required this.child});
+
+  @override
+  double get minExtent => extent;
+  @override
+  double get maxExtent => extent;
+  @override
+  Widget build(
+          BuildContext context, double shrinkOffset, bool overlapsContent) =>
+      SizedBox(height: extent, child: child);
+  @override
+  bool shouldRebuild(covariant _BoardHeaderDelegate oldDelegate) => true;
 }
 
 class _DaySeg {
