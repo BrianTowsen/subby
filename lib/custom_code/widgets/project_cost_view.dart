@@ -15,6 +15,8 @@ import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -22,6 +24,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/auth/firebase_auth/auth_util.dart';
+import 'package:flutter/rendering.dart' show ScrollDirection;
 
 /// ProjectCostView — Financial Control Module.
 ///
@@ -182,6 +185,7 @@ class _ProjectCostViewState extends State<ProjectCostView> {
   OverlayEntry? _kbBar;
 
   int _tab = 0; // 0 = Cost Estimate, 1 = Payments, 2 = Cost Control
+  bool _navVisible = true; // bottom tab bar auto-hides on scroll down
   bool _manage = false; // manage-sections overlay
   int? _paymentFilter; // null = all; otherwise section index
   String? _editingPaymentId; // full-screen payment editor when non-null
@@ -1301,21 +1305,38 @@ class _ProjectCostViewState extends State<ProjectCostView> {
           Column(
             children: [
               Expanded(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 280),
-                  switchInCurve: Curves.easeOutCubic,
-                  switchOutCurve: Curves.easeIn,
-                  transitionBuilder: (child, anim) => FadeTransition(
-                    opacity: anim,
-                    child: child,
-                  ),
-                  child: KeyedSubtree(
-                    key: ValueKey<int>(_tab),
-                    child: _activeScreen(),
+                child: NotificationListener<UserScrollNotification>(
+                  onNotification: (n) {
+                    if (n.direction == ScrollDirection.reverse && _navVisible) {
+                      setState(() => _navVisible = false);
+                    } else if (n.direction == ScrollDirection.forward &&
+                        !_navVisible) {
+                      setState(() => _navVisible = true);
+                    }
+                    return false;
+                  },
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 280),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeIn,
+                    transitionBuilder: (child, anim) => FadeTransition(
+                      opacity: anim,
+                      child: child,
+                    ),
+                    child: KeyedSubtree(
+                      key: ValueKey<int>(_tab),
+                      child: _activeScreen(),
+                    ),
                   ),
                 ),
               ),
-              _tabBar(),
+              AnimatedSize(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOut,
+                child: _navVisible
+                    ? _tabBar()
+                    : const SizedBox(width: double.infinity, height: 0),
+              ),
             ],
           ),
           if (_editingPaymentId != null && _editingPayment != null)
