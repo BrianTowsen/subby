@@ -1185,9 +1185,9 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
                       ),
               ],
             ),
-            const SizedBox(height: 16),
-            // Completion + location moved OUT of the pinned bar into
-            // _inkHeroLower so they scroll away with the page.
+            // Top-bar only — matches the other pages' masthead height
+            // (top + 14 · row · 14). Completion + location live on the
+            // white overview card in the body.
           ],
         ),
       ),
@@ -4496,28 +4496,63 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
   static const List<List<dynamic>> _consultantDefs = <List<dynamic>>[
     [
       Icons.architecture_rounded,
-      'Architect',
+      'Architect - Home',
       <String>['architect']
     ],
     [
       Icons.design_services_rounded,
-      'Interior Architect',
-      <String>['interior']
+      'Architect - Interior',
+      <String>['interior architect']
+    ],
+    [
+      Icons.yard_rounded,
+      'Architect - Landscape',
+      <String>['landscape']
+    ],
+    [
+      Icons.chair_rounded,
+      'Interior Decorator',
+      <String>['decorator']
     ],
     [
       Icons.engineering_rounded,
-      'Engineer',
-      <String>['engineer', 'structural']
+      'Engineer - Structural',
+      <String>['structural']
+    ],
+    [
+      Icons.bolt_rounded,
+      'Engineer - Electrical',
+      <String>['electrical engineer']
+    ],
+    [
+      Icons.hvac_rounded,
+      'Engineer - HVAC',
+      <String>['hvac', 'mechanical']
+    ],
+    [
+      Icons.eco_rounded,
+      'Environmental Consultant',
+      <String>['environmental']
+    ],
+    [
+      Icons.history_edu_rounded,
+      'Historical Consultant',
+      <String>['historical', 'heritage']
     ],
     [
       Icons.calculate_rounded,
       'Quantity Surveyor',
-      <String>['quantity', ' qs']
+      <String>['quantity']
+    ],
+    [
+      Icons.map_rounded,
+      'Town Planner',
+      <String>['town planner', 'planner']
     ],
     [
       Icons.square_foot_rounded,
       'Land Surveyor',
-      <String>['land']
+      <String>['land surveyor']
     ],
   ];
 
@@ -4596,12 +4631,42 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
       const SizedBox(height: 12),
       _rTeamTabs(),
       const SizedBox(height: 16),
-      if (_teamTab == 0)
-        _rAdminPanel(readOnly)
-      else if (_teamTab == 1)
-        _rConsultantsPanel(readOnly)
-      else
-        _rCompaniesPanel(readOnly),
+      // Swipe left/right to move between Admin · Consultants · Companies;
+      // the pill tracks the selection (AnimatedAlign in _rTeamTabs).
+      GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onHorizontalDragEnd: (d) {
+          final v = d.primaryVelocity ?? 0;
+          if (v < -250 && _teamTab < 2) {
+            setState(() => _teamTab++);
+          } else if (v > 250 && _teamTab > 0) {
+            setState(() => _teamTab--);
+          }
+        },
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 260),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeOutCubic,
+          transitionBuilder: (child, anim) => FadeTransition(
+            opacity: anim,
+            child: SlideTransition(
+              position:
+                  Tween<Offset>(begin: const Offset(0.06, 0), end: Offset.zero)
+                      .animate(anim),
+              child: child,
+            ),
+          ),
+          child: Container(
+            key: ValueKey<int>(_teamTab),
+            width: double.infinity,
+            child: _teamTab == 0
+                ? _rAdminPanel(readOnly)
+                : _teamTab == 1
+                    ? _rConsultantsPanel(readOnly)
+                    : _rCompaniesPanel(readOnly),
+          ),
+        ),
+      ),
     ]);
   }
 
@@ -4779,26 +4844,26 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
           icon: Icons.badge_outlined,
           filled: false,
           title: 'Office',
-          sub: 'Your staff on this project',
-          subIsCta: false,
+          sub: readOnly ? 'Not added' : 'Tap to invite',
+          subIsCta: !readOnly,
           showBorder: true,
-          onTap: () => _openAdmin('office')),
+          onTap: readOnly ? null : () => _openAdmin('office')),
       _rHubRow(
           icon: Icons.engineering_outlined,
           filled: false,
           title: 'Site Foreman',
-          sub: 'Runs the site day-to-day',
-          subIsCta: false,
+          sub: readOnly ? 'Not added' : 'Tap to invite',
+          subIsCta: !readOnly,
           showBorder: true,
-          onTap: () => _openAdmin('foreman')),
+          onTap: readOnly ? null : () => _openAdmin('foreman')),
       _rHubRow(
           icon: Icons.visibility_outlined,
           filled: false,
           title: 'Owner / Guest',
-          sub: 'Client follows the build',
-          subIsCta: false,
+          sub: readOnly ? 'Not added' : 'Tap to invite',
+          subIsCta: !readOnly,
           showBorder: false,
-          onTap: () => _openAdmin('client')),
+          onTap: readOnly ? null : () => _openAdmin('client')),
     ];
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       _rHubCard(rows),
@@ -4842,9 +4907,62 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
     }
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       _rHubCard(rows),
-      if (!readOnly) _rInviteBtn('Invite a consultant', _navigateToDirectory),
+      // Consultants join free — invited here, or they list themselves.
+      Container(
+        margin: const EdgeInsets.only(top: 12),
+        padding: const EdgeInsets.fromLTRB(12, 11, 12, 11),
+        decoration: BoxDecoration(
+            color: _surface, borderRadius: BorderRadius.circular(10)),
+        child:
+            Row(crossAxisAlignment: CrossAxisAlignment.start, children: const [
+          Icon(Icons.info_outline_rounded, size: 15, color: _inkMute),
+          SizedBox(width: 7),
+          Expanded(
+            child: Text(
+                'Consultants join free — invite them here, or they can list themselves in the Directory.',
+                style: TextStyle(
+                    fontFamily: _bodyFont,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    height: 1.4,
+                    color: _inkMute)),
+          ),
+        ]),
+      ),
+      if (!readOnly)
+        Padding(
+          padding: const EdgeInsets.only(top: 10),
+          child: _rInviteBtnFlush('Invite a consultant', _navigateToDirectory),
+        ),
     ]);
   }
+
+  // Invite button without the default top padding (caller controls spacing).
+  Widget _rInviteBtnFlush(String label, VoidCallback onTap) => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 13),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+                color: _ink, borderRadius: BorderRadius.circular(12)),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              const Icon(Icons.person_add_alt_1_rounded,
+                  size: 18, color: _paper),
+              const SizedBox(width: 8),
+              Text(label,
+                  style: const TextStyle(
+                      fontFamily: _bodyFont,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: _paper)),
+            ]),
+          ),
+        ),
+      );
 
   Widget _rCompaniesPanel(bool readOnly) {
     final companies = _companyRows();
