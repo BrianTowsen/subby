@@ -4643,27 +4643,32 @@ class _ProjectDetailPageViewState extends State<ProjectDetailPageView>
             setState(() => _teamTab--);
           }
         },
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 260),
-          switchInCurve: Curves.easeOutCubic,
-          switchOutCurve: Curves.easeOutCubic,
-          transitionBuilder: (child, anim) => FadeTransition(
-            opacity: anim,
-            child: SlideTransition(
-              position:
-                  Tween<Offset>(begin: const Offset(0.06, 0), end: Offset.zero)
-                      .animate(anim),
-              child: child,
+        child: AnimatedSize(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 260),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeOutCubic,
+            transitionBuilder: (child, anim) => FadeTransition(
+              opacity: anim,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                        begin: const Offset(0.06, 0), end: Offset.zero)
+                    .animate(anim),
+                child: child,
+              ),
             ),
-          ),
-          child: Container(
-            key: ValueKey<int>(_teamTab),
-            width: double.infinity,
-            child: _teamTab == 0
-                ? _rAdminPanel(readOnly)
-                : _teamTab == 1
-                    ? _rConsultantsPanel(readOnly)
-                    : _rCompaniesPanel(readOnly),
+            child: Container(
+              key: ValueKey<int>(_teamTab),
+              width: double.infinity,
+              child: _teamTab == 0
+                  ? _rAdminPanel(readOnly)
+                  : _teamTab == 1
+                      ? _rConsultantsPanel(readOnly)
+                      : _rCompaniesPanel(readOnly),
+            ),
           ),
         ),
       ),
